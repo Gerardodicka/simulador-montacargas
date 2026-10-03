@@ -7705,7 +7705,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · sonido v2';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v3 ambiente + maniobras';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -7720,8 +7720,30 @@
             const rn = noise(); const rb = ctx.createBiquadFilter(); rb.type = 'bandpass'; rb.frequency.value = 320; rb.Q.value = 0.8; SND.rollGain = ctx.createGain(); SND.rollGain.gain.value = 0; rn.connect(rb); rb.connect(SND.rollGain); SND.rollGain.connect(out); SND.rollBp = rb;
             // bomba hidráulica: motor de bomba + flujo de aceite al mover el mástil
             SND.hyd = ctx.createOscillator(); SND.hyd.type = 'sawtooth'; SND.hyd.frequency.value = 148; const hp = ctx.createBiquadFilter(); hp.type = 'lowpass'; hp.frequency.value = 700; const hn = noise(); const hb = ctx.createBiquadFilter(); hb.type = 'bandpass'; hb.frequency.value = 1700; hb.Q.value = 1.2; const hng = ctx.createGain(); hng.gain.value = 0.5;
-            SND.hydGain = ctx.createGain(); SND.hydGain.gain.value = 0; SND.hyd.connect(hp); hp.connect(SND.hydGain); hn.connect(hb); hb.connect(hng); hng.connect(SND.hydGain); SND.hydGain.connect(out); SND.hyd.start(); } catch (e) {} }
-        function updateEngineSound(v, vmax, reversing, mastMoving) { if (!SND.on) return; try { const ctx = hornCtx, t = ctx.currentTime; const f = Math.min(1, v / vmax); const moving = v > 0.15;
+            SND.hydGain = ctx.createGain(); SND.hydGain.gain.value = 0; SND.hyd.connect(hp); hp.connect(SND.hydGain); hn.connect(hb); hb.connect(hng); hng.connect(SND.hydGain); SND.hydGain.connect(out); SND.hyd.start(); startAmbient(ctx, noiseBuf); } catch (e) {} }
+        // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
+        function startAmbient(ctx, noiseBuf) { if (SND.amb) return; const amb = SND.amb = ctx.createGain(); amb.gain.value = 0.85; amb.connect(ctx.destination);
+            const loop = () => { const n = ctx.createBufferSource(); n.buffer = noiseBuf; n.loop = true; n.start(); return n; };
+            { const n = loop(); const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380; const g = ctx.createGain(); g.gain.value = 0.05; n.connect(lp); lp.connect(g); g.connect(amb); }   // tono de la nave: extractores y ventilación
+            { const o = ctx.createOscillator(); o.frequency.value = 120; const g = ctx.createGain(); g.gain.value = 0.004; o.connect(g); g.connect(amb); o.start(); }   // zumbido de luminarias/cargadores de baterías
+            // un motor por montacargas NPC: volumen y tono según distancia y movimiento
+            SND.npc = NPC.forks.map(() => { const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 300; const g = ctx.createGain(); g.gain.value = 0; const n = loop(); const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 300; bp.Q.value = .8; const ng = ctx.createGain(); ng.gain.value = 0; n.connect(bp); bp.connect(ng); o.connect(g); g.connect(amb); ng.connect(amb); o.start(); return { o, g, ng, px: null, pz: null }; });
+            const burst = (dur, type, f, q, vol, decay) => { const t = ctx.currentTime; const n = ctx.createBufferSource(); n.buffer = noiseBuf; const fl = ctx.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + decay); n.connect(fl); fl.connect(g); g.connect(amb); n.start(t, Math.random()); n.stop(t + dur); };
+            const tone = (f, t0, dur, vol, type) => { const t = ctx.currentTime + t0; const o = ctx.createOscillator(); o.type = type || 'square'; o.frequency.value = f; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400; const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.setValueAtTime(vol, t + dur - 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(lp); lp.connect(g); g.connect(amb); o.start(t); o.stop(t + dur + 0.02); };
+            const events = [
+                () => { for (let i = 0; i < 3 + Math.floor(Math.random() * 4); i++) tone(1150, i * 0.9, 0.35, 0.012); },                          // alarma de reversa lejana
+                () => { burst(0.35, 'lowpass', 160, 0.7, 0.16, 0.3); tone(55, 0, 0.18, 0.05, 'sine'); },                                        // tarima que se asienta en el piso
+                () => { burst(0.25, 'bandpass', 2600, 6, 0.05, 0.22); burst(0.2, 'bandpass', 3900, 9, 0.025, 0.18); },                          // golpe metálico (horquilla/rack)
+                () => { const t = ctx.currentTime; const n = ctx.createBufferSource(); n.buffer = noiseBuf; const f1 = ctx.createBiquadFilter(); f1.type = 'bandpass'; f1.Q.value = 5; const g = ctx.createGain(); g.gain.value = 0; n.connect(f1); f1.connect(g); g.connect(amb); n.start(t, Math.random());
+                        const d = 1.2 + Math.random() * 1.6; for (let k = 0; k < d * 6; k++) { const tk = t + k / 6; f1.frequency.setValueAtTime(400 + Math.random() * 900, tk); g.gain.setValueAtTime(Math.random() < 0.75 ? 0.035 : 0.003, tk); } g.gain.setValueAtTime(0.0001, t + d); n.stop(t + d + 0.1); },   // voces del personal (murmullo)
+                () => { burst(0.08, 'highpass', 1800, 1, 0.03, 0.06); const t = ctx.currentTime + 0.1; const n = ctx.createBufferSource(); n.buffer = noiseBuf; const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 2; const g = ctx.createGain(); g.gain.value = 0; n.connect(bp); bp.connect(g); g.connect(amb); n.start(t, Math.random()); for (let k = 0; k < 12; k++) g.gain.setValueAtTime(Math.random() < 0.7 ? 0.02 : 0.002, t + k * 0.11); g.gain.setValueAtTime(0.0001, t + 1.4); n.stop(t + 1.5); },   // radio de comunicación (estática + voz)
+                () => { burst(0.6, 'bandpass', 900, 1.5, 0.02, 0.55); }                                                                          // emplayadora / cinta
+            ];
+            const tick = () => { if (!SND.amb) return; try { events[Math.floor(Math.random() * events.length)](); } catch (e) {} SND.ambT = setTimeout(tick, 1800 + Math.random() * 4200); }; SND.ambT = setTimeout(tick, 1500); }
+        function updateAmbient() { if (!SND.npc || typeof camera === 'undefined') return; const ctx = hornCtx, t = ctx.currentTime;
+            NPC.forks.forEach((f, i) => { const s = SND.npc[i]; if (!s) return; const d = Math.hypot(f.x - camera.position.x, f.z - camera.position.z); const moving = s.px !== null && Math.hypot(f.x - s.px, f.z - s.pz) > 0.004; const lifting = f.op && (f.op.ph === 'up' || f.op.ph === 'down'); s.px = f.x; s.pz = f.z;
+                const att = Math.min(1, 6 / Math.max(6, d)); s.o.frequency.setTargetAtTime(lifting ? 150 : (moving ? 700 : 240), t, 0.3); s.g.gain.setTargetAtTime((moving || lifting ? 0.03 : 0.004) * att, t, 0.3); s.ng.gain.setTargetAtTime((moving ? 0.07 : lifting ? 0.05 : 0) * att, t, 0.3); }); }
+        function updateEngineSound(v, vmax, reversing, mastMoving) { if (!SND.on) return; try { updateAmbient(); const ctx = hornCtx, t = ctx.currentTime; const f = Math.min(1, v / vmax); const moving = v > 0.15;
             SND.humGain.gain.setTargetAtTime(0.018, t, 0.3);
             SND.motor.frequency.setTargetAtTime(240 + f * 1150, t, 0.12); SND.motor2.frequency.setTargetAtTime(482 + f * 2310, t, 0.12);
             SND.motorGain.gain.setTargetAtTime(moving ? 0.012 + f * 0.035 : 0, t, 0.15);
@@ -8063,7 +8085,7 @@
             add(new THREE.BoxGeometry(1.15, .12, .9), red, 0, .15, -.3); add(new THREE.BoxGeometry(1.15, 1.3, .1), red, 0, .8, -.8);
             [[-1, -.75], [1, -.75], [-1, .15], [1, .15]].forEach(([sx, sz]) => add(new THREE.BoxGeometry(.06, 2.2, .06), steel, sx * .55, 1.25, sz)); add(new THREE.BoxGeometry(1.2, .05, 1.1), steel, 0, 2.35, -.3);
             [-1, 1].forEach(sd => add(new THREE.BoxGeometry(.18, .28, 1.9), red, sd * .49, .2, .95));
-            [-.42, .42].forEach(dx => add(new THREE.BoxGeometry(.09, 3.4, .16), steel, dx, 1.7, .55)); [-.3, .3].forEach(dx => add(new THREE.BoxGeometry(.1, .05, 1.15), dark, dx, .12, 1.8));
+            [-.42, .42].forEach(dx => add(new THREE.BoxGeometry(.09, 3.4, .16), steel, dx, 1.7, .55)); 
             raymondReachDetail(g, 1.15, 3.4);
             const t = raymondTex(512, 112); [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.PlaneGeometry(.8, .18), new THREE.MeshBasicMaterial({ map: t })); l.position.set(sd * .62, .6, -1.3); l.rotation.y = sd > 0 ? Math.PI / 2 : -Math.PI / 2; g.add(l); });
             // operador
@@ -8072,7 +8094,14 @@
             const plateT = makeTextTexture([{ text: 'MC-' + id, size: 80, color: '#fff' }], { w: 256, h: 96, bg: '#011131' }); const plate = new THREE.Mesh(new THREE.PlaneGeometry(.6, .22), new THREE.MeshBasicMaterial({ map: plateT })); plate.position.set(0, 1.5, -2.09); plate.rotation.y = Math.PI; g.add(plate);
             g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
             mergeStaticMeshes(g); g.traverse(o => { if (o.isMesh) o.castShadow = o.geometry.attributes.position.count > 200; });
-            scene.add(g); NPC.forks.push({ id, g, beacon, path, t: phase || 0, dir: 1, yield: 0, replied: false, x: path[0][0], z: path[0][1] });
+            // carro portahorquillas (se eleva por el mástil), mástil interior telescópico y tarima con producto (cuando va cargado)
+            const car = new THREE.Group(); car.name = 'npcCarriage'; const blk = new THREE.MeshStandardMaterial({ color: 0x141518, metalness: .6, roughness: .45 });
+            const cplate = new THREE.Mesh(new THREE.BoxGeometry(.95, .55, .06), blk); cplate.position.set(0, .3, 1.22); car.add(cplate); [-.3, .3].forEach(dx => { const fk = new THREE.Mesh(new THREE.BoxGeometry(.1, .05, 1.15), blk); fk.position.set(dx, .03, 1.8); car.add(fk); });
+            const pal = new THREE.Group(); pal.name = 'npcPallet'; const pw = new THREE.Mesh(new THREE.BoxGeometry(1.0, .14, 1.2), new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 })); pw.position.set(0, .12, 1.85); pal.add(pw);
+            const bx = new THREE.Mesh(new THREE.BoxGeometry(.95, 1.0, 1.1), cardboardMat(Math.floor(Math.random() * 3))); bx.position.set(0, .7, 1.85); pal.add(bx); pal.visible = false; car.add(pal);
+            car.position.y = 0.09; g.add(car); const inner = new THREE.Group(); [-.34, .34].forEach(dx => { const r = new THREE.Mesh(new THREE.BoxGeometry(.07, 3.3, .12), steel); r.position.set(dx, 1.65, .66); inner.add(r); }); g.add(inner);
+            car.traverse(o => { if (o.isMesh) o.castShadow = true; });
+            scene.add(g); NPC.forks.push({ id, g, beacon, car, pal, inner, path, t: phase || 0, dir: 1, yield: 0, replied: false, x: path[0][0], z: path[0][1], opCool: 4 + Math.random() * 8 });
         }
 
         // ================== ENTORNO IBL PROCEDURAL (reflejos en casco y cintas) ==================
@@ -8520,11 +8549,24 @@
         function pathLen(path) { let l = 0; for (let i = 1; i < path.length; i++) l += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]); return l; }
         // Separación real entre dos montacargas: distancia mínima entre sus ejes (de la defensa trasera a la punta de horquillas), menos nada → < 1.9 m = cuerpos a menos de ~0.4 m
         function forkGap(ax, az, ar, bx, bz, br) { let m = 99; for (let i = 0; i <= 5; i++) { const u = -1.9 + i * 1.02, px = ax + Math.sin(ar) * u, pz = az + Math.cos(ar) * u; for (let j = 0; j <= 5; j++) { const v = -1.9 + j * 1.02; const d = Math.hypot(px - bx - Math.sin(br) * v, pz - bz - Math.cos(br) * v); if (d < m) m = d; } } return m; }
+        // ====== Operadores NPC trabajando: en su pasillo se detienen, giran 90° hacia el rack, elevan el carro al nivel, toman o dejan la tarima, bajan y continúan ======
+        function npcStartOp(f) { const a = AISLES[f.aisle - 1]; if (!a) return; const side = Math.random() < 0.5 ? -1 : 1; const lvl = 1 + Math.floor(Math.random() * 5);
+            f.op = { ph: 'turn', t: 0, rot0: f.g.rotation.y, rot1: side > 0 ? Math.PI / 2 : -Math.PI / 2, y: 0.5 + lvl * 1.8 + 0.06, load: !f.pal.visible }; f.opX = a.x; }
+        function npcUpdateOp(f, dt) { const o = f.op; o.t += dt; const ease = k => k < 0 ? 0 : k > 1 ? 1 : k * k * (3 - 2 * k); let d;
+            const setCar = y => { f.car.position.y = y; f.inner.position.y = Math.max(0, y - 2.0); };
+            if (o.ph === 'turn') { d = o.rot1 - o.rot0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; f.g.rotation.y = o.rot0 + d * ease(o.t / 1.6); f.beacon.material.emissiveIntensity = Math.sin(performance.now() / 120) > 0 ? 2.2 : .4; if (o.t >= 1.6) { o.ph = 'up'; o.t = 0; } }
+            else if (o.ph === 'up') { setCar(0.09 + (o.y - 0.09) * ease(o.t / (o.y / 0.45))); if (o.t >= o.y / 0.45) { o.ph = 'work'; o.t = 0; } }   // ~0.45 m/s de elevación
+            else if (o.ph === 'work') { if (o.t >= 1.8) { f.pal.visible = o.load; o.ph = 'down'; o.t = 0; } }   // inserta / retira horquillas: toma o deja la tarima
+            else if (o.ph === 'down') { setCar(o.y - (o.y - 0.09) * ease(o.t / (o.y / 0.5))); if (o.t >= o.y / 0.5) { setCar(0.09); o.ph = 'back'; o.t = 0; } }   // baja con la carga a 15 cm antes de moverse
+            else if (o.ph === 'back') { d = o.rot0 - o.rot1; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; f.g.rotation.y = o.rot1 + d * ease(o.t / 1.6); if (o.t >= 1.6) { f.g.rotation.y = o.rot0; f.op = null; f.opCool = 10 + Math.random() * 14; } } }
         function updateTraffic(dtS) {
             const now = performance.now(); const honkedRecently = now - lastHonk < 5000;
             const px = forkPosition.x, pz = forkPosition.z;
             // --- montacargas ---
             NPC.forks.forEach(f => {
+                if (f.op) { npcUpdateOp(f, dtS); return; }   // maniobra de carga/descarga en el rack: el equipo permanece detenido
+                if (f.aisle !== undefined && f.yield <= 0 && !f.backT) { f.opCool = (f.opCool || 0) - dtS; const ax = AISLES[f.aisle - 1]; const { near, far } = aisleZRange();
+                    if (f.opCool <= 0 && ax && Math.abs(f.x - ax.x) < 0.4 && f.z < near - 4 && f.z > far + 3 && Math.hypot(f.x - forkPosition.x, f.z - forkPosition.z) > 8 && !NPC.peds.some(pd => Math.hypot(pd.x - f.x, pd.z - f.z) < 5)) { npcStartOp(f); return; } }
                 const prevT = f.t; const L = pathLen(f.path);
                 // Reglas de operación segura (NOM-006-STPS-2014 · manejo de materiales con montacargas): el peatón tiene prioridad,
                 // distancia mínima de 3 m (5 m en el cruce peatonal), 5 km/h con peatones a menos de 10 m o dentro de la zona de tránsito, claxon al detenerse por un peatón.
