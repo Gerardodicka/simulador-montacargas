@@ -7055,17 +7055,15 @@
             paintLine(-29, 8, 29, 8); paintLine(-29, 14, 29, 14);
             for (let x = -28; x < 28; x += 2) { paintLine(x, 9, x, 13, 0xffffff, 0.8); }
             paintLabel('ZONA DE TRÁNSITO · MAX 10 km/h', 0, 6, 3, '#ffffff', 0, 22);
-            // Pasillos peatonales delimitados (verde con bordes blancos y rotulado PEATONES): perimetrales junto a los muros y hacia recibo/embarque
+            // Pasillos peatonales delimitados según NOM-001-STPS-2008 (delimitar áreas de tránsito de peatones y vehículos) con el amarillo de delimitación/precaución de NOM-026-STPS-2008: franjas amarillas de 10 cm a ambos lados y rotulado PEATONES
             { const hwW = WAREHOUSE.w / 2, hdW = WAREHOUSE.d / 2, xl = hwW - 1.4, z0 = -hdW + 3, z1 = hdW - 4.7, zr = (typeof transitZ === 'function' ? transitZ() : 9) + 8;
-              const pedMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x2e9e5b).convertSRGBToLinear(), roughness: 1 });
-              const lane = (xa, za, xb, zb) => { const L = Math.hypot(xb - xa, zb - za), m = new THREE.Mesh(new THREE.PlaneGeometry(1.2, L), pedMat); m.rotation.x = -Math.PI / 2; m.rotation.z = Math.atan2(xb - xa, zb - za); m.position.set((xa + xb) / 2, 0.011, (za + zb) / 2); scene.add(m);
-                  const nx = (zb - za) / L * 0.62, nz = -(xb - xa) / L * 0.62; paintLine(xa + nx, za + nz, xb + nx, zb + nz, 0xffffff, 0.1); paintLine(xa - nx, za - nz, xb - nx, zb - nz, 0xffffff, 0.1);
-                  for (let d = 4; d < L - 2; d += 12) paintLabel('PEATONES', xa + (xb - xa) * d / L, za + (zb - za) * d / L, 0.55, '#ffffff', Math.atan2(xb - xa, zb - za) + Math.PI / 2, 3.2); };
+              const lane = (xa, za, xb, zb) => { const L = Math.hypot(xb - xa, zb - za);
+                  const nx = (zb - za) / L * 0.62, nz = -(xb - xa) / L * 0.62; paintLine(xa + nx, za + nz, xb + nx, zb + nz, 0xf5c400, 0.1); paintLine(xa - nx, za - nz, xb - nx, zb - nz, 0xf5c400, 0.1);
+                  for (let d = 4; d < L - 2; d += 12) paintLabel('PEATONES', xa + (xb - xa) * d / L, za + (zb - za) * d / L, 0.55, '#f5c400', Math.atan2(xb - xa, zb - za) + Math.PI / 2, 3.2); };
               lane(-xl, z0, -xl, z1); lane(xl, z0, xl, z1); lane(-xl + 0.6, zr, -hwW + 20, zr); lane(xl - 0.6, zr, hwW - 20, zr); }
             // Zona peatonal verde al frente
-            const ped = new THREE.Mesh(new THREE.PlaneGeometry(58, 3), new THREE.MeshStandardMaterial({ color: 0x2e9e5b, roughness: 1 }));
-            ped.rotation.x = -Math.PI / 2; ped.position.set(0, 0.012, 42); scene.add(ped);
-            paintLabel('PASO PEATONAL', 0, 42, 2.2, '#ffffff', 0, 10);
+            paintLine(-29, 40.5, 29, 40.5, 0xf5c400, 0.1); paintLine(-29, 43.5, 29, 43.5, 0xf5c400, 0.1);   // pasillo peatonal frente a andenes: franjas amarillas (NOM-001/026-STPS)
+            paintLabel('PASILLO PEATONAL', 0, 42, 1.6, '#f5c400', 0, 10);
             // Zona de destino (staging) amarilla
             dropZone = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ color: 0xf5c400, emissive: 0x665000, roughness: 1, transparent: true, opacity: 0.85 }));
             dropZone.rotation.x = -Math.PI / 2; dropZone.position.set(-20, 0.013, 26); scene.add(dropZone);
@@ -8436,7 +8434,7 @@
             if (!opts.length) for (let i = 1; i <= AISLES.length; i++) if (i !== cur && !taken.has(i) && i !== busyByPlayer) opts.push(i);
             if (!opts.length) for (let i = 1; i <= AISLES.length; i++) if (i !== cur) opts.push(i);
             return opts[Math.floor(Math.random() * opts.length)]; }
-        function assignNewRoute(f) { const next = pickNextAisle(f); const startX = f.x; f.aisle = next; const route = buildAisleRoute(startX, next - 1); const { near } = aisleZRange(); if (f.z < near - 3) route.unshift([f.x, f.z], [f.x, near]);   // si está dentro del pasillo, primero sale por la entrada
+        function assignNewRoute(f) { const next = pickNextAisle(f); const startX = f.x; f.aisle = next; const route = buildAisleRoute(startX, next - 1); const { near } = aisleZRange(); if (f.z < near - 3) route.unshift([f.x, f.z], [f.x, near]); else if (Math.hypot(route[0][0] - f.x, route[0][1] - f.z) > 0.3) route.unshift([f.x, f.z]);   /* la nueva ruta parte de donde está el equipo: sin saltos */   // si está dentro del pasillo, primero sale por la entrada
             f.path = route; f.t = 0; f.dir = 1; f.blockT = 0; f.g.userData.route = next; }
         // ================== RUTAS DINÁMICAS DE PEATONES ==================
         // Al terminar un trayecto el peatón elige otra ruta del catálogo (paso peatonal, cruce de tránsito, perimetral, área de recibo)
@@ -8498,6 +8496,8 @@
         function pushOutOfFork(pd, f) { if (!inForkBox(f, pd.g.position.x, pd.g.position.z, 0.6)) return false; const a = f.g.rotation.y; const dx = pd.g.position.x - f.x, dz = pd.g.position.z - f.z; let lat = dx * Math.cos(a) - dz * Math.sin(a); const sd = lat >= 0 ? 1 : -1; const fwd = dx * Math.sin(a) + dz * Math.cos(a); const nx = f.x + Math.sin(a) * fwd + Math.cos(a) * sd * 1.6, nz = f.z + Math.cos(a) * fwd - Math.sin(a) * sd * 1.6; pd.g.position.set(nx, 0, nz); pd.x = nx; pd.z = nz; return true; }
         function probeAt(np, f) { return { x: np.x, z: np.z, g: { rotation: { y: f.g.rotation.y } } }; }
         function pathLen(path) { let l = 0; for (let i = 1; i < path.length; i++) l += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]); return l; }
+        // Separación real entre dos montacargas: distancia mínima entre sus ejes (de la defensa trasera a la punta de horquillas), menos nada → < 1.9 m = cuerpos a menos de ~0.4 m
+        function forkGap(ax, az, ar, bx, bz, br) { let m = 99; for (let i = 0; i <= 5; i++) { const u = -1.9 + i * 1.02, px = ax + Math.sin(ar) * u, pz = az + Math.cos(ar) * u; for (let j = 0; j <= 5; j++) { const v = -1.9 + j * 1.02; const d = Math.hypot(px - bx - Math.sin(br) * v, pz - bz - Math.cos(br) * v); if (d < m) m = d; } } return m; }
         function updateTraffic(dtS) {
             const now = performance.now(); const honkedRecently = now - lastHonk < 5000;
             const px = forkPosition.x, pz = forkPosition.z;
@@ -8524,7 +8524,7 @@
                     else if (sameAisle && f.aisle !== undefined) { f.t = Math.min(1, f.t + v * dtS / L); if (f.t >= 1) assignNewRoute(f); }   // el jugador entró a su pasillo: el NPC sigue su ruta y sale por la zona de tránsito
                     else if (dP <= 6) { f.resumeAt = now + WAIT_AFTER_PASS * 1000; f.nearT = (f.nearT || 0) + dtS; if (f.nearT > 8 && f.aisle !== undefined) { assignNewRoute(f); f.resumeAt = 0; f.nearT = 0; } }   // si el jugador se queda junto al NPC, éste toma otra ruta
                     else { f.nearT = 0; f.blockT = (f.blockT || 0) + dtS; if (pedAhead) f.beacon.material.emissiveIntensity = Math.sin(now / 120) > 0 ? 2.2 : .4; const limit = otherFork ? 2.5 : (pedAhead ? 4 : 6); if (f.blockT > limit) { if (pedAhead && !otherFork && f.aisle !== undefined) { f.backT = 3; } else if (otherFork && f.aisle !== undefined) { const other = NPC.forks.find(o => o !== f && Math.hypot(o.x - f.x, o.z - f.z) < 8); if (!other || NPC.forks.indexOf(f) > NPC.forks.indexOf(other)) f.backT = 3; } else if (f.aisle !== undefined) assignNewRoute(f); else f.dir *= -1; f.blockT = 0; } } }
-                let p = segmentPos(f.path, f.t); if (NPC.forks.some(o => { if (o === f) return false; const dn = Math.hypot(p.x - o.x, p.z - o.z); return dn < 3.4 && dn < Math.hypot(f.x - o.x, f.z - o.z); })) { f.t = prevT; p = { x: f.x, z: f.z }; f.blockT = (f.blockT || 0) + dtS; }   /* candado final: nunca acercarse a menos de 3.4 m de otro montacargas */
+                let p = segmentPos(f.path, f.t); const rNew = Math.hypot(p.x - f.x, p.z - f.z) > 1e-4 ? Math.atan2(p.x - f.x, p.z - f.z) : f.g.rotation.y; if (NPC.forks.some(o => { if (o === f) return false; const dn = forkGap(p.x, p.z, rNew, o.x, o.z, o.g.rotation.y); return (dn < 1.9 || Math.hypot(p.x - o.x, p.z - o.z) < 3.4) && dn < forkGap(f.x, f.z, f.g.rotation.y, o.x, o.z, o.g.rotation.y) + 1e-3; })) { f.t = prevT; p = { x: f.x, z: f.z }; f.lockT = (f.lockT || 0) + dtS; if (f.lockT > 3 + NPC.forks.indexOf(f)) { f.lockT = 0; if (f.aisle !== undefined) assignNewRoute(f); else f.dir *= -1; } } else f.lockT = 0;   /* candado final: nunca acercarse a menos de 3.4 m de otro montacargas */
                 const ang = Math.atan2(p.x - f.x, p.z - f.z); if (Math.hypot(p.x - f.x, p.z - f.z) > 1e-4) f.g.rotation.y = ang;
                 f.x = p.x; f.z = p.z; f.g.position.set(f.x, 0, f.z);
                 // responde al claxon
