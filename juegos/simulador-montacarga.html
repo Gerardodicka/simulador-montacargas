@@ -8294,14 +8294,19 @@
             const px = forkPosition.x, pz = forkPosition.z;
             // --- montacargas ---
             NPC.forks.forEach(f => {
-                const L = pathLen(f.path); const v = 10 / 3.6; // 10 km/h
+                const L = pathLen(f.path);
+                // Reglas de operación segura (NOM-006-STPS-2014 · manejo de materiales con montacargas): el peatón tiene prioridad,
+                // distancia mínima de 3 m (5 m en el cruce peatonal), 5 km/h con peatones a menos de 10 m o dentro de la zona de tránsito, claxon al detenerse por un peatón.
+                const pedNear = NPC.peds.some(pd => Math.hypot(pd.x - f.x, pd.z - f.z) < 10); const inTransit = Math.abs(f.z - transitZ()) < 4;
+                const v = (pedNear || inTransit ? 5 : 10) / 3.6;
                 const dP = Math.hypot(f.x - px, f.z - pz);
                 if (f.yield > 0) { f.yield -= dtS; f.beacon.material.emissiveIntensity = Math.sin(now / 80) > 0 ? 2.5 : .3; }
                 else { f.beacon.material.emissiveIntensity = 1.2;
                     const nt = Math.max(0, Math.min(1, f.t + f.dir * v * dtS / L)); const np = segmentPos(f.path, nt);
                     const probe = { x: np.x, z: np.z, g: { rotation: { y: f.g.rotation.y } } };
                     { const want = Math.atan2(np.x - f.x, np.z - f.z); let dAng = want - f.g.rotation.y; while (dAng > Math.PI) dAng -= 2 * Math.PI; while (dAng < -Math.PI) dAng += 2 * Math.PI; if (Math.abs(dAng) > 0.6 && NPC.peds.some(pd => Math.hypot(pd.x - f.x, pd.z - f.z) < 4.2)) { f.beacon.material.emissiveIntensity = Math.sin(now / 120) > 0 ? 2.2 : .4; f.blockT = (f.blockT || 0) + dtS; if (f.blockT > 8) { assignNewRoute(f); f.blockT = 0; } return; } }   // giro con peatón cerca: barre con las horquillas → espera
-                    const pedAhead = NPC.peds.some(pd => inForkBox(probe, pd.x, pd.z, 0.9));   // frena si el peatón quedaría dentro de la huella del equipo (horquillas incluidas)
+                    const pedAhead = NPC.peds.some(pd => { if (inForkBox(probe, pd.x, pd.z, 0.9)) return true; const dx = pd.x - f.x, dz = pd.z - f.z; const fwdD = dx * Math.sin(f.g.rotation.y) + dz * Math.cos(f.g.rotation.y); return fwdD > -1 && Math.hypot(dx, dz) < (pd.crossing ? 5 : 3); });
+                    if (pedAhead && !f.pedHonk) { f.pedHonk = true; if (dP < 25) hornSound([392, 494], 0.18, 0.12); } else if (!pedAhead) f.pedHonk = false;   // alto total + claxon corto al detenerse por el peatón   // frena si el peatón quedaría dentro de la huella del equipo (horquillas incluidas)
                     // Prioridad entre NPC: el de menor índice tiene preferencia (frena sólo a 0.4 m); el otro cede con margen amplio. Tras ceder > limit s, el que cede toma otra ruta y tiene 2.5 s de 'escape' para alejarse.
                     const otherFork = NPC.forks.some(o => o !== f && (inForkBox(o, np.x, np.z, 1.2) || inForkBox(probeAt(np, f), o.x, o.z, 1.2)));
                     if (f.backT > 0) { f.backT -= dtS; const bt = Math.max(0, Math.min(1, f.t - v * 0.7 * dtS / L)); const bp = segmentPos(f.path, bt); const bPed = NPC.peds.some(pd => inForkBox(probeAt(bp, f), pd.x, pd.z, 0.9)); if (!bPed) f.t = bt; if (f.backT <= 0) assignNewRoute(f); return; }   // retrocede 3 s por su ruta para liberar al otro equipo y luego toma otra ruta
