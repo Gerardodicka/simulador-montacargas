@@ -78,3 +78,10 @@ PUERTA DE ACCESO (solo publicado en Netlify)
 RESOLUCIÓN ADAPTATIVA (calidad Auto)
 - En modo Auto el simulador mide la fluidez cada 2 s: si va lento baja la resolución hasta 60 %; si sigue lento baja de Alta → Media → Baja
   (aviso en pantalla). Si sobra margen recupera la resolución. Elegir Alta/Media/Baja manual desactiva el ajuste.
+
+SEÑALAMIENTOS DE SEGURIDAD (simulador de montacarga y CLAMP SAFE)
+- Basados en NOM-026-STPS-2008 (colores y señales) y NOM-003-SEGOB-2011 (Protección Civil): verde = evacuación/emergencia,
+  rojo = prohibición y equipo contra incendio, azul = obligación, amarillo = precaución. Texto de apoyo bajo cada símbolo.
+- Muros laterales: ruta de evacuación cada 15 m apuntando a las salidas + extintor (con extintor 3D), EPP, precaución montacargas,
+  prohibido peatones, velocidad máx 10 km/h, botiquín, no fumar, riesgo eléctrico. Muro de andenes: 2 salidas de emergencia peatonales.
+  Muro de fondo: EPP obligatorio y reglas. Pictogramas dibujados por código (función drawSign); validar con Seguridad DICKA.
