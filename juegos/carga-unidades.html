@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carga de Unidades | DICKA Logistics</title>
+<style>
+:root{--azul:#1D2586;--brillante:#2138D3;--marino:#011131;--gris:#838383;--amarillo:#f5c400;--verde:#2e9e5b;--rojo:#c62828}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,var(--azul) 0%,var(--marino) 100%);min-height:100vh;padding:1rem;color:#333}
+.wrap{max-width:820px;margin:0 auto}
+.head{text-align:center;color:#fff;margin-bottom:1rem}
+.head svg{width:200px;max-width:65%}
+.head h1{font-size:22px;font-weight:900;margin-top:.2rem}
+.head p{font-size:12px;color:#c5cdf5}
+.card{background:#fff;border-radius:16px;padding:1.4rem;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.hidden{display:none!important}
+.big{font-size:60px;text-align:center}
+.card h2{color:var(--azul);text-align:center;font-size:22px;margin:.3rem 0}
+.lead{text-align:center;color:#666;font-size:14px;line-height:1.6}
+.info{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.9rem 1.1rem;border-radius:8px;margin:1rem 0;font-size:13px;color:#444;line-height:1.9}
+.info b{color:var(--azul)}
+input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border-radius:8px;font-size:15px;margin-top:.4rem}
+.lbl{font-size:11px;font-weight:800;color:var(--azul);display:block;margin-top:.8rem;letter-spacing:1px}
+.btn{width:100%;padding:.85rem;border:none;border-radius:10px;background:linear-gradient(135deg,var(--azul),var(--brillante));color:#fff;font-weight:800;font-size:14px;cursor:pointer;letter-spacing:1px;margin-top:.8rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--brillante);border:2px solid var(--brillante)}
+.btn.warn{background:var(--amarillo);color:var(--marino)}
+.topbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--azul);margin-bottom:.6rem;flex-wrap:wrap;gap:6px}
+.timer{font-family:monospace;font-size:20px;color:var(--brillante)}
+.timer.low{color:var(--rojo)}
+.bar{height:8px;background:#e6e9f4;border-radius:4px;overflow:hidden;margin-bottom:1rem}
+.bar div{height:100%;background:linear-gradient(90deg,var(--azul),var(--brillante));transition:width .3s}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--rojo);color:#fff;padding:.6rem 1.2rem;border-radius:10px;font-weight:800;font-size:13px;z-index:50;opacity:0;transition:.25s;pointer-events:none;text-align:center;max-width:90%}
+.toast.show{opacity:1}
+.toast.good{background:var(--verde)}
+.score{font-size:60px;font-weight:900;color:var(--brillante);text-align:center;line-height:1}
+.badge{display:block;width:max-content;margin:.8rem auto;padding:.5rem 1.4rem;border-radius:30px;font-weight:800}
+.badge.ok{background:#d4edda;color:#155724}.badge.bad{background:#f8d7da;color:#721c24}
+.stats{background:#f7f8fc;border-radius:10px;padding:.8rem 1rem;font-size:13.5px}
+.stats div{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #e6e9f4}
+.stats div:last-child{border:0}.stats b{color:var(--brillante)}
+.code{background:var(--marino);color:#fff;font-family:monospace;font-size:11px;padding:.7rem;border-radius:8px;word-break:break-all;margin-top:.8rem}
+.err{background:#fff7e0;border-left:4px solid var(--amarillo);padding:.7rem 1rem;border-radius:8px;font-size:12.5px;margin-top:.8rem;line-height:1.7}
+
+.truck{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:stretch;margin:.6rem 0}
+.cab{background:var(--azul);color:#fff;border-radius:12px 4px 4px 12px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;font-weight:900;letter-spacing:3px;font-size:12px}
+.box{border:3px solid var(--marino);border-radius:4px 12px 12px 4px;padding:8px;background:#dfe3ee;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(2,1fr);gap:6px;position:relative}
+.box::after{content:'PUERTA →';position:absolute;right:-2px;top:50%;transform:translateY(-50%) rotate(90deg);font-size:9px;font-weight:900;color:var(--gris);letter-spacing:2px}
+.pos{aspect-ratio:1;border:2px dashed #9aa4c4;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:#666;cursor:pointer;background:#f5f6fb;text-align:center;line-height:1.2}
+.pos.filled{border-style:solid;color:#fff;font-weight:800}
+.pos.s1{background:#2e9e5b;border-color:#2e9e5b}.pos.s2{background:#f5a300;border-color:#f5a300}.pos.s3{background:#c62828;border-color:#c62828}
+.pos.frag::after{content:'🥚';font-size:12px}
+.pos.hl{border-color:var(--brillante);background:#e6ebff}
+.pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:.8rem}
+.tar{border:2px solid #dfe3f0;border-radius:10px;padding:.5rem;cursor:pointer;background:#fff;font-size:11px;position:relative}
+.tar.sel{border-color:var(--amarillo);background:#fff7cf}
+.tar b{display:block;font-size:13px}.tar .stop{display:inline-block;padding:1px 6px;border-radius:10px;color:#fff;font-size:10px;font-weight:800}
+.tar .stop.s1{background:#2e9e5b}.tar .stop.s2{background:#f5a300}.tar .stop.s3{background:#c62828}
+.tar.done{opacity:.35;pointer-events:none}
+.rules{font-size:12px;color:#444;background:#f0f4f8;border-radius:8px;padding:.6rem .9rem;line-height:1.7;margin-bottom:.4rem}
+.bal{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--azul);margin-top:.4rem}
+
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+  <div class="head">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPIAAABGCAYAAAD2M8nHAAAM4ElEQVR4nO2dX4hXxxXHPz+pgbRgICkkAfNgwD4oJIKFJtAGDMSAEdKH5qHFFDbCCtvArsSCKVjRgg3Y4AomsMK2sBZT2BQMmMKmYEALWjCwFjTYBy0oaEAfIpiCKdw+zG/c2bszc2fmzty/vy9c9rd3Zs6cmbln/p5zZpBlGR3HGPCnupkYYYSUGPRAkDNgUDcTI4yQEqvqZqAiNLm3yhyf+8AicKRCPmJhwkA//8yXzCdmGUw8xkYG3ClLpC8jMsAe4P06GdFgAdgagU7ZGYfpI7gCbExA1wXTwG6P+NeAdYYw3/qx8R17difzKkW3LyMywB/qZkCDbyPRkaPFTCR6EqH8xRi9pjxpxKxLE1IJMcDeMoS6Lsj5aWjXpx/j1FvGUwnyz4AHkWmaYJvi/j5x3qXod12QpzTvzlbNRA3IgDM15Pl6ItqrSd9BTQJPWMJ/Ezm/qOXpsiCbKuonlXJRH7ZQ3egckk/IVDhleaYtYVWdegSXr6uCXFQhbZhiDwoeV1yNz9oyuNZlnv9HNO8+daCz6M9iIapcFwPMxibYJUE+hd8mSxuE2Qb58f+qIN4PgB2JeNjnEMen49k+jGsbrT93pOWKqoUY4C1LWNB+QBcE+TDh67PzkXmpAx9S/MGdSJT3QUvYXcIF4RED7QF+R1JFsM1W6jrlWB2SqK2CPD78myHOh8F/ygnwAukULKpGUdlLKx3kUDSj+X5J+vuBj4a/rxB/dBxHzFZM+HXk/CRcZoLHfIm2TSFkAvhg+HvA8krJN/QxiqedprRV4TTwmiEslKeQqaIpzSVgU8R8UuIqZsHU8VMX/z57Cs5ow4gs1717gW3K+/FcvMnc/2/jPkq3qjcrgK283j29AZcD828Kmi7E3miqIOs2rbYC/1D+/3Eu/BULPSnQNy1xFpy5ay9cZyhF2BCJTh1o2kzCBC+hb4ogq6OuCc8B7yn/b8uFm6aoKp5BNNYeTdhWVo7ybcXxmvKdqilfV9g2N1NvbpkGiukYxOtcI6vK4vL3LsRHqAvT/X8TWJsLD+WjDI1QpFgjS5ga1me9qFsjq/sULrSrgssauc7R2NYeZzErKjnxVeWIrE6X3zHE8R1J/hbOzkPIabc8n+zSelkHU9274t0oXFSPOoV4rCD8pbIZpBbkk4b3z0eify4SHYCXCTvCahvKmk2uLY7SONS9Lv5jibyd9m5SCvIc8HND2I8s6Xy0kP7sEdcHXR6V27xRlQJNaWuTUDt1vLEFWZ0+v2mJZzuIXxOPnVJoSgPHxnfqZqCBSNnWJtq7PGgUbsLGEOQ8o7bp7he5/29r4jxajp0RCvCfuhloKGxn4ymg2w/6rSFuocOIEEGewd6D6aa7h4d/8wrv/9TEbcqIDN0clcsaHcTyxNE0pFhymDqH/IAm8bvQjFwFeR9LH7W6A6fTU9b1NPLMN6+/ekkTt4wgHyqRVsXHyu+uCXNZA/kmukzygU0pJnZbmzqHH1rSfGN4b+WtSJBl4i3KO9U642fKb5vxgalA+zXvvlvAkw2xPFS8kft/IhLdqpBXV42J2J4yqsQAYS1mQyxhDvXB9b2QRDpBnmdlYdQNknvK7+vK7y81tGTvN+3B0+MecfMClmpH1qQA0VRM15Rvk2cvA8NvHS5GyM/kg6vMcdc1U8AqhHYRiEYYY/moJtdDLykMPKb8Vt8fZ2Vlyd5vtybMVCCfqXVe3zolmvyRukK3lOkDdN+aTaA2p2LEESbeTO5+WcWSiuBxxNUq0gULw99VQBXsVz3SuehXx0QbhNnG46ZIediEoA11JGFb75d1bm/C1w7PLUv6A7qXq1hqFJ9zrdRQBfuCJd4aqh9lmvyhmjTpqkZM/9pSNyGFdVqR84AUbb3G4XnKkl57RNUU6ycbXkQItUlgY+hb62BzY9NEzGPWpIP4qog2euO4+fMqgipIW0kjWEX14us++X4oI2XQBkGW2DT8O517n2oXVbejDnbHaXUhY/kJQh6fVcWIgoOUcy9kEtqM+KcINmH2dZ9c5tTFFSvqpk2CLLGb+pYBA5pzResk7l5DffYdfFA0mj2B4E+7rjPApUxFR0ghsJ1MuM4EavP/1jafXXnMAjtZXtFvEU/YVLp3Ke9QLg+bPXIslHF1ZPPZ5ZJehyvAXxC25I8jHCDaZhN5TAFHNe99fXbpUFSOIjpVC9NDftquQL9T8+4V0oyasYW4ClRlkpl3+GDDBsL3Hw6iF+JYKCrHAmGzmzLtMIbZDPIh2ji11kFVu4ul3QVi9IBmrott+ITq7apT5zfAvG8ROx8TbCaFpg6grDKRbVCakz+6Isiqk/aYmw2yEZqyLnbBAPhpjXkXjh6BdKuEzVON7/T57TKMDKGzEgTFVLgrgizhen+QKz5E76gvFmJ1OpdI490kxKR055CP60URHeBTppgdeNFmal6YU6+Nn7aETUD3BBnE/UFZxOf9hLy+HJhOFdwB5TW2TCPQe4b3LniWsM7lRGA6ky1vqLVWjE4xZsdq6hjXQ/t3rU3YS7yLqbvuw2uEDqCrggxCTTCGn+qRII/QeHRZkKH82mUkxCO0Al1cI6sYYDe6aApiawQdQr/ej3nB9hFDHj6GGztw08k+mcvj64L4d4Abmucy4qJ0Xdgd9M4ADmve+fKbIXSwQ3yKL+To3NBF6vqIDOKDmwpIN0Va5QOJiwj71xijf74x7yE2SZ5kpUVNaH75PG4DXyHUMfM+r101oVzMIr9FdMpPslyDK5+2zP7IJyw/uvNtm3zdXEe0wTqW29lfATYW0BpnyYrsHsLP13qW6vgewjfAMOcs68NjwtUsy05mWTYz/LuohFXF2/kI+R1Q+J70qI+zHnnsU9KNe+Rx2iFOqvD8c98zvmvbyHgucQ87xs0y8X06lT3mB9n0553MD1XxVVaQTw3TL3im2+tR1pPDeDah1D3yo501hNvyv+PIm0/duZbXp20eDOMc8KwbiYkSfD6ME/rxtPHxwaEK+SojyHKU3FeyXhYt4ZPDOL4fqk+bmMJuVJhfSNuc8aSXf65lWXbLwOdJH1ptN5rwQV4h/hvgrwgrnPUst8Bpi6fIg4i1U7A/ZITmmk1pYhr4N9XoOedhu8+6CdhCOV3qZy1hX/kQ6sNmVx4uBa7y2Ok8wpTPN0+XjaKytG4gNldS1YetDDHLF0rT1jYp+Aum3fXjJx98QftuYzwRiY6pzGupx7sILPGU0kd3WaTSw/c28+yjIE+xXE95gBDizaRz8hYb8uP+ZWS6uitOUnkXccFniKl91fcyFUEeC6XSw9+PONbLWHJXbUUfBfkoKw/rVT/Gpnt5moTQWwyKoDr4P58oDx+8iuh4NyDa6VSdzCiIofpbhKcRndhriLJbPZP2UZDzuIeYIsnRuQ0bXTZ3qaG4m/v/hQR5hOAoS+apryM+al/Plm2FvNjhCqLzMGrO9VWQ1Wn1B4hdW1dHdl1FXpCbhu2I9voI4dkyI0x9so3YiCj7OYTL4xWeRPu4aw1wDPOtfFVvdoXsWqfYMb2PMM6XNFPuykqUyUN1XOirQll217qKurHhMmK5cRN4BvoryCAa4xzi/qo6ESLIsiFTHs1IQXHNY3LIk+7+5P+iv9UhhkD40OiKIEtkDD2d9kkhJI8pxGaC2pPV3TCu2EiaZYDqJkl6WnHFdEH4GGk8kfp48IyFg5g9klSJXQw3wfq6RoaVH949XaSGI8b1n7C03tquCXO9LSJ/pKc+UO4CexdUKcxSy23OGis9pIumxT4LsvzI9iCOnB6zR28cLhDv+k+TmuHHCPPEpqOuTvjN4iiV4Pk+T63bvjnwIks77WWWBFIBRkfjjUh5dBFySn+HckuGcezud53Q5xH5XZYuZ2/rRyr5XgxMfwDhdN1mNCHzKHMhG8Bqj7hGTxgGpJ62m7AHMWM5FZj+GCsVPXy9rABciG2W1qZH2pFmmdletoqnrD3yuFIOn3SXh2nmHeOH5KGmG/OgKW3H5xzoT3jw5VsGl7aZHcZ54Fkvt4bpjuTezw3f73WgIfPulT1y/jk0rIQdNfMRw0MI2RIuF8SbV+LqjNpd8rjmEPeqEr+Ini5sxiH9wjB80ZP/2G0zptA+UxD3tAMfLh5HZP3OZlm/BTmkYVM8asO6wEZr1pJOxcUS/B7z4PVYAS2XMhVhxoN3l/zU52xg/CIUCTvZ8s7BhIejdp8VQg4gzgI/RX/sUiUmcLueZTXutz/MANsQpoi3gc+BXwRxZ8YRhP7zOoSjhi8RDuzKODowYR6xnn8U+Bdif6P0JlFCzCFuBn0KUf9/J9xa7TTCicFqxGnFCiWmPgsyjHZjR+gI+rxrvQPzLXcjjNAq9FmQN5PGHHCEESpHnwX5f8S9gnWEEWpDnwX5OYRVzggjtB59FuQ1iB3WEUZoPf4P1n99yq+M7XQAAAAASUVORK5CYII=" alt="DICKA Logistics" class="dicka-logo" style="height:60px;width:auto;display:block;margin:0 auto .6rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));">
+    <h1>Carga de Unidades</h1><p>2 unidades · 12 tarimas c/u · aprueba con 150/200</p>
+  </div>
+  <div class="card" id="intro">
+    <div class="big">🚚</div><h2>Carga de Unidades</h2><p class="lead">Acomoda las tarimas en la caja seca respetando secuencia de ruta, balance de peso y producto frágil.</p>
+    <div class="info"><b>2 unidades</b> con 3 paradas cada una<br>Cada unidad vale <b>100 puntos</b>: secuencia 40 · balance 25 · frágiles 15 · distribución de peso 20<br>Toca la tarima y luego la posición; toca una cargada para regresarla<br>Aprueba con <b>150</b> puntos</div>
+    <label class="lbl">TU NOMBRE COMPLETO</label><input class="name" id="pname" placeholder="Nombre y apellido">
+    <label class="lbl">PUESTO</label><select class="name" id="ppuesto"><option>Aux de Almacén</option><option>Surtidor</option><option>Verificador</option><option>Auxiliar de Inventarios</option><option>Mesa de Control</option><option>Supervisor de Operaciones</option><option>Jefe de Operaciones</option><option>Gerente de Operaciones</option><option>Director de Operaciones</option><option>Distribución</option><option>Área Staff</option></select>
+    <label class="lbl">ÁREA</label><select class="name" id="parea"><option>Operaciones</option><option>Distribución</option><option>Seguridad</option><option>Comercial</option><option>Sistemas</option><option>Finanzas</option></select>
+    <label class="lbl">ALMACÉN</label><select class="name" id="pwh"><option>Agave 1</option><option>Agave 3</option><option>Mezquite 1</option><option>Mezquite 2</option><option>BIC</option><option>Celaya</option><option>Toluca</option><option>Escobedo</option><option>Apodaca</option><option>Guadalajara</option><option>Villahermosa</option><option>Mérida</option></select>
+    <button class="btn" onclick="start()">COMENZAR</button>
+  </div>
+  <div class="card hidden" id="game">
+<div class="topbar"><span>Unidad <span id="un">1</span>/2 · Ruta <span id="rt"></span></span><span class="timer" id="tm">0:00</span><span>⭐ <span id="sc">0</span></span></div>
+<div class="rules">📍 <b>Secuencia:</b> lo de la <b>última parada</b> va al fondo (junto a cabina); <b>parada 1</b> junto a la puerta.<br>⚖️ <b>Balance:</b> peso izquierda/derecha con diferencia ≤ 15%. ⬆️ <b>Pesadas</b> al fondo, <b>frágiles 🥚</b> nunca en la fila de la puerta.</div>
+<div class="truck"><div class="cab">CABINA</div><div class="box" id="box"></div></div>
+<div class="bal"><span>⬅ Lado izq: <span id="wl">0</span> kg</span><span>Lado der: <span id="wr">0</span> kg ➡</span></div>
+<div class="hint" style="font-size:12px;color:var(--gris);text-align:center;margin-top:.4rem">1) Toca una tarima  2) Toca la posición en la caja. Toca una tarima ya cargada para regresarla.</div>
+<div class="pool" id="pool"></div>
+<button class="btn" id="go" onclick="evaluate()" disabled>🚚 CERRAR PUERTAS Y SALIR</button>
+</div>
+  <div class="card hidden" id="end">
+    <div class="big" id="eicon">🏆</div><h2 id="etitle"></h2>
+    <div class="score" id="escore">0</div><p class="lead">de 200 puntos · aprueba con 150</p>
+    <span class="badge" id="ebadge"></span>
+    <div class="stats" id="estats"></div>
+    <div class="err hidden" id="review"></div>
+    <div class="code" id="ecode"></div>
+    <button class="btn" onclick="share()">📲 ENVIAR RESULTADO POR WHATSAPP</button>
+    <button class="btn ghost" onclick="copyRes()">📋 COPIAR RESULTADO</button>
+    <button class="btn ghost" onclick="location.reload()">🔄 REPETIR</button>
+  </div>
+</div>
+<script>
+const GAME_ID='carga-unidades', GAME_NAME='Carga de Unidades', PASS=150, MAX=200;
+let who={}, t0, score=0, errors=[], REG='';
+const $=id=>document.getElementById(id);
+function toast(msg,good){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(good?' good':''); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800); if(!good&&navigator.vibrate) navigator.vibrate(80); }
+function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,puesto:$('ppuesto').value,area:$('parea').value,wh:$('pwh').value}; t0=Date.now(); $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); gameStart(); }
+function chk(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))>>>0; return h.toString(36).toUpperCase().slice(0,6); }
+function finish(extraStats){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
+  const ok=score>=PASS, secs=Math.round((Date.now()-t0)/1000), date=new Date();
+  const base=`REG|${GAME_ID}|${who.name}|${who.puesto}|${who.area}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');
+  $('eicon').textContent=ok?'🏆':'📚'; $('etitle').textContent=ok?'¡Aprobaste!':'Aún no apruebas'; $('escore').textContent=score;
+  $('ebadge').textContent=ok?'✓ APROBADO':'✗ NO APROBADO'; $('ebadge').className='badge '+(ok?'ok':'bad');
+  $('estats').innerHTML=`<div><span>Operario</span><b>${who.name}</b></div><div><span>Puesto</span><b>${who.puesto}</b></div><div><span>Área</span><b>${who.area}</b></div><div><span>Almacén</span><b>${who.wh}</b></div>${extraStats||''}<div><span>Tiempo</span><b>${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}</b></div><div><span>Fecha</span><b>${date.toLocaleDateString('es-MX')} ${date.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</b></div>`;
+  if(errors.length){ const by={}; errors.forEach(e=>by[e]=(by[e]||0)+1); $('review').classList.remove('hidden'); $('review').innerHTML='<b>Errores cometidos:</b><br>'+Object.entries(by).map(([k,v])=>`• ${k} ×${v}`).join('<br>'); }
+  $('ecode').textContent='Código de verificación: '+REG;
+  try{ const k='dicka_console_results', l=JSON.parse(localStorage.getItem(k)||'[]'); l.push({juego:GAME_NAME,nombre:who.name,puesto:who.puesto,area:who.area,almacen:who.wh,score:`${score}/${MAX}`,aprobado:ok,fecha:date.toISOString(),reg:REG}); localStorage.setItem(k,JSON.stringify(l)); }catch(e){}
+  try{ parent.postMessage({type:'dicka-result',juego:GAME_NAME,nombre:who.name,score:`${score}/${MAX}`,aprobado:ok},'*'); }catch(e){}
+}
+function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombre: ${who.name}\nPuesto: ${who.puesto}\nÁrea: ${who.area}\nAlmacén: ${who.wh}\nPuntaje: ${score}/${MAX}\nEstado: ${score>=PASS?'✓ APROBADO':'✗ NO APROBADO'}\n\n${REG}`; }
+function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
+function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
+function fmt(s){ return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+const STOPS=['Celaya','Toluca','Querétaro','León','Puebla','Morelia'];
+let unit=1,tarimas=[],grid=[],sel=null,tick,secs=0,route=[],stats={seq:0,bal:0,frag:0,heavy:0};
+function gameStart(){ tick=setInterval(()=>{secs++;$('tm').textContent=fmt(secs)},1000); newUnit(); }
+function newUnit(){ route=[...STOPS].sort(()=>Math.random()-.5).slice(0,3); $('un').textContent=unit; $('rt').textContent=route.map((r,i)=>`${i+1}·${r}`).join(' → ');
+  tarimas=[]; for(let i=0;i<12;i++){ const stop=(i%3)+1; tarimas.push({id:i,stop,w:[900,650,420,1100,300,780,520,950,380,700,600,450][i]+Math.floor(Math.random()*80),frag:i%5===0,pos:null}); }
+  tarimas.sort(()=>Math.random()-.5); grid=Array(12).fill(null); sel=null; draw(); }
+function draw(){ // grid: col 0 = junto a cabina (fondo) ... col 5 = puerta ; row 0 = izq, row 1 = der
+  let h=''; for(let r=0;r<2;r++) for(let c=0;c<6;c++){ const i=r*6+c, t=grid[i]; h+=`<div class="pos ${t?'filled s'+t.stop:''} ${t&&t.frag?'frag':''} ${sel!==null&&!t?'hl':''}" onclick="place(${i})">${t?`P${t.stop}<br>${t.w}kg`:(c===0?'FONDO':c===5?'PUERTA':'&nbsp;')}</div>`; }
+  $('box').innerHTML=h;
+  $('pool').innerHTML=tarimas.map(t=>`<div class="tar ${sel===t.id?'sel':''} ${t.pos!==null?'done':''}" onclick="selT(${t.id})"><span class="stop s${t.stop}">Parada ${t.stop} · ${route[t.stop-1]}</span><b>${t.w} kg ${t.frag?'🥚 FRÁGIL':''}</b>Tarima #${t.id+1}</div>`).join('');
+  const wl=grid.slice(0,6).reduce((a,t)=>a+(t?t.w:0),0), wr=grid.slice(6).reduce((a,t)=>a+(t?t.w:0),0); $('wl').textContent=wl; $('wr').textContent=wr;
+  $('go').disabled=grid.some(x=>!x); }
+function selT(id){ sel=sel===id?null:id; draw(); }
+function place(i){ if(grid[i]){ const t=grid[i]; t.pos=null; grid[i]=null; sel=null; draw(); return; } if(sel===null){toast('Primero toca una tarima');return;} const t=tarimas.find(x=>x.id===sel); t.pos=i; grid[i]=t; sel=null;
+  const col=i%6; if(t.frag&&col===5){ toast('⚠️ Frágil en fila de puerta: se golpea al abrir'); } if(t.stop===1&&col<=1){ toast('⚠️ Parada 1 al fondo: tendrás que descargar todo en la primera entrega'); } draw(); }
+function evaluate(){ let pts=0, notes=[];
+  // Secuencia: stop 3 debe estar en cols 0-1, stop2 en 2-3, stop1 en 4-5
+  let seqOk=0; grid.forEach((t,i)=>{ const c=i%6; const expected=t.stop===3?[0,1]:t.stop===2?[2,3]:[4,5]; if(expected.includes(c)) seqOk++; }); pts+=Math.round(seqOk/12*40); stats.seq+=seqOk; if(seqOk<12){ notes.push(`${12-seqOk} tarimas fuera de secuencia de ruta`); errors.push('Tarima fuera de secuencia de ruta'); }
+  // Balance
+  const wl=grid.slice(0,6).reduce((a,t)=>a+t.w,0), wr=grid.slice(6).reduce((a,t)=>a+t.w,0); const diff=Math.abs(wl-wr)/Math.max(wl,wr); if(diff<=0.15){pts+=25;stats.bal++;} else if(diff<=0.25){pts+=10;notes.push('Balance lateral regular ('+Math.round(diff*100)+'%)');errors.push('Desbalance lateral');} else {notes.push('Desbalance lateral grave ('+Math.round(diff*100)+'%)');errors.push('Desbalance lateral grave');}
+  // Frágiles fuera de puerta
+  const fragBad=grid.filter((t,i)=>t.frag&&i%6===5).length; if(!fragBad){pts+=15;stats.frag++;} else {notes.push(`${fragBad} frágil(es) en fila de puerta`); errors.push('Frágil en fila de puerta');}
+  // Pesadas al fondo: promedio peso cols 0-2 > cols 3-5
+  const front=[0,1,2,6,7,8].reduce((a,i)=>a+grid[i].w,0), back=[3,4,5,9,10,11].reduce((a,i)=>a+grid[i].w,0); if(front>=back){pts+=20;stats.heavy++;} else {notes.push('Más peso hacia la puerta que hacia cabina'); errors.push('Peso concentrado hacia la puerta');}
+  score+=pts; $('sc').textContent=score; toast(notes.length?`Unidad ${unit}: ${pts}/100 · ${notes[0]}`:`✓ Unidad ${unit} perfecta: ${pts}/100`, !notes.length);
+  if(unit<2){ unit++; setTimeout(newUnit,1400); } else { clearInterval(tick); setTimeout(()=>finish(`<div><span>Tarimas en secuencia</span><b>${stats.seq}/24</b></div><div><span>Unidades balanceadas</span><b>${stats.bal}/2</b></div><div><span>Frágiles protegidas</span><b>${stats.frag}/2</b></div><div><span>Peso bien distribuido</span><b>${stats.heavy}/2</b></div>`),1400); } }
+
+</script>
+</body>
+</html>

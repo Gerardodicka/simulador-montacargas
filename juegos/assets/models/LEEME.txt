@@ -1,0 +1,15 @@
+Coloca aquí el modelo del operario:  operario.glb  (glTF 2.0 binario, con esqueleto y clips de animación)
+
+Requisitos:
+- Formato .glb (Mixamo → Download → Format: glTF Binary (.glb) o FBX→Blender→glb). Peso esperado 5–8 MB.
+- Clips con nombres que contengan: "Walk" (caminar), "Idle" (de pie). Opcionales: "Wave" (saludo al claxon), "Sit"/"Driving" (operador sentado).
+- Altura libre: el simulador la normaliza a 1.74 m.
+
+Comportamiento:
+- Si el archivo existe, los peatones usan el modelo riggeado (SkeletonUtils.clone + AnimationMixer por personaje).
+- Si no existe, el simulador usa automáticamente el avatar procedural v5 (no falla).
+- Los loaders GLTFLoader.js y SkeletonUtils.js (Three.js r128) están en juegos/js/ y también incrustados en el simulador.
+
+Validación en consola del navegador (5 s tras entrar al simulador):
+  NPC.peds.filter(p => p.gltf && p.gltf.mixer).length > 0   // true = modelo glTF activo
+  GLTF_AVATAR.clips                                          // clips detectados

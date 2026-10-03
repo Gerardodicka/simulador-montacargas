@@ -1,0 +1,7 @@
+{
+  "name": "dojo-virtual-dicka",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Simulador de Operaciones (DOJO Virtual) · DICKA Logistics con base de datos compartida (Netlify Blobs)",
+  "dependencies": { "@netlify/blobs": "^8.1.0" }
+}
