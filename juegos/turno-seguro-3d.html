@@ -6800,9 +6800,14 @@
             m.position.set((x1 + x2) / 2, 0.015, (z1 + z2) / 2); scene.add(m);
         }
 
-        function paintLabel(text, x, z, size = 3, color = '#f5c400', rotY = 0) {
-            const t = makeTextTexture([{ text, size: 160, color }], { w: 512, h: 256, bg: 'rgba(0,0,0,0)' });
-            const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 2, size), new THREE.MeshBasicMaterial({ map: t, transparent: true }));
+        function paintLabel(text, x, z, size = 3, color = '#ffffff', rotY = 0, maxW = size * 2) {
+            // Rotulado de piso: el texto se ajusta al ancho (antes se cortaba "PASILLO n") y el plano toma la proporción real del texto
+            const c = document.createElement('canvas'); c.height = 256; const g = c.getContext('2d'); let fs = 170; g.font = `900 ${fs}px Arial Black, Arial`; const tw = g.measureText(text).width;
+            c.width = Math.min(2048, Math.ceil(tw + 80)); if (tw + 80 > 2048) fs = Math.floor(fs * 1968 / tw); g.font = `900 ${fs}px Arial Black, Arial`; g.textAlign = 'center'; g.textBaseline = 'middle';
+            g.lineJoin = 'round'; g.lineWidth = 12; g.strokeStyle = color === '#011131' ? 'rgba(255,255,255,.6)' : 'rgba(1,17,49,.85)'; g.strokeText(text, c.width / 2, 132);   // contorno oscuro: legible sobre piso claro g.fillStyle = color; g.fillText(text, c.width / 2, 132);
+            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+            let pw = size * c.width / 256, ph = size; if (pw > maxW) { ph *= maxW / pw; pw = maxW; }   // no rebasa el ancho disponible (pasillo)
+            const m = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false })); m.renderOrder = 2;
             m.rotation.x = -Math.PI / 2; m.rotation.z = rotY; m.position.set(x, 0.02, z); scene.add(m);
         }
 
@@ -7035,7 +7040,7 @@
                 paintLine(cx - 1.75, zStart, cx - 1.75, zStart + bays * 2.8);
                 paintLine(cx + 1.75, zStart, cx + 1.75, zStart + bays * 2.8);
                 paintLabel(`PASILLO ${i + 1}`, cx, zStart + bays * 2.8 + 3, 2.2);
-                paintLabel(`PASILLO ${i + 1}`, cx, zStart - 3, 2.2, '#f5c400', Math.PI);
+                paintLabel(`PASILLO ${i + 1}`, cx, zStart - 3, 2.2, '#ffffff', Math.PI);
                 // Letrero colgante de identificación (número grande + nombre) en ambas entradas del pasillo
                 const nm = (typeof AISLE_NAMES !== 'undefined' && AISLE_NAMES[i + 1]) || '';
                 const signTex = makeTextTexture([{ text: `P${i + 1}`, size: 150, y: 95, color: '#f5c400' }, { text: nm, size: 52, y: 200, weight: '700', color: '#FFFFFF' }], { w: 1024, h: 256, bg: '#011131', stripe: true });
@@ -7049,11 +7054,18 @@
             // Pasillo transversal principal (zona de tránsito) con doble línea y cruce peatonal
             paintLine(-29, 8, 29, 8); paintLine(-29, 14, 29, 14);
             for (let x = -28; x < 28; x += 2) { paintLine(x, 9, x, 13, 0xffffff, 0.8); }
-            paintLabel('ZONA DE TRÁNSITO · MAX 10 km/h', 0, 6, 3, '#ffffff');
+            paintLabel('ZONA DE TRÁNSITO · MAX 10 km/h', 0, 6, 3, '#ffffff', 0, 22);
+            // Pasillos peatonales delimitados (verde con bordes blancos y rotulado PEATONES): perimetrales junto a los muros y hacia recibo/embarque
+            { const hwW = WAREHOUSE.w / 2, hdW = WAREHOUSE.d / 2, xl = hwW - 1.4, z0 = -hdW + 3, z1 = hdW - 4.7, zr = (typeof transitZ === 'function' ? transitZ() : 9) + 8;
+              const pedMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x2e9e5b).convertSRGBToLinear(), roughness: 1 });
+              const lane = (xa, za, xb, zb) => { const L = Math.hypot(xb - xa, zb - za), m = new THREE.Mesh(new THREE.PlaneGeometry(1.2, L), pedMat); m.rotation.x = -Math.PI / 2; m.rotation.z = Math.atan2(xb - xa, zb - za); m.position.set((xa + xb) / 2, 0.011, (za + zb) / 2); scene.add(m);
+                  const nx = (zb - za) / L * 0.62, nz = -(xb - xa) / L * 0.62; paintLine(xa + nx, za + nz, xb + nx, zb + nz, 0xffffff, 0.1); paintLine(xa - nx, za - nz, xb - nx, zb - nz, 0xffffff, 0.1);
+                  for (let d = 4; d < L - 2; d += 12) paintLabel('PEATONES', xa + (xb - xa) * d / L, za + (zb - za) * d / L, 0.55, '#ffffff', Math.atan2(xb - xa, zb - za) + Math.PI / 2, 3.2); };
+              lane(-xl, z0, -xl, z1); lane(xl, z0, xl, z1); lane(-xl + 0.6, zr, -hwW + 20, zr); lane(xl - 0.6, zr, hwW - 20, zr); }
             // Zona peatonal verde al frente
             const ped = new THREE.Mesh(new THREE.PlaneGeometry(58, 3), new THREE.MeshStandardMaterial({ color: 0x2e9e5b, roughness: 1 }));
             ped.rotation.x = -Math.PI / 2; ped.position.set(0, 0.012, 42); scene.add(ped);
-            paintLabel('PASO PEATONAL', 0, 42, 2.2, '#ffffff');
+            paintLabel('PASO PEATONAL', 0, 42, 2.2, '#ffffff', 0, 10);
             // Zona de destino (staging) amarilla
             dropZone = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ color: 0xf5c400, emissive: 0x665000, roughness: 1, transparent: true, opacity: 0.85 }));
             dropZone.rotation.x = -Math.PI / 2; dropZone.position.set(-20, 0.013, 26); scene.add(dropZone);
@@ -8153,7 +8165,7 @@
             setBoneWorld(av, 'lFore', C.swing * W.elbow * (0.5 + Math.max(0, sw2) * 0.6), 0, 0); setBoneWorld(av, 'rFore', C.swing * W.elbow * (0.5 + Math.max(0, sw) * 0.6), 0, 0);
             if (waving) { setBoneWorld(av, 'rArm', 0, 0, C.armR * (-0.3 + Math.sin(t * 7.7) * 0.12)); setBoneWorld(av, 'rFore', 0, 0, C.armR * -1.1); }
             // piernas, rodillas y pies (eje lateral): el signo de balanceo del brazo indica el sentido "adelante"
-            setBoneWorld(av, 'lUp', C.swing * sw * W.legSwing); setBoneWorld(av, 'rUp', C.swing * sw2 * W.legSwing);
+            setBoneWorld(av, 'lUp', C.swing * sw * W.legSwing, 0, C.armL * 0.08); setBoneWorld(av, 'rUp', C.swing * sw2 * W.legSwing, 0, C.armR * 0.08);
             setBoneWorld(av, 'lLeg', walking ? -C.swing * Math.max(0, -Math.sin(w - .6)) * W.knee : 0); setBoneWorld(av, 'rLeg', walking ? -C.swing * Math.max(0, -Math.sin(w + Math.PI - .6)) * W.knee : 0);
             setBoneWorld(av, 'lFoot', walking ? C.swing * Math.max(-W.foot, Math.min(W.foot, Math.sin(w + .6) * .35)) : 0); setBoneWorld(av, 'rFoot', walking ? C.swing * Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + .6) * .35)) : 0);
             if (av.bones.hips) av.bones.hips.position.y = av.hipsY0 + (walking ? Math.abs(Math.cos(w)) * 3.5 : Math.sin(t / .9 + idlePhase) * 0.8);
@@ -8389,8 +8401,8 @@
         function pedRouteCatalog() { const { near } = aisleZRange(); const tz = transitZ(); const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2;
             return [ { path: [[-hw + 6, hd - 3.2], [hw - 6, hd - 3.2]], crossing: false },   // paso peatonal frente a andenes
                      { path: [[0, near + 3], [0, tz + 6]], crossing: true },                  // cruce de la zona de tránsito
-                     { path: [[-hw + 2.5, near - 12], [-hw + 2.5, near]], crossing: false },   // pasillo perimetral izquierdo
-                     { path: [[hw - 2.5, near - 12], [hw - 2.5, near]], crossing: false },     // pasillo perimetral derecho
+                     { path: [[-hw + 1.4, near - 12], [-hw + 1.4, near]], crossing: false },   // pasillo perimetral izquierdo
+                     { path: [[hw - 1.4, near - 12], [hw - 1.4, near]], crossing: false },     // pasillo perimetral derecho
                      { path: [[-hw + 8, tz + 8], [-hw + 20, tz + 8]], crossing: false },      // área de recibo
                      { path: [[hw - 20, tz + 8], [hw - 8, tz + 8]], crossing: false } ]; }     // área de embarque
         function assignPedRoute(pd) { const cat = pedRouteCatalog(); const opts = cat.filter(r => !pd.routeIdx || cat.indexOf(r) !== pd.routeIdx); const r = opts[Math.floor(Math.random() * opts.length)]; pd.routeIdx = cat.indexOf(r);
