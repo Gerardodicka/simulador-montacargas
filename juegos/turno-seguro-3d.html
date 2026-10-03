@@ -8136,8 +8136,23 @@
         // Si no está disponible, se mantiene el avatar procedural v5. El modelo se carga una vez y se clona por personaje (SkeletonUtils).
         const GLTF_SEAT = { y: 0.58, z: -1.0 };   // posición del modelo realista sentado respecto al equipo (pies a la altura del piso de la cabina)
         const GLTF_AVATAR = { url: 'assets/models/operario.glb', urls: ['assets/models/operario.glb', 'juegos/assets/models/operario.glb', '/juegos/assets/models/operario.glb', '/assets/models/operario.glb'], gltf: null, tried: false, clips: {}, scale: 1, ok: false };
+        // ====== Chaleco DICKA: recolorea el chaleco naranja de la textura del operario a azul DICKA (#1769AA) y estampa el logotipo blanco ======
+        // La zona del chaleco en el atlas (Operador_DICKA_BaseColor) ocupa la esquina inferior izquierda; sólo se cambian píxeles naranja (las cintas reflejantes se conservan).
+        const VEST_UV = { x0: 0.0, x1: 0.47, y0: 0.66, y1: 1.0 }, VEST_LOGOS = [[0.232, 0.765, 0.13], [0.232, 0.93, 0.15]];   // [u, v, ancho] en fracción del atlas
+        function dickaVest(scene) { return new Promise(done => { const logo = new Image(); logo.onload = () => { const seen = new Set();
+            scene.traverse(o => { if (!o.isMesh || !o.material || !o.material.map || !o.material.map.image || seen.has(o.material.map)) return; const m = o.material, img = m.map.image; seen.add(m.map); if (!/body/i.test(m.name || '')) return;
+                const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+                const X0 = Math.floor(VEST_UV.x0 * c.width), Y0 = Math.floor(VEST_UV.y0 * c.height), W = Math.ceil((VEST_UV.x1 - VEST_UV.x0) * c.width), H = Math.ceil((VEST_UV.y1 - VEST_UV.y0) * c.height);
+                const d = g.getImageData(X0, Y0, W, H), a = d.data;
+                for (let i = 0; i < a.length; i += 4) { const r = a[i], gg = a[i + 1], b = a[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b); if (mx < 60 || r < gg || (mx - mn) / mx < 0.45) continue; const hue = 60 * ((gg - b) / (mx - mn)); if (hue < 2 || hue > 42) continue;   // naranja
+                    const v = mx / 255; a[i] = 23 * v * 1.25; a[i + 1] = 105 * v * 1.25; a[i + 2] = 170 * v * 1.25; }   // azul DICKA conservando el sombreado de la tela
+                g.putImageData(d, X0, Y0);
+                VEST_LOGOS.forEach(([u, v, w]) => { const lw = w * c.width, lh = lw * logo.height / logo.width; g.drawImage(logo, u * c.width - lw / 2, v * c.height - lh / 2, lw, lh); });
+                const t = new THREE.CanvasTexture(c); t.flipY = m.map.flipY; t.encoding = THREE.sRGBEncoding; t.wrapS = m.map.wrapS; t.wrapT = m.map.wrapT; t.anisotropy = 4; m.map = t; m.needsUpdate = true; });
+            done(); }; logo.onerror = () => done(); logo.src = LOGO_DATA_W; }); }
         function loadOperarioModel() { return new Promise(res => { if (GLTF_AVATAR.tried || !THREE.GLTFLoader) { res(GLTF_AVATAR.ok); return; } GLTF_AVATAR.tried = true; if (location.protocol === 'file:' && !/\/juegos\//.test(location.pathname)) { res(false); return; }
-            const tryUrl = (i) => { if (i >= GLTF_AVATAR.urls.length) { console.info('[SIM] Sin operario.glb en ninguna ruta: se usa el avatar procedural v5'); res(false); return; } new THREE.GLTFLoader().load(GLTF_AVATAR.urls[i], onLoad, undefined, () => tryUrl(i + 1)); };
+            const tryUrl = (i) => { if (i >= GLTF_AVATAR.urls.length) { console.info('[SIM] Sin operario.glb en ninguna ruta: se usa el avatar procedural v5'); res(false); return; } new THREE.GLTFLoader().load(GLTF_AVATAR.urls[i], g => onLoad0(g), undefined, () => tryUrl(i + 1)); };
+            const onLoad0 = g => { dickaVest(g.scene).then(() => onLoad(g)); };
             const onLoad = g => { GLTF_AVATAR.gltf = g; g.scene.updateMatrixWorld(true); let h = 0; let headB = null, footB = null; g.scene.traverse(o => { if (o.isBone) { if (/Head$/i.test(o.name) && !/End/i.test(o.name)) headB = o; if (/(LeftFoot|RightFoot|LeftToeBase)$/i.test(o.name) && !footB) footB = o; } }); if (headB) { const hp = new THREE.Vector3(); headB.getWorldPosition(hp); const fp = new THREE.Vector3(); if (footB) footB.getWorldPosition(fp); h = (hp.y - Math.min(fp.y, 0)) + 0.13; }   // altura por huesos: la caja de un SkinnedMesh no considera la escala de la armadura
                 if (!(h > 0.2)) { const box = new THREE.Box3().setFromObject(g.scene); h = box.max.y - box.min.y || 1.8; } GLTF_AVATAR.scale = 1.74 / h;
                 g.animations.forEach(c => { const n = c.name.toLowerCase(); if (/walk/.test(n)) GLTF_AVATAR.clips.walk = c; else if (/idle|stand/.test(n)) GLTF_AVATAR.clips.idle = c; else if (/wave/.test(n)) GLTF_AVATAR.clips.wave = c; else if (/sit|seat|driv/.test(n)) GLTF_AVATAR.clips.sit = c; });
@@ -8428,7 +8443,7 @@
                 obstacles.push({ minX: x - 1.6, maxX: x + 1.6, minZ: z0, maxZ: z0 + 3.0 });
                 // cargador: va de la estiba al tráiler con una caja y regresa vacío
                 if (GLTF_AVATAR.ok) { const av = makeGLTFAvatar(true); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); const g = new THREE.Group(); g.add(av.obj);
-                    const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.34), cardboardMat(k % 3)); box.position.set(0, 1.0, 0.33); g.add(box); scene.add(g);
+                    const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.34), cardboardMat(k % 3)); box.position.set(0, 0.92, 0.3); g.add(box); scene.add(g);
                     DOCKW.push({ g, av, box, x: x + 1.3 * (k % 2 ? -1 : 1) * 0 + (k % 2 ? -0.55 : 0.55), za: z0 + 3.7, zb: hd - 0.9, t: k * 0.37 % 1, dir: 1, wait: 0, walk: k * 2, idle: k }); }
             }); }
         function updateDockWorkers(dtS) { const now = performance.now(); DOCKW.forEach(d => { let walking = false; const L = d.zb - d.za;
@@ -8437,7 +8452,7 @@
                 d.box.visible = d.dir > 0 ? d.wait <= 0 || d.t < 0.5 : d.wait > 0 && d.t > 0.5;   // lleva caja hacia el tráiler y regresa sin ella
                 d.g.position.set(d.x, 0, d.za + L * d.t); d.g.rotation.y = d.dir > 0 ? 0 : Math.PI;
                 gltfWalkPose(d.av, walking, d.walk, now, false, d.idle);
-                if (d.box.visible) { const C = d.av.calib; setBoneWorld(d.av, 'lArm', C.swing * 0.95, -0.05, C.armL * 1.2); setBoneWorld(d.av, 'rArm', C.swing * 0.95, 0.05, C.armR * 1.2); setBoneWorld(d.av, 'lFore', C.swing * 0.7, 0, C.armL * -0.5); setBoneWorld(d.av, 'rFore', C.swing * 0.7, 0, C.armR * -0.5); }   // brazos al frente sosteniendo la caja
+                if (d.box.visible) { const C = d.av.calib; setBoneWorld(d.av, 'lArm', C.swing * 0.35, -0.12, C.armL * 1.5); setBoneWorld(d.av, 'rArm', C.swing * 0.35, 0.12, C.armR * 1.5); setBoneWorld(d.av, 'lFore', C.swing * 1.35, 0, C.armL * 0.1); setBoneWorld(d.av, 'rFore', C.swing * 1.35, 0, C.armR * 0.1); }   // brazos al frente sosteniendo la caja
             }); }
         function buildTraffic() {
             if (!GLTF_AVATAR.tried) { loadOperarioModel().then(() => { buildTraffic(); try { buildDockOperations(); } catch (e) { console.warn('[SIM] andenes:', e.message); } try { mergeSceneStatics(); } catch (e) { console.warn('[SIM] fusión de estáticos:', e.message); } }); return; }
