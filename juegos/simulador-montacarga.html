@@ -6877,19 +6877,22 @@
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xd9dde6, roughness: 0.95 });
             const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2, h = WAREHOUSE.h;
             const walls = [
-                { g: [WAREHOUSE.w, h, 0.5], p: [0, h / 2, -hd] }, { g: [WAREHOUSE.w, h, 0.5], p: [0, h / 2, hd] },
+                { g: [WAREHOUSE.w, h, 0.5], p: [0, h / 2, -hd] },
                 { g: [0.5, h, WAREHOUSE.d], p: [-hw, h / 2, 0] }, { g: [0.5, h, WAREHOUSE.d], p: [hw, h / 2, 0] }
             ];
             const wc = document.createElement('canvas'); wc.width = 128; wc.height = 384; const wg = wc.getContext('2d'); wg.fillStyle = '#e4e7ec'; wg.fillRect(0, 0, 128, 384);
             for (let i = 0; i < 4; i++) { const gr = wg.createLinearGradient(i * 32, 0, i * 32 + 32, 0); gr.addColorStop(0, '#f3f5f8'); gr.addColorStop(0.45, '#d9dde4'); gr.addColorStop(0.55, '#c7ccd5'); gr.addColorStop(1, '#eef0f4'); wg.fillStyle = gr; wg.fillRect(i * 32, 0, 32, 384); }   // lámina acanalada (4 crestas por metro)
             wg.fillStyle = 'rgba(60,70,90,.35)'; wg.fillRect(0, 382, 128, 2); wg.fillStyle = 'rgba(80,90,110,.25)'; for (let y = 40; y < 384; y += 120) { wg.fillRect(20, y, 3, 3); wg.fillRect(84, y, 3, 3); }   // traslape y tornillería
+            { const OH = 3.2, OW = 3.0, open = [-20, -10, 0, 10]; let x0 = -hw;   // muro frontal en tramos: vanos reales (sin muro detrás) para ver la caja del tráiler con profundidad
+              open.forEach(ox => { const x1 = ox - OW / 2; walls.push({ g: [x1 - x0, h, 0.5], p: [(x0 + x1) / 2, h / 2, hd] }); walls.push({ g: [OW, h - OH, 0.5], p: [ox, OH + (h - OH) / 2, hd], lintel: true }); x0 = ox + OW / 2; });
+              walls.push({ g: [hw - x0, h, 0.5], p: [(x0 + hw) / 2, h / 2, hd] }); }
             walls.forEach(w => { const t = new THREE.CanvasTexture(wc); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.repeat.set(Math.max(w.g[0], w.g[2]), h / 3);
                 const m = new THREE.Mesh(new THREE.BoxGeometry(...w.g), new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0.25 })); m.position.set(...w.p); m.receiveShadow = true; scene.add(m); });
             { const poly = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xdfeefa).convertSRGBToLinear(), emissive: new THREE.Color(0xcfe6ff).convertSRGBToLinear(), emissiveIntensity: 0.55, roughness: 0.3 });   // franja de policarbonato (luz natural)
               [[0, -hd + 0.27, 0, WAREHOUSE.w], [0, hd - 0.27, Math.PI, WAREHOUSE.w], [-hw + 0.27, 0, Math.PI / 2, WAREHOUSE.d], [hw - 0.27, 0, -Math.PI / 2, WAREHOUSE.d]].forEach(([x, z, ry, L]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(L - 1, 1.1), poly); m.position.set(x, h - 1.6, z); m.rotation.y = ry; scene.add(m); }); }
             // Zócalo azul marino
             const baseMat = new THREE.MeshStandardMaterial({ color: BRAND.marino });
-            walls.forEach(w => { const g = w.g.slice(); g[1] = 1.2; const m = new THREE.Mesh(new THREE.BoxGeometry(g[0] + 0.05, 1.2, g[2] + 0.05), baseMat); m.position.set(w.p[0], 0.6, w.p[2]); scene.add(m); });
+            walls.forEach(w => { if (w.lintel) return; const g = w.g.slice(); g[1] = 1.2; const m = new THREE.Mesh(new THREE.BoxGeometry(g[0] + 0.05, 1.2, g[2] + 0.05), baseMat); m.position.set(w.p[0], 0.6, w.p[2]); scene.add(m); });
             // Techo con vigas
             const roof = new THREE.Mesh(new THREE.PlaneGeometry(WAREHOUSE.w, WAREHOUSE.d), new THREE.MeshStandardMaterial({ color: 0x33415c, side: THREE.DoubleSide })); window.roofMesh = roof;
             roof.rotation.x = Math.PI / 2; roof.position.y = h; roof.name = 'roof'; window.roofMesh = roof; scene.add(roof);
@@ -6908,7 +6911,7 @@
 
             // Colisión con paredes
             obstacles.push({ minX: -hw - 5, maxX: hw + 5, minZ: -hd - 5, maxZ: -hd + 0.5 });
-            obstacles.push({ minX: -hw - 5, maxX: -1.7, minZ: hd - 0.5, maxZ: hd + 5 }); obstacles.push({ minX: 1.7, maxX: hw + 5, minZ: hd - 0.5, maxZ: hd + 5 });   // vano libre en el Andén 3 (x=0) para el tráiler
+            obstacles.push({ minX: -hw - 5, maxX: -1.7, minZ: hd - 0.5, maxZ: hd + 5 }); obstacles.push({ minX: 1.7, maxX: hw + 5, minZ: hd - 0.5, maxZ: hd + 5 }); [-20, -10, 10].forEach(ox => obstacles.push({ minX: ox - 1.7, maxX: ox + 1.7, minZ: hd - 0.5, maxZ: hd + 5 }));   /* andenes con tráiler en carga: sólo los cargadores entran */   // vano libre en el Andén 3 (x=0) para el tráiler
             obstacles.push({ minX: -hw - 5, maxX: -hw + 0.5, minZ: -hd, maxZ: hd });
             obstacles.push({ minX: hw - 0.5, maxX: hw + 5, minZ: -hd, maxZ: hd });
         }
@@ -7086,7 +7089,7 @@
                 const x = i * 10;
                 const zw = WAREHOUSE.d / 2 - 0.25;   // cara interior del muro
                 const loading = DOCK_LOADING.includes(x);   // andenes en operación de carga/descarga: cortina arriba y caja del tráiler visible
-                if (loading) { const inn = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 2.7), DOCK.trailer); inn.position.set(x, 1.35, zw - 0.045); inn.rotation.y = Math.PI; scene.add(inn); const up = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 0.7), DOCK.door); up.position.set(x, 3.05, zw - 0.046); up.rotation.y = Math.PI; scene.add(up); DOCK_STAGE.push(x); }
+                if (loading || x === 0) { const up = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 0.35), DOCK.door); up.position.set(x, 3.02, zw - 0.3); up.rotation.y = Math.PI; scene.add(up); if (loading) { buildDockTrailer(x); DOCK_STAGE.push(x); } }   // cortina enrollada arriba
                 else { const door = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 3.4), DOCK.door); door.position.set(x, 1.7, zw - 0.045); door.rotation.y = Math.PI; scene.add(door); }
                 [[-1.62, 1.85, 0.24, 3.7], [1.62, 1.85, 0.24, 3.7], [0, 3.62, 3.48, 0.3]].forEach(([dx, y, w, hh]) => { const sm = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 0.16), DOCK.seal); sm.position.set(x + dx, y, zw - 0.08); scene.add(sm); });   // marco/sello del andén
                 const lev = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.2), DOCK.plate); lev.rotation.x = -Math.PI / 2; lev.position.set(x, 0.016, zw - 1.1); scene.add(lev);   // rampa niveladora
@@ -8436,6 +8439,15 @@
             if (!opts.length) { pd.dir *= -1; pd.t = Math.max(0, Math.min(1, pd.t)); return; }   // sin conexión: regresa por el mismo tramo
             const o = opts[Math.floor(Math.random() * opts.length)]; pd.routeIdx = o.k; pd.path = o.path; pd.t = 0; pd.dir = 1; pd.crossing = o.r.crossing; pd.laps = 0; pd.routeT = 0; }
 
+        // Caja de tráiler estacionada en un andén de carga (sólo visual): piso de madera, paredes con costillas, techo y carga parcialmente estibada
+        function buildDockTrailer(x) { const hd = WAREHOUSE.d / 2, L = 13.6, W = 2.5, H = 2.7, z0 = hd + 0.25, zc = z0 + L / 2; const g = new THREE.Group();
+            const alu = new THREE.MeshStandardMaterial({ color: 0xd8d8d8, metalness: .6, roughness: .35 }), inner = new THREE.MeshStandardMaterial({ color: 0xaeb4bd, roughness: .8 }), wood = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 });
+            const fl = new THREE.Mesh(new THREE.BoxGeometry(W, 0.12, L), wood); fl.position.set(0, -0.06, zc); g.add(fl);
+            [-1, 1].forEach(sd => { const w = new THREE.Mesh(new THREE.BoxGeometry(0.08, H, L), inner); w.position.set(sd * (W / 2 + 0.04), H / 2, zc); g.add(w); for (let i = 0; i < 12; i++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.05, H, 0.07), alu); r.position.set(sd * (W / 2 - 0.02), H / 2, z0 + 0.6 + i * 1.1); g.add(r); } });
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(W + 0.2, 0.08, L), inner); roof.position.set(0, H, zc); g.add(roof); const fr = new THREE.Mesh(new THREE.BoxGeometry(W, H, 0.1), inner); fr.position.set(0, H / 2, z0 + L); g.add(fr);
+            for (let i = 0; i < 4; i++) [-0.62, 0.62].forEach((dx, j) => { const bh = 1.3 + ((i + j) % 3) * 0.25; const b = new THREE.Mesh(new THREE.BoxGeometry(1.1, bh, 1.15), cardboardMat((i + j) % 3)); b.position.set(dx, bh / 2 + 0.14, z0 + L - 0.8 - i * 1.25); g.add(b); const pl = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.14, 1.15), wood); pl.position.set(dx, 0.07, b.position.z); g.add(pl); });   // carga ya estibada al fondo
+            const lamp = new THREE.PointLight(0xfff1d6, 0.6, 9); lamp.position.set(0, H - 0.3, z0 + 3); g.add(lamp);
+            mergeStaticMeshes(g); g.position.x = x; scene.add(g); }
         // ====== Operación de andén: estibas de mercancía emplayada frente a los andenes activos y cargadores llevando cajas al tráiler ======
         const DOCK_LOADING = [-20, -10, 10], DOCK_STAGE = [], DOCKW = [];
         function buildDockOperations() { const hd = WAREHOUSE.d / 2, z0 = hd - 9.6, wrap = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, roughness: 0.15, metalness: 0.1, depthWrite: false });
@@ -8451,7 +8463,7 @@
                 // cargador: va de la estiba al tráiler con una caja y regresa vacío
                 if (GLTF_AVATAR.ok) { const av = makeGLTFAvatar(true); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); const g = new THREE.Group(); g.add(av.obj);
                     const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.34), cardboardMat(k % 3)); box.position.set(0, 0.92, 0.3); g.add(box); scene.add(g);
-                    DOCKW.push({ g, av, box, x: x + 1.3 * (k % 2 ? -1 : 1) * 0 + (k % 2 ? -0.55 : 0.55), za: z0 + 3.7, zb: hd - 0.9, t: k * 0.37 % 1, dir: 1, wait: 0, walk: k * 2, idle: k }); }
+                    DOCKW.push({ g, av, box, x: x + 1.3 * (k % 2 ? -1 : 1) * 0 + (k % 2 ? -0.55 : 0.55), za: z0 + 3.7, zb: hd + 1.6, t: k * 0.37 % 1, dir: 1, wait: 0, walk: k * 2, idle: k }); }
             }); }
         function updateDockWorkers(dtS) { const now = performance.now(); DOCKW.forEach(d => { let walking = false; const L = d.zb - d.za;
                 const zNow = d.za + L * d.t, dP = Math.hypot(forkPosition.x - d.x, forkPosition.z - zNow);
