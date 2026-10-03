@@ -8145,7 +8145,7 @@
                 const X0 = Math.floor(VEST_UV.x0 * c.width), Y0 = Math.floor(VEST_UV.y0 * c.height), W = Math.ceil((VEST_UV.x1 - VEST_UV.x0) * c.width), H = Math.ceil((VEST_UV.y1 - VEST_UV.y0) * c.height);
                 const d = g.getImageData(X0, Y0, W, H), a = d.data;
                 for (let i = 0; i < a.length; i += 4) { const r = a[i], gg = a[i + 1], b = a[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b); if (mx < 60 || r < gg || (mx - mn) / mx < 0.45) continue; const hue = 60 * ((gg - b) / (mx - mn)); if (hue < 2 || hue > 42) continue;   // naranja
-                    const v = mx / 255; a[i] = 23 * v * 1.25; a[i + 1] = 105 * v * 1.25; a[i + 2] = 170 * v * 1.25; }   // azul DICKA conservando el sombreado de la tela
+                    const v = mx / 255; a[i] = 18 * v * 0.85; a[i + 1] = 70 * v * 0.85; a[i + 2] = 140 * v * 0.85; }   // azul DICKA conservando el sombreado de la tela
                 g.putImageData(d, X0, Y0);
                 VEST_LOGOS.forEach(([u, v, w]) => { const lw = w * c.width, lh = lw * logo.height / logo.width; g.drawImage(logo, u * c.width - lw / 2, v * c.height - lh / 2, lw, lh); });
                 const t = new THREE.CanvasTexture(c); t.flipY = m.map.flipY; t.encoding = THREE.sRGBEncoding; t.wrapS = m.map.wrapS; t.wrapT = m.map.wrapT; t.anisotropy = 4; m.map = t; m.needsUpdate = true; });
