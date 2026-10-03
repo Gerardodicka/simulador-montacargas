@@ -67,3 +67,14 @@ CALIDAD GRÁFICA (botón 🎚️ dentro del panel USB/⚙️): Auto · Alta · M
 - Auto detecta la tarjeta: gráficos integrados (Intel/UHD/Iris) → Media; celular/tablet → Baja; tarjeta dedicada → Alta.
 - Alta: resolución 100 %, sombras 1536, modelo detallado hasta 18 m. Media: 85 %, sombras 1024, detallado hasta 8 m. Baja: 70 %, sin sombras, todos los avatares en modelo ligero.
 - Se guarda en el navegador. Si el simulador va lento en una laptop, elegir Media o Baja.
+
+PUERTA DE ACCESO (solo publicado en Netlify)
+- Todo el sitio (consola, juegos, modelos y resultados) pide un código de acceso; queda recordado 30 días en el navegador.
+- Código inicial: DICKA2026 (o el valor de la variable de entorno DICKA_ACCESS_CODE en Netlify).
+- Cambiarlo: Administrar (PIN) → 🔑 Código de acceso → nuevo código → PIN otra vez. Todos deberán escribir el código nuevo.
+- PIN de servidor: variable DICKA_ADMIN_PIN (si no existe, 2026). Abrir index.html desde la computadora no pide código.
+- La contraseña de Netlify (Password protection) ya no es necesaria; se puede quitar en Project configuration → Access & security.
+
+RESOLUCIÓN ADAPTATIVA (calidad Auto)
+- En modo Auto el simulador mide la fluidez cada 2 s: si va lento baja la resolución hasta 60 %; si sigue lento baja de Alta → Media → Baja
+  (aviso en pantalla). Si sobra margen recupera la resolución. Elegir Alta/Media/Baja manual desactiva el ajuste.

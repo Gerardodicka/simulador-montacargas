@@ -6668,7 +6668,7 @@
             camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 150);   // far = fin de la niebla: lo que no se ve no se dibuja
             { const test = document.createElement('canvas'); const gl = test.getContext('webgl2') || test.getContext('webgl') || test.getContext('experimental-webgl'); if (!gl) { showWebGLError(); throw new Error('WebGL no disponible'); } }
             renderer = new THREE.WebGLRenderer({ canvas, antialias: true, precision: 'highp', powerPreference: 'high-performance' });
-            renderer.setSize(width, height); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, QUALITY.preset.dpr));   // según preset de calidad (Auto/Alta/Media/Baja)
+            renderer.setSize(width, height); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, QUALITY.preset.dpr) * QADAPT.scale);   // según preset de calidad (Auto/Alta/Media/Baja)
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFShadowMap; renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
             renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.82; renderer.outputEncoding = THREE.sRGBEncoding;
@@ -7871,7 +7871,22 @@
         const QUALITY_PRESETS = { alta: { dpr: 1.0, shadow: 1536, hiDist: 18, shadows: true, label: 'Alta' }, media: { dpr: 0.85, shadow: 1024, hiDist: 8, shadows: true, label: 'Media' }, baja: { dpr: 0.7, shadow: 768, hiDist: 0, shadows: false, label: 'Baja' } };
         function detectQuality() { try { const c = document.createElement('canvas'); const gl = c.getContext('webgl'); const ext = gl && gl.getExtension('WEBGL_debug_renderer_info'); const r = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : ''; if (/Mali|Adreno|Apple GPU|PowerVR/i.test(r) || /Android|iPhone|iPad/i.test(navigator.userAgent)) return 'baja'; if (/Intel|UHD|Iris|HD Graphics/i.test(r)) return 'media'; } catch (e) {} return 'alta'; }
         const QUALITY = { mode: localStorage.getItem('dicka_quality') || 'auto' }; QUALITY.preset = QUALITY_PRESETS[QUALITY.mode === 'auto' ? detectQuality() : QUALITY.mode] || QUALITY_PRESETS.media;
-        function applyQuality() { const q = QUALITY.preset; if (typeof renderer !== 'undefined' && renderer) { renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q.dpr)); renderer.shadowMap.enabled = q.shadows; if (window.sunLight) { window.sunLight.castShadow = q.shadows; window.sunLight.shadow.mapSize.set(q.shadow, q.shadow); if (window.sunLight.shadow.map) { window.sunLight.shadow.map.dispose(); window.sunLight.shadow.map = null; } } window.dispatchEvent(new Event('resize')); } const lbl = document.getElementById('qualityLbl'); if (lbl) lbl.textContent = (QUALITY.mode === 'auto' ? 'Auto · ' : '') + q.label; }
+        // Resolución adaptativa (solo modo Auto): mide el tiempo por cuadro cada 2 s; si va lento baja la resolución hasta 60 %,
+        // si sigue lento baja un preset (Alta → Media → Baja); si sobra margen la recupera poco a poco.
+        const QADAPT = { t: 0, n: 0, acc: 0, scale: 1 };
+        function qualityAdapt() {
+            if (QUALITY.mode !== 'auto' || typeof renderer === 'undefined' || !renderer || (XR.active && renderer.xr.isPresenting)) return;
+            const now = performance.now(), dt = now - QADAPT.t; QADAPT.t = now; if (dt > 250) return;   // pestaña oculta o pausa: no cuenta
+            QADAPT.acc += dt; QADAPT.n++; if (QADAPT.acc < 2000) return;
+            const ms = QADAPT.acc / QADAPT.n; QADAPT.acc = 0; QADAPT.n = 0;
+            if (ms > 30 && QADAPT.scale <= 0.6 && QUALITY.preset !== QUALITY_PRESETS.baja) {
+                QUALITY.preset = QUALITY.preset === QUALITY_PRESETS.alta ? QUALITY_PRESETS.media : QUALITY_PRESETS.baja; applyQuality();
+                toast('🎚️ Rendimiento bajo: calidad Auto · ' + QUALITY.preset.label); return;
+            }
+            let sc = QADAPT.scale; if (ms > 24) sc = Math.max(0.6, sc - 0.1); else if (ms < 18) sc = Math.min(1, sc + 0.05);
+            if (sc !== QADAPT.scale) { QADAPT.scale = sc; renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, QUALITY.preset.dpr) * sc); }
+        }
+        function applyQuality() { const q = QUALITY.preset; if (typeof renderer !== 'undefined' && renderer) { QADAPT.scale = 1; renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q.dpr)); renderer.shadowMap.enabled = q.shadows; if (window.sunLight) { window.sunLight.castShadow = q.shadows; window.sunLight.shadow.mapSize.set(q.shadow, q.shadow); if (window.sunLight.shadow.map) { window.sunLight.shadow.map.dispose(); window.sunLight.shadow.map = null; } } window.dispatchEvent(new Event('resize')); } const lbl = document.getElementById('qualityLbl'); if (lbl) lbl.textContent = (QUALITY.mode === 'auto' ? 'Auto · ' : '') + q.label; }
         function setQuality(m) { QUALITY.mode = m; localStorage.setItem('dicka_quality', m); QUALITY.preset = QUALITY_PRESETS[m === 'auto' ? detectQuality() : m] || QUALITY_PRESETS.media; applyQuality(); toast('🎚️ Calidad gráfica: ' + ((QUALITY.mode === 'auto' ? 'Auto · ' : '') + QUALITY.preset.label)); }
         const GLTF_LOD = { gltf: null, tried: false };
         function loadOperarioLod() { if (GLTF_LOD.tried || !THREE.GLTFLoader) return; GLTF_LOD.tried = true; const urls = GLTF_AVATAR.urls.map(u => u.replace('operario.glb', 'operario_lod.glb')); const tryUrl = i => { if (i >= urls.length) return; new THREE.GLTFLoader().load(urls[i], g => { GLTF_LOD.gltf = g; console.log('[SIM] Avatar glTF ligero cargado'); }, undefined, () => tryUrl(i + 1)); }; tryUrl(0); }
@@ -8574,6 +8589,7 @@
             const scr = document.getElementById('simulatorScreen'); if (!scr) return;   // la página fue reemplazada (diagnóstico / consola)
             if (!(XR.active && renderer.xr.isPresenting)) requestAnimationFrame(animateSimulator);
             if (!scr.classList.contains('active')) return;
+            qualityAdapt();
             if (practiceDone) { renderScreens(); return; }
             if (VIEWER) { if (viewerReady && MVR.on) xrUpdateRig(); if (viewerReady) { const dtS = Math.min(0.05, (performance.now() - (window.__lastT || performance.now())) / 1000); window.__lastT = performance.now(); NPC.peds.forEach(pd => { animatePed(pd, pd.wait <= 0 && pd.walk > 0, dtS, performance.now()); }); if (typeof updateAvatarLOD === 'function') updateAvatarLOD(); applyForkliftPose(mastM(), reachM(1), reachM(2)); if (hasLoad && cargo) { const tip = tipPos(); cargo.position.set(tip.x, tip.y, tip.z); cargo.rotation.y = forkRotation.y; } frameCount++; renderer.shadowMap.needsUpdate = (frameCount % 2 === 0); renderScreens(); } return; }
 

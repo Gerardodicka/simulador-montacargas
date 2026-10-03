@@ -348,7 +348,16 @@ function toggleAdmin(){
   document.getElementById('adminBtn').textContent=admin?'➕ Agregar simulador':'⚙️ Administrar';
   if(admin){ document.getElementById('adminBtn').onclick=()=>document.getElementById('addModal').classList.add('open'); 
     const exit=document.createElement('button'); exit.id='exitAdmin'; exit.textContent='Salir admin'; exit.onclick=()=>{admin=false;document.body.classList.remove('admin');document.getElementById('adminBtn').textContent='⚙️ Administrar';document.getElementById('adminBtn').onclick=toggleAdmin;exit.remove();};
-    exit.className='cta ghost'; document.querySelector('.ctas').appendChild(exit); }
+    exit.className='cta ghost'; document.querySelector('.ctas').appendChild(exit);
+    const acc=document.createElement('button'); acc.textContent='🔑 Código de acceso'; acc.className='cta ghost'; acc.onclick=cambiarCodigoAcceso; exit.addEventListener('click',()=>acc.remove()); document.querySelector('.ctas').appendChild(acc); }
+}
+// Cambia el código de la puerta de acceso (solo funciona publicado en Netlify; todos deberán ingresar el código nuevo)
+async function cambiarCodigoAcceso(){
+  const nuevo=prompt('Nuevo código de acceso (4 a 20 letras o números):'); if(!nuevo) return;
+  const pin=prompt('Confirma con el PIN de administrador:'); if(!pin) return;
+  try{ const r=await fetch('/acceso/cambiar',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({pin,nuevo})}); const j=await r.json().catch(()=>({}));
+    alert(j.ok?'Código actualizado: '+nuevo.trim().toUpperCase()+'\nCompártelo con los colaboradores.':'No se pudo cambiar: '+(j.error||r.status)); }
+  catch(e){ alert('No disponible: la puerta de acceso solo funciona con el sitio publicado en Netlify.'); }
 }
 function saveGame(){
   const g={ id:'c'+Date.now(), name:fName.value.trim(), icon:fIcon.value.trim()||'🎮', desc:fDesc.value.trim(), url:fUrl.value.trim(), cat:fCat.value, status:fStatus.value, time:fTime.value.trim(), pass:fPass.value.trim() };

@@ -27,7 +27,7 @@ Plataforma web sin instalación: consola (`index.html`) + 7 cursos en `juegos/` 
 
 ## 4. Pendientes (backlog priorizado)
 1. ~~Arreglar despliegue (§3.1)~~ resuelto; verificar el sitio publicado.
-2. Puerta de acceso con código DICKA (gestionable desde Administrar) antes de hacer el sitio público.
+2. ~~Puerta de acceso~~ implementada (`netlify/edge-functions/puerta.js`, ver LEEME). Pendiente: resolución adaptativa también en CLAMP SAFE (no tiene sistema QUALITY).
 3. Supabase: tablas `colaboradores, cursos, sesiones, actividades, faltas, competencias`, RLS (insert público / select admin), migración del JSON de Netlify Blobs + CSV, dashboard leyendo de Supabase, cola sin conexión.
 4. Validación por DICKA (no inventar): checklists reales por equipo, nomenclatura real de ubicaciones, presión/unidades del clamp (provisional 65, rango 50–80), logos oficiales PNG de clientes, nombres reales de pasillos y categorías.
 5. Modelos definitivos: GLB de los montacargas (nodos `Mast, Carriage, Fork_L/R, ClampPad_L/R, Wheel_*, SteeringWheel, Seat, OperatorAnchor, Beacon`) — el kit Unity `DICKA_Unity_Kit.zip` documenta la convención.
