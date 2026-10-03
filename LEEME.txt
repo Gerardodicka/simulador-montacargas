@@ -1,0 +1,69 @@
+SIMULADOR DE OPERACIONES (DOJO VIRTUAL) - DICKA Logistics
+====================================
+index.html            -> la consola (esto es lo que se comparte / publica)
+juegos/               -> carpeta con cada videojuego (un archivo .html por juego)
+
+CÓMO AGREGAR UN JUEGO NUEVO
+1) Copia el archivo .html del juego dentro de la carpeta juegos/
+2) Abre la consola, botón "Administrar" (PIN 2026) -> "Agregar juego"
+   Liga del juego: juegos/nombre-del-archivo.html   (o una URL https://...)
+3) Listo. También puedes dejarlo fijo editando BASE_GAMES dentro de index.html
+
+PUBLICAR COMO LIGA
+Sube la carpeta completa (index.html + juegos/) a Netlify Drop, tiiny.host o GitHub Pages.
+
+ACTUALIZAR A UNA NUEVA VERSIÓN SIN PERDER RESULTADOS
+1) En la versión vieja: Dashboard → "Respaldar base" (descarga respaldo-dicka-play-FECHA.json)
+2) Publica la nueva versión (misma liga o nueva)
+3) En la nueva versión: Dashboard → "Importar / restaurar" → elige el .json (o los CSV descargados antes)
+   Los resultados repetidos se detectan por su código REG y no se duplican.
+Nota: si publicas en la MISMA liga (misma dirección web) los resultados no se borran; el respaldo es por seguridad.
+
+MODO 3 PANTALLAS (simulador de montacarga → botón 🖥️ 3 PANT.)
+A) Surround: configura los 3 monitores como uno solo (NVIDIA Surround / AMD Eyefinity), maximiza el navegador y elige "Surround":
+   el canvas se divide en 3 vistas (izquierda, centro, derecha) con continuidad de imagen.
+B) Multiventana: publica el simulador (Netlify), abre "pantalla izquierda" y "pantalla derecha" desde el panel; arrastra cada ventana a su
+   monitor y ponla en pantalla completa (F11). La ventana central controla; las laterales se sincronizan solas.
+Ángulo entre monitores: 0 = automático; si los monitores están en ángulo físico (45–60°), indícalo en el control deslizante.
+
+REALIDAD VIRTUAL · META QUEST 3S (Simulador de Montacarga y CLAMP SAFE)
+1) Publica la consola en Netlify (WebXR exige https). 2) En el visor abre el navegador Meta (Browser) y entra a la liga del Dojo Virtual.
+3) Abre el simulador; en la fila de botones aparece 🥽 VR QUEST (solo si el navegador soporta WebXR). Púlsalo y acepta el permiso.
+Controles Touch: stick izquierdo = avanzar/reversa y giro · stick derecho = mástil (arriba/abajo) y reach/placas (izq/der) · gatillo derecho = agarrar/soltar
+gatillo izquierdo = claxon · A = ajustar altura del punto de vista · B = extender/retraer (o cerrar/abrir placas) · X = reiniciar práctica.
+El HUD (actividad, velocidad, mástil, puntaje) flota frente al operador. En CLAMP SAFE se apunta al riesgo con el rayo del control y se aprieta el gatillo;
+las decisiones se eligen apuntando al panel flotante. El visor usa 90 % de resolución y sombras 1024 para mantener fluidez.
+Nota: la validación de joystick/volante y el modo 3 pantallas no aplican dentro del visor.
+
+VR DE CELULAR (visor tipo Cardboard, Android o iPhone)
+En el teléfono (publicado en Netlify) aparece el botón 📱 VR CELULAR en el simulador. Al pulsarlo: pantalla completa horizontal, vista dividida
+para dos ojos y el giroscopio controla hacia dónde miras. Si el teléfono tiene WebXR (Chrome Android con Cardboard) se usa la vía nativa.
+Controles: TOCAR Y MANTENER la pantalla (o el botón del visor) = acelerar · DOBLE TOQUE = cambiar avance/reversa · GIRAR = mirar a la izquierda o
+derecha respecto al frente del equipo · mirar fijamente los botones flotantes ▲▼ ⇆ ✋ 📣 y tocar = mástil, reach/placas, agarrar, claxon.
+CLAMP SAFE: la mirilla central señala el riesgo y un toque lo selecciona; las opciones del panel flotante se eligen igual.
+iPhone pide permiso de movimiento la primera vez; acéptalo.
+
+CABINA VR · laptop (joystick + volante, una sola pantalla) + celular en visor VR (botón propio 📱 CABINA VR, independiente del modo 3 pantallas)
+1) En la laptop, con el simulador publicado en Netlify, pulsa 📱 CABINA VR → "Generar código". Aparece un código de 4 dígitos y la liga.
+2) En el celular abre esa liga o, en la portada del simulador, escribe el código de 4 dígitos y pulsa Conectar (misma Wi-Fi no es obligatoria: se conecta por internet con WebRTC/PeerJS). Pulsa "ENTRAR A LA CABINA VR" y colócalo en el visor.
+3) Conduces con el joystick/volante de la laptop; el celular muestra la cabina en estéreo y el giroscopio deja mirar libremente (atrás, arriba, abajo).
+El estado viaja ~30 veces por segundo (posición, mástil, reach/placas, carga, NPC, peatones). Varios celulares pueden conectarse al mismo código.
+
+LÍNEA BLANCA v2 (carton clamp)
+- 14 bahías de ESPACIO DOBLE (2 piezas lado a lado) × 6 niveles, organizadas por clasificación: Refrigeradores (4), Lavadoras (3), Secadoras (3), Estufas (2), Lavavajillas (2), con más separación entre bahías (paso 3.4 m).
+- Nomenclatura: BAH-<CAT>-<nn>-N<nivel> (ej. BAH-REF-02-N4). Letrero por bahía, placa por nivel y letrero por categoría.
+- El clamp toma y traslada las 2 piezas de un espacio en un solo viaje; las placas se abren al ancho de la carga. Estibar material en una bahía de otra categoría cuenta como falta.
+- El STAGING tiene una pareja de cada categoría; la actividad "Estiba" indica categoría, bahía y nivel; "Retiro" toma las 2 piezas del nivel superior de una bahía.
+HUD DESPEJADO: la tarjeta de actividad aparece 6 s al iniciar cada actividad y luego se contrae a una pastilla arriba a la derecha (toque = volver a ver las indicaciones). La ubicación destino aparece como mensaje flotante y como etiqueta 3D.
+CÁMARA OPERADOR (primera persona): tecla C / botón HORQ. cicla HORQUILLAS → REVERSA → ARRIBA → OPERADOR (desde el puesto del operador, con el mástil y las placas al frente).
+
+MODELO REALISTA (Nivel C) · rendimiento
+- juegos/assets/models/operario.glb (5.5 MB, 45k triángulos): operador del jugador y peatones cercanos.
+- juegos/assets/models/operario_lod.glb (1.9 MB, 19k triángulos): operadores de los montacargas NPC y peatones a más de 18 m (cambio automático).
+- Los avatares lejanos actualizan su pose cada 3 o 6 cuadros y no proyectan sombra; sólo el avatar cercano (< 14 m) proyecta sombra.
+- Si se sustituye el modelo, generar también la versión ligera (gltf-transform simplify ratio 0.35) con el mismo esqueleto.
+
+CALIDAD GRÁFICA (botón 🎚️ dentro del panel USB/⚙️): Auto · Alta · Media · Baja.
+- Auto detecta la tarjeta: gráficos integrados (Intel/UHD/Iris) → Media; celular/tablet → Baja; tarjeta dedicada → Alta.
+- Alta: resolución 100 %, sombras 1536, modelo detallado hasta 18 m. Media: 85 %, sombras 1024, detallado hasta 8 m. Baja: 70 %, sin sombras, todos los avatares en modelo ligero.
+- Se guarda en el navegador. Si el simulador va lento en una laptop, elegir Media o Baja.

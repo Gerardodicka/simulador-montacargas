@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Validación de joystick y volante · Dojo Virtual DICKA</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Poppins',-apple-system,Segoe UI,Roboto,sans-serif;background:#011131;color:#fff;margin:0;padding:1.2rem}
+h1{font-size:20px;font-weight:700}.card{background:rgba(255,255,255,.06);border:1px solid #2138D3;border-radius:12px;padding:1rem;margin:.8rem 0}
+.ok{color:#8ff0b0;font-weight:800}.bad{color:#ff8a80;font-weight:800}.warn{color:#ffe08a;font-weight:800}
+code,pre{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:4px;font-size:12px}pre{white-space:pre-wrap;padding:.6rem}
+.bar{height:10px;background:rgba(255,255,255,.12);border-radius:5px;overflow:hidden;margin:2px 0}.bar i{display:block;height:100%;background:#2138D3}
+.btn{display:inline-block;background:#2138D3;color:#fff;padding:.5rem .9rem;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;margin-right:6px;border:none;cursor:pointer}
+ol li{margin:.35rem 0;font-size:13.5px;line-height:1.5}
+.b{display:inline-block;width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,.12);margin:2px;text-align:center;font-size:10px;line-height:22px}.b.on{background:#f5c400;color:#011131;font-weight:800}
+.dev{background:rgba(0,0,0,.25);border-radius:8px;padding:.6rem;margin:.4rem 0}.dev b{font-size:13px}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;margin-left:6px}.tag.w{background:#f5c400;color:#011131}.tag.s{background:#2e9e5b;color:#fff}.tag.u{background:#838383;color:#fff}
+.status{font-size:14px;font-weight:700;padding:.6rem .8rem;border-radius:8px;margin:.4rem 0}.status.ok{background:rgba(46,158,91,.25)}.status.bad{background:rgba(198,16,46,.25)}
+</style></head><body>
+<h1>🔌 Validación de conexiones · Joystick Extreme 3D Pro y volante G920</h1>
+<div class="card"><b>Entorno</b><div id="env"></div></div>
+<div class="card"><b>Estado de la validación</b>
+  <div class="status bad" id="stStick">🎮 Joystick Extreme 3D Pro: <span>no detectado</span></div>
+  <div class="status bad" id="stWheel">🛞 Volante G920: <span>no detectado</span></div>
+  <div style="font-size:12px;color:#c5cdf5;margin-top:.4rem">Con los dos aparatos conectados, <b>presiona el gatillo del joystick</b> y <b>un botón del volante (A/B/X/Y)</b>. El navegador no muestra un dispositivo hasta recibir su primera pulsación.</div>
+</div>
+<div class="card"><b>Dispositivos que ve el navegador</b> <span id="cnt"></span><div id="devs" style="margin-top:.5rem">Ninguno todavía.</div></div>
+<div class="card"><b>Prueba funcional</b>
+  <div id="ftest" style="font-size:13px;line-height:1.9">
+    <div id="f1">⬜ Joystick · mueve la palanca adelante</div><div id="f2">⬜ Joystick · mueve la palanca a la derecha</div><div id="f3">⬜ Joystick · presiona el gatillo (claxon)</div><div id="f4">⬜ Joystick · mueve el acelerador de la base (mástil)</div>
+    <div id="f5">⬜ Volante · gira a la derecha</div><div id="f6">⬜ Volante · gira a la izquierda</div><div id="f7">⬜ Volante · presiona el botón Y (cámara)</div>
+  </div><div id="fdone" class="ok" style="margin-top:.5rem"></div>
+</div>
+<div class="card"><b>Eventos</b><pre id="log">esperando…</pre></div>
+<div class="card"><b>Si no aparece nada arriba, revisa en este orden:</b>
+<ol>
+<li><b>Windows → Ejecutar → <code>joy.cpl</code></b>. Si el G920 o el Extreme 3D Pro no aparecen ahí, Windows no los reconoce y ningún navegador los verá. El G920 versión Xbox requiere <b>Logitech G HUB</b> instalado; reconecta el USB directo a la PC.</li>
+<li>Usa <b>Google Chrome o Microsoft Edge</b> en Windows/Mac. Firefox y Safari tienen soporte parcial; en tablets/celulares el USB no funciona.</li>
+<li>Cierra por completo el navegador, ábrelo con los aparatos ya conectados y vuelve a esta página.</li>
+<li>Si esta página está dentro de un marco (iframe) el navegador bloquea el gamepad: ábrela directo por su liga. Estado: <span id="iframe"></span></li>
+<li>Si el aparato aparece pero el simulador no responde, en el simulador abre 🎮 USB → "Dispositivos USB detectados" y asígnalo manualmente como Volante o Joystick; si gira pero no obedece, usa "Detectar eje".</li>
+</ol></div>
+<button class="btn" onclick="location.reload()">🔄 Reintentar</button> <button class="btn" onclick="history.back()">← Volver</button>
+<script>
+const log=m=>{const el=document.getElementById('log');el.textContent=(new Date().toLocaleTimeString()+'  '+m+'\n'+el.textContent).slice(0,4000);};
+const inFrame=window.self!==window.top; document.getElementById('iframe').innerHTML=inFrame?'<span class="bad">DENTRO DE UN MARCO (problema)</span>':'<span class="ok">página directa (correcto)</span>';
+const ua=navigator.userAgent, isChrome=/Chrome|Edg/.test(ua)&&!/OPR/.test(ua), mobile=/Android|iPhone|iPad/i.test(ua);
+document.getElementById('env').innerHTML=`Navegador: <code>${ua.split(') ').pop()}</code> ${isChrome?'<span class=ok>✓ compatible</span>':'<span class=warn>⚠ usa Chrome o Edge</span>'}<br>Sistema: <code>${navigator.platform}</code> ${mobile?'<span class=bad>✗ móvil/tablet: el USB no funciona aquí</span>':''}<br>API Gamepad: ${navigator.getGamepads?'<span class=ok>✓ disponible</span>':'<span class=bad>✗ no disponible</span>'}<br>Permiso gamepad: ${document.featurePolicy?(document.featurePolicy.allowsFeature('gamepad')?'<span class=ok>✓ permitido</span>':'<span class=bad>✗ bloqueado por la página contenedora</span>'):'n/d'}`;
+const isWheel=id=>/g920|g923|g29|g27|g25|driving force|wheel|volante|racing|xbox|xinput|046d.*(c262|c26d|c24f|c29b|c298|c299|c29a)/i.test(id), isStick=id=>/extreme 3d|joystick|stick|046d.*c215/i.test(id);
+window.addEventListener('gamepadconnected',e=>log('✅ conectado: '+e.gamepad.id+' ('+e.gamepad.axes.length+' ejes, '+e.gamepad.buttons.length+' botones, mapping "'+e.gamepad.mapping+'")'));
+window.addEventListener('gamepaddisconnected',e=>log('❌ desconectado: '+e.gamepad.id));
+let seen=new Set(); const done={}; const mark=(k,t)=>{ if(done[k]) return; done[k]=true; const el=document.getElementById(k); el.textContent='✅ '+el.textContent.slice(2); log('✔ '+t); const n=Object.keys(done).length; document.getElementById('fdone').textContent=n>=7?'🎉 Validación completa: joystick y volante funcionan correctamente. Ya puedes usarlos en el simulador.':`${n}/7 pruebas completadas`; };
+function tick(){ const pads=(navigator.getGamepads?Array.from(navigator.getGamepads()):[]).filter(Boolean); document.getElementById('cnt').textContent=pads.length?`(${pads.length})`:'';
+  let stick=null, wheel=null; pads.forEach(g=>{ if(isWheel(g.id)) wheel=wheel||g; else if(isStick(g.id)) stick=stick||g; });
+  const ss=document.getElementById('stStick'), sw=document.getElementById('stWheel'); ss.className='status '+(stick?'ok':'bad'); ss.querySelector('span').textContent=stick?'detectado · '+stick.id.replace(/\(.*$/,'').trim():'no detectado'; sw.className='status '+(wheel?'ok':'bad'); sw.querySelector('span').textContent=wheel?'detectado · '+wheel.id.replace(/\(.*$/,'').trim()+(/xbox|xinput/i.test(wheel.id)?' (modo XInput / G HUB)':''):'no detectado';
+  if(stick){ if(stick.axes[1]<-0.6) mark('f1','palanca adelante'); if(stick.axes[0]>0.6) mark('f2','palanca derecha'); if(stick.buttons[0]&&stick.buttons[0].pressed) mark('f3','gatillo'); if(stick.axes.length>3&&Math.abs(stick.axes[3])>0.6) mark('f4','acelerador'); }
+  if(wheel){ if(wheel.axes[0]>0.3) mark('f5','volante derecha'); if(wheel.axes[0]<-0.3) mark('f6','volante izquierda'); if(wheel.buttons[3]&&wheel.buttons[3].pressed) mark('f7','botón Y'); }
+  if(pads.length) document.getElementById('devs').innerHTML=pads.map(g=>{ if(!seen.has(g.id)){seen.add(g.id);log('👀 visto: '+g.id);} const role=isWheel(g.id)?'<span class="tag w">VOLANTE</span>':isStick(g.id)?'<span class="tag s">JOYSTICK</span>':'<span class="tag u">DESCONOCIDO</span>';
+    return `<div class="dev"><b>${g.id}</b>${role}<br><small>índice ${g.index} · mapping "${g.mapping||'(ninguno)'}"</small><div style="margin-top:.4rem;font-size:11px">Ejes:</div>${g.axes.map((a,i)=>`<div style="display:grid;grid-template-columns:40px 1fr 50px;gap:6px;font-size:11px;align-items:center"><span>eje ${i}</span><div class=bar><i style="width:${Math.max(0,Math.min(100,(a+1)/2*100))}%"></i></div><span>${a.toFixed(2)}</span></div>`).join('')}<div style="margin-top:.4rem;font-size:11px">Botones:</div>${g.buttons.map((b,i)=>`<span class="b ${b.pressed?'on':''}">${i}</span>`).join('')}</div>`; }).join('');
+  requestAnimationFrame(tick); } tick(); log('página cargada · conecta joystick y volante y presiona un botón de cada uno');
+</script></body></html>
