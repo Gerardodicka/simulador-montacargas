@@ -6894,7 +6894,12 @@
             const baseMat = new THREE.MeshStandardMaterial({ color: BRAND.marino });
             walls.forEach(w => { if (w.lintel) return; const g = w.g.slice(); g[1] = 1.2; const m = new THREE.Mesh(new THREE.BoxGeometry(g[0] + 0.05, 1.2, g[2] + 0.05), baseMat); m.position.set(w.p[0], 0.6, w.p[2]); scene.add(m); });
             // Techo con vigas
-            const roof = new THREE.Mesh(new THREE.PlaneGeometry(WAREHOUSE.w, WAREHOUSE.d), new THREE.MeshStandardMaterial({ color: 0x33415c, side: THREE.DoubleSide })); window.roofMesh = roof;
+            const rc = document.createElement('canvas'); rc.width = 64; rc.height = 256; { const g = rc.getContext('2d'); for (let x = 0; x < 64; x += 16) { const gr = g.createLinearGradient(x, 0, x + 16, 0); gr.addColorStop(0, '#9aa3b2'); gr.addColorStop(0.5, '#6f7889'); gr.addColorStop(1, '#a7afbd'); g.fillStyle = gr; g.fillRect(x, 0, 16, 256); } g.fillStyle = 'rgba(30,35,45,.45)'; g.fillRect(0, 254, 64, 2); }   // lámina de techo (losacero) acanalada
+            const rt = new THREE.CanvasTexture(rc); rt.encoding = THREE.sRGBEncoding; rt.wrapS = rt.wrapT = THREE.RepeatWrapping; rt.repeat.set(WAREHOUSE.w / 1.0, WAREHOUSE.d / 4); rt.anisotropy = 4;
+            const roof = new THREE.Mesh(new THREE.PlaneGeometry(WAREHOUSE.w, WAREHOUSE.d), new THREE.MeshStandardMaterial({ map: rt, side: THREE.DoubleSide, roughness: 0.7, metalness: 0.3 })); window.roofMesh = roof;
+            { const sky = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xe9f3ff).convertSRGBToLinear(), emissive: new THREE.Color(0xdcecff).convertSRGBToLinear(), emissiveIntensity: 0.7, side: THREE.DoubleSide }); const lampM = new THREE.MeshStandardMaterial({ color: 0x2a2d33, emissive: new THREE.Color(0xfff6e0).convertSRGBToLinear(), emissiveIntensity: 1.1 });
+              for (let z = -hd + 12; z < hd - 8; z += 22) { const sk = new THREE.Mesh(new THREE.PlaneGeometry(WAREHOUSE.w - 8, 1.6), sky); sk.rotation.x = Math.PI / 2; sk.position.set(0, h - 0.02, z); scene.add(sk); }   // tragaluces de policarbonato
+              for (let x = -hw + 8; x < hw - 4; x += 10) for (let z = -hd + 8; z < hd - 4; z += 10) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, 0.22, 16, 1, true), lampM); l.position.set(x, h - 0.8, z); scene.add(l); const c = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.8, 0.02), lampM); c.position.set(x, h - 0.4, z); scene.add(c); } }   // luminarias LED high-bay
             roof.rotation.x = Math.PI / 2; roof.position.y = h; roof.name = 'roof'; window.roofMesh = roof; scene.add(roof);
             const beamMat = new THREE.MeshStandardMaterial({ color: BRAND.azul });
             for (let z = -hd + 7.5; z < hd; z += 15) { const b = new THREE.Mesh(new THREE.BoxGeometry(WAREHOUSE.w, 0.6, 0.4), beamMat); b.position.set(0, h - 0.3, z); scene.add(b); }
@@ -7701,17 +7706,27 @@
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
-            // motor eléctrico de tracción: zumbido con armónico que sube con la velocidad
-            SND.motor = ctx.createOscillator(); SND.motor.type = 'sawtooth'; SND.motor.frequency.value = 55; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500; SND.motorGain = ctx.createGain(); SND.motorGain.gain.value = 0; SND.motor.connect(lp); lp.connect(SND.motorGain); SND.motorGain.connect(ctx.destination); SND.motor.start();
-            SND.motor2 = ctx.createOscillator(); SND.motor2.type = 'triangle'; SND.motor2.frequency.value = 110; SND.motor2.connect(SND.motorGain); SND.motor2.start();
-            // bomba hidráulica: silbido agudo cuando se mueve el mástil
-            SND.hyd = ctx.createOscillator(); SND.hyd.type = 'sawtooth'; SND.hyd.frequency.value = 180; const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 3; SND.hydGain = ctx.createGain(); SND.hydGain.gain.value = 0; SND.hyd.connect(bp); bp.connect(SND.hydGain); SND.hydGain.connect(ctx.destination); SND.hyd.start(); } catch (e) {} }
-        function updateEngineSound(v, vmax, reversing, mastMoving) { if (!SND.on) return; try { const ctx = hornCtx; const f = v / vmax;
-            SND.motor.frequency.setTargetAtTime(55 + f * 140, ctx.currentTime, 0.1); SND.motor2.frequency.setTargetAtTime(110 + f * 280, ctx.currentTime, 0.1);
-            SND.motorGain.gain.setTargetAtTime(v > 0.2 ? 0.035 + f * 0.09 : 0.0, ctx.currentTime, 0.15);
-            SND.hydGain.gain.setTargetAtTime(mastMoving ? 0.06 : 0, ctx.currentTime, 0.08);
-            // alarma de reversa: bip intermitente
-            if (reversing) { SND.revT += 1; if (SND.revT % 40 === 1) { const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 1100; const g = ctx.createGain(); g.gain.value = 0.08; o.connect(g); g.connect(ctx.destination); o.start(); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22); o.stop(ctx.currentTime + 0.25); } } else SND.revT = 0; } catch (e) {} }
+            const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
+            const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+            const noise = () => { const n = ctx.createBufferSource(); n.buffer = noiseBuf; n.loop = true; n.start(); return n; };
+            // inversor/controlador AC: zumbido grave constante con el equipo encendido
+            SND.hum = ctx.createOscillator(); SND.hum.type = 'sawtooth'; SND.hum.frequency.value = 100; const hl = ctx.createBiquadFilter(); hl.type = 'lowpass'; hl.frequency.value = 220; SND.humGain = ctx.createGain(); SND.humGain.gain.value = 0; SND.hum.connect(hl); hl.connect(SND.humGain); SND.humGain.connect(out); SND.hum.start();
+            // motor de tracción AC: silbido agudo (tono de conmutación) que sube con la velocidad + armónico
+            SND.motor = ctx.createOscillator(); SND.motor.type = 'sine'; SND.motor.frequency.value = 250; SND.motor2 = ctx.createOscillator(); SND.motor2.type = 'triangle'; SND.motor2.frequency.value = 502;
+            SND.motorGain = ctx.createGain(); SND.motorGain.gain.value = 0; const m2g = ctx.createGain(); m2g.gain.value = 0.35; SND.motor.connect(SND.motorGain); SND.motor2.connect(m2g); m2g.connect(SND.motorGain); SND.motorGain.connect(out); SND.motor.start(); SND.motor2.start();
+            // rodamiento: llantas de poliuretano sobre concreto y engranes (ruido filtrado)
+            const rn = noise(); const rb = ctx.createBiquadFilter(); rb.type = 'bandpass'; rb.frequency.value = 320; rb.Q.value = 0.8; SND.rollGain = ctx.createGain(); SND.rollGain.gain.value = 0; rn.connect(rb); rb.connect(SND.rollGain); SND.rollGain.connect(out); SND.rollBp = rb;
+            // bomba hidráulica: motor de bomba + flujo de aceite al mover el mástil
+            SND.hyd = ctx.createOscillator(); SND.hyd.type = 'sawtooth'; SND.hyd.frequency.value = 148; const hp = ctx.createBiquadFilter(); hp.type = 'lowpass'; hp.frequency.value = 700; const hn = noise(); const hb = ctx.createBiquadFilter(); hb.type = 'bandpass'; hb.frequency.value = 1700; hb.Q.value = 1.2; const hng = ctx.createGain(); hng.gain.value = 0.5;
+            SND.hydGain = ctx.createGain(); SND.hydGain.gain.value = 0; SND.hyd.connect(hp); hp.connect(SND.hydGain); hn.connect(hb); hb.connect(hng); hng.connect(SND.hydGain); SND.hydGain.connect(out); SND.hyd.start(); } catch (e) {} }
+        function updateEngineSound(v, vmax, reversing, mastMoving) { if (!SND.on) return; try { const ctx = hornCtx, t = ctx.currentTime; const f = Math.min(1, v / vmax); const moving = v > 0.15;
+            SND.humGain.gain.setTargetAtTime(0.018, t, 0.3);
+            SND.motor.frequency.setTargetAtTime(240 + f * 1150, t, 0.12); SND.motor2.frequency.setTargetAtTime(482 + f * 2310, t, 0.12);
+            SND.motorGain.gain.setTargetAtTime(moving ? 0.012 + f * 0.035 : 0, t, 0.15);
+            SND.rollGain.gain.setTargetAtTime(moving ? 0.03 + f * 0.09 : 0, t, 0.2); SND.rollBp.frequency.setTargetAtTime(260 + f * 420, t, 0.2);
+            SND.hydGain.gain.setTargetAtTime(mastMoving ? 0.07 : 0, t, 0.06); SND.hyd.frequency.setTargetAtTime(mastMoving ? 148 : 110, t, 0.1);
+            // alarma de reversa (bip-bip tipo 97 dB, ~1.2 kHz)
+            if (reversing) { SND.revT += 1; if (SND.revT % 40 === 1) { const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 1180; const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1180; bp.Q.value = 4; const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.01); g.gain.setValueAtTime(0.12, t + 0.2); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24); o.connect(bp); bp.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.26); } } else SND.revT = 0; } catch (e) {} }
         // El navegador exige un gesto del usuario para iniciar audio
         ['pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, () => { const scr = document.getElementById('simulatorScreen'); if (scr && scr.classList.contains('active')) initEngineSound(); }, { passive: true }));
 
@@ -8516,7 +8531,7 @@
                     const probe = { x: np.x, z: np.z, g: { rotation: { y: f.g.rotation.y } } };
                     { const want = Math.atan2(np.x - f.x, np.z - f.z); let dAng = want - f.g.rotation.y; while (dAng > Math.PI) dAng -= 2 * Math.PI; while (dAng < -Math.PI) dAng += 2 * Math.PI; if (Math.abs(dAng) > 0.6 && NPC.peds.some(pd => Math.hypot(pd.x - f.x, pd.z - f.z) < 4.2)) { f.beacon.material.emissiveIntensity = Math.sin(now / 120) > 0 ? 2.2 : .4; f.blockT = (f.blockT || 0) + dtS; if (f.blockT > 8) { assignNewRoute(f); f.blockT = 0; } return; } }   // giro con peatón cerca: barre con las horquillas → espera
                     const pedAhead = NPC.peds.some(pd => { if (inForkBox(probe, pd.x, pd.z, 0.9)) return true; const dx = pd.x - f.x, dz = pd.z - f.z; const fwdD = dx * Math.sin(f.g.rotation.y) + dz * Math.cos(f.g.rotation.y); return fwdD > -1 && Math.hypot(dx, dz) < (pd.crossing ? 5 : 3); });
-                    if (pedAhead && !f.pedHonk) { f.pedHonk = true; if (dP < 25) hornSound([392, 494], 0.18, 0.12); } else if (!pedAhead) f.pedHonk = false;   // alto total + claxon corto al detenerse por el peatón   // frena si el peatón quedaría dentro de la huella del equipo (horquillas incluidas)
+                    if (pedAhead && !f.pedHonk) { f.pedHonk = true; if (dP < 25) hornSound([400], 0.16, 0.12); } else if (!pedAhead) f.pedHonk = false;   // alto total + claxon corto al detenerse por el peatón   // frena si el peatón quedaría dentro de la huella del equipo (horquillas incluidas)
                     // Prioridad entre NPC: el de menor índice tiene preferencia (frena sólo a 0.4 m); el otro cede con margen amplio. Tras ceder > limit s, el que cede toma otra ruta y tiene 2.5 s de 'escape' para alejarse.
                     const otherFork = NPC.forks.some(o => o !== f && (inForkBox(o, np.x, np.z, 1.8) || inForkBox(probeAt(np, f), o.x, o.z, 1.8)));
                     if (f.backT > 0) { f.backT -= dtS; const bt = Math.max(0, Math.min(1, f.t - v * 0.7 * dtS / L)); const bp = segmentPos(f.path, bt); const bPed = NPC.peds.some(pd => inForkBox(probeAt(bp, f), pd.x, pd.z, 0.9)); const bFork = NPC.forks.some(o => o !== f && (inForkBox(probeAt(bp, f), o.x, o.z, 1.5) || inForkBox(o, bp.x, bp.z, 1.5))); if (bFork) { f.backT = 0; assignNewRoute(f); return; } if (!bPed) f.t = bt; /* en reversa también respeta a los demás montacargas */ if (f.backT <= 0) assignNewRoute(f); return; }   // retrocede 3 s por su ruta para liberar al otro equipo y luego toma otra ruta
@@ -8529,7 +8544,7 @@
                 const ang = Math.atan2(p.x - f.x, p.z - f.z); if (Math.hypot(p.x - f.x, p.z - f.z) > 1e-4) f.g.rotation.y = ang;
                 f.x = p.x; f.z = p.z; f.g.position.set(f.x, 0, f.z);
                 // responde al claxon
-                if (honkedRecently && dP < 14 && !f.replied) { f.replied = true; f.yield = 3.5; npcReply(`📣 MC-${f.id} responde el claxon y cede el paso`); setTimeout(() => hornSound([440, 554], .25, .25), 700); }
+                if (honkedRecently && dP < 14 && !f.replied) { f.replied = true; f.yield = 3.5; npcReply(`📣 MC-${f.id} responde el claxon y cede el paso`); setTimeout(() => hornSound([395], .22, .22), 700); }
                 if (!honkedRecently) f.replied = false;
                 // acercamiento sin claxon / colisión
                 if (dP < 5 && simSpeed > 1 && !honkedRecently && !f.warned) { f.warned = true; registerFault('sinClaxon'); }
@@ -8568,18 +8583,18 @@
         function npcReply(msg) { const c = document.getElementById('npcReply'); const d = document.createElement('div'); d.textContent = msg; c.appendChild(d); setTimeout(() => d.remove(), 2400); }
         function audioCtx() { hornCtx = hornCtx || new (window.AudioContext || window.webkitAudioContext)(); if (hornCtx.state === 'suspended') hornCtx.resume(); return hornCtx; }
         // Claxon de montacargas: dos bocinas electromecánicas (acorde tipo automóvil), armónicos, ataque con "arranque" y resonancia
-        function hornSound(freqs, dur, vol, ctx) { try { ctx = ctx || audioCtx(); const t = ctx.currentTime; const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
-            const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 6; comp.connect(master);
-            const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800; lp.Q.value = 2.5; lp.connect(comp);
-            const bp = ctx.createBiquadFilter(); bp.type = 'peaking'; bp.frequency.value = 900; bp.gain.value = 8; bp.Q.value = 1.5; bp.connect(lp);
-            freqs.forEach((f, i) => { [1, 2, 3, 4].forEach(h => { const o = ctx.createOscillator(); o.type = h === 1 ? 'sawtooth' : 'square'; o.frequency.setValueAtTime(f * h * 0.93, t); o.frequency.exponentialRampToValueAtTime(f * h, t + 0.06); // arranque del vibrador
-                const g = ctx.createGain(); g.gain.value = (vol || .5) / (h * h) / freqs.length; o.connect(g); g.connect(bp); o.start(t); o.stop(t + dur + .1); });
-              // trémolo de diafragma
-              const lfo = ctx.createOscillator(); lfo.frequency.value = 38 + i * 3; const lg = ctx.createGain(); lg.gain.value = 6; lfo.connect(lg); lfo.start(t); lfo.stop(t + dur + .1); });
-            master.gain.setValueAtTime(0, t); master.gain.linearRampToValueAtTime(1, t + 0.03); master.gain.setValueAtTime(1, t + dur - 0.05); master.gain.exponentialRampToValueAtTime(0.001, t + dur + 0.08);
-        } catch (e) {} }
+        function hornSound(freqs, dur, vol, ctx) { try { ctx = ctx || audioCtx(); const t = ctx.currentTime; const f0 = freqs[0] || 410;
+            // bocina eléctrica de disco: el diafragma golpea a ~f0 → onda casi cuadrada, muy rica en armónicos impares, con resonancia de la trompeta ~2.4 kHz
+            const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+            const shaper = ctx.createWaveShaper(); const cv = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; cv[i] = Math.tanh(x * 6); } shaper.curve = cv;
+            const res = ctx.createBiquadFilter(); res.type = 'peaking'; res.frequency.value = 2400; res.Q.value = 3; res.gain.value = 9; const body = ctx.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = f0 * 2; body.Q.value = 2; body.gain.value = 6;
+            const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200; shaper.connect(body); body.connect(res); res.connect(lp); lp.connect(master);
+            const o = ctx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(f0 * 0.9, t); o.frequency.exponentialRampToValueAtTime(f0, t + 0.04); const og = ctx.createGain(); og.gain.value = 0.6; o.connect(og); og.connect(shaper);
+            const o2 = ctx.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = f0 * 1.003; const o2g = ctx.createGain(); o2g.gain.value = 0.25; o2.connect(o2g); o2g.connect(shaper);   // ligera desafinación: "carraspeo" del contacto
+            const v = (vol || 0.5) * 0.55; master.gain.setValueAtTime(0, t); master.gain.linearRampToValueAtTime(v, t + 0.012); master.gain.setValueAtTime(v, t + dur - 0.03); master.gain.exponentialRampToValueAtTime(0.0008, t + dur + 0.04);
+            [o, o2].forEach(x => { x.start(t); x.stop(t + dur + 0.08); }); } catch (e) {} }
         function beep(freq, dur, vol) { hornSound([freq, freq * 1.26], dur, vol || .35); }
-        function honk() { if (practiceDone) return; lastHonk = performance.now(); hornSound([392, 494], .45, .6); setTimeout(() => hornSound([392, 494], .3, .55), 520);
+        function honk() { if (practiceDone) return; lastHonk = performance.now(); hornSound([415], .42, .6); setTimeout(() => hornSound([415], .3, .55), 520);
             const w = document.querySelector('.canvas-wrapper'); const r = document.createElement('div'); r.className = 'horn-ring'; w.appendChild(r); setTimeout(() => r.remove(), 800);
             const near = NPC.forks.filter(f => Math.hypot(f.x - forkPosition.x, f.z - forkPosition.z) < 14).length + NPC.peds.filter(p => Math.hypot(p.x - forkPosition.x, p.z - forkPosition.z) < 12).length;
             if (!near) npcReply('📣 Claxon · nadie cerca'); }
