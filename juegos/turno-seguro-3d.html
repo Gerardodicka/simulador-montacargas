@@ -6913,10 +6913,28 @@
         }
 
         // Rack selectivo: postes azul DICKA, largueros azul brillante, tarimas con cajas
+        // ====== Racks selectivos realistas: postes perforados azules, vigas naranja, placas base, travesaños de soporte, protectores y placa de capacidad ======
+        const RACK_MATS = {};
+        function rackMats() { if (RACK_MATS.up) return RACK_MATS; const C = h => new THREE.Color(h).convertSRGBToLinear();
+            const c = document.createElement('canvas'); c.width = 32; c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#1f47b8'; g.fillRect(0, 0, 32, 64); g.fillStyle = '#0a1638';
+            [8, 40].forEach(y => { g.beginPath(); g.moveTo(12, y); g.lineTo(20, y); g.lineTo(18, y + 16); g.lineTo(14, y + 16); g.closePath(); g.fill(); });   // perforaciones tipo lágrima
+            g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(2, 0, 3, 64);
+            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 26); t.anisotropy = 4;
+            RACK_MATS.up = new THREE.MeshStandardMaterial({ map: t, metalness: 0.3, roughness: 0.5 });
+            RACK_MATS.beam = new THREE.MeshStandardMaterial({ color: C(0xe8601c), metalness: 0.25, roughness: 0.45 });
+            RACK_MATS.brace = new THREE.MeshStandardMaterial({ color: C(0x1f47b8), metalness: 0.3, roughness: 0.55 });
+            RACK_MATS.steel = new THREE.MeshStandardMaterial({ color: C(0x8d939c), metalness: 0.7, roughness: 0.4 });
+            RACK_MATS.plate = new THREE.MeshStandardMaterial({ color: C(0x2a2d33), metalness: 0.5, roughness: 0.6 });
+            RACK_MATS.guard = new THREE.MeshStandardMaterial({ color: C(0xf5c400), roughness: 0.5 });
+            const k = document.createElement('canvas'); k.width = 256; k.height = 320; const q = k.getContext('2d'); q.fillStyle = '#fff'; q.fillRect(0, 0, 256, 320); q.strokeStyle = '#111'; q.lineWidth = 8; q.strokeRect(4, 4, 248, 312);
+            q.fillStyle = '#f5c400'; q.fillRect(8, 8, 240, 60); q.fillStyle = '#111'; q.textAlign = 'center'; q.font = 'bold 30px Arial'; q.fillText('CAPACIDAD', 128, 48);
+            q.font = 'bold 22px Arial'; ['MÁX. POR NIVEL', '1,000 kg', 'CARGA UNIFORME', '', 'NO ESCALAR', 'REPORTAR DAÑOS'].forEach((l, i) => { q.font = i === 1 ? 'bold 46px Arial' : 'bold 22px Arial'; q.fillText(l, 128, 108 + i * 38 + (i > 1 ? 10 : 0)); });
+            const kt = new THREE.CanvasTexture(k); kt.encoding = THREE.sRGBEncoding; RACK_MATS.cap = new THREE.MeshBasicMaterial({ map: kt });
+            return RACK_MATS; }
         function buildRack(x, zStart, bays, levels, facing, letter) {
             const bayW = 2.8, depth = 2.4, levelH = 1.8; const rackStatic = new THREE.Group(); const sceneAdd = scene.add.bind(scene); const scene_add_static = m => rackStatic.add(m);
-            const upMat = new THREE.MeshStandardMaterial({ color: BRAND.azul, metalness: 0.5, roughness: 0.5 });
-            const beamMat = new THREE.MeshStandardMaterial({ color: BRAND.brillante, metalness: 0.4, roughness: 0.5 }); const braceMat = new THREE.MeshStandardMaterial({ color: 0x13205a, metalness: 0.4, roughness: 0.6 });
+            const RM = rackMats(); const upMat = RM.up;
+            const beamMat = RM.beam; const braceMat = RM.brace;
             const deckMat = new THREE.MeshStandardMaterial({ color: BRAND.gris, metalness: 0.7, roughness: 0.4, wireframe: false });
             const palletMat = new THREE.MeshStandardMaterial({ color: 0xb08850, roughness: 0.9 });
             const boxMats = [0, 1, 2].map(v => cardboardMat(v));
@@ -6924,15 +6942,18 @@
             for (let b = 0; b <= bays; b++) {
                 const z = zStart + b * bayW;
                 [-depth / 2, depth / 2].forEach(dx => {
-                    const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, totalH, 0.1), upMat);
+                    const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, totalH, 0.11), upMat);
                     post.position.set(x + dx, totalH / 2, z); post.castShadow = false; scene_add_static(post);
+                    const bp = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.025, 0.18), RM.plate); bp.position.set(x + dx, 0.0125, z); scene_add_static(bp);   // placa base anclada
+                    if (Math.sign(dx) === Math.sign(facing) && b > 0 && b < bays) { const pg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.22), rayMats().stripe); pg.position.set(x + dx + facing * 0.06, 0.25, z); scene_add_static(pg); }   // protector de poste del lado del pasillo
                 });
                 // Diagonales de arriostre
                 // Marco del bastidor: travesaños horizontales por nivel y diagonales en X (en el plano del bastidor, a lo ancho del rack, delgados en Z)
                 for (let l = 0; l < levels; l++) { const y0 = 0.5 + l * levelH; const tie = new THREE.Mesh(new THREE.BoxGeometry(depth, 0.05, 0.05), braceMat); tie.position.set(x, y0 + levelH / 2, z); scene_add_static(tie);
                     const dl = Math.hypot(depth, levelH); [1, -1].forEach(sd => { const diag = new THREE.Mesh(new THREE.BoxGeometry(dl, 0.04, 0.04), braceMat); diag.position.set(x, y0 + levelH / 2, z); diag.rotation.z = sd * Math.atan2(levelH, depth); scene_add_static(diag); }); }
                 // Protector de poste (amarillo)
-                if (b === 0 || b === bays) { const g = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.45, 0.4), new THREE.MeshStandardMaterial({ color: 0xf5c400 })); g.position.set(x, 0.22, z); scene_add_static(g); }
+                if (b === 0 || b === bays) { const ez = z + (b === 0 ? -0.35 : 0.35); const rail = new THREE.Mesh(new THREE.BoxGeometry(depth + 0.3, 0.16, 0.12), RM.guard); rail.position.set(x, 0.4, ez); scene_add_static(rail); [-1, 1].forEach(sd => { const pst = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.5, 0.12), RM.guard); pst.position.set(x + sd * (depth / 2 + 0.1), 0.25, ez); scene_add_static(pst); });   // defensa de cabecera
+                    const cap = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.52), RM.cap); cap.position.set(x + facing * (depth / 2 - 0.3), 1.7, z + (b === 0 ? -0.07 : 0.07)); cap.rotation.y = b === 0 ? Math.PI : 0; scene_add_static(cap); }   // placa de capacidad de carga
             }
             for (let l = 0; l <= levels; l++) {
                 const y = 0.5 + l * levelH;
@@ -6941,6 +6962,7 @@
                     beam.position.set(x + dx, y, zStart + bays * bayW / 2); scene_add_static(beam);
                 });
                 if (l < levels) {
+                    for (let b = 0; b < bays; b++) { const zc = zStart + b * bayW + bayW / 2; [-0.75, 0.75].forEach(o => { const bar = new THREE.Mesh(new THREE.BoxGeometry(depth, 0.035, 0.05), RM.steel); bar.position.set(x, y + 0.085, zc + o); scene_add_static(bar); }); }   // travesaños de soporte de tarima
                     // Tarimas con producto en cada bahía (aleatoriamente ocupadas)
                     for (let b = 0; b < bays; b++) {
                         const zc = zStart + b * bayW + bayW / 2;
