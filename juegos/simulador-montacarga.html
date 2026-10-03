@@ -7068,14 +7068,49 @@
             // barra de sujeción para la mano izquierda (equipos de pie)
             if (sp.stand && !sp.tiller) { const rail = new THREE.Group(); rail.name = 'cabinRail'; const bar = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, .32, 12), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: .5, metalness: .4 })); bar.rotation.z = Math.PI / 2; rail.add(bar); [-.14, .14].forEach(x => { const post = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .08, 8), bar.material); post.position.set(x, -.04, 0); rail.add(post); }); rail.position.set(0.42, 1.1, -0.05); rail.visible = false; target.add(rail); }
             return target.getObjectByName('cabinJoystick'); }
+        // ====== Detalle realista Raymond (reach): carrocería redondeada, pintura satinada, cilindros, cadenas, mangueras, defensas y luces ======
+        function roundedBox(w, h, d, r) { r = Math.min(r, w / 2 - 0.001, h / 2 - 0.001); const s = new THREE.Shape(); const x = -w / 2, y = -h / 2;
+            s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+            const g = new THREE.ExtrudeGeometry(s, { depth: d - 0.04, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2, curveSegments: 4 }); g.translate(0, 0, -(d - 0.04) / 2); return g; }
+        const RAY_MATS = {};
+        function rayMats() { if (RAY_MATS.paint) return RAY_MATS;   // colores en sRGB → lineal: el renderer usa sRGBEncoding, sin conversión el rojo se ve rosa
+            const C = h => new THREE.Color(h).convertSRGBToLinear();
+            RAY_MATS.paint = new THREE.MeshStandardMaterial({ color: C(RAYMOND), metalness: 0.05, roughness: 0.42, envMapIntensity: 0.6 });   // pintura roja satinada (sin tono rosado)
+            RAY_MATS.charcoal = new THREE.MeshStandardMaterial({ color: C(0x24262b), metalness: 0.2, roughness: 0.55 });
+            RAY_MATS.rubber = new THREE.MeshStandardMaterial({ color: C(0x0b0b0b), roughness: 0.95 });
+            RAY_MATS.chrome = new THREE.MeshStandardMaterial({ color: C(0xd9dde3), metalness: 1.0, roughness: 0.18 });
+            RAY_MATS.chain = new THREE.MeshStandardMaterial({ color: C(0x3b3b3b), metalness: 0.8, roughness: 0.5 });
+            RAY_MATS.hose = new THREE.MeshStandardMaterial({ color: C(0x151515), roughness: 0.7 });
+            RAY_MATS.lens = new THREE.MeshStandardMaterial({ color: C(0xffffff), emissive: C(0xfff4d6), emissiveIntensity: 0.9 });
+            RAY_MATS.amber = new THREE.MeshStandardMaterial({ color: C(0xff8a00), emissive: C(0xff6a00), emissiveIntensity: 0.6 });
+            const c = document.createElement('canvas'); c.width = 128; c.height = 16; const g = c.getContext('2d'); for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#111' : '#f5c400'; g.beginPath(); g.moveTo(i * 16, 16); g.lineTo(i * 16 + 8, 0); g.lineTo(i * 16 + 24, 0); g.lineTo(i * 16 + 16, 16); g.fill(); }
+            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = THREE.RepeatWrapping; t.repeat.set(3, 1); RAY_MATS.stripe = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 });
+            return RAY_MATS; }
+        // Agrega detalle a un reach Raymond construido en el grupo g (ancho W). Solo piezas estáticas sin nombre: no interfiere con mástil/horquillas animados.
+        function raymondReachDetail(g, W, mastH) { const M = rayMats(); const add = (geo, mat, x, y, z, rx, ry, rz) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz; m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+            add(roundedBox(W + 0.02, 1.02, 1.54, 0.16), M.paint, 0, 0.6, -1.3);      // carrocería del módulo motriz con aristas redondeadas
+            add(new THREE.BoxGeometry(W + 0.08, 0.22, 1.56), M.charcoal, 0, 0.12, -1.3);                    // faldón inferior
+            add(roundedBox(W + 0.1, 0.24, 0.16, 0.08), M.rubber, 0, 0.28, -2.1);                           // defensa trasera de hule
+            add(roundedBox(W - 0.12, 0.08, 1.34, 0.04), M.charcoal, 0, 1.45, -1.3);                         // tapa de batería
+            [-0.3, 0.3].forEach(dx => add(new THREE.TorusGeometry(0.06, 0.012, 6, 12, Math.PI), M.chrome, dx, 1.49, -1.3, 0, Math.PI / 2, 0));   // asas de la tapa
+            [-1, 1].forEach(sd => { add(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 16), M.lens, sd * (W / 2 - 0.15), 0.95, -2.09, Math.PI / 2, 0, 0); add(new THREE.BoxGeometry(0.12, 0.06, 0.03), M.amber, sd * (W / 2 - 0.15), 0.78, -2.09); });   // faros y calaveras
+            add(new THREE.BoxGeometry(W - 0.2, 0.06, 0.04), M.stripe, 0, 0.45, -2.09);                     // franja de seguridad trasera
+            [-1, 1].forEach(sd => { add(new THREE.BoxGeometry(0.19, 0.05, 1.7), M.stripe, sd * (W / 2 - 0.09), 0.36, 0.95); add(new THREE.CylinderGeometry(0.025, 0.025, 0.5, 8), M.chrome, sd * (W / 2 - 0.02), 1.2, -0.72); });   // franjas en brazos de apoyo + agarraderas
+            add(new THREE.BoxGeometry(0.42, 0.04, 0.3), M.rubber, -W / 2 + 0.3, 0.24, 0.05);                // escalón antiderrapante
+            // Mástil: cilindros de elevación cromados, cadenas y mangueras hidráulicas
+            const mh = mastH || 3.4; [-0.2, 0.2].forEach(dx => { add(new THREE.CylinderGeometry(0.045, 0.045, mh * 0.85, 12), M.chrome, dx, mh * 0.45, 0.5); add(new THREE.CylinderGeometry(0.06, 0.06, 0.12, 12), M.charcoal, dx, 0.12, 0.5); });
+            [-0.3, 0.3].forEach(dx => add(new THREE.BoxGeometry(0.035, mh * 0.9, 0.02), M.chain, dx, mh * 0.48, 0.66));
+            [-0.12, 0.12].forEach(dx => add(new THREE.CylinderGeometry(0.016, 0.016, mh * 0.8, 6), M.hose, dx, mh * 0.42, 0.44));
+            add(new THREE.BoxGeometry(0.98, 0.1, 0.18), M.charcoal, 0, mh, 0.55);                            // travesaño superior del mástil
+        }
         function createForklift() {
             if (forklift) scene.remove(forklift);
             forklift = new THREE.Group();
             forklift.position.set(forkPosition.x, forkPosition.y, forkPosition.z);
             forklift.rotation.y = forkRotation.y;
             const sp = spec(), W = sp.w;
-            const red = new THREE.MeshStandardMaterial({ color: RAYMOND, metalness: 0.35, roughness: 0.4 });
-            const dark = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.4, roughness: 0.6 });
+            const red = rayMats().paint;
+            const dark = rayMats().charcoal;
             const steel = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, metalness: 0.85, roughness: 0.3 });
             const black = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, metalness: 0.9, roughness: 0.4 });
             const grey = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 });
@@ -7117,8 +7152,8 @@
                 if (sp.reachStages === 2) { add(new THREE.BoxGeometry(0.62, 0.07, 0.6), steel, 0, 0.3, 1.5, 'reach2'); }
                 add(new THREE.BoxGeometry(0.9, 0.9, 0.05), black, 0, 0.55, sp.forkZ - 0.25, 'fork'); // respaldo de carga
                 forks(sp.forkZ, 1.15);
-                logo(0.9, 0, 0.9, -2.06, Math.PI); logo(0.8, -W / 2 - 0.01, 0.6, -1.3, -Math.PI / 2); logo(0.8, W / 2 + 0.01, 0.6, -1.3, Math.PI / 2);
-                dicka(0.5, 0, 1.6, -0.86, Math.PI); beacon(0, 2.45, -0.6);
+                logo(0.9, 0, 0.65, -2.09, Math.PI); logo(0.8, -W / 2 - 0.04, 0.6, -1.3, -Math.PI / 2); logo(0.8, W / 2 + 0.04, 0.6, -1.3, Math.PI / 2);
+                dicka(0.5, 0, 1.6, -0.86, Math.PI); beacon(0, 2.45, -0.6); raymondReachDetail(forklift, W, 3.6);
             }
             else if (sp.type === 'Contrabalanceo' || sp.clamp) {
                 add(new THREE.BoxGeometry(W, 0.6, 2.6), red, 0, 0.55, -0.9);              // chasis
@@ -7936,18 +7971,19 @@
         const NPC = { forks: [], peds: [] }; const WAIT_AFTER_PASS = 5;   // s que esperan personas y equipos después de que pasa un montacargas
         let lastHonk = -99999, hornCtx = null;
         function npcForklift(id, path, phase) {
-            const g = new THREE.Group(); const red = new THREE.MeshStandardMaterial({ color: RAYMOND, metalness: .35, roughness: .4 }), dark = new THREE.MeshStandardMaterial({ color: 0x1a1a1a }), steel = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, metalness: .8, roughness: .3 });
+            const g = new THREE.Group(); const red = rayMats().paint, dark = rayMats().charcoal, steel = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, metalness: .8, roughness: .3 });
             const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
             add(new THREE.BoxGeometry(1.15, 1.0, 1.5), red, 0, .6, -1.3); add(new THREE.BoxGeometry(1.05, .35, 1.4), dark, 0, 1.25, -1.3);
             add(new THREE.BoxGeometry(1.15, .12, .9), red, 0, .15, -.3); add(new THREE.BoxGeometry(1.15, 1.3, .1), red, 0, .8, -.8);
             [[-1, -.75], [1, -.75], [-1, .15], [1, .15]].forEach(([sx, sz]) => add(new THREE.BoxGeometry(.06, 2.2, .06), steel, sx * .55, 1.25, sz)); add(new THREE.BoxGeometry(1.2, .05, 1.1), steel, 0, 2.35, -.3);
             [-1, 1].forEach(sd => add(new THREE.BoxGeometry(.18, .28, 1.9), red, sd * .49, .2, .95));
             [-.42, .42].forEach(dx => add(new THREE.BoxGeometry(.09, 3.4, .16), steel, dx, 1.7, .55)); [-.3, .3].forEach(dx => add(new THREE.BoxGeometry(.1, .05, 1.15), dark, dx, .12, 1.8));
-            const t = raymondTex(512, 112); [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.PlaneGeometry(.8, .18), new THREE.MeshBasicMaterial({ map: t })); l.position.set(sd * .59, .6, -1.3); l.rotation.y = sd > 0 ? Math.PI / 2 : -Math.PI / 2; g.add(l); });
+            raymondReachDetail(g, 1.15, 3.4);
+            const t = raymondTex(512, 112); [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.PlaneGeometry(.8, .18), new THREE.MeshBasicMaterial({ map: t })); l.position.set(sd * .62, .6, -1.3); l.rotation.y = sd > 0 ? Math.PI / 2 : -Math.PI / 2; g.add(l); });
             // operador
             let op; if (GLTF_AVATAR.ok) { op = makeStandingOperator(true); op.rotation.y = -Math.PI / 2 + 0.55; op.traverse(o => { if (o.isMesh) o.castShadow = false; }); } else { op = buildHuman({ seatbelt: false, glasses: true }, { seated: false, hipY: 0.94 }); op.getObjectByName('armL').rotation.x = -0.9; op.getObjectByName('armR').rotation.x = -0.9; op.getObjectByName('elbowL').rotation.x = -0.5; op.getObjectByName('elbowR').rotation.x = -0.5; } op.scale.setScalar(0.96); op.position.set(0, .2, -.3); g.add(op); buildCabinJoystick(g, FORK_SPECS.reach); if (op.userData && op.userData.gltf) { op.name = 'operator'; g.updateMatrixWorld(true); snapControlsToHands(g, op); }
             const beacon = add(new THREE.CylinderGeometry(.07, .09, .14, 12), new THREE.MeshStandardMaterial({ color: 0xff9900, emissive: 0xff6600, emissiveIntensity: 1.2 }), 0, 2.45, -.6);
-            const plateT = makeTextTexture([{ text: 'MC-' + id, size: 80, color: '#fff' }], { w: 256, h: 96, bg: '#011131' }); const plate = new THREE.Mesh(new THREE.PlaneGeometry(.6, .22), new THREE.MeshBasicMaterial({ map: plateT })); plate.position.set(0, 1.5, -2.06); plate.rotation.y = Math.PI; g.add(plate);
+            const plateT = makeTextTexture([{ text: 'MC-' + id, size: 80, color: '#fff' }], { w: 256, h: 96, bg: '#011131' }); const plate = new THREE.Mesh(new THREE.PlaneGeometry(.6, .22), new THREE.MeshBasicMaterial({ map: plateT })); plate.position.set(0, 1.5, -2.09); plate.rotation.y = Math.PI; g.add(plate);
             g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
             mergeStaticMeshes(g); g.traverse(o => { if (o.isMesh) o.castShadow = o.geometry.attributes.position.count > 200; });
             scene.add(g); NPC.forks.push({ id, g, beacon, path, t: phase || 0, dir: 1, yield: 0, replied: false, x: path[0][0], z: path[0][1] });
