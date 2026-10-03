@@ -6800,9 +6800,14 @@
             m.position.set((x1 + x2) / 2, 0.015, (z1 + z2) / 2); scene.add(m);
         }
 
-        function paintLabel(text, x, z, size = 3, color = '#f5c400', rotY = 0) {
-            const t = makeTextTexture([{ text, size: 160, color }], { w: 512, h: 256, bg: 'rgba(0,0,0,0)' });
-            const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 2, size), new THREE.MeshBasicMaterial({ map: t, transparent: true }));
+        function paintLabel(text, x, z, size = 3, color = '#ffffff', rotY = 0, maxW = size * 2) {
+            // Rotulado de piso: el texto se ajusta al ancho (antes se cortaba "PASILLO n") y el plano toma la proporción real del texto
+            const c = document.createElement('canvas'); c.height = 256; const g = c.getContext('2d'); let fs = 170; g.font = `900 ${fs}px Arial Black, Arial`; const tw = g.measureText(text).width;
+            c.width = Math.min(2048, Math.ceil(tw + 80)); if (tw + 80 > 2048) fs = Math.floor(fs * 1968 / tw); g.font = `900 ${fs}px Arial Black, Arial`; g.textAlign = 'center'; g.textBaseline = 'middle';
+            g.lineJoin = 'round'; g.lineWidth = 12; g.strokeStyle = color === '#011131' ? 'rgba(255,255,255,.6)' : 'rgba(1,17,49,.85)'; g.strokeText(text, c.width / 2, 132);   // contorno oscuro: legible sobre piso claro g.fillStyle = color; g.fillText(text, c.width / 2, 132);
+            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+            let pw = size * c.width / 256, ph = size; if (pw > maxW) { ph *= maxW / pw; pw = maxW; }   // no rebasa el ancho disponible (pasillo)
+            const m = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false })); m.renderOrder = 2;
             m.rotation.x = -Math.PI / 2; m.rotation.z = rotY; m.position.set(x, 0.02, z); scene.add(m);
         }
 
@@ -7035,7 +7040,7 @@
                 paintLine(cx - 1.75, zStart, cx - 1.75, zStart + bays * 2.8);
                 paintLine(cx + 1.75, zStart, cx + 1.75, zStart + bays * 2.8);
                 paintLabel(`PASILLO ${i + 1}`, cx, zStart + bays * 2.8 + 3, 2.2);
-                paintLabel(`PASILLO ${i + 1}`, cx, zStart - 3, 2.2, '#f5c400', Math.PI);
+                paintLabel(`PASILLO ${i + 1}`, cx, zStart - 3, 2.2, '#ffffff', Math.PI);
                 // Letrero colgante de identificación (número grande + nombre) en ambas entradas del pasillo
                 const nm = (typeof AISLE_NAMES !== 'undefined' && AISLE_NAMES[i + 1]) || '';
                 const signTex = makeTextTexture([{ text: `P${i + 1}`, size: 150, y: 95, color: '#f5c400' }, { text: nm, size: 52, y: 200, weight: '700', color: '#FFFFFF' }], { w: 1024, h: 256, bg: '#011131', stripe: true });
@@ -7049,11 +7054,18 @@
             // Pasillo transversal principal (zona de tránsito) con doble línea y cruce peatonal
             paintLine(-29, 8, 29, 8); paintLine(-29, 14, 29, 14);
             for (let x = -28; x < 28; x += 2) { paintLine(x, 9, x, 13, 0xffffff, 0.8); }
-            paintLabel('ZONA DE TRÁNSITO · MAX 10 km/h', 0, 6, 3, '#ffffff');
+            paintLabel('ZONA DE TRÁNSITO · MAX 10 km/h', 0, 6, 3, '#ffffff', 0, 22);
+            // Pasillos peatonales delimitados (verde con bordes blancos y rotulado PEATONES): perimetrales junto a los muros y hacia recibo/embarque
+            { const hwW = WAREHOUSE.w / 2, hdW = WAREHOUSE.d / 2, xl = hwW - 1.4, z0 = -hdW + 3, z1 = hdW - 4.7, zr = (typeof transitZ === 'function' ? transitZ() : 9) + 8;
+              const pedMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x2e9e5b).convertSRGBToLinear(), roughness: 1 });
+              const lane = (xa, za, xb, zb) => { const L = Math.hypot(xb - xa, zb - za), m = new THREE.Mesh(new THREE.PlaneGeometry(1.2, L), pedMat); m.rotation.x = -Math.PI / 2; m.rotation.z = Math.atan2(xb - xa, zb - za); m.position.set((xa + xb) / 2, 0.011, (za + zb) / 2); scene.add(m);
+                  const nx = (zb - za) / L * 0.62, nz = -(xb - xa) / L * 0.62; paintLine(xa + nx, za + nz, xb + nx, zb + nz, 0xffffff, 0.1); paintLine(xa - nx, za - nz, xb - nx, zb - nz, 0xffffff, 0.1);
+                  for (let d = 4; d < L - 2; d += 12) paintLabel('PEATONES', xa + (xb - xa) * d / L, za + (zb - za) * d / L, 0.55, '#ffffff', Math.atan2(xb - xa, zb - za) + Math.PI / 2, 3.2); };
+              lane(-xl, z0, -xl, z1); lane(xl, z0, xl, z1); lane(-xl + 0.6, zr, -hwW + 20, zr); lane(xl - 0.6, zr, hwW - 20, zr); }
             // Zona peatonal verde al frente
             const ped = new THREE.Mesh(new THREE.PlaneGeometry(58, 3), new THREE.MeshStandardMaterial({ color: 0x2e9e5b, roughness: 1 }));
             ped.rotation.x = -Math.PI / 2; ped.position.set(0, 0.012, 42); scene.add(ped);
-            paintLabel('PASO PEATONAL', 0, 42, 2.2, '#ffffff');
+            paintLabel('PASO PEATONAL', 0, 42, 2.2, '#ffffff', 0, 10);
             // Zona de destino (staging) amarilla
             dropZone = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ color: 0xf5c400, emissive: 0x665000, roughness: 1, transparent: true, opacity: 0.85 }));
             dropZone.rotation.x = -Math.PI / 2; dropZone.position.set(-20, 0.013, 26); scene.add(dropZone);
@@ -7077,12 +7089,17 @@
               const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 3); DOCK.plate = new THREE.MeshStandardMaterial({ map: t, metalness: 0.7, roughness: 0.45 }); }
             DOCK.stripe = rayMats().stripe; DOCK.seal = new THREE.MeshStandardMaterial({ color: C(0x16181c), roughness: 0.9 }); DOCK.bollard = new THREE.MeshStandardMaterial({ color: C(0xf5c400), roughness: 0.5 }); DOCK.bollardDark = new THREE.MeshStandardMaterial({ color: C(0x30343b), metalness: 0.5, roughness: 0.5 });
             DOCK.red = new THREE.MeshStandardMaterial({ color: C(0xff2a2a), emissive: C(0xff0000), emissiveIntensity: 1.4 }); DOCK.green = new THREE.MeshStandardMaterial({ color: C(0x1f3d24), roughness: 0.6 }); DOCK.lamp = new THREE.MeshStandardMaterial({ color: C(0x30343b), emissive: C(0xfff1c9), emissiveIntensity: 0.5 });
+            { const c = document.createElement('canvas'); c.width = 256; c.height = 230; const g = c.getContext('2d'); const gr = g.createLinearGradient(0, 0, 0, 230); gr.addColorStop(0, '#1b1f26'); gr.addColorStop(1, '#3a3f47'); g.fillStyle = gr; g.fillRect(0, 0, 256, 230);
+              g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 3; for (let x = 20; x < 256; x += 36) { g.beginPath(); g.moveTo(x, 0); g.lineTo(128 + (x - 128) * 0.45, 140); g.stroke(); } g.fillStyle = '#8a6a40'; g.fillRect(70, 150, 52, 50); g.fillRect(132, 160, 50, 40); g.fillStyle = '#b8935a'; g.fillRect(74, 120, 44, 32);   // interior de la caja con carga
+              const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; DOCK.trailer = new THREE.MeshBasicMaterial({ map: t }); }
             const doorMat = DOCK.door;
             const frameMat = new THREE.MeshStandardMaterial({ color: BRAND.brillante });
             for (let i = -2; i <= 2; i++) {
                 const x = i * 10;
                 const zw = WAREHOUSE.d / 2 - 0.25;   // cara interior del muro
-                const door = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 3.4), DOCK.door); door.position.set(x, 1.7, zw - 0.045); door.rotation.y = Math.PI; scene.add(door);
+                const loading = DOCK_LOADING.includes(x);   // andenes en operación de carga/descarga: cortina arriba y caja del tráiler visible
+                if (loading) { const inn = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 2.7), DOCK.trailer); inn.position.set(x, 1.35, zw - 0.045); inn.rotation.y = Math.PI; scene.add(inn); const up = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 0.7), DOCK.door); up.position.set(x, 3.05, zw - 0.046); up.rotation.y = Math.PI; scene.add(up); DOCK_STAGE.push(x); }
+                else { const door = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 3.4), DOCK.door); door.position.set(x, 1.7, zw - 0.045); door.rotation.y = Math.PI; scene.add(door); }
                 [[-1.62, 1.85, 0.24, 3.7], [1.62, 1.85, 0.24, 3.7], [0, 3.62, 3.48, 0.3]].forEach(([dx, y, w, hh]) => { const sm = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 0.16), DOCK.seal); sm.position.set(x + dx, y, zw - 0.08); scene.add(sm); });   // marco/sello del andén
                 const lev = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.2), DOCK.plate); lev.rotation.x = -Math.PI / 2; lev.position.set(x, 0.016, zw - 1.1); scene.add(lev);   // rampa niveladora
                 [-1, 1].forEach(sd => { const e = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 2.2), DOCK.stripe); e.rotation.x = -Math.PI / 2; e.rotation.z = Math.PI / 2 * 0; e.position.set(x + sd * 1.27, 0.017, zw - 1.1); scene.add(e); });
@@ -8153,7 +8170,7 @@
             setBoneWorld(av, 'lFore', C.swing * W.elbow * (0.5 + Math.max(0, sw2) * 0.6), 0, 0); setBoneWorld(av, 'rFore', C.swing * W.elbow * (0.5 + Math.max(0, sw) * 0.6), 0, 0);
             if (waving) { setBoneWorld(av, 'rArm', 0, 0, C.armR * (-0.3 + Math.sin(t * 7.7) * 0.12)); setBoneWorld(av, 'rFore', 0, 0, C.armR * -1.1); }
             // piernas, rodillas y pies (eje lateral): el signo de balanceo del brazo indica el sentido "adelante"
-            setBoneWorld(av, 'lUp', C.swing * sw * W.legSwing); setBoneWorld(av, 'rUp', C.swing * sw2 * W.legSwing);
+            setBoneWorld(av, 'lUp', C.swing * sw * W.legSwing, 0, C.armL * 0.08); setBoneWorld(av, 'rUp', C.swing * sw2 * W.legSwing, 0, C.armR * 0.08);
             setBoneWorld(av, 'lLeg', walking ? -C.swing * Math.max(0, -Math.sin(w - .6)) * W.knee : 0); setBoneWorld(av, 'rLeg', walking ? -C.swing * Math.max(0, -Math.sin(w + Math.PI - .6)) * W.knee : 0);
             setBoneWorld(av, 'lFoot', walking ? C.swing * Math.max(-W.foot, Math.min(W.foot, Math.sin(w + .6) * .35)) : 0); setBoneWorld(av, 'rFoot', walking ? C.swing * Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + .6) * .35)) : 0);
             if (av.bones.hips) av.bones.hips.position.y = av.hipsY0 + (walking ? Math.abs(Math.cos(w)) * 3.5 : Math.sin(t / .9 + idlePhase) * 0.8);
@@ -8389,16 +8406,41 @@
         function pedRouteCatalog() { const { near } = aisleZRange(); const tz = transitZ(); const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2;
             return [ { path: [[-hw + 6, hd - 3.2], [hw - 6, hd - 3.2]], crossing: false },   // paso peatonal frente a andenes
                      { path: [[0, near + 3], [0, tz + 6]], crossing: true },                  // cruce de la zona de tránsito
-                     { path: [[-hw + 2.5, near - 12], [-hw + 2.5, near]], crossing: false },   // pasillo perimetral izquierdo
-                     { path: [[hw - 2.5, near - 12], [hw - 2.5, near]], crossing: false },     // pasillo perimetral derecho
+                     { path: [[-hw + 1.4, near - 12], [-hw + 1.4, near]], crossing: false },   // pasillo perimetral izquierdo
+                     { path: [[hw - 1.4, near - 12], [hw - 1.4, near]], crossing: false },     // pasillo perimetral derecho
                      { path: [[-hw + 8, tz + 8], [-hw + 20, tz + 8]], crossing: false },      // área de recibo
                      { path: [[hw - 20, tz + 8], [hw - 8, tz + 8]], crossing: false } ]; }     // área de embarque
         function assignPedRoute(pd) { const cat = pedRouteCatalog(); const opts = cat.filter(r => !pd.routeIdx || cat.indexOf(r) !== pd.routeIdx); const r = opts[Math.floor(Math.random() * opts.length)]; pd.routeIdx = cat.indexOf(r);
             // nueva ruta empieza cerca de donde está: primer tramo desde la posición actual
             pd.path = [[pd.x, pd.z]].concat(r.path); pd.t = 0; pd.dir = 1; pd.crossing = r.crossing; pd.laps = 0; pd.routeT = 0; }
 
+        // ====== Operación de andén: estibas de mercancía emplayada frente a los andenes activos y cargadores llevando cajas al tráiler ======
+        const DOCK_LOADING = [-20, -10, 10], DOCK_STAGE = [], DOCKW = [];
+        function buildDockOperations() { const hd = WAREHOUSE.d / 2, z0 = hd - 9.6, wrap = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, roughness: 0.15, metalness: 0.1, depthWrite: false });
+            const pal = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.9 });
+            DOCK_STAGE.forEach((x, k) => {
+                paintLine(x - 1.9, z0 - 0.4, x + 1.9, z0 - 0.4, 0xf5c400, 0.1); paintLine(x - 1.9, z0 + 3.4, x + 1.9, z0 + 3.4, 0xf5c400, 0.1); paintLine(x - 1.9, z0 - 0.4, x - 1.9, z0 + 3.4, 0xf5c400, 0.1); paintLine(x + 1.9, z0 - 0.4, x + 1.9, z0 + 3.4, 0xf5c400, 0.1);
+                paintLabel('STAGING A' + (Math.round(x / 10) + 3), x, z0 - 1.1, 0.5, '#ffffff', Math.PI, 3.6);
+                [[-0.85, 0.6], [0.85, 0.6], [-0.85, 2.3], [0.85, 2.3]].forEach(([dx, dz], j) => { if ((k + j) % 4 === 3) return; const px = x + dx, pz = z0 + dz, bh = 0.9 + ((k * 7 + j * 3) % 5) * 0.12;
+                    const p = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.14, 1.0), pal); p.position.set(px, 0.07, pz); p.receiveShadow = true; scene.add(p);
+                    const b = new THREE.Mesh(new THREE.BoxGeometry(1.12, bh, 0.94), cardboardMat((k + j) % 3)); b.position.set(px, 0.14 + bh / 2, pz); b.castShadow = true; b.receiveShadow = true; scene.add(b);
+                    const w = new THREE.Mesh(new THREE.BoxGeometry(1.16, bh + 0.02, 0.98), wrap); w.position.copy(b.position); scene.add(w); });   // emplaye
+                obstacles.push({ minX: x - 1.6, maxX: x + 1.6, minZ: z0, maxZ: z0 + 3.0 });
+                // cargador: va de la estiba al tráiler con una caja y regresa vacío
+                if (GLTF_AVATAR.ok) { const av = makeGLTFAvatar(true); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); const g = new THREE.Group(); g.add(av.obj);
+                    const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.34), cardboardMat(k % 3)); box.position.set(0, 1.0, 0.33); g.add(box); scene.add(g);
+                    DOCKW.push({ g, av, box, x: x + 1.3 * (k % 2 ? -1 : 1) * 0 + (k % 2 ? -0.55 : 0.55), za: z0 + 3.7, zb: hd - 0.9, t: k * 0.37 % 1, dir: 1, wait: 0, walk: k * 2, idle: k }); }
+            }); }
+        function updateDockWorkers(dtS) { const now = performance.now(); DOCKW.forEach(d => { let walking = false; const L = d.zb - d.za;
+                const zNow = d.za + L * d.t, dP = Math.hypot(forkPosition.x - d.x, forkPosition.z - zNow);
+                if (d.wait > 0) d.wait -= dtS; else if (dP > 4.5) { d.t += d.dir * 1.1 * dtS / L; d.walk += 1.1 * dtS * 4.6; walking = true; if (d.t >= 1) { d.t = 1; d.dir = -1; d.wait = 1.6; } if (d.t <= 0) { d.t = 0; d.dir = 1; d.wait = 1.6; } }   // se detiene si el montacargas del jugador está cerca
+                d.box.visible = d.dir > 0 ? d.wait <= 0 || d.t < 0.5 : d.wait > 0 && d.t > 0.5;   // lleva caja hacia el tráiler y regresa sin ella
+                d.g.position.set(d.x, 0, d.za + L * d.t); d.g.rotation.y = d.dir > 0 ? 0 : Math.PI;
+                gltfWalkPose(d.av, walking, d.walk, now, false, d.idle);
+                if (d.box.visible) { const C = d.av.calib; setBoneWorld(d.av, 'lArm', C.swing * 0.95, -0.05, C.armL * 1.2); setBoneWorld(d.av, 'rArm', C.swing * 0.95, 0.05, C.armR * 1.2); setBoneWorld(d.av, 'lFore', C.swing * 0.7, 0, C.armL * -0.5); setBoneWorld(d.av, 'rFore', C.swing * 0.7, 0, C.armR * -0.5); }   // brazos al frente sosteniendo la caja
+            }); }
         function buildTraffic() {
-            if (!GLTF_AVATAR.tried) { loadOperarioModel().then(() => { buildTraffic(); try { mergeSceneStatics(); } catch (e) { console.warn('[SIM] fusión de estáticos:', e.message); } }); return; }
+            if (!GLTF_AVATAR.tried) { loadOperarioModel().then(() => { buildTraffic(); try { buildDockOperations(); } catch (e) { console.warn('[SIM] andenes:', e.message); } try { mergeSceneStatics(); } catch (e) { console.warn('[SIM] fusión de estáticos:', e.message); } }); return; }
             // Montacargas a 10 km/h por pasillos 1 y 4 y por la zona de tránsito
             npcForklift('04', [[-15.25, -36], [-15.25, 2]], 0.2); NPC.forks[0].aisle = 1;
             npcForklift('07', [[18.25, -30], [18.25, 2]], 0.7); NPC.forks[1].aisle = 4;
@@ -8894,7 +8936,7 @@
             }
 
             if (typeof BANNERS !== 'undefined') { const tt = performance.now() / 1000; BANNERS.forEach(b => { b.rotation.x = Math.sin(tt * 0.6 + b.userData.sway) * 0.03; }); }
-            updateTraffic(dtS);
+            updateTraffic(dtS); if (DOCKW.length) updateDockWorkers(dtS);
             checkAisleRule(); checkRackDistance();
             updateLoadPhysics(dtS, turn);
             checkFaults(fwd, turn, mastHeight, r1 + r2);
