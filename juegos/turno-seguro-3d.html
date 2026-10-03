@@ -8402,7 +8402,7 @@
             const px = forkPosition.x, pz = forkPosition.z;
             // --- montacargas ---
             NPC.forks.forEach(f => {
-                const L = pathLen(f.path);
+                const prevT = f.t; const L = pathLen(f.path);
                 // Reglas de operación segura (NOM-006-STPS-2014 · manejo de materiales con montacargas): el peatón tiene prioridad,
                 // distancia mínima de 3 m (5 m en el cruce peatonal), 5 km/h con peatones a menos de 10 m o dentro de la zona de tránsito, claxon al detenerse por un peatón.
                 const pedNear = NPC.peds.some(pd => Math.hypot(pd.x - f.x, pd.z - f.z) < 10); const inTransit = Math.abs(f.z - transitZ()) < 4;
@@ -8417,13 +8417,14 @@
                     if (pedAhead && !f.pedHonk) { f.pedHonk = true; if (dP < 25) hornSound([392, 494], 0.18, 0.12); } else if (!pedAhead) f.pedHonk = false;   // alto total + claxon corto al detenerse por el peatón   // frena si el peatón quedaría dentro de la huella del equipo (horquillas incluidas)
                     // Prioridad entre NPC: el de menor índice tiene preferencia (frena sólo a 0.4 m); el otro cede con margen amplio. Tras ceder > limit s, el que cede toma otra ruta y tiene 2.5 s de 'escape' para alejarse.
                     const otherFork = NPC.forks.some(o => o !== f && (inForkBox(o, np.x, np.z, 1.8) || inForkBox(probeAt(np, f), o.x, o.z, 1.8)));
-                    if (f.backT > 0) { f.backT -= dtS; const bt = Math.max(0, Math.min(1, f.t - v * 0.7 * dtS / L)); const bp = segmentPos(f.path, bt); const bPed = NPC.peds.some(pd => inForkBox(probeAt(bp, f), pd.x, pd.z, 0.9)); if (!bPed) f.t = bt; if (f.backT <= 0) assignNewRoute(f); return; }   // retrocede 3 s por su ruta para liberar al otro equipo y luego toma otra ruta
+                    if (f.backT > 0) { f.backT -= dtS; const bt = Math.max(0, Math.min(1, f.t - v * 0.7 * dtS / L)); const bp = segmentPos(f.path, bt); const bPed = NPC.peds.some(pd => inForkBox(probeAt(bp, f), pd.x, pd.z, 0.9)); const bFork = NPC.forks.some(o => o !== f && (inForkBox(probeAt(bp, f), o.x, o.z, 1.5) || inForkBox(o, bp.x, bp.z, 1.5))); if (bFork) { f.backT = 0; assignNewRoute(f); return; } if (!bPed) f.t = bt; /* en reversa también respeta a los demás montacargas */ if (f.backT <= 0) assignNewRoute(f); return; }   // retrocede 3 s por su ruta para liberar al otro equipo y luego toma otra ruta
                     const sameAisle = f.aisle !== undefined && playerAisle() === f.aisle;   // dos montacargas nunca en el mismo pasillo: el NPC espera fuera
                     if (dP > 6 && !pedAhead && !otherFork && !(sameAisle && dP < 30) && !(f.resumeAt && now < f.resumeAt)) { f.t = nt; f.blockT = 0; if (f.t >= 1) { if (f.aisle !== undefined) assignNewRoute(f); else { f.t = 1; f.dir = -1; } } if (f.t <= 0) { f.t = 0; f.dir = 1; } }
                     else if (sameAisle && f.aisle !== undefined) { f.t = Math.min(1, f.t + v * dtS / L); if (f.t >= 1) assignNewRoute(f); }   // el jugador entró a su pasillo: el NPC sigue su ruta y sale por la zona de tránsito
                     else if (dP <= 6) { f.resumeAt = now + WAIT_AFTER_PASS * 1000; f.nearT = (f.nearT || 0) + dtS; if (f.nearT > 8 && f.aisle !== undefined) { assignNewRoute(f); f.resumeAt = 0; f.nearT = 0; } }   // si el jugador se queda junto al NPC, éste toma otra ruta
                     else { f.nearT = 0; f.blockT = (f.blockT || 0) + dtS; if (pedAhead) f.beacon.material.emissiveIntensity = Math.sin(now / 120) > 0 ? 2.2 : .4; const limit = otherFork ? 2.5 : (pedAhead ? 4 : 6); if (f.blockT > limit) { if (pedAhead && !otherFork && f.aisle !== undefined) { f.backT = 3; } else if (otherFork && f.aisle !== undefined) { const other = NPC.forks.find(o => o !== f && Math.hypot(o.x - f.x, o.z - f.z) < 8); if (!other || NPC.forks.indexOf(f) > NPC.forks.indexOf(other)) f.backT = 3; } else if (f.aisle !== undefined) assignNewRoute(f); else f.dir *= -1; f.blockT = 0; } } }
-                const p = segmentPos(f.path, f.t); const ang = Math.atan2(p.x - f.x, p.z - f.z); if (Math.hypot(p.x - f.x, p.z - f.z) > 1e-4) f.g.rotation.y = ang;
+                let p = segmentPos(f.path, f.t); if (NPC.forks.some(o => { if (o === f) return false; const dn = Math.hypot(p.x - o.x, p.z - o.z); return dn < 3.4 && dn < Math.hypot(f.x - o.x, f.z - o.z); })) { f.t = prevT; p = { x: f.x, z: f.z }; f.blockT = (f.blockT || 0) + dtS; }   /* candado final: nunca acercarse a menos de 3.4 m de otro montacargas */
+                const ang = Math.atan2(p.x - f.x, p.z - f.z); if (Math.hypot(p.x - f.x, p.z - f.z) > 1e-4) f.g.rotation.y = ang;
                 f.x = p.x; f.z = p.z; f.g.position.set(f.x, 0, f.z);
                 // responde al claxon
                 if (honkedRecently && dP < 14 && !f.replied) { f.replied = true; f.yield = 3.5; npcReply(`📣 MC-${f.id} responde el claxon y cede el paso`); setTimeout(() => hornSound([440, 554], .25, .25), 700); }
