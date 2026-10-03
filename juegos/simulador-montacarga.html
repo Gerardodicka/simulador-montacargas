@@ -559,6 +559,30 @@
         .summary { display: none; position: absolute; inset: 0; background: rgba(1,17,49,0.85); z-index: 10; align-items: center; justify-content: center; }
         .summary.show { display: flex; }
         .summary-card { background: #fff; color: #011131; border-radius: 16px; padding: 1.5rem; width: 92%; max-width: 420px; text-align: center; max-height: 92%; overflow-y: auto; }
+        /* Inspección pre-operativa v2: encabezado fijo con avance, tarjetas por punto, control segmentado y pie fijo */
+        #checklist .summary-card { max-width: 560px; padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+        #checklist .ck-head { padding: 1rem 1.1rem .8rem; background: linear-gradient(135deg,#1D2586,#2138D3); color: #fff; }
+        #checklist .ck-head .summary-title { color: #fff; font-size: 15px; letter-spacing: .5px; margin: 0; }
+        #checklist .ck-head .ck-eq { display: inline-block; margin-top: 6px; background: #f5c400; color: #011131; font-weight: 800; font-size: 12px; padding: 3px 10px; border-radius: 99px; }
+        #checklist .ck-head p { color: #dfe5ff !important; margin: .55rem 0 .7rem !important; font-size: 12px !important; line-height: 1.4; }
+        #checklist .ck-prog { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; }
+        #checklist .ck-bar { flex: 1; height: 8px; background: rgba(255,255,255,.25); border-radius: 99px; overflow: hidden; }
+        #checklist .ck-bar i { display: block; height: 100%; width: 0; background: #f5c400; transition: width .25s; }
+        #checklist #ckItems { min-height: 0; overflow-y: auto; padding: .8rem .9rem; background: #f3f5fb; flex: 0 1 auto; }
+        #checklist .ck-foot { padding: .7rem .9rem .9rem; background: #fff; border-top: 1px solid #e6e9f4; }
+        #checklist .ck-foot #ckBlock { margin-top: 0 !important; margin-bottom: 8px; } #checklist .hidden { display: none !important; }
+        #checklist .ck-foot #ckDone { margin-top: 0 !important; }
+        #checklist .ck-item { display: grid; grid-template-columns: 28px 1fr; gap: 6px 10px; align-items: start; background: #fff; border: 1px solid #e3e7f3; border-left: 5px solid #c9cfe2; border-radius: 12px; padding: .7rem .75rem; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(1,17,49,.05); transition: border-color .2s, background .2s; }
+        #checklist .ck-item.st-ok { border-left-color: #28a745; } #checklist .ck-item.st-bad { border-left-color: #dc3545; background: #fff7f8; } #checklist .ck-item.st-na { border-left-color: #838383; }
+        #checklist .ck-num { width: 26px; height: 26px; border-radius: 50%; background: #1D2586; color: #fff; font-weight: 800; font-size: 12px; display: grid; place-items: center; }
+        #checklist .ck-item .txt b { display: block; font-size: 13.5px; line-height: 1.3; color: #011131; }
+        #checklist .ck-item .txt small { display: inline-block; margin-top: 5px; background: #fdecee; color: #b3141f; border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 700; }
+        #checklist .ck-item .bt { grid-column: 2; display: grid; grid-template-columns: 1fr 1fr 64px; gap: 6px; }
+        #checklist .ck-item .bt button { min-height: 38px; padding: .45rem .3rem; font-size: 12px; font-weight: 800; border-radius: 9px; border: 2px solid #dfe3f0; background: #fff; color: #33405c; cursor: pointer; white-space: nowrap; }
+        #checklist .ck-item .bt button:hover { border-color: #2138D3; }
+        #checklist .ck-item .bt button.on-ok { background: #28a745; border-color: #28a745; color: #fff; }
+        #checklist .ck-item .bt button.on-bad { background: #dc3545; border-color: #dc3545; color: #fff; }
+        #checklist .ck-item .bt button.on-na { background: #838383; border-color: #838383; color: #fff; }
         .summary-title { font-size: 13px; font-weight: 800; color: #2138D3; letter-spacing: 1px; }
         .summary-score { font-size: 60px; font-weight: 900; color: #1D2586; line-height: 1; margin-top: 0.4rem; }
         .summary-sub { font-size: 12px; color: #838383; }
@@ -971,11 +995,13 @@
                 <!-- Checklist pre-operativo -->
                 <div class="summary" id="checklist">
                     <div class="summary-card" style="text-align:left">
-                        <div class="summary-title">🔍 ACTIVIDAD 1 · INSPECCIÓN PRE-OPERATIVA <span id="ckEquipo" style="color:#c8102e"></span></div>
+                        <div class="ck-head"><div class="summary-title">🔍 ACTIVIDAD 1 · INSPECCIÓN PRE-OPERATIVA</div><span class="ck-eq" id="ckEquipo"></span>
                         <p style="font-size:12px;color:#555;margin:.4rem 0 .8rem">Revisa cada punto del equipo y marca <b>Cumple</b>, <b>No cumple</b> o <b>N/A</b> (solo cuando el punto no aplica a este equipo). Un punto que <b>No cumple</b> deja el equipo fuera de operación hasta que el instructor lo libere.</p>
+                        <div class="ck-prog"><div class="ck-bar"><i id="ckBar"></i></div><span id="ckCount">0 / 0</span></div></div>
                         <div id="ckItems"></div>
+                        <div class="ck-foot">
                         <div id="ckBlock" class="hidden" style="background:#fff3cd;border-left:4px solid #c8102e;padding:.7rem .9rem;border-radius:8px;font-size:12.5px;margin-top:10px;color:#333"><b>⛔ Equipo fuera de operación.</b> Reporta la falla a mantenimiento. Solo el instructor / supervisor puede liberar el equipo.<br><button class="btn-next" style="margin-top:8px;background:#c8102e" onclick="instructorRelease()">🔓 Liberación del instructor (PIN)</button></div>
-                        <button class="btn-next" style="width:100%;margin-top:10px" id="ckDone" onclick="finishChecklist()" disabled>CONTINUAR</button>
+                        <button class="btn-next" style="width:100%;margin-top:10px" id="ckDone" onclick="finishChecklist()" disabled>CONTINUAR</button></div>
                     </div>
                 </div>
 
@@ -8578,13 +8604,14 @@
         function showChecklist() {
             const sp = spec(); CK = CK_COMMON.concat(CK_BY_TYPE[sp.type] || []);
             ckDefect = Math.floor(Math.random() * CK.length); ckAns = Array(CK.length).fill(null); ckBlocked = false; ckReleased = false;
-            document.getElementById('ckEquipo').textContent = '· Raymond ' + sp.code + ' ' + sp.name;
-            document.getElementById('ckItems').innerHTML = CK.map((it, i) => `<div class="ck-item"><div class="txt"><b>${i + 1}. ${it.t}</b>${i === ckDefect ? `<small>Observación: ${it.d}</small>` : ''}</div><div class="bt"><button onclick="ckMark(${i},'ok',this)">Cumple</button><button onclick="ckMark(${i},'bad',this)">No cumple</button><button onclick="ckMark(${i},'na',this)" title="Solo si el punto no aplica a este equipo">N/A</button></div></div>`).join('');
+            document.getElementById('ckEquipo').textContent = 'Raymond ' + sp.code + ' · ' + sp.name;
+            document.getElementById('ckItems').innerHTML = CK.map((it, i) => `<div class="ck-item"><div class="ck-num">${i + 1}</div><div class="txt"><b>${it.t}</b>${i === ckDefect ? `<small>⚠ Observación: ${it.d}</small>` : ''}</div><div class="bt"><button onclick="ckMark(${i},'ok',this)">✓ Cumple</button><button onclick="ckMark(${i},'bad',this)">✗ No cumple</button><button onclick="ckMark(${i},'na',this)" title="Solo si el punto no aplica a este equipo">N/A</button></div></div>`).join(''); ckProgress();
             document.getElementById('ckDone').disabled = true; document.getElementById('ckDone').textContent = 'CONTINUAR'; document.getElementById('ckBlock').classList.add('hidden'); document.getElementById('checklist').classList.add('show');
         }
         function instructorRelease() { const pin = prompt('PIN del instructor / supervisor para liberar el equipo tras el reporte a mantenimiento:'); if (pin !== '2026') { if (pin !== null) toast('PIN incorrecto: el equipo sigue fuera de operación'); return; }
             ckReleased = true; ckBlocked = false; document.getElementById('ckBlock').classList.add('hidden'); document.getElementById('ckDone').disabled = false; document.getElementById('ckDone').textContent = 'CONTINUAR (equipo liberado por instructor)'; toast('🔓 Equipo liberado por el instructor · falla reportada'); }
-        function ckMark(i, v, btn) { ckAns[i] = v; const bts = btn.parentElement.children; bts[0].className = v === 'ok' ? 'on-ok' : ''; bts[1].className = v === 'bad' ? 'on-bad' : ''; bts[2].className = v === 'na' ? 'on-na' : '';
+        function ckProgress() { const n = ckAns.filter(a => a !== null).length; document.getElementById('ckBar').style.width = (CK.length ? n / CK.length * 100 : 0) + '%'; document.getElementById('ckCount').textContent = n + ' / ' + CK.length + ' revisados'; }
+        function ckMark(i, v, btn) { ckAns[i] = v; const bts = btn.parentElement.children; bts[0].className = v === 'ok' ? 'on-ok' : ''; bts[1].className = v === 'bad' ? 'on-bad' : ''; bts[2].className = v === 'na' ? 'on-na' : ''; btn.parentElement.parentElement.className = 'ck-item st-' + v; ckProgress();
             const complete = !ckAns.some(a => a === null); const anyBad = ckAns.some(a => a === 'bad');
             ckBlocked = complete && anyBad && !ckReleased; document.getElementById('ckBlock').classList.toggle('hidden', !ckBlocked);
             document.getElementById('ckDone').disabled = !complete || ckBlocked; }
