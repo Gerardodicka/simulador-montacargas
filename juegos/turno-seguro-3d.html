@@ -6705,6 +6705,7 @@
 
             buildFloor();
             buildWalls();
+            buildSafetySigns();
             buildRacks();
             buildDock();
             createForklift();
@@ -6779,6 +6780,78 @@
             m.rotation.x = -Math.PI / 2; m.rotation.z = rotY; m.position.set(x, 0.02, z); scene.add(m);
         }
 
+        // ====== Señalamientos de seguridad en muros · NOM-026-STPS-2008 (colores y señales) y NOM-003-SEGOB-2011 (Protección Civil) ======
+        // Rojo = prohibición / equipo contra incendio · Azul = obligación · Amarillo con borde negro = precaución · Verde = información de emergencia.
+        // Todas las señales comparten una textura atlas y un material para que mergeSceneStatics las fusione en una sola llamada de dibujo.
+        const SIGN_TYPES = ['evacDer', 'evacIzq', 'salida', 'extintor', 'botiquin', 'casco', 'chaleco', 'calzado', 'precMonta', 'electrico', 'noPeaton', 'noFumar', 'vel10', 'reunion'];
+        const SIGN_ATLAS = { cols: 7, rows: 2, cw: 256, ch: 352, tex: null, mat: null };
+        function drawSign(g, type, W, H) {
+            const VERDE = '#007A33', ROJO = '#C8102E', AZUL = '#0047AB', AMAR = '#FFD100', NEGRO = '#111', BL = '#fff';
+            const T = { evacDer: 'RUTA DE EVACUACIÓN', evacIzq: 'RUTA DE EVACUACIÓN', salida: 'SALIDA DE EMERGENCIA', extintor: 'EXTINTOR', botiquin: 'BOTIQUÍN', casco: 'USO OBLIGATORIO DE CASCO', chaleco: 'USO OBLIGATORIO DE CHALECO', calzado: 'USO OBLIGATORIO DE CALZADO DE SEGURIDAD', precMonta: 'PRECAUCIÓN TRÁNSITO DE MONTACARGAS', electrico: 'RIESGO ELÉCTRICO', noPeaton: 'PROHIBIDO EL PASO A PEATONES', noFumar: 'PROHIBIDO FUMAR', vel10: 'VELOCIDAD MÁXIMA', reunion: 'PUNTO DE REUNIÓN' }[type];
+            const verde = ['evacDer', 'evacIzq', 'salida', 'botiquin', 'reunion'].includes(type), rojo = type === 'extintor';
+            g.fillStyle = verde ? VERDE : rojo ? ROJO : BL; g.fillRect(0, 0, W, H);
+            g.strokeStyle = verde || rojo ? BL : NEGRO; g.lineWidth = 6; g.strokeRect(8, 8, W - 16, H - 16);
+            const cx = W / 2, cy = 112, R = 86; g.lineCap = 'round'; g.lineJoin = 'round';
+            const flecha = (dir, y) => { g.fillStyle = BL; g.save(); g.translate(cx, y); g.scale(dir, 1); g.beginPath(); g.moveTo(-90, -18); g.lineTo(30, -18); g.lineTo(30, -50); g.lineTo(95, 0); g.lineTo(30, 50); g.lineTo(30, 18); g.lineTo(-90, 18); g.closePath(); g.fill(); g.restore(); };
+            const persona = (x, y, s, col) => { g.fillStyle = col; g.strokeStyle = col; g.lineWidth = 12 * s; g.beginPath(); g.arc(x, y - 52 * s, 13 * s, 0, 7); g.fill(); g.beginPath(); g.moveTo(x, y - 36 * s); g.lineTo(x, y + 8 * s); g.moveTo(x - 26 * s, y - 20 * s); g.lineTo(x + 26 * s, y - 14 * s); g.moveTo(x, y + 8 * s); g.lineTo(x - 20 * s, y + 46 * s); g.moveTo(x, y + 8 * s); g.lineTo(x + 22 * s, y + 46 * s); g.stroke(); };
+            const circulo = (fill, ring) => { g.beginPath(); g.arc(cx, cy, R, 0, 7); g.fillStyle = fill; g.fill(); if (ring) { g.lineWidth = 18; g.strokeStyle = ring; g.stroke(); } };
+            const prohib = () => { g.lineWidth = 18; g.strokeStyle = ROJO; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke(); g.beginPath(); g.moveTo(cx - R * 0.7, cy - R * 0.7); g.lineTo(cx + R * 0.7, cy + R * 0.7); g.stroke(); };
+            const triangulo = () => { g.beginPath(); g.moveTo(cx, cy - 98); g.lineTo(cx + 110, cy + 82); g.lineTo(cx - 110, cy + 82); g.closePath(); g.fillStyle = AMAR; g.fill(); g.lineWidth = 14; g.strokeStyle = NEGRO; g.stroke(); };
+            switch (type) {
+                case 'evacDer': persona(cx - 40, cy - 20, 0.9, BL); flecha(1, cy + 62); break;
+                case 'evacIzq': persona(cx + 40, cy - 20, 0.9, BL); flecha(-1, cy + 62); break;
+                case 'salida': g.strokeStyle = BL; g.lineWidth = 10; g.strokeRect(cx + 20, cy - 90, 70, 125); persona(cx - 30, cy - 20, 0.9, BL); g.save(); g.translate(0, cy + 66); g.scale(1, 0.7); flecha(1, 0); g.restore(); break;
+                case 'extintor': g.fillStyle = BL; g.beginPath(); g.roundRect ? g.roundRect(cx - 30, cy - 50, 60, 140, 22) : g.rect(cx - 30, cy - 50, 60, 140); g.fill(); g.fillRect(cx - 12, cy - 75, 24, 28); g.lineWidth = 10; g.strokeStyle = BL; g.beginPath(); g.moveTo(cx + 10, cy - 66); g.lineTo(cx + 60, cy - 70); g.lineTo(cx + 70, cy - 30); g.stroke(); break;
+                case 'botiquin': g.fillStyle = BL; g.fillRect(cx - 80, cy - 80, 160, 160); g.fillStyle = VERDE; g.fillRect(cx - 18, cy - 60, 36, 120); g.fillRect(cx - 60, cy - 18, 120, 36); break;
+                case 'reunion': g.fillStyle = BL; [0, 1, 2, 3].forEach(k => { g.save(); g.translate(cx, cy); g.rotate(k * Math.PI / 2); g.beginPath(); g.moveTo(-14, -96); g.lineTo(14, -96); g.lineTo(14, -58); g.lineTo(30, -58); g.lineTo(0, -28); g.lineTo(-30, -58); g.lineTo(-14, -58); g.closePath(); g.fill(); g.restore(); }); persona(cx - 12, cy + 18, 0.45, BL); persona(cx + 14, cy + 18, 0.45, BL); break;
+                case 'casco': circulo(AZUL); g.fillStyle = BL; g.beginPath(); g.arc(cx, cy + 20, 55, Math.PI, 0); g.fill(); g.fillRect(cx - 72, cy + 16, 144, 16); break;
+                case 'chaleco': circulo(AZUL); g.fillStyle = BL; g.beginPath(); g.moveTo(cx - 40, cy - 60); g.lineTo(cx - 12, cy - 60); g.lineTo(cx, cy - 20); g.lineTo(cx + 12, cy - 60); g.lineTo(cx + 40, cy - 60); g.lineTo(cx + 55, cy + 60); g.lineTo(cx - 55, cy + 60); g.closePath(); g.fill(); g.fillStyle = AZUL; g.fillRect(cx - 52, cy + 10, 104, 12); break;
+                case 'calzado': circulo(AZUL); g.fillStyle = BL; g.beginPath(); g.moveTo(cx - 40, cy - 60); g.lineTo(cx + 5, cy - 60); g.lineTo(cx + 5, cy + 5); g.lineTo(cx + 60, cy + 25); g.lineTo(cx + 62, cy + 52); g.lineTo(cx - 42, cy + 52); g.closePath(); g.fill(); break;
+                case 'precMonta': triangulo(); g.fillStyle = NEGRO; g.fillRect(cx - 50, cy + 10, 60, 34); g.fillRect(cx - 30, cy - 22, 30, 34); g.fillRect(cx + 14, cy - 50, 9, 94); g.fillRect(cx + 14, cy + 38, 44, 7); g.beginPath(); g.arc(cx - 36, cy + 50, 12, 0, 7); g.arc(cx + 2, cy + 50, 12, 0, 7); g.fill(); break;
+                case 'electrico': triangulo(); g.fillStyle = NEGRO; g.beginPath(); g.moveTo(cx + 12, cy - 60); g.lineTo(cx - 28, cy + 10); g.lineTo(cx - 2, cy + 10); g.lineTo(cx - 14, cy + 66); g.lineTo(cx + 30, cy - 8); g.lineTo(cx + 4, cy - 8); g.closePath(); g.fill(); break;
+                case 'noPeaton': circulo(BL); persona(cx, cy + 10, 1.1, NEGRO); prohib(); break;
+                case 'noFumar': circulo(BL); g.fillStyle = NEGRO; g.fillRect(cx - 62, cy + 2, 100, 22); g.fillStyle = '#E87722'; g.fillRect(cx + 40, cy + 2, 22, 22); g.strokeStyle = NEGRO; g.lineWidth = 6; g.beginPath(); g.moveTo(cx + 50, cy - 8); g.quadraticCurveTo(cx + 30, cy - 30, cx + 50, cy - 52); g.stroke(); prohib(); break;
+                case 'vel10': circulo(BL, ROJO); g.fillStyle = NEGRO; g.font = 'bold 92px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('10', cx, cy - 6); g.font = 'bold 30px Arial'; g.fillText('km/h', cx, cy + 50); break;
+            }
+            // Texto de apoyo (NOM-026: texto complementario debajo del símbolo)
+            g.fillStyle = verde || rojo ? BL : NEGRO; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'bold 26px Arial'; if (T.length > 30) g.font = 'bold 22px Arial';
+            const words = T.split(' '), lines = []; let ln = ''; words.forEach(w => { const t = ln ? ln + ' ' + w : w; if (g.measureText(t).width > W - 36) { lines.push(ln); ln = w; } else ln = t; }); lines.push(ln);
+            lines.forEach((l, i) => g.fillText(l, cx, 270 + (i - (lines.length - 1) / 2) * 27));
+        }
+        function signMaterial() {
+            if (SIGN_ATLAS.mat) return SIGN_ATLAS.mat;
+            const A = SIGN_ATLAS, c = document.createElement('canvas'); c.width = A.cols * A.cw; c.height = A.rows * A.ch; const g = c.getContext('2d');
+            SIGN_TYPES.forEach((t, i) => { g.save(); g.translate((i % A.cols) * A.cw, Math.floor(i / A.cols) * A.ch); g.beginPath(); g.rect(0, 0, A.cw, A.ch); g.clip(); drawSign(g, t, A.cw, A.ch); g.restore(); });
+            A.tex = new THREE.CanvasTexture(c); A.tex.anisotropy = 4; A.mat = new THREE.MeshBasicMaterial({ map: A.tex }); return A.mat;
+        }
+        function addSign(type, x, y, z, rotY, size = 1) {
+            const A = SIGN_ATLAS, i = SIGN_TYPES.indexOf(type), geo = new THREE.PlaneGeometry(0.8 * size, 1.1 * size);
+            const u0 = (i % A.cols) / A.cols, u1 = u0 + 1 / A.cols, v1 = 1 - Math.floor(i / A.cols) / A.rows, v0 = v1 - 1 / A.rows;
+            const uv = geo.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) ? u1 : u0, uv.getY(k) ? v1 : v0);
+            const m = new THREE.Mesh(geo, signMaterial()); m.position.set(x, y, z); m.rotation.y = rotY; m.name = 'senal-' + type; scene.add(m); return m;
+        }
+        function buildSafetySigns() {
+            const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2, xi = hw - 0.26, zf = hd - 0.26, zb = -hd + 0.26, y = 2.5;
+            const redMat = new THREE.MeshStandardMaterial({ color: 0xC8102E, roughness: 0.5 }), greyMat = new THREE.MeshStandardMaterial({ color: 0x5b6577, metalness: 0.4, roughness: 0.5 });
+            // Muros laterales: ruta de evacuación hacia las salidas (frente, +Z) cada 15 m, alternando con señales de obligación, precaución y prohibición
+            const extra = ['extintor', 'precMonta', 'casco', 'noPeaton', 'chaleco', 'extintor', 'vel10', 'calzado', 'botiquin', 'noFumar', 'extintor', 'electrico'];
+            let k = 0;
+            for (let z = -hd + 8; z <= hd - 8; z += 15) {
+                [-1, 1].forEach(sd => {
+                    const rot = sd < 0 ? Math.PI / 2 : -Math.PI / 2, x = sd * xi, d = sd < 0 ? -1 : 1;   // d: desplazamiento hacia -Z en el plano del muro
+                    addSign(sd < 0 ? 'evacIzq' : 'evacDer', x, y, z, rot);
+                    const t = extra[k++ % extra.length]; addSign(t, x, y, z - 1.2, rot);
+                    if (t === 'extintor') { const e = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.55, 12), redMat); e.position.set(sd * (xi - 0.14), 1.55, z - 1.2); scene.add(e); const v = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.08, 8), greyMat); v.position.set(e.position.x, 1.86, e.position.z); scene.add(v); }
+                });
+            }
+            // Muro frontal (andenes): salidas de emergencia peatonales en las esquinas, fuera de las cortinas de andén
+            [-1, 1].forEach(sd => {
+                const x = sd * (hw - 4); const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.2, 0.12), new THREE.MeshStandardMaterial({ color: 0x007A33, roughness: 0.6 })); door.position.set(x, 1.1, zf - 0.02); scene.add(door);
+                addSign('salida', x, 3.0, zf - 0.1, Math.PI, 1.1); addSign('precMonta', x + sd * 1.6, y, zf - 0.1, Math.PI); addSign('extintor', x - sd * 1.6, y, zf - 0.1, Math.PI);
+            });
+            // Muro de fondo (bajo el letrero DICKA): equipo de protección obligatorio y reglas del almacén
+            ['casco', 'chaleco', 'calzado', 'vel10', 'noFumar', 'precMonta', 'electrico', 'botiquin'].forEach((t, i, a) => addSign(t, (i - (a.length - 1) / 2) * 3.2, y, zb + 0.08, 0, 1.15));
+        }
         function buildWalls() {
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xd9dde6, roughness: 0.95 });
             const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2, h = WAREHOUSE.h;
