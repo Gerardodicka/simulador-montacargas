@@ -8159,8 +8159,30 @@
                 if (!GLTF_AVATAR.clips.walk && !GLTF_AVATAR.clips.sit && g.animations.length) GLTF_AVATAR.clips.sit = g.animations[0];   // un solo clip sin nombre reconocible → se asume pose de conducción (operador a bordo)
                 GLTF_AVATAR.ok = g.animations.length > 0 || g.scene.children.length > 0; console.log('[SIM] Avatar glTF cargado:', Object.keys(GLTF_AVATAR.clips), 'altura', h.toFixed(2)); res(GLTF_AVATAR.ok); };
             tryUrl(0); }); }
+        // ====== Equipo de protección y detalles del operario DICKA: gafete con logotipo y radio ======
+        // Las piezas se anclan a los huesos (siguen la animación). Se calculan en espacio del avatar (frente = +Z) y se convierten al espacio local del hueso.
+        const GEAR = {};
+        function gearMats() { if (GEAR.frame) return GEAR; const C = h => new THREE.Color(h).convertSRGBToLinear();
+            GEAR.frame = new THREE.MeshStandardMaterial({ color: C(0x15171b), roughness: 0.4, metalness: 0.2 });
+            GEAR.lens = new THREE.MeshStandardMaterial({ color: C(0xcfe3ff), roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.28, depthWrite: false });
+            GEAR.radio = new THREE.MeshStandardMaterial({ color: C(0x1a1c20), roughness: 0.6 });
+            const c = document.createElement('canvas'); c.width = 128; c.height = 192; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 128, 192); g.fillStyle = '#1D2586'; g.fillRect(0, 0, 128, 46); g.fillStyle = '#d7dbe6'; g.fillRect(34, 60, 60, 66); g.fillStyle = '#1D2586'; g.font = 'bold 18px Arial'; g.textAlign = 'center'; g.fillText('OPERADOR', 64, 150); g.font = '12px Arial'; g.fillText('DICKA LOGISTICS', 64, 172);
+            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; GEAR.badge = new THREE.MeshStandardMaterial({ map: t, roughness: 0.35 });
+            const lg = new Image(); lg.onload = () => { g.drawImage(lg, 14, 8, 100, 100 * lg.height / lg.width); t.needsUpdate = true; }; lg.src = LOGO_DATA_W;
+            const hl = new THREE.TextureLoader().load(LOGO_DATA); hl.encoding = THREE.sRGBEncoding; GEAR.hatLogo = new THREE.MeshBasicMaterial({ map: hl, transparent: true, depthWrite: false });
+            return GEAR; }
+        function addAvatarGear(root) { const M = gearMats(); root.updateMatrixWorld(true); const find = re => { let b = null; root.traverse(o => { if (!b && o.isBone && re.test(o.name)) b = o; }); return b; };
+            const head = find(/Head$/), chest = find(/Spine2$/), hips = find(/Hips$/) || find(/Spine$/); if (!head || !chest) return;
+            const rootQ = new THREE.Quaternion(); root.getWorldQuaternion(rootQ);
+            const attach = (bone, mesh, off, rx) => { const bp = new THREE.Vector3(); bone.getWorldPosition(bp);   // el clon está en el origen sin padre: espacio mundo = espacio del avatar en metros
+                mesh.position.copy(bone.worldToLocal(new THREE.Vector3(bp.x + off[0], bp.y + off[1], bp.z + off[2])));
+                const bq = new THREE.Quaternion(); bone.getWorldQuaternion(bq); mesh.quaternion.copy(bq.invert().multiply(rootQ)); if (rx) mesh.rotateX(rx);
+                const ws = new THREE.Vector3(); bone.getWorldScale(ws); mesh.scale.setScalar(1 / ws.x); mesh.castShadow = false; bone.add(mesh); };
+            attach(chest, new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.082, 0.004), M.badge), [0.075, -0.03, 0.165]);   // gafete al pecho
+            if (hips) attach(hips, new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.03), M.radio), [-0.17, 0.02, 0.03]);       // radio en la cintura
+        }
         function makeGLTFAvatar() { const src = GLTF_AVATAR.gltf.scene; const clone = THREE.SkeletonUtils.clone(src); clone.scale.setScalar(GLTF_AVATAR.scale); clone.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material) { o.material.side = THREE.FrontSide; if (o.material.map) o.material.map.encoding = THREE.sRGBEncoding; if (o.material.transparent) { o.material.alphaTest = 0.5; o.material.transparent = false; o.material.depthWrite = true; } } } });
-            const mixer = new THREE.AnimationMixer(clone); const acts = {}; Object.entries(GLTF_AVATAR.clips).forEach(([k, c]) => { acts[k] = mixer.clipAction(c); }); if (acts.idle) acts.idle.play(); else if (acts.walk) acts.walk.play(); return { obj: clone, mixer, acts, current: acts.idle ? 'idle' : (acts.walk ? 'walk' : null) }; }
+            const mixer = new THREE.AnimationMixer(clone); const acts = {}; Object.entries(GLTF_AVATAR.clips).forEach(([k, c]) => { acts[k] = mixer.clipAction(c); }); if (acts.idle) acts.idle.play(); else if (acts.walk) acts.walk.play(); try { addAvatarGear(clone); } catch (e) { console.warn('[SIM] EPP avatar:', e.message); } return { obj: clone, mixer, acts, current: acts.idle ? 'idle' : (acts.walk ? 'walk' : null) }; }
 
         // ---- Marcha procedural sobre el esqueleto del modelo realista (cuando el GLB no trae clip Walk/Idle) ----
         // Parte de la pose de reposo (T-pose) y aplica rotaciones locales: brazos bajados y balanceo, piernas, rodillas, pies, cadera, columna y cabeza.
