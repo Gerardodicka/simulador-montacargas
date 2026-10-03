@@ -7446,7 +7446,7 @@
         function setActBay(a) { if (a.id === 'rack2') { const stageCats = [...new Set(FRIDGES.filter(f => f.userData.stageCat && f.visible !== undefined && !f.userData.taken).map(f => f.userData.stageCat))]; const cat = stageCats[Math.floor(Math.random() * stageCats.length)] || 'REF'; const t = randomBayTarget(cat); a.locCode = t.code; a.drop = { x: t.x, z: t.z, r: 0.55, yMin: t.y + 0.02, yMax: t.y + 0.5, label: t.code, slot: true, level: t.y, bay: t }; a.spawn = { x: -22.3, y: 0, z: 31 }; a.text = `Toma el ESPACIO DOBLE de ${WG_CATS[cat].name.toLowerCase()} (2 piezas) del STAGING y estíbalo en ${t.code} · nivel ${t.lvl + 1}`; a.cat = cat; }
             if (a.id === 'rack3') { const t = randomBayPick(); a.locCode = t.code; a.spawn = { x: t.x, y: t.y, z: t.z }; a.pick = { x: t.x, z: t.z, y: t.y }; a.bayEntry = t.entry; a.text = `Retira las 2 piezas de ${WG_CATS[t.cat].name.toLowerCase()} de ${t.code} (nivel ${t.lvl + 1}) y déjalas en RECEPCIÓN`; a.cat = t.cat; if (t.entry) { t.entry.mesh.visible = false; } setClampLoad(t.cat, 2); cargo.getObjectByName('wgLoad').visible = true; cargo.position.set(t.x, t.y, t.z); cargo.rotation.y = Math.PI; cargo.userData.onBay = true; }
             if (slotMarker) { slotMarker.visible = !!a.drop; if (a.drop) slotMarker.position.set(a.drop.x, a.drop.level + 0.9, a.drop.z); } }
-        function setBaysVisible(v) { if (bayGroup) bayGroup.visible = v; obstacles.forEach(o => { if (o.bay) o.disabled = !v; }); }
+        function setBaysVisible(v) { if (bayGroup) bayGroup.visible = v; obstacles.forEach(o => { if (o.bay) o.disabled = !v; }); if (typeof applyDockVisibility === 'function') applyDockVisibility(); }
 
         // ================== FÍSICA DE LA CARGA (centro de gravedad, apoyo, retiro) ==================
         const LOAD = { lat: 0, onRack: false, rackY: 0, grabPos: null, wobble: 0, dropped: false, retiroWarned: false };
@@ -7705,6 +7705,8 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
+        const SIM_BUILD = '2026.10.04 · sonido v2';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
             const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
@@ -8218,7 +8220,7 @@
         const VC_MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .8, metalness: 0 });   // material único para niveles lejanos (color por vértice)
         function matKey(m) { return [m.type, m.color ? m.color.getHex() : 0, m.map ? m.map.uuid : '-', m.normalMap ? m.normalMap.uuid : '-', m.roughnessMap ? m.roughnessMap.uuid : '-', m.emissive ? m.emissive.getHex() : 0, m.emissiveIntensity || 0, m.roughness, m.metalness, m.opacity, m.side, m.wireframe ? 1 : 0].join('|'); }
         // Fusiona las mallas estáticas de primer nivel de la escena (líneas de piso, letreros, lámparas, muros…) respetando lo dinámico
-        function mergeSceneStatics() { const keep = new Set([forklift, cargo, window.roofMesh, slotMarker, slotLabel, bayGroup, TRAILER && TRAILER.g].filter(Boolean)); NPC.forks.forEach(f => keep.add(f.g)); NPC.peds.forEach(pd => keep.add(pd.g)); FRIDGES.forEach(f => keep.add(f)); BANNERS.forEach(b => keep.add(b));
+        function mergeSceneStatics() { const keep = new Set([forklift, cargo, window.roofMesh, slotMarker, slotLabel, bayGroup, TRAILER && TRAILER.g].filter(Boolean)); NPC.forks.forEach(f => keep.add(f.g)); NPC.peds.forEach(pd => keep.add(pd.g)); FRIDGES.forEach(f => keep.add(f)); BANNERS.forEach(b => keep.add(b)); if (DOCK_GRP) keep.add(DOCK_GRP);
             const stat = new THREE.Group(); stat.name = 'sceneStatics'; const cand = scene.children.filter(o => o.isMesh && !o.name && !keep.has(o) && !o.isInstancedMesh && !o.material.transparent && !Array.isArray(o.material) && !o.material.isMeshPhysicalMaterial && o.material.side !== THREE.BackSide && !(o.material.map && o.material.map.image && o.material.map.image.width > 1024 && o.geometry.type === 'PlaneGeometry' && o.geometry.parameters.width > 40));
             cand.forEach(o => { scene.remove(o); stat.add(o); }); const before = cand.length; mergeStaticMeshes(stat); let after = 0; stat.traverse(o => { if (o.isMesh) { after++; o.castShadow = false; o.receiveShadow = true; } }); scene.add(stat); console.log('[SIM] Estáticos de escena fusionados:', before, '→', after); }
         function mergeStaticMeshes(node, vcMode) {
@@ -8465,7 +8467,11 @@
             mergeStaticMeshes(g); g.position.x = x; scene.add(g); }
         // ====== Operación de andén: estibas de mercancía emplayada frente a los andenes activos y cargadores llevando cajas al tráiler ======
         const DOCK_LOADING = [-20, -10, 10], DOCK_STAGE = [], DOCKW = [];
-        function buildDockOperations() { const hd = WAREHOUSE.d / 2, z0 = hd - 9.6, wrap = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, roughness: 0.15, metalness: 0.1, depthWrite: false });
+        let DOCK_GRP = null;
+        function buildDockOperations() { const n0 = scene.children.length, ob0 = obstacles.length; buildDockOperationsCore(); DOCK_GRP = new THREE.Group(); DOCK_GRP.name = 'dockOps'; scene.children.slice(n0).forEach(o => { if (!DOCKW.some(d => d.g === o)) DOCK_GRP.add(o); }); scene.add(DOCK_GRP); obstacles.slice(ob0).forEach(o => o.dock = true); applyDockVisibility(); }
+        // Con el carton clamp las bahías de línea blanca ocupan el frente de andenes: se ocultan estibas y cargadores
+        function applyDockVisibility() { const clampOn = !!(typeof bayGroup !== 'undefined' && bayGroup && bayGroup.visible); if (DOCK_GRP) DOCK_GRP.visible = !clampOn; DOCKW.forEach(d => d.g.visible = !clampOn); obstacles.forEach(o => { if (o.dock) o.disabled = clampOn; }); }
+        function buildDockOperationsCore() { const hd = WAREHOUSE.d / 2, z0 = hd - 9.6, wrap = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, roughness: 0.15, metalness: 0.1, depthWrite: false });
             const pal = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.9 });
             DOCK_STAGE.forEach((x, k) => {
                 paintLine(x - 1.9, z0 - 0.4, x + 1.9, z0 - 0.4, 0xf5c400, 0.1); paintLine(x - 1.9, z0 + 3.4, x + 1.9, z0 + 3.4, 0xf5c400, 0.1); paintLine(x - 1.9, z0 - 0.4, x - 1.9, z0 + 3.4, 0xf5c400, 0.1); paintLine(x + 1.9, z0 - 0.4, x + 1.9, z0 + 3.4, 0xf5c400, 0.1);
@@ -8992,7 +8998,7 @@
             }
 
             if (typeof BANNERS !== 'undefined') { const tt = performance.now() / 1000; BANNERS.forEach(b => { b.rotation.x = Math.sin(tt * 0.6 + b.userData.sway) * 0.03; }); }
-            updateTraffic(dtS); if (DOCKW.length) updateDockWorkers(dtS);
+            updateTraffic(dtS); if (DOCKW.length && (!DOCK_GRP || DOCK_GRP.visible)) updateDockWorkers(dtS);
             checkAisleRule(); checkRackDistance();
             updateLoadPhysics(dtS, turn);
             checkFaults(fwd, turn, mastHeight, r1 + r2);
