@@ -6916,13 +6916,13 @@
         // ====== Racks selectivos realistas: postes perforados azules, vigas naranja, placas base, travesaños de soporte, protectores y placa de capacidad ======
         const RACK_MATS = {};
         function rackMats() { if (RACK_MATS.up) return RACK_MATS; const C = h => new THREE.Color(h).convertSRGBToLinear();
-            const c = document.createElement('canvas'); c.width = 32; c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#1f47b8'; g.fillRect(0, 0, 32, 64); g.fillStyle = '#0a1638';
+            const c = document.createElement('canvas'); c.width = 32; c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#1c2b4f'; g.fillRect(0, 0, 32, 64); g.fillStyle = '#05080f';
             [8, 40].forEach(y => { g.beginPath(); g.moveTo(12, y); g.lineTo(20, y); g.lineTo(18, y + 16); g.lineTo(14, y + 16); g.closePath(); g.fill(); });   // perforaciones tipo lágrima
             g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(2, 0, 3, 64);
             const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 26); t.anisotropy = 4;
             RACK_MATS.up = new THREE.MeshStandardMaterial({ map: t, metalness: 0.3, roughness: 0.5 });
-            RACK_MATS.beam = new THREE.MeshStandardMaterial({ color: C(0xe8601c), metalness: 0.25, roughness: 0.45 });
-            RACK_MATS.brace = new THREE.MeshStandardMaterial({ color: C(0x1f47b8), metalness: 0.3, roughness: 0.55 });
+            RACK_MATS.beam = new THREE.MeshStandardMaterial({ color: C(0xea6a12), metalness: 0.25, roughness: 0.45 });
+            RACK_MATS.brace = new THREE.MeshStandardMaterial({ color: C(0x1c2b4f), metalness: 0.3, roughness: 0.55 });
             RACK_MATS.steel = new THREE.MeshStandardMaterial({ color: C(0x8d939c), metalness: 0.7, roughness: 0.4 });
             RACK_MATS.plate = new THREE.MeshStandardMaterial({ color: C(0x2a2d33), metalness: 0.5, roughness: 0.6 });
             RACK_MATS.guard = new THREE.MeshStandardMaterial({ color: C(0xf5c400), roughness: 0.5 });
@@ -6931,6 +6931,8 @@
             q.font = 'bold 22px Arial'; ['MÁX. POR NIVEL', '1,000 kg', 'CARGA UNIFORME', '', 'NO ESCALAR', 'REPORTAR DAÑOS'].forEach((l, i) => { q.font = i === 1 ? 'bold 46px Arial' : 'bold 22px Arial'; q.fillText(l, 128, 108 + i * 38 + (i > 1 ? 10 : 0)); });
             const mc = document.createElement('canvas'); mc.width = 256; mc.height = 72; const mq = mc.getContext('2d'); mq.fillStyle = '#e8601c'; mq.fillRect(0, 0, 256, 72); mq.fillStyle = '#fff'; mq.font = 'bold 40px Arial'; mq.textAlign = 'center'; mq.textBaseline = 'middle'; mq.fillText('MECALUX', 128, 38);
             const mt = new THREE.CanvasTexture(mc); mt.encoding = THREE.sRGBEncoding; RACK_MATS.maker = new THREE.MeshBasicMaterial({ map: mt });   // placa del fabricante (estilo Mecalux: bastidor azul, viga naranja)
+            const wc = document.createElement('canvas'); wc.width = wc.height = 64; const wq = wc.getContext('2d'); wq.strokeStyle = '#b9c0c8'; wq.lineWidth = 3; for (let i = 0; i <= 64; i += 16) { wq.beginPath(); wq.moveTo(i, 0); wq.lineTo(i, 64); wq.stroke(); } wq.lineWidth = 2; for (let i = 0; i <= 64; i += 8) { wq.beginPath(); wq.moveTo(0, i); wq.lineTo(64, i); wq.stroke(); }
+            const wt = new THREE.CanvasTexture(wc); wt.encoding = THREE.sRGBEncoding; wt.wrapS = wt.wrapT = THREE.RepeatWrapping; wt.anisotropy = 4; RACK_MATS.wire = new THREE.MeshStandardMaterial({ map: wt, metalness: 0.6, roughness: 0.4, alphaTest: 0.5, transparent: false, side: THREE.DoubleSide });   // parrilla electrosoldada galvanizada
             const kt = new THREE.CanvasTexture(k); kt.encoding = THREE.sRGBEncoding; RACK_MATS.cap = new THREE.MeshBasicMaterial({ map: kt });
             return RACK_MATS; }
         function buildRack(x, zStart, bays, levels, facing, letter) {
@@ -6951,6 +6953,7 @@
                 });
                 // Diagonales de arriostre
                 // Marco del bastidor: travesaños horizontales por nivel y diagonales en X (en el plano del bastidor, a lo ancho del rack, delgados en Z)
+                { const t0 = new THREE.Mesh(new THREE.BoxGeometry(depth, 0.05, 0.05), braceMat); t0.position.set(x, 0.18, z); scene_add_static(t0); }   // travesaño inferior del bastidor
                 for (let l = 0; l < levels; l++) { const y0 = 0.5 + l * levelH; const tie = new THREE.Mesh(new THREE.BoxGeometry(depth, 0.05, 0.05), braceMat); tie.position.set(x, y0 + levelH / 2, z); scene_add_static(tie);
                     const dl = Math.hypot(depth, levelH); [l % 2 ? 1 : -1].forEach(sd => { const diag = new THREE.Mesh(new THREE.BoxGeometry(dl, 0.04, 0.04), braceMat); diag.position.set(x, y0 + levelH / 2, z); diag.rotation.z = sd * Math.atan2(levelH, depth); scene_add_static(diag); }); }
                 // Protector de poste (amarillo)
@@ -6965,6 +6968,7 @@
                     beam.position.set(x + dx, y, zStart + bays * bayW / 2); scene_add_static(beam);
                 });
                 if (l < levels) {
+                    { const dk = new THREE.Mesh(new THREE.PlaneGeometry(depth + 0.1, bays * bayW), RM.wire); dk.rotation.x = -Math.PI / 2; dk.position.set(x, y + 0.075, zStart + bays * bayW / 2); const uv = dk.geometry.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) * (depth + 0.1) * 2, uv.getY(k) * bays * bayW * 2); scene_add_static(dk); }   // parrilla de entrepaño
                     for (let b = 0; b < bays; b++) { const zc = zStart + b * bayW + bayW / 2; [-0.75, 0.75].forEach(o => { const bar = new THREE.Mesh(new THREE.BoxGeometry(depth, 0.035, 0.05), RM.steel); bar.position.set(x, y + 0.085, zc + o); scene_add_static(bar); }); }   // travesaños de soporte de tarima
                     // Tarimas con producto en cada bahía (aleatoriamente ocupadas)
                     for (let b = 0; b < bays; b++) {
