@@ -6779,11 +6779,11 @@
         function woodTex() { if (_texCache.wood) return _texCache.wood; const c = noiseCanvas(256, 256, '#b08850', 30, (g, w, h) => { g.strokeStyle = 'rgba(80,50,20,.35)'; for (let i = 0; i < 18; i++) { g.lineWidth = 1 + Math.random() * 2; g.beginPath(); g.moveTo(0, i * 14 + Math.random() * 6); g.bezierCurveTo(w / 3, i * 14 + (Math.random() - .5) * 10, 2 * w / 3, i * 14 + (Math.random() - .5) * 10, w, i * 14 + Math.random() * 6); g.stroke(); } }); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; _texCache.wood = upgradeTex(t, 'madera.jpg'); return t; }
         // ====== Tarima real (tablas de cubierta, bloques y tablas inferiores) y carga unitaria (cajas individuales en camas, cinta, etiquetas y emplaye) ======
         function palletGeometry(rot) { const k = rot === 'lite' ? 'palGeoL' : rot ? 'palGeoR' : 'palGeo'; if (_texCache[k]) return _texCache[k]; const parts = []; const box = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); parts.push(g); };
-            if (rot === 'lite') { box(1.2, 0.022, 1.0, 0, 0.011, 0); [-0.53, 0, 0.53].forEach(x => box(0.14, 0.1, 1.0, x, 0.072, 0)); box(1.2, 0.022, 1.0, 0, 0.133, 0); const g = THREE.BufferGeometryUtils.mergeBufferGeometries(parts); g.translate(0, -0.072, 0); g.rotateY(Math.PI / 2); g.computeBoundingSphere(); _texCache[k] = g; return g; }   // versión ligera (60 triángulos) para los cientos de tarimas en rack
-            [-0.45, 0, 0.45].forEach(z => box(1.2, 0.022, 0.1, 0, 0.011, z));                                                 // tablas inferiores
-            [-0.53, 0, 0.53].forEach(x => [-0.43, 0, 0.43].forEach(z => box(0.14, 0.078, 0.14, x, 0.061, z)));                // 9 bloques
-            [-0.53, 0, 0.53].forEach(x => box(0.14, 0.022, 1.0, x, 0.111, 0));                                                // largueros
-            for (let i = 0; i < 7; i++) box(0.12, 0.022, 1.0, -0.54 + i * 0.18, 0.133, 0);                                   // 7 tablas de cubierta con separación
+            if (rot === 'lite') { box(1.2, 0.022, 1.0, 0, 0.011, 0); [-0.47, 0, 0.47].forEach(z => box(1.2, 0.1, 0.05, 0, 0.072, z)); box(1.2, 0.022, 1.0, 0, 0.133, 0); const g = THREE.BufferGeometryUtils.mergeBufferGeometries(parts); g.translate(0, -0.072, 0); g.rotateY(Math.PI / 2); g.computeBoundingSphere(); _texCache[k] = g; return g; }   // versión ligera (60 triángulos) para los cientos de tarimas en rack
+            // tarima de largueros (2 entradas): 5 tablas inferiores, 3 largueros macizos y 7 tablas de cubierta con separación
+            for (let i = 0; i < 5; i++) box(0.12, 0.022, 1.0, -0.54 + i * 0.27, 0.011, 0);
+            [-0.475, 0, 0.475].forEach(z => box(1.2, 0.1, 0.05, 0, 0.072, z));
+            for (let i = 0; i < 7; i++) box(0.12, 0.022, 1.0, -0.54 + i * 0.18, 0.133, 0);
             let g = THREE.BufferGeometryUtils.mergeBufferGeometries(parts); g.translate(0, -0.072, 0); if (rot) g.rotateY(Math.PI / 2); g.computeBoundingSphere(); _texCache[k] = g; return g; }
         function unitLoadTex(v) { const k = 'ul' + v; if (_texCache[k]) return _texCache[k]; const base = ['#c9a875', '#d3b283', '#bfa070'][v % 3]; const c = noiseCanvas(512, 512, base, 14, (g, w, h) => {
                 const cols = 3, rows = 4, cw = w / cols, rh = h / rows;
@@ -6791,9 +6791,12 @@
                     g.fillStyle = 'rgba(150,110,50,.35)'; g.fillRect(x + cw / 2 - 7, y, 14, rh);                                // cinta canela
                     if ((r + q + v) % 3 === 0) { g.fillStyle = '#f4f4f0'; g.fillRect(x + 12, y + rh - 46, 62, 34); g.fillStyle = '#1D2586'; g.fillRect(x + 12, y + rh - 46, 62, 8); g.fillStyle = '#222'; for (let b = 0; b < 12; b++) g.fillRect(x + 16 + b * 4.5, y + rh - 22, b % 3 ? 2 : 1, 8); }   // etiqueta con código de barras
                     g.strokeStyle = 'rgba(60,40,15,.55)'; g.lineWidth = 3; g.strokeRect(x + 1.5, y + 1.5, cw - 3, rh - 3); }       // junta entre cajas
-                for (let i = 0; i < 22; i++) { g.strokeStyle = `rgba(255,255,255,${0.05 + Math.random() * 0.08})`; g.lineWidth = 2 + Math.random() * 6; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.lineTo(w, y + (Math.random() - .5) * 60); g.stroke(); } });   // brillo del emplaye
+                g.fillStyle = 'rgba(225,235,242,.16)'; g.fillRect(0, 0, w, h); const hz = g.createLinearGradient(0, 0, 0, h); hz.addColorStop(0, 'rgba(235,242,248,.28)'); hz.addColorStop(.25, 'rgba(235,242,248,0)'); hz.addColorStop(.8, 'rgba(235,242,248,0)'); hz.addColorStop(1, 'rgba(235,242,248,.32)'); g.fillStyle = hz; g.fillRect(0, 0, w, h);   // película: más capas arriba y abajo
+                for (let i = 0; i < 9; i++) { const y = i * h / 8 + (Math.random() - .5) * 20; g.strokeStyle = 'rgba(255,255,255,.22)'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y + 70); g.stroke(); }   // bordes de cada vuelta en espiral
+                for (let i = 0; i < 40; i++) { g.strokeStyle = `rgba(255,255,255,${0.06 + Math.random() * 0.14})`; g.lineWidth = 1 + Math.random() * 4; g.beginPath(); const y = Math.random() * h, x = Math.random() * w; g.moveTo(x, y); g.quadraticCurveTo(x + 30, y + (Math.random() - .5) * 40, x + 40 + Math.random() * 120, y + (Math.random() - .5) * 30); g.stroke(); }   // arrugas y pliegues
+                for (let i = 0; i < 6; i++) { g.fillStyle = `rgba(255,255,255,${0.10 + Math.random() * 0.12})`; const x = Math.random() * w; g.fillRect(x, 0, 3 + Math.random() * 10, h); } });   // reflejos verticales del plástico
             const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; cartonUpgrade(c, t); _texCache[k] = t; return t; }
-        function unitLoadMat(v) { return new THREE.MeshStandardMaterial({ map: unitLoadTex(v), roughness: 0.55, metalness: 0.02 }); }
+        function unitLoadMat(v) { const P = THREE.MeshPhysicalMaterial; return P ? new P({ map: unitLoadTex(v), roughness: 0.8, clearcoat: 1.0, clearcoatRoughness: 0.22, envMapIntensity: 1.2 }) : new THREE.MeshStandardMaterial({ map: unitLoadTex(v), roughness: 0.55 }); }   // cartón bajo película stretch brillante
         // Caja de cartón realista: caras distintas (tapa con solapas y cinta, costados con cinta que baja, tinta impresa, etiqueta, bordes gastados)
         function cbFaceTex(v, face) { const k = 'cbf' + v + face; if (_texCache[k]) return _texCache[k]; const base = ['#c19a64', '#cba674', '#b8915a'][v % 3];
             const c = noiseCanvas(256, 256, face === 'bot' ? '#a8834e' : base, 12, (g, w, h) => {
@@ -6813,8 +6816,8 @@
         // Tarima real: 3 largueros + 7 tablas arriba + 3 abajo
         function makePallet(w, d) { w = w || 1.0; d = d || 1.2; const g = new THREE.Group(); const m = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.9 });
             for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.022, d / 7 * 0.72), m); b.position.set(0, 0.13, -d / 2 + d / 14 + i * d / 7); b.castShadow = true; g.add(b); }
-            [-w / 2 + 0.05, 0, w / 2 - 0.05].forEach(x => { const s = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, d), m); s.position.set(x, 0.065, 0); g.add(s); });
-            [-d / 2 + 0.06, 0, d / 2 - 0.06].forEach(z => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, 0.1), m); b.position.set(0, 0.01, z); g.add(b); });
+            [-w / 2 + 0.05, 0, w / 2 - 0.05].forEach(x => { const s = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, d), m); s.position.set(x, 0.07, 0); g.add(s); });
+            [-d / 2 + 0.06, -d / 4, 0, d / 4, d / 2 - 0.06].forEach(z => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, 0.1), m); b.position.set(0, 0.01, z); g.add(b); });
             return g; }
 
         // ====== Texturas fotográficas (Poly Haven, CC0) en assets/textures/: si no cargan (archivo local o sin red) se quedan las procedurales ======
@@ -7733,7 +7736,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v7.9 mástil';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v8.1 tarima y emplaye';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8248,6 +8251,20 @@
         // La zona del chaleco en el atlas (Operador_DICKA_BaseColor) ocupa la esquina inferior izquierda; sólo se cambian píxeles naranja (las cintas reflejantes se conservan).
         const VEST_UV = { x0: 0.0, x1: 0.47, y0: 0.66, y1: 1.0 }, VEST_LOGOS = [[0.232, 0.765, 0.13], [0.232, 0.93, 0.15]];   // [u, v, ancho] en fracción del atlas
         let SKIN_IMG = null;
+        // Guantes de trabajo amarillos (NOM-017-STPS-2008) pintados sobre la malla de la mano: siguen dedos y muñeca porque usan los pesos de los huesos
+        function workGloves(scene) { scene.traverse(o => { if (!o.isSkinnedMesh || !o.skeleton || !o.geometry.attributes.skinIndex || o.geometry.attributes.aGlove) return;
+                const hb = o.skeleton.bones.map(b => /Hand/i.test(b.name) ? 1 : 0); if (!hb.some(Boolean)) return; const si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, n = si.count, gw = new Float32Array(n);
+                for (let i = 0; i < n; i++) gw[i] = hb[si.getX(i)] * sw.getX(i) + hb[si.getY(i)] * sw.getY(i) + hb[si.getZ(i)] * sw.getZ(i) + hb[si.getW(i)] * sw.getW(i);
+                o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); const m = o.material; if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
+                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nvarying float vGlove;\nvarying float vPalm;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGlove = aGlove; vPalm = smoothstep(-0.15, -0.55, normalize(objectNormal).y);');
+                    sh.fragmentShader = 'varying float vGlove;\nvarying float vPalm;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+                    float gk = smoothstep(0.003, 0.03, vGlove); if (gk > 0.0) { vec2 gu = vUv * vec2(1400.0, 2600.0); float rib = abs(sin(gu.x)); float loopv = abs(sin(gu.y + (sin(gu.x * 0.5) > 0.0 ? 1.57 : 0.0)));
+                      float knit = 0.62 + 0.38 * rib * (0.55 + 0.45 * loopv); float fz = fract(sin(dot(floor(gu * 0.5), vec2(12.9898, 78.233))) * 43758.5453);   // punto de tejido con pelusa
+                      vec3 gy = vec3(0.90, 0.68, 0.04) * knit * (0.92 + 0.12 * fz);
+                      float wr = 0.85 + 0.15 * sin(vUv.y * 9000.0 + sin(vUv.x * 4000.0) * 2.0); vec3 nit = vec3(0.16, 0.17, 0.19) * wr * (0.9 + 0.1 * fz);   // recubrimiento de nitrilo con arrugas
+                      gy = mix(gy, nit, vPalm * smoothstep(0.35, 0.6, vGlove)); float cuffB = smoothstep(0.003, 0.03, vGlove) * (1.0 - smoothstep(0.12, 0.3, vGlove)); gy = mix(gy, vec3(0.55, 0.40, 0.02), cuffB * 0.7);
+                      diffuseColor.rgb = mix(diffuseColor.rgb, gy, gk); }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix(roughnessFactor, mix(0.97, 0.5, vPalm * smoothstep(0.35, 0.6, vGlove)), smoothstep(0.003, 0.03, vGlove));'); };
+                m.customProgramCacheKey = () => 'glove'; m.needsUpdate = true; }); }
         function dickaVest(scene) { return new Promise(done => { const skin = new Image(); skin.onload = () => { SKIN_IMG = skin; go(); }; skin.onerror = () => go(); skin.src = 'assets/textures/piel.jpg'; const go = () => { const logo = new Image(); logo.onload = () => { const seen = new Set();
             scene.traverse(o => { if (!o.isMesh || !o.material || !o.material.map || !o.material.map.image || seen.has(o.material.map)) return; const m = o.material, img = m.map.image; seen.add(m.map); if (!/body/i.test(m.name || '')) return;
                 const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
@@ -8266,7 +8283,7 @@
             done(); }; logo.onerror = () => done(); logo.src = LOGO_DATA_W; }; }); }
         function loadOperarioModel() { return new Promise(res => { if (GLTF_AVATAR.tried || !THREE.GLTFLoader) { res(GLTF_AVATAR.ok); return; } GLTF_AVATAR.tried = true; if (location.protocol === 'file:' && !/\/juegos\//.test(location.pathname)) { res(false); return; }
             const tryUrl = (i) => { if (i >= GLTF_AVATAR.urls.length) { console.info('[SIM] Sin operario.glb en ninguna ruta: se usa el avatar procedural v5'); res(false); return; } new THREE.GLTFLoader().load(GLTF_AVATAR.urls[i], g => onLoad0(g), undefined, () => tryUrl(i + 1)); };
-            const onLoad0 = g => { dickaVest(g.scene).then(() => onLoad(g)); };
+            const onLoad0 = g => { workGloves(g.scene); dickaVest(g.scene).then(() => onLoad(g)); };
             const onLoad = g => { GLTF_AVATAR.gltf = g; g.scene.updateMatrixWorld(true); let h = 0; let headB = null, footB = null; g.scene.traverse(o => { if (o.isBone) { if (/Head$/i.test(o.name) && !/End/i.test(o.name)) headB = o; if (/(LeftFoot|RightFoot|LeftToeBase)$/i.test(o.name) && !footB) footB = o; } }); if (headB) { const hp = new THREE.Vector3(); headB.getWorldPosition(hp); const fp = new THREE.Vector3(); if (footB) footB.getWorldPosition(fp); h = (hp.y - Math.min(fp.y, 0)) + 0.13; }   // altura por huesos: la caja de un SkinnedMesh no considera la escala de la armadura
                 if (!(h > 0.2)) { const box = new THREE.Box3().setFromObject(g.scene); h = box.max.y - box.min.y || 1.8; } GLTF_AVATAR.scale = 1.74 / h;
                 g.animations.forEach(c => { const n = c.name.toLowerCase(); if (/walk/.test(n)) GLTF_AVATAR.clips.walk = c; else if (/idle|stand/.test(n)) GLTF_AVATAR.clips.idle = c; else if (/wave/.test(n)) GLTF_AVATAR.clips.wave = c; else if (/sit|seat|driv/.test(n)) GLTF_AVATAR.clips.sit = c; });
@@ -8632,7 +8649,7 @@
                 // cargador: va de la estiba al tráiler con una caja y regresa vacío
                 if (GLTF_AVATAR.ok) { const av = makeGLTFAvatar(true); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); const g = new THREE.Group(); g.add(av.obj);
                     const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.34), cardboardMat(k % 3)); box.position.set(0, 0.92, 0.3); g.add(box); scene.add(g);
-                    addGloves(av.obj);   // guantes de trabajo: NOM-017-STPS-2008 (EPP) para manejo manual de cajas
+                    /* guantes ya pintados en la malla (workGloves) */   // guantes de trabajo: NOM-017-STPS-2008 (EPP) para manejo manual de cajas
                     DOCKW.push({ g, av, box, x: x + 1.3 * (k % 2 ? -1 : 1) * 0 + (k % 2 ? -0.55 : 0.55), za: z0 + 3.7, zb: hd + 1.6, t: k * 0.37 % 1, dir: 1, wait: 0, walk: k * 2, idle: k }); }
             }); }
         function updateDockWorkers(dtS) { const now = performance.now(); DOCKW.forEach(d => { let walking = false; const L = d.zb - d.za;
