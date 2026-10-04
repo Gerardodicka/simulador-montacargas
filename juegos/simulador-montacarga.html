@@ -6783,11 +6783,15 @@
             [-d / 2 + 0.06, 0, d / 2 - 0.06].forEach(z => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, 0.1), m); b.position.set(0, 0.01, z); g.add(b); });
             return g; }
 
+        // ====== Texturas fotográficas (Poly Haven, CC0) en assets/textures/: si no cargan (archivo local o sin red) se quedan las procedurales ======
+        function loadRealTex(file, repX, repY, done) { try { new THREE.TextureLoader().load('assets/textures/' + file, t => { t.encoding = /rough/.test(file) ? THREE.LinearEncoding : THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repX, repY); t.anisotropy = 8; done(t); }, undefined, () => {}); } catch (e) {} }
         function buildFloor() {
             // Concreto pulido
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(WAREHOUSE.w, WAREHOUSE.d),
                 new THREE.MeshStandardMaterial({ map: concreteTex(), roughness: 0.6, metalness: 0.08 }));
             floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+            loadRealTex('piso.jpg', WAREHOUSE.w / 4, WAREHOUSE.d / 4, t => { floor.material.map = t; floor.material.color.setRGB(1.15, 1.15, 1.15); floor.material.needsUpdate = true; });   // concreto real (≈4 m por mosaico)
+            loadRealTex('piso_rough.jpg', WAREHOUSE.w / 4, WAREHOUSE.d / 4, t => { floor.material.roughnessMap = t; floor.material.roughness = 0.9; floor.material.needsUpdate = true; });
 
             // Juntas de losas
             const jointMat = new THREE.LineBasicMaterial({ color: 0x777777 });
@@ -6916,7 +6920,8 @@
               open.forEach(ox => { const x1 = ox - OW / 2; walls.push({ g: [x1 - x0, h, 0.5], p: [(x0 + x1) / 2, h / 2, hd] }); walls.push({ g: [OW, h - OH, 0.5], p: [ox, OH + (h - OH) / 2, hd], lintel: true }); x0 = ox + OW / 2; });
               walls.push({ g: [hw - x0, h, 0.5], p: [(x0 + hw) / 2, h / 2, hd] }); }
             walls.forEach(w => { const t = new THREE.CanvasTexture(wc); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.repeat.set(Math.max(w.g[0], w.g[2]), h / 3);
-                const m = new THREE.Mesh(new THREE.BoxGeometry(...w.g), new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0.25 })); m.position.set(...w.p); m.receiveShadow = true; scene.add(m); });
+                const mat = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0.25 }); const m = new THREE.Mesh(new THREE.BoxGeometry(...w.g), mat); m.position.set(...w.p); m.receiveShadow = true; scene.add(m);
+                loadRealTex('lamina.jpg', Math.max(w.g[0], w.g[2]) / 2.5, w.g[1] / 2.5, rt => { mat.map = rt; mat.color.setRGB(1.75, 1.75, 1.8); mat.needsUpdate = true; }); });   // lámina acanalada real (≈2.5 m por mosaico)
             { const poly = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xdfeefa).convertSRGBToLinear(), emissive: new THREE.Color(0xcfe6ff).convertSRGBToLinear(), emissiveIntensity: 0.55, roughness: 0.3 });   // franja de policarbonato (luz natural)
               [[0, -hd + 0.27, 0, WAREHOUSE.w], [0, hd - 0.27, Math.PI, WAREHOUSE.w], [-hw + 0.27, 0, Math.PI / 2, WAREHOUSE.d], [hw - 0.27, 0, -Math.PI / 2, WAREHOUSE.d]].forEach(([x, z, ry, L]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(L - 1, 1.1), poly); m.position.set(x, h - 1.6, z); m.rotation.y = ry; scene.add(m); }); }
             // Zócalo azul marino
@@ -7734,7 +7739,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v6.1 rendimiento';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v7 texturas reales';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
