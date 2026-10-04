@@ -7733,7 +7733,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v7.9 mástil';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v8.0 guantes';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8248,6 +8248,17 @@
         // La zona del chaleco en el atlas (Operador_DICKA_BaseColor) ocupa la esquina inferior izquierda; sólo se cambian píxeles naranja (las cintas reflejantes se conservan).
         const VEST_UV = { x0: 0.0, x1: 0.47, y0: 0.66, y1: 1.0 }, VEST_LOGOS = [[0.232, 0.765, 0.13], [0.232, 0.93, 0.15]];   // [u, v, ancho] en fracción del atlas
         let SKIN_IMG = null;
+        // Guantes de trabajo amarillos (NOM-017-STPS-2008) pintados sobre la malla de la mano: siguen dedos y muñeca porque usan los pesos de los huesos
+        function workGloves(scene) { scene.traverse(o => { if (!o.isSkinnedMesh || !o.skeleton || !o.geometry.attributes.skinIndex || o.geometry.attributes.aGlove) return;
+                const hb = o.skeleton.bones.map(b => /Hand/i.test(b.name) ? 1 : 0); if (!hb.some(Boolean)) return; const si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, n = si.count, gw = new Float32Array(n);
+                for (let i = 0; i < n; i++) gw[i] = hb[si.getX(i)] * sw.getX(i) + hb[si.getY(i)] * sw.getY(i) + hb[si.getZ(i)] * sw.getZ(i) + hb[si.getW(i)] * sw.getW(i);
+                o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); const m = o.material; if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
+                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nvarying float vGlove;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGlove = aGlove;');
+                    sh.fragmentShader = 'varying float vGlove;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+                    float gk = smoothstep(0.04, 0.16, vGlove); if (gk > 0.0) { vec2 gu = vUv * vec2(900.0, 1800.0); float knit = 0.82 + 0.18 * abs(sin(gu.x)) * (0.7 + 0.3 * sin(gu.y));
+                      vec3 gy = vec3(0.86, 0.62, 0.02) * knit; float cuffB = smoothstep(0.04, 0.12, vGlove) * (1.0 - smoothstep(0.30, 0.45, vGlove)); gy = mix(gy, vec3(0.55, 0.40, 0.02), cuffB * 0.7);
+                      diffuseColor.rgb = mix(diffuseColor.rgb, gy, gk); }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix(roughnessFactor, 0.95, smoothstep(0.04, 0.16, vGlove));'); };
+                m.customProgramCacheKey = () => 'glove'; m.needsUpdate = true; }); }
         function dickaVest(scene) { return new Promise(done => { const skin = new Image(); skin.onload = () => { SKIN_IMG = skin; go(); }; skin.onerror = () => go(); skin.src = 'assets/textures/piel.jpg'; const go = () => { const logo = new Image(); logo.onload = () => { const seen = new Set();
             scene.traverse(o => { if (!o.isMesh || !o.material || !o.material.map || !o.material.map.image || seen.has(o.material.map)) return; const m = o.material, img = m.map.image; seen.add(m.map); if (!/body/i.test(m.name || '')) return;
                 const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
@@ -8266,7 +8277,7 @@
             done(); }; logo.onerror = () => done(); logo.src = LOGO_DATA_W; }; }); }
         function loadOperarioModel() { return new Promise(res => { if (GLTF_AVATAR.tried || !THREE.GLTFLoader) { res(GLTF_AVATAR.ok); return; } GLTF_AVATAR.tried = true; if (location.protocol === 'file:' && !/\/juegos\//.test(location.pathname)) { res(false); return; }
             const tryUrl = (i) => { if (i >= GLTF_AVATAR.urls.length) { console.info('[SIM] Sin operario.glb en ninguna ruta: se usa el avatar procedural v5'); res(false); return; } new THREE.GLTFLoader().load(GLTF_AVATAR.urls[i], g => onLoad0(g), undefined, () => tryUrl(i + 1)); };
-            const onLoad0 = g => { dickaVest(g.scene).then(() => onLoad(g)); };
+            const onLoad0 = g => { workGloves(g.scene); dickaVest(g.scene).then(() => onLoad(g)); };
             const onLoad = g => { GLTF_AVATAR.gltf = g; g.scene.updateMatrixWorld(true); let h = 0; let headB = null, footB = null; g.scene.traverse(o => { if (o.isBone) { if (/Head$/i.test(o.name) && !/End/i.test(o.name)) headB = o; if (/(LeftFoot|RightFoot|LeftToeBase)$/i.test(o.name) && !footB) footB = o; } }); if (headB) { const hp = new THREE.Vector3(); headB.getWorldPosition(hp); const fp = new THREE.Vector3(); if (footB) footB.getWorldPosition(fp); h = (hp.y - Math.min(fp.y, 0)) + 0.13; }   // altura por huesos: la caja de un SkinnedMesh no considera la escala de la armadura
                 if (!(h > 0.2)) { const box = new THREE.Box3().setFromObject(g.scene); h = box.max.y - box.min.y || 1.8; } GLTF_AVATAR.scale = 1.74 / h;
                 g.animations.forEach(c => { const n = c.name.toLowerCase(); if (/walk/.test(n)) GLTF_AVATAR.clips.walk = c; else if (/idle|stand/.test(n)) GLTF_AVATAR.clips.idle = c; else if (/wave/.test(n)) GLTF_AVATAR.clips.wave = c; else if (/sit|seat|driv/.test(n)) GLTF_AVATAR.clips.sit = c; });
@@ -8632,7 +8643,7 @@
                 // cargador: va de la estiba al tráiler con una caja y regresa vacío
                 if (GLTF_AVATAR.ok) { const av = makeGLTFAvatar(true); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); const g = new THREE.Group(); g.add(av.obj);
                     const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.34), cardboardMat(k % 3)); box.position.set(0, 0.92, 0.3); g.add(box); scene.add(g);
-                    addGloves(av.obj);   // guantes de trabajo: NOM-017-STPS-2008 (EPP) para manejo manual de cajas
+                    /* guantes ya pintados en la malla (workGloves) */   // guantes de trabajo: NOM-017-STPS-2008 (EPP) para manejo manual de cajas
                     DOCKW.push({ g, av, box, x: x + 1.3 * (k % 2 ? -1 : 1) * 0 + (k % 2 ? -0.55 : 0.55), za: z0 + 3.7, zb: hd + 1.6, t: k * 0.37 % 1, dir: 1, wait: 0, walk: k * 2, idle: k }); }
             }); }
         function updateDockWorkers(dtS) { const now = performance.now(); DOCKW.forEach(d => { let walking = false; const L = d.zb - d.za;
