@@ -6899,7 +6899,7 @@
             if (SIGN_ATLAS.mat) return SIGN_ATLAS.mat;
             const A = SIGN_ATLAS, c = document.createElement('canvas'); c.width = A.cols * A.cw; c.height = A.rows * A.ch; const g = c.getContext('2d');
             SIGN_TYPES.forEach((t, i) => { g.save(); g.translate((i % A.cols) * A.cw, Math.floor(i / A.cols) * A.ch); g.beginPath(); g.rect(0, 0, A.cw, A.ch); g.clip(); drawSign(g, t, A.cw, A.ch); g.restore(); });
-            A.tex = new THREE.CanvasTexture(c); A.tex.anisotropy = 4; A.mat = new THREE.MeshBasicMaterial({ map: A.tex }); return A.mat;
+            A.tex = new THREE.CanvasTexture(c); A.tex.anisotropy = 4; A.tex.encoding = THREE.sRGBEncoding; A.mat = new THREE.MeshBasicMaterial({ map: A.tex }); return A.mat;
         }
         function addSign(type, x, y, z, rotY, size = 1) {
             const A = SIGN_ATLAS, i = SIGN_TYPES.indexOf(type), geo = new THREE.PlaneGeometry(0.8 * size, 1.1 * size);
