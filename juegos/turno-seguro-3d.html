@@ -7419,6 +7419,7 @@
             // marcas de piso dentro de la caja: posiciones de tarimas
             for (let i = 0; i < 11; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 1.2), new THREE.MeshBasicMaterial({ color: 0xf5c400 })); m.rotation.x = -Math.PI / 2; m.position.set(0, 0.01, z0 + 0.7 + i * 1.2); g.add(m); }
             const fondo = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.2, 1.3), new THREE.MeshBasicMaterial({ color: 0x2e9e5b, transparent: true, opacity: .35 })); fondo.rotation.x = -Math.PI / 2; fondo.position.set(0, 0.012, z0 + L - 0.75); g.add(fondo); g.userData.fondo = fondo;
+            try { trailerInterior(g, W, H, L, z0); } catch (e) {}
             mergeStaticMeshes(g); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(g); TRAILER = { g, z0, L, W };
             // colisiones: paredes laterales y frente de la caja
             obstacles.push({ minX: -W / 2 - 0.2, maxX: -W / 2 + 0.05, minZ: z0, maxZ: z0 + L }); obstacles.push({ minX: W / 2 - 0.05, maxX: W / 2 + 0.2, minZ: z0, maxZ: z0 + L }); obstacles.push({ minX: -W / 2, maxX: W / 2, minZ: z0 + L - 0.1, maxZ: z0 + L + 1 });
@@ -7710,7 +7711,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v7.1 selección de equipo';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v7.2 caja de tráiler';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8540,6 +8541,29 @@
             const o = opts[Math.floor(Math.random() * opts.length)]; pd.routeIdx = o.k; pd.path = o.path; pd.t = 0; pd.dir = 1; pd.crossing = o.r.crossing; pd.laps = 0; pd.routeT = 0; }
 
         // Caja de tráiler estacionada en un andén de carga (sólo visual): piso de madera, paredes con costillas, techo y carga parcialmente estibada
+        // ====== Interior realista de caja seca de 53 ft: forro de triplay abajo, aluminio arriba, rieles logísticos (E-track), arcos de techo translúcido, marco trasero de acero y labio de rampa ======
+        const TRL = {};
+        function trailerMats() { if (TRL.ply) return TRL; const C = h => new THREE.Color(h).convertSRGBToLinear();
+            const mk = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); fn(g, w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t; };
+            const ply = mk(256, 128, (g, w, h) => { g.fillStyle = '#b48a5a'; g.fillRect(0, 0, w, h); for (let i = 0; i < 40; i++) { g.strokeStyle = `rgba(90,55,25,${0.08 + Math.random() * 0.1})`; g.lineWidth = 1 + Math.random() * 2; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.bezierCurveTo(w * .3, y + 6, w * .6, y - 6, w, y + 2); g.stroke(); } g.fillStyle = 'rgba(40,25,10,.45)'; g.fillRect(w - 2, 0, 2, h); for (let y = 10; y < h; y += 30) { g.fillStyle = '#6b6f75'; g.fillRect(w - 10, y, 4, 4); } });   // triplay con tornillos en las uniones
+            const alu = mk(128, 256, (g, w, h) => { g.fillStyle = '#c7ccd2'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 4) { g.fillStyle = `rgba(255,255,255,${Math.random() * 0.12})`; g.fillRect(x, 0, 2, h); } g.fillStyle = 'rgba(70,75,85,.6)'; g.fillRect(w - 6, 0, 6, h); for (let y = 8; y < h; y += 22) { g.fillStyle = '#7d828a'; g.beginPath(); g.arc(w - 3, y, 2, 0, 7); g.fill(); } });   // panel de aluminio con poste y remaches
+            const etrack = mk(256, 32, (g, w, h) => { g.fillStyle = '#4a4f57'; g.fillRect(0, 0, w, h); g.fillStyle = '#16181c'; for (let x = 6; x < w; x += 16) g.fillRect(x, 9, 9, 14); });   // riel logístico con ranuras
+            const floor = mk(256, 256, (g, w, h) => { for (let i = 0; i < 8; i++) { g.fillStyle = ['#6b4a2b', '#7a5532', '#5d3f24', '#71502f'][i % 4]; g.fillRect(i * 32, 0, 32, h); g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(i * 32, 0, 2, h); } for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(0,0,0,${Math.random() * .12})`; g.fillRect(Math.random() * w, Math.random() * h, 3 + Math.random() * 10, 1 + Math.random() * 2); } });   // piso de madera dura laminada
+            TRL.ply = new THREE.MeshStandardMaterial({ map: ply, roughness: .85 }); TRL.alu = new THREE.MeshStandardMaterial({ map: alu, roughness: .4, metalness: .5 }); TRL.etrack = new THREE.MeshStandardMaterial({ map: etrack, roughness: .5, metalness: .6 });
+            TRL.floor = new THREE.MeshStandardMaterial({ map: floor, roughness: .8 }); TRL.roof = new THREE.MeshStandardMaterial({ color: C(0xf4f6f2), emissive: C(0xf0f2e8), emissiveIntensity: .55, roughness: .6 });   // techo translúcido (luz natural)
+            TRL.bow = new THREE.MeshStandardMaterial({ color: C(0xaab0b8), metalness: .6, roughness: .4 }); TRL.frame = new THREE.MeshStandardMaterial({ color: C(0x2b2f36), metalness: .5, roughness: .5 }); TRL.lip = new THREE.MeshStandardMaterial({ color: C(0x5b616b), metalness: .7, roughness: .45 }); return TRL; }
+        function trailerInterior(g, W, H, L, z0) { const M = trailerMats(); const add = (geo, mat, x, y, z, rx) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; m.receiveShadow = true; g.add(m); return m; }; const zc = z0 + L / 2;
+            const fl = add(new THREE.PlaneGeometry(W, L), M.floor, 0, 0.004, zc, -Math.PI / 2); fl.material.map.repeat.set(1, L / 2.5);
+            [-1, 1].forEach(sd => { const x = sd * (W / 2 - 0.005), ry = sd < 0 ? Math.PI / 2 : -Math.PI / 2;
+                const ply = add(new THREE.PlaneGeometry(L, 1.22), M.ply, x, 0.61, zc); ply.rotation.y = ry; ply.material.map.repeat.set(L / 1.22, 1);
+                const al = add(new THREE.PlaneGeometry(L, H - 1.22), M.alu, x, 1.22 + (H - 1.22) / 2, zc); al.rotation.y = ry; al.material.map.repeat.set(L / 0.6, 1);
+                [1.25, 1.95].forEach(y => { const e = add(new THREE.BoxGeometry(0.02, 0.12, L - 0.2), M.etrack, x - sd * 0.012, y, zc); e.material.map.repeat.set(L / 1.0, 1); }); });   // rieles logísticos a dos alturas
+            add(new THREE.PlaneGeometry(W, L), M.roof, 0, H - 0.02, zc, Math.PI / 2);
+            for (let z = z0 + 0.3; z < z0 + L; z += 0.61) add(new THREE.BoxGeometry(W, 0.05, 0.04), M.bow, 0, H - 0.06, z);   // arcos de techo cada 24"
+            [-1, 1].forEach(sd => { add(new THREE.BoxGeometry(0.16, H + 0.25, 0.22), M.frame, sd * (W / 2 + 0.06), (H + 0.25) / 2, z0 + 0.05); for (let k = 0; k < 4; k++) add(new THREE.BoxGeometry(0.08, 0.14, 0.12), M.frame, sd * (W / 2 + 0.17), 0.4 + k * 0.7, z0 + 0.05); });   // marco trasero de acero y bisagras de las puertas abatibles
+            add(new THREE.BoxGeometry(W + 0.44, 0.28, 0.22), M.frame, 0, H + 0.12, z0 + 0.05);   // cabezal
+            const lip = add(new THREE.BoxGeometry(1.9, 0.03, 0.42), M.lip, 0, 0.02, z0 - 0.02); lip.rotation.x = 0.05;   // labio de la rampa niveladora apoyado en la caja
+        }
         function buildDockTrailer(x) { const hd = WAREHOUSE.d / 2, L = 13.6, W = 2.5, H = 2.7, z0 = hd + 0.25, zc = z0 + L / 2; const g = new THREE.Group();
             const alu = new THREE.MeshStandardMaterial({ color: 0xd8d8d8, metalness: .6, roughness: .35 }), inner = new THREE.MeshStandardMaterial({ color: 0xaeb4bd, roughness: .8 }), wood = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 });
             const fl = new THREE.Mesh(new THREE.BoxGeometry(W, 0.12, L), wood); fl.position.set(0, -0.06, zc); g.add(fl);
@@ -8547,6 +8571,7 @@
             const roof = new THREE.Mesh(new THREE.BoxGeometry(W + 0.2, 0.08, L), inner); roof.position.set(0, H, zc); g.add(roof); const fr = new THREE.Mesh(new THREE.BoxGeometry(W, H, 0.1), inner); fr.position.set(0, H / 2, z0 + L); g.add(fr);
             for (let i = 0; i < 4; i++) [-0.62, 0.62].forEach((dx, j) => { const bh = 1.3 + ((i + j) % 3) * 0.25; const b = new THREE.Mesh(new THREE.BoxGeometry(1.1, bh, 1.15), unitLoadMat((i + j) % 3)); b.position.set(dx, bh / 2 + 0.14, z0 + L - 0.8 - i * 1.25); g.add(b); const pl = new THREE.Mesh(palletGeometry(true), wood); pl.position.set(dx, 0.072, b.position.z); g.add(pl); });   // carga ya estibada al fondo
             const lampM = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 1.2), new THREE.MeshBasicMaterial({ color: 0xfff1d6 })); lampM.rotation.x = Math.PI / 2; lampM.position.set(0, H - 0.05, z0 + 3); g.add(lampM); inner.emissive = new THREE.Color(0x2a2c30);   // luminaria interior sin luz dinámica (rendimiento)
+            trailerInterior(g, W, H, L, z0);
             mergeStaticMeshes(g); g.position.x = x; scene.add(g); }
         // ====== Operación de andén: estibas de mercancía emplayada frente a los andenes activos y cargadores llevando cajas al tráiler ======
         const DOCK_LOADING = [-20, -10, 10], DOCK_STAGE = [], DOCKW = [];
