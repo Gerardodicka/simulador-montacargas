@@ -7705,7 +7705,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v4 ciclo rack-staging';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v5 postura operadores';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8209,7 +8209,7 @@
             setBoneWorld(av, 'lArm', 0, 0, av.calib.armL * 1.25); av.obj.updateMatrixWorld(true); const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(av.obj.getWorldQuaternion(new THREE.Quaternion())); hand.getWorldPosition(wp); const z0 = wp.clone();
             setBoneWorld(av, 'lArm', 0.6, 0, av.calib.armL * 1.25); av.obj.updateMatrixWorld(true); hand.getWorldPosition(wp); av.calib.swing = wp.clone().sub(z0).dot(fwd) > 0 ? 1 : -1; setBoneWorld(av, 'lArm'); }
         function gltfStandPose(av, armFwd = 0.95, headYaw = 0) { gltfPrepareBones(av); gltfCalibrate(av); const C = av.calib; av.obj.updateMatrixWorld(true);
-            setBoneWorld(av, 'lArm', C.swing * (armFwd - 0.25), 0, C.armL * 1.38); setBoneWorld(av, 'rArm', C.swing * (armFwd - 0.15), 0, C.armR * 1.36); setBoneWorld(av, 'lFore', C.swing * 0.7, 0, 0); setBoneWorld(av, 'rFore', C.swing * 0.75, 0, 0);
+            setBoneWorld(av, 'lArm', C.swing * (armFwd - 0.45), -0.08, C.armL * 1.52); setBoneWorld(av, 'rArm', C.swing * (armFwd - 0.4), 0.08, C.armR * 1.5); setBoneWorld(av, 'lFore', C.swing * 1.05, 0, C.armL * 0.05); setBoneWorld(av, 'rFore', C.swing * 1.1, 0, C.armR * 0.05);   // brazos pegados al torso y antebrazos al frente sobre los controles (antes quedaban abiertos en "A")
             setBoneWorld(av, 'head', 0, headYaw); if (av.bones.hips) av.bones.hips.position.y = av.hipsY0; }
         // Coloca el joystick bajo la mano derecha y la barra bajo la mano izquierda del modelo realista (huesos RightHand / LeftHand)
         // Soporte de los controles: pedestal de la consola hasta el piso de la cabina y postes de la barra
