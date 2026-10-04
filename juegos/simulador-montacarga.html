@@ -7790,7 +7790,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v7.8 marcha y extintores';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v7.9 mástil';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8025,7 +8025,8 @@
             const curve = v => Math.sign(v) * Math.pow(Math.abs(v), 2.4);   // palanca progresiva: poco movimiento = poca velocidad
             const fwd = curve(-dzone(ax(GP_MAP.y), 0.14)); let turn = curve(dzone(ax(GP_MAP.x), 0.12)); const tw = curve(dzone(ax(GP_MAP.twist), 0.18)); if (Math.abs(tw) > Math.abs(turn)) turn = tw;
             // Acelerador de la base → altura del mástil absoluta (adelante = arriba)
-            if (g.axes.length > GP_MAP.throttle) { const t = ax(GP_MAP.throttle); if (Math.abs(t - (GP.lastThrottle ?? t)) > 0.01 || GP.throttleTouched) { GP.throttleTouched = true; const el = document.getElementById('mastHeight'); const target = (1 - t) / 2 * 100; el.value = parseFloat(el.value) + (target - parseFloat(el.value)) * 0.12; } GP.lastThrottle = t; }
+            if (g.axes.length > GP_MAP.throttle) { const t = ax(GP_MAP.throttle); if (Math.abs(t - (GP.lastThrottle ?? t)) > 0.01) GP.throttleUntil = performance.now() + 1200; if (performance.now() < (GP.throttleUntil || 0)) {   // la palanca manda solo mientras se mueve: después, botones 5/6, POV, Q/E y pantalla vuelven a controlar el mástil
+                 const el = document.getElementById('mastHeight'); const target = (1 - t) / 2 * 100; el.value = parseFloat(el.value) + (target - parseFloat(el.value)) * 0.12; } GP.lastThrottle = t; }
             // Botones de mantener
             if (bt(GP_MAP.b5)) clampSlider('mastHeight', 1.2); if (bt(GP_MAP.b6)) clampSlider('mastHeight', -1.2);
             // Hat / POV: eje 9 en Chrome (valores discretos), o botones 12-15 en mapeo estándar
