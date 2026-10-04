@@ -7793,7 +7793,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v8.1 tarima y emplaye';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v8.2 casco';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8233,10 +8233,25 @@
         const VEST_UV = { x0: 0.0, x1: 0.47, y0: 0.66, y1: 1.0 }, VEST_LOGOS = [[0.232, 0.765, 0.13], [0.232, 0.93, 0.15]];   // [u, v, ancho] en fracción del atlas
         let SKIN_IMG = null;
         // Guantes de trabajo amarillos (NOM-017-STPS-2008) pintados sobre la malla de la mano: siguen dedos y muñeca porque usan los pesos de los huesos
+        // Casco ABS (NOM-115-STPS): plástico amarillo brillante con granulado, raspones y calcomanía DICKA al frente (proyectada, no depende de las UV del modelo)
+        function hardHat(scene) { scene.traverse(o => { if (!o.isMesh || !/Helmet/i.test(o.name) || (o.material && o.material.userData.abs)) return;
+                const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'); g.fillStyle = '#f2c200'; g.fillRect(0, 0, 512, 512);
+                const id = g.getImageData(0, 0, 512, 512); for (let i = 0; i < id.data.length; i += 4) { const v = (Math.random() - .5) * 16; id.data[i] += v; id.data[i + 1] += v; id.data[i + 2] += v * .4; } g.putImageData(id, 0, 0);
+                for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(${Math.random() < .6 ? '255,250,225' : '120,90,20'},${0.15 + Math.random() * 0.3})`; g.lineWidth = .6 + Math.random() * 1.6; g.beginPath(); const x = Math.random() * 512, y = Math.random() * 512, a = Math.random() * 6.3, l = 6 + Math.random() * 40; g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }   // raspones
+                for (let i = 0; i < 12; i++) { g.fillStyle = `rgba(90,70,30,${0.06 + Math.random() * 0.08})`; g.beginPath(); g.ellipse(Math.random() * 512, Math.random() * 512, 8 + Math.random() * 30, 4 + Math.random() * 14, Math.random() * 3, 0, 7); g.fill(); }   // polvo y uso
+                const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+                const lc = document.createElement('canvas'); lc.width = 256; lc.height = 128; const l = lc.getContext('2d'); l.fillStyle = '#011131'; l.beginPath(); l.roundRect ? l.roundRect(4, 14, 248, 100, 18) : l.rect(4, 14, 248, 100); l.fill(); l.fillStyle = '#fff'; l.font = '900 56px Arial Black, Arial'; l.textAlign = 'center'; l.fillText('DICKA', 128, 78); l.font = '700 18px Arial'; l.fillText('LOGISTICS', 128, 102);
+                const logo = new THREE.CanvasTexture(lc); logo.encoding = THREE.sRGBEncoding;
+                const P = THREE.MeshPhysicalMaterial || THREE.MeshStandardMaterial; const m = new P({ skinning: !!o.isSkinnedMesh, map: tex, bumpMap: tex, bumpScale: 0.0015, roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.25, envMapIntensity: 1.1 }); m.userData.abs = true;
+                m.onBeforeCompile = sh => { sh.uniforms.uLogo = { value: logo }; sh.vertexShader = 'varying vec3 vHP;\nvarying vec3 vHN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vHP = position; vHN = normal;');
+                    sh.fragmentShader = 'uniform sampler2D uLogo;\nvarying vec3 vHP;\nvarying vec3 vHN;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+                    vec2 lu = vec2((vHP.x + 0.055) / 0.11, (vHP.y - 1.69) / 0.055); if (vHN.z > 0.35 && vHP.z > 0.0 && lu.x > 0.0 && lu.x < 1.0 && lu.y > 0.0 && lu.y < 1.0) { vec4 lc = texture2D(uLogo, lu); diffuseColor.rgb = mix(diffuseColor.rgb, lc.rgb, lc.a); }`); };
+                m.customProgramCacheKey = () => 'abs'; o.material = m; }); }
         function workGloves(scene) { scene.traverse(o => { if (!o.isSkinnedMesh || !o.skeleton || !o.geometry.attributes.skinIndex || o.geometry.attributes.aGlove) return;
                 const hb = o.skeleton.bones.map(b => /Hand/i.test(b.name) ? 1 : 0); if (!hb.some(Boolean)) return; const si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, n = si.count, gw = new Float32Array(n);
                 for (let i = 0; i < n; i++) gw[i] = hb[si.getX(i)] * sw.getX(i) + hb[si.getY(i)] * sw.getY(i) + hb[si.getZ(i)] * sw.getZ(i) + hb[si.getW(i)] * sw.getW(i);
-                o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); const m = o.material; if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
+                let mx = 0; for (let i = 0; i < n; i++) if (gw[i] > mx) mx = gw[i]; const m = o.material; if (mx < 0.5 || !m || Array.isArray(m) || !m.map) return;   // solo la malla que contiene las manos (con textura); el casco y otras piezas no se tocan
+                o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
                 m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nvarying float vGlove;\nvarying float vPalm;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGlove = aGlove; vPalm = smoothstep(-0.15, -0.55, normalize(objectNormal).y);');
                     sh.fragmentShader = 'varying float vGlove;\nvarying float vPalm;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
                     float gk = smoothstep(0.003, 0.03, vGlove); if (gk > 0.0) { vec2 gu = vUv * vec2(1400.0, 2600.0); float rib = abs(sin(gu.x)); float loopv = abs(sin(gu.y + (sin(gu.x * 0.5) > 0.0 ? 1.57 : 0.0)));
@@ -8262,12 +8277,12 @@
                 VEST_LOGOS.forEach(([u, v, w]) => { const lw = w * c.width, lh = lw * logo.height / logo.width; g.drawImage(logo, u * c.width - lw / 2, v * c.height - lh / 2, lw, lh); });
                 const t = new THREE.CanvasTexture(c); t.flipY = m.map.flipY; t.encoding = THREE.sRGBEncoding; t.wrapS = m.map.wrapS; t.wrapT = m.map.wrapT; t.anisotropy = 4; m.map = t; m.needsUpdate = true; });
             done(); }; logo.onerror = () => done(); logo.src = LOGO_DATA_W; }; }); }
-        function loadOperarioLod() { if (GLTF_LOD.tried || !THREE.GLTFLoader) return; GLTF_LOD.tried = true; const urls = GLTF_AVATAR.urls.map(u => u.replace('operario.glb', 'operario_lod.glb')); const tryUrl = i => { if (i >= urls.length) return; new THREE.GLTFLoader().load(urls[i], g => { workGloves(g.scene); dickaVest(g.scene); GLTF_LOD.gltf = g; console.log('[SIM] Avatar glTF ligero cargado'); }, undefined, () => tryUrl(i + 1)); }; tryUrl(0); }
+        function loadOperarioLod() { if (GLTF_LOD.tried || !THREE.GLTFLoader) return; GLTF_LOD.tried = true; const urls = GLTF_AVATAR.urls.map(u => u.replace('operario.glb', 'operario_lod.glb')); const tryUrl = i => { if (i >= urls.length) return; new THREE.GLTFLoader().load(urls[i], g => { hardHat(g.scene); workGloves(g.scene); dickaVest(g.scene); GLTF_LOD.gltf = g; console.log('[SIM] Avatar glTF ligero cargado'); }, undefined, () => tryUrl(i + 1)); }; tryUrl(0); }
         const GLTF_AVATAR = { url: 'assets/models/operario.glb', urls: ['assets/models/operario.glb', 'juegos/assets/models/operario.glb', '/juegos/assets/models/operario.glb', '/assets/models/operario.glb'], gltf: null, tried: false, clips: {}, scale: 1, ok: false };
         function loadOperarioModel() { return new Promise(res => { if (GLTF_AVATAR.tried || !THREE.GLTFLoader) { res(GLTF_AVATAR.ok); return; } GLTF_AVATAR.tried = true; if (location.protocol === 'file:' && !/\/juegos\//.test(location.pathname)) { res(false); return; }
             const tryUrl = (i) => { if (i >= GLTF_AVATAR.urls.length) { console.info('[SIM] Sin operario.glb en ninguna ruta: se usa el avatar procedural v5'); res(false); return; } new THREE.GLTFLoader().load(GLTF_AVATAR.urls[i], g => onLoad0(g), undefined, () => tryUrl(i + 1)); };
             loadOperarioLod();
-            const onLoad0 = g => { workGloves(g.scene); dickaVest(g.scene).then(() => onLoad(g)); };
+            const onLoad0 = g => { hardHat(g.scene); workGloves(g.scene); dickaVest(g.scene).then(() => onLoad(g)); };
             const onLoad = g => { GLTF_AVATAR.gltf = g; g.scene.updateMatrixWorld(true); let h = 0; let headB = null, footB = null; g.scene.traverse(o => { if (o.isBone) { if (/Head$/i.test(o.name) && !/End/i.test(o.name)) headB = o; if (/(LeftFoot|RightFoot|LeftToeBase)$/i.test(o.name) && !footB) footB = o; } }); if (headB) { const hp = new THREE.Vector3(); headB.getWorldPosition(hp); const fp = new THREE.Vector3(); if (footB) footB.getWorldPosition(fp); h = (hp.y - Math.min(fp.y, 0)) + 0.13; }   // altura por huesos: la caja de un SkinnedMesh no considera la escala de la armadura
                 if (!(h > 0.2)) { const box = new THREE.Box3().setFromObject(g.scene); h = box.max.y - box.min.y || 1.8; } GLTF_AVATAR.scale = 1.74 / h; { let sc = 1; g.scene.traverse(o => { if (o.isSkinnedMesh && sc === 1) { const v = new THREE.Vector3(); o.getWorldScale(v); sc = v.x || 1; } }); GLTF_AVATAR.rigScale = sc / GLTF_AVATAR.scale; }
                 g.animations.forEach(c => { const n = c.name.toLowerCase(); if (/walk/.test(n)) GLTF_AVATAR.clips.walk = c; else if (/idle|stand/.test(n)) GLTF_AVATAR.clips.idle = c; else if (/wave/.test(n)) GLTF_AVATAR.clips.wave = c; else if (/sit|seat|driv/.test(n)) GLTF_AVATAR.clips.sit = c; });
