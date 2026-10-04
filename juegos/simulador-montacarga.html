@@ -6769,11 +6769,11 @@
         function woodTex() { if (_texCache.wood) return _texCache.wood; const c = noiseCanvas(256, 256, '#b08850', 30, (g, w, h) => { g.strokeStyle = 'rgba(80,50,20,.35)'; for (let i = 0; i < 18; i++) { g.lineWidth = 1 + Math.random() * 2; g.beginPath(); g.moveTo(0, i * 14 + Math.random() * 6); g.bezierCurveTo(w / 3, i * 14 + (Math.random() - .5) * 10, 2 * w / 3, i * 14 + (Math.random() - .5) * 10, w, i * 14 + Math.random() * 6); g.stroke(); } }); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; _texCache.wood = upgradeTex(t, 'madera.jpg'); return t; }
         // ====== Tarima real (tablas de cubierta, bloques y tablas inferiores) y carga unitaria (cajas individuales en camas, cinta, etiquetas y emplaye) ======
         function palletGeometry(rot) { const k = rot === 'lite' ? 'palGeoL' : rot ? 'palGeoR' : 'palGeo'; if (_texCache[k]) return _texCache[k]; const parts = []; const box = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); parts.push(g); };
-            if (rot === 'lite') { box(1.2, 0.022, 1.0, 0, 0.011, 0); [-0.53, 0, 0.53].forEach(x => box(0.14, 0.1, 1.0, x, 0.072, 0)); box(1.2, 0.022, 1.0, 0, 0.133, 0); const g = THREE.BufferGeometryUtils.mergeBufferGeometries(parts); g.translate(0, -0.072, 0); g.rotateY(Math.PI / 2); g.computeBoundingSphere(); _texCache[k] = g; return g; }   // versión ligera (60 triángulos) para los cientos de tarimas en rack
-            [-0.45, 0, 0.45].forEach(z => box(1.2, 0.022, 0.1, 0, 0.011, z));                                                 // tablas inferiores
-            [-0.53, 0, 0.53].forEach(x => [-0.43, 0, 0.43].forEach(z => box(0.14, 0.078, 0.14, x, 0.061, z)));                // 9 bloques
-            [-0.53, 0, 0.53].forEach(x => box(0.14, 0.022, 1.0, x, 0.111, 0));                                                // largueros
-            for (let i = 0; i < 7; i++) box(0.12, 0.022, 1.0, -0.54 + i * 0.18, 0.133, 0);                                   // 7 tablas de cubierta con separación
+            if (rot === 'lite') { box(1.2, 0.022, 1.0, 0, 0.011, 0); [-0.47, 0, 0.47].forEach(z => box(1.2, 0.1, 0.05, 0, 0.072, z)); box(1.2, 0.022, 1.0, 0, 0.133, 0); const g = THREE.BufferGeometryUtils.mergeBufferGeometries(parts); g.translate(0, -0.072, 0); g.rotateY(Math.PI / 2); g.computeBoundingSphere(); _texCache[k] = g; return g; }   // versión ligera (60 triángulos) para los cientos de tarimas en rack
+            // tarima de largueros (2 entradas): 5 tablas inferiores, 3 largueros macizos y 7 tablas de cubierta con separación
+            for (let i = 0; i < 5; i++) box(0.12, 0.022, 1.0, -0.54 + i * 0.27, 0.011, 0);
+            [-0.475, 0, 0.475].forEach(z => box(1.2, 0.1, 0.05, 0, 0.072, z));
+            for (let i = 0; i < 7; i++) box(0.12, 0.022, 1.0, -0.54 + i * 0.18, 0.133, 0);
             let g = THREE.BufferGeometryUtils.mergeBufferGeometries(parts); g.translate(0, -0.072, 0); if (rot) g.rotateY(Math.PI / 2); g.computeBoundingSphere(); _texCache[k] = g; return g; }
         function unitLoadTex(v) { const k = 'ul' + v; if (_texCache[k]) return _texCache[k]; const base = ['#c9a875', '#d3b283', '#bfa070'][v % 3]; const c = noiseCanvas(512, 512, base, 14, (g, w, h) => {
                 const cols = 3, rows = 4, cw = w / cols, rh = h / rows;
@@ -6781,9 +6781,12 @@
                     g.fillStyle = 'rgba(150,110,50,.35)'; g.fillRect(x + cw / 2 - 7, y, 14, rh);                                // cinta canela
                     if ((r + q + v) % 3 === 0) { g.fillStyle = '#f4f4f0'; g.fillRect(x + 12, y + rh - 46, 62, 34); g.fillStyle = '#1D2586'; g.fillRect(x + 12, y + rh - 46, 62, 8); g.fillStyle = '#222'; for (let b = 0; b < 12; b++) g.fillRect(x + 16 + b * 4.5, y + rh - 22, b % 3 ? 2 : 1, 8); }   // etiqueta con código de barras
                     g.strokeStyle = 'rgba(60,40,15,.55)'; g.lineWidth = 3; g.strokeRect(x + 1.5, y + 1.5, cw - 3, rh - 3); }       // junta entre cajas
-                for (let i = 0; i < 22; i++) { g.strokeStyle = `rgba(255,255,255,${0.05 + Math.random() * 0.08})`; g.lineWidth = 2 + Math.random() * 6; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.lineTo(w, y + (Math.random() - .5) * 60); g.stroke(); } });   // brillo del emplaye
+                g.fillStyle = 'rgba(225,235,242,.16)'; g.fillRect(0, 0, w, h); const hz = g.createLinearGradient(0, 0, 0, h); hz.addColorStop(0, 'rgba(235,242,248,.28)'); hz.addColorStop(.25, 'rgba(235,242,248,0)'); hz.addColorStop(.8, 'rgba(235,242,248,0)'); hz.addColorStop(1, 'rgba(235,242,248,.32)'); g.fillStyle = hz; g.fillRect(0, 0, w, h);   // película: más capas arriba y abajo
+                for (let i = 0; i < 9; i++) { const y = i * h / 8 + (Math.random() - .5) * 20; g.strokeStyle = 'rgba(255,255,255,.22)'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y + 70); g.stroke(); }   // bordes de cada vuelta en espiral
+                for (let i = 0; i < 40; i++) { g.strokeStyle = `rgba(255,255,255,${0.06 + Math.random() * 0.14})`; g.lineWidth = 1 + Math.random() * 4; g.beginPath(); const y = Math.random() * h, x = Math.random() * w; g.moveTo(x, y); g.quadraticCurveTo(x + 30, y + (Math.random() - .5) * 40, x + 40 + Math.random() * 120, y + (Math.random() - .5) * 30); g.stroke(); }   // arrugas y pliegues
+                for (let i = 0; i < 6; i++) { g.fillStyle = `rgba(255,255,255,${0.10 + Math.random() * 0.12})`; const x = Math.random() * w; g.fillRect(x, 0, 3 + Math.random() * 10, h); } });   // reflejos verticales del plástico
             const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; cartonUpgrade(c, t); _texCache[k] = t; return t; }
-        function unitLoadMat(v) { return new THREE.MeshStandardMaterial({ map: unitLoadTex(v), roughness: 0.55, metalness: 0.02 }); }
+        function unitLoadMat(v) { const P = THREE.MeshPhysicalMaterial; return P ? new P({ map: unitLoadTex(v), roughness: 0.8, clearcoat: 1.0, clearcoatRoughness: 0.22, envMapIntensity: 1.2 }) : new THREE.MeshStandardMaterial({ map: unitLoadTex(v), roughness: 0.55 }); }   // cartón bajo película stretch brillante
         // Caja de cartón realista: caras distintas (tapa con solapas y cinta, costados con cinta que baja, tinta impresa, etiqueta, bordes gastados)
         function cbFaceTex(v, face) { const k = 'cbf' + v + face; if (_texCache[k]) return _texCache[k]; const base = ['#c19a64', '#cba674', '#b8915a'][v % 3];
             const c = noiseCanvas(256, 256, face === 'bot' ? '#a8834e' : base, 12, (g, w, h) => {
@@ -6803,8 +6806,8 @@
         // Tarima real: 3 largueros + 7 tablas arriba + 3 abajo
         function makePallet(w, d) { w = w || 1.0; d = d || 1.2; const g = new THREE.Group(); const m = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.9 });
             for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.022, d / 7 * 0.72), m); b.position.set(0, 0.13, -d / 2 + d / 14 + i * d / 7); b.castShadow = true; g.add(b); }
-            [-w / 2 + 0.05, 0, w / 2 - 0.05].forEach(x => { const s = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, d), m); s.position.set(x, 0.065, 0); g.add(s); });
-            [-d / 2 + 0.06, 0, d / 2 - 0.06].forEach(z => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, 0.1), m); b.position.set(0, 0.01, z); g.add(b); });
+            [-w / 2 + 0.05, 0, w / 2 - 0.05].forEach(x => { const s = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, d), m); s.position.set(x, 0.07, 0); g.add(s); });
+            [-d / 2 + 0.06, -d / 4, 0, d / 4, d / 2 - 0.06].forEach(z => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, 0.1), m); b.position.set(0, 0.01, z); g.add(b); });
             return g; }
 
         // ====== Texturas fotográficas (Poly Haven, CC0) en assets/textures/: si no cargan (archivo local o sin red) se quedan las procedurales ======
@@ -7790,7 +7793,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v8.0 guantes';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v8.1 tarima y emplaye';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
