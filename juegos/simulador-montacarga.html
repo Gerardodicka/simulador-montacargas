@@ -6759,7 +6759,8 @@
             g.fillStyle = 'rgba(0,0,0,.25)'; g.font = '700 26px Arial'; g.fillText('↑↑  FRÁGIL', w - 220, h - 40); }); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; _texCache[k] = t; return t; }
         function woodTex() { if (_texCache.wood) return _texCache.wood; const c = noiseCanvas(256, 256, '#b08850', 30, (g, w, h) => { g.strokeStyle = 'rgba(80,50,20,.35)'; for (let i = 0; i < 18; i++) { g.lineWidth = 1 + Math.random() * 2; g.beginPath(); g.moveTo(0, i * 14 + Math.random() * 6); g.bezierCurveTo(w / 3, i * 14 + (Math.random() - .5) * 10, 2 * w / 3, i * 14 + (Math.random() - .5) * 10, w, i * 14 + Math.random() * 6); g.stroke(); } }); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; _texCache.wood = t; return t; }
         // ====== Tarima real (tablas de cubierta, bloques y tablas inferiores) y carga unitaria (cajas individuales en camas, cinta, etiquetas y emplaye) ======
-        function palletGeometry(rot) { const k = rot ? 'palGeoR' : 'palGeo'; if (_texCache[k]) return _texCache[k]; const parts = []; const box = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); parts.push(g); };
+        function palletGeometry(rot) { const k = rot === 'lite' ? 'palGeoL' : rot ? 'palGeoR' : 'palGeo'; if (_texCache[k]) return _texCache[k]; const parts = []; const box = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); parts.push(g); };
+            if (rot === 'lite') { box(1.2, 0.022, 1.0, 0, 0.011, 0); [-0.53, 0, 0.53].forEach(x => box(0.14, 0.1, 1.0, x, 0.072, 0)); box(1.2, 0.022, 1.0, 0, 0.133, 0); const g = THREE.BufferGeometryUtils.mergeBufferGeometries(parts); g.translate(0, -0.072, 0); g.rotateY(Math.PI / 2); g.computeBoundingSphere(); _texCache[k] = g; return g; }   // versión ligera (60 triángulos) para los cientos de tarimas en rack
             [-0.45, 0, 0.45].forEach(z => box(1.2, 0.022, 0.1, 0, 0.011, z));                                                 // tablas inferiores
             [-0.53, 0, 0.53].forEach(x => [-0.43, 0, 0.43].forEach(z => box(0.14, 0.078, 0.14, x, 0.061, z)));                // 9 bloques
             [-0.53, 0, 0.53].forEach(x => box(0.14, 0.022, 1.0, x, 0.111, 0));                                                // largueros
@@ -6893,7 +6894,7 @@
         // ====== Detalles de nave: columnas de acero con protector, ductos de aire, tarimas vacías, contenedores de residuos y estación de carga de baterías ======
         function buildWarehouseProps() { const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2, h = WAREHOUSE.h; const C = x => new THREE.Color(x).convertSRGBToLinear(); const grp = new THREE.Group(); grp.name = 'props';
             const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: C(c), roughness: .6, metalness: .2 }, o || {})); const steel = M(0x2b3a66, { metalness: .5, roughness: .45 }), yel = M(0xf5c400, { roughness: .5 }), duct = M(0xc9ced6, { metalness: .7, roughness: .3 }), dk = M(0x30343b);
-            const add = (geo, mat, x, y, z, ry) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (ry) m.rotation.y = ry; m.castShadow = m.receiveShadow = true; grp.add(m); return m; };
+            const add = (geo, mat, x, y, z, ry) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (ry) m.rotation.y = ry; m.castShadow = false; m.receiveShadow = true; grp.add(m); return m; };   /* sin sombra proyectada: ahorra el pase de sombras */
             for (let z = -hd + 10; z < hd - 6; z += 10) [-1, 1].forEach(sd => { const x = sd * (hw - 0.45); add(new THREE.BoxGeometry(0.32, h, 0.32), steel, x, h / 2, z); add(new THREE.BoxGeometry(0.42, 0.04, 0.42), dk, x, 0.02, z); add(new THREE.BoxGeometry(0.46, 0.9, 0.46), yel, x, 0.45, z); });   // columnas perimetrales con protector
             [-12, 12].forEach(x => { const d = add(new THREE.CylinderGeometry(0.42, 0.42, WAREHOUSE.d - 6, 20, 1, true), duct, x, h - 1.3, 0); d.rotation.x = Math.PI / 2; for (let z = -hd + 6; z < hd - 4; z += 6) { add(new THREE.BoxGeometry(0.03, 0.9, 0.03), dk, x, h - 0.45, z); const v = add(new THREE.CylinderGeometry(0.18, 0.3, 0.25, 14), duct, x, h - 1.85, z); } });   // ductos de inyección de aire con difusores
             const wood = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 }); [[-26, -43.2, 9], [-24.6, -43.2, 6], [-26, -41.8, 4]].forEach(([x, z, n]) => { for (let k = 0; k < n; k++) add(palletGeometry(), wood, x, 0.072 + k * 0.146, z, (k % 2) * 0.02); });   // tarimas vacías estibadas
@@ -7036,7 +7037,7 @@
             if (!RACK_INST.length) return;
             const dummy = new THREE.Object3D();
             // Tarimas (una malla de caja con textura madera)
-            const palMesh = new THREE.InstancedMesh(palletGeometry(true), new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.9 }), RACK_INST.length);
+            const palMesh = new THREE.InstancedMesh(palletGeometry('lite'), new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.9 }), RACK_INST.length);
             palMesh.receiveShadow = true;
             RACK_INST.forEach((r, i) => { dummy.position.set(r.x, r.y + 0.14, r.z); dummy.rotation.set(0, Math.PI / 2, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); palMesh.setMatrixAt(i, dummy.matrix); r.palIdx = i; r.palMesh = palMesh; });
             scene.add(palMesh);
@@ -7733,7 +7734,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v6 nave y tarimas';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v6.1 rendimiento';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8520,7 +8521,7 @@
             [-1, 1].forEach(sd => { const w = new THREE.Mesh(new THREE.BoxGeometry(0.08, H, L), inner); w.position.set(sd * (W / 2 + 0.04), H / 2, zc); g.add(w); for (let i = 0; i < 12; i++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.05, H, 0.07), alu); r.position.set(sd * (W / 2 - 0.02), H / 2, z0 + 0.6 + i * 1.1); g.add(r); } });
             const roof = new THREE.Mesh(new THREE.BoxGeometry(W + 0.2, 0.08, L), inner); roof.position.set(0, H, zc); g.add(roof); const fr = new THREE.Mesh(new THREE.BoxGeometry(W, H, 0.1), inner); fr.position.set(0, H / 2, z0 + L); g.add(fr);
             for (let i = 0; i < 4; i++) [-0.62, 0.62].forEach((dx, j) => { const bh = 1.3 + ((i + j) % 3) * 0.25; const b = new THREE.Mesh(new THREE.BoxGeometry(1.1, bh, 1.15), unitLoadMat((i + j) % 3)); b.position.set(dx, bh / 2 + 0.14, z0 + L - 0.8 - i * 1.25); g.add(b); const pl = new THREE.Mesh(palletGeometry(true), wood); pl.position.set(dx, 0.072, b.position.z); g.add(pl); });   // carga ya estibada al fondo
-            const lamp = new THREE.PointLight(0xfff1d6, 0.6, 9); lamp.position.set(0, H - 0.3, z0 + 3); g.add(lamp);
+            const lampM = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 1.2), new THREE.MeshBasicMaterial({ color: 0xfff1d6 })); lampM.rotation.x = Math.PI / 2; lampM.position.set(0, H - 0.05, z0 + 3); g.add(lampM); inner.emissive = new THREE.Color(0x2a2c30);   // luminaria interior sin luz dinámica (rendimiento)
             mergeStaticMeshes(g); g.position.x = x; scene.add(g); }
         // ====== Operación de andén: estibas de mercancía emplayada frente a los andenes activos y cargadores llevando cajas al tráiler ======
         const DOCK_LOADING = [-20, -10, 10], DOCK_STAGE = [], DOCKW = [];
