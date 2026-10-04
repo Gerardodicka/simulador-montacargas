@@ -6762,6 +6762,10 @@
             for (let i = 0; i < 9000; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(40,40,40,.25)' : 'rgba(230,230,225,.22)'; g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 1.5, 1 + Math.random() * 1.5); }   // agregado fino
             for (let i = 0; i < 4; i++) { g.strokeStyle = `rgba(25,25,25,${0.035 + Math.random() * 0.03})`; g.lineWidth = 14 + Math.random() * 8; g.beginPath(); const y = Math.random() * h; g.moveTo(-20, y); g.bezierCurveTo(w * 0.3, y + (Math.random() - .5) * 160, w * 0.6, y + (Math.random() - .5) * 160, w + 20, y + (Math.random() - .5) * 60); g.stroke(); }   // huellas de rodado tenues
             g.strokeStyle = 'rgba(50,50,50,.5)'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke(); }); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(WAREHOUSE.w / 12, WAREHOUSE.d / 12); t.anisotropy = 8; t.encoding = THREE.sRGBEncoding; _texCache.concrete = t; return t; }   // juntas de losa cada 6 m
+        // Cartón real (TextureCan paper_0025, CC0): al cargar se funde sobre las texturas de cajas (fibras, arrugas y manchas) conservando cinta, etiquetas y juntas
+        const CARTON = { img: null, pend: [] };
+        function cartonUpgrade(c, t) { const apply = () => { const g = c.getContext('2d'); g.save(); g.globalCompositeOperation = 'overlay'; g.globalAlpha = 0.75; for (let x = 0; x < c.width; x += 512) for (let y = 0; y < c.height; y += 512) g.drawImage(CARTON.img, x, y, 512, 512); g.restore(); t.needsUpdate = true; };
+            if (CARTON.img) apply(); else { CARTON.pend.push(apply); if (!CARTON.loading) { CARTON.loading = true; const im = new Image(); im.onload = () => { CARTON.img = im; CARTON.pend.forEach(f => f()); CARTON.pend = []; }; im.src = 'assets/textures/carton.jpg'; } } }
         function cardboardTex(variant) { const k = 'cb' + variant; if (_texCache[k]) return _texCache[k]; const cols = ['#c9a875', '#d3b283', '#bfa070']; const c = noiseCanvas(512, 512, cols[variant % 3], 18, (g, w, h) => {
             g.fillStyle = 'rgba(120,80,30,.25)'; for (let i = 0; i < 6; i++) g.fillRect(0, i * 90 + 20, w, 2);          // corrugado
             g.fillStyle = 'rgba(200,180,120,.85)'; g.fillRect(w * 0.42, 0, w * 0.16, h);                             // cinta
@@ -6769,7 +6773,7 @@
             g.fillStyle = '#333'; g.font = '600 15px Arial'; g.fillText('SKU ' + (10000 + variant * 3217 + 231), 52, 108); g.fillText('DICKA LOGISTICS', 52, 128); g.fillText('QTY 24  ·  8.6 kg', 52, 148);
             for (let i = 0; i < 24; i++) { g.fillStyle = '#111'; g.fillRect(48 + i * 6, 152, Math.random() < .5 ? 2 : 3, 14); }                  // código de barras
             g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 3; g.strokeRect(2, 2, w - 4, h - 4);
-            g.fillStyle = 'rgba(0,0,0,.25)'; g.font = '700 26px Arial'; g.fillText('↑↑  FRÁGIL', w - 220, h - 40); }); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; _texCache[k] = t; return t; }
+            g.fillStyle = 'rgba(0,0,0,.25)'; g.font = '700 26px Arial'; g.fillText('↑↑  FRÁGIL', w - 220, h - 40); }); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; cartonUpgrade(c, t); _texCache[k] = t; return t; }
         // Sustituye la imagen de una textura procedural por una fotográfica de assets/textures/ cuando carga (todas las piezas que la comparten se actualizan)
         function upgradeTex(t, file) { try { const im = new Image(); im.onload = () => { t.image = im; t.needsUpdate = true; }; im.src = 'assets/textures/' + file; } catch (e) {} return t; }
         function woodTex() { if (_texCache.wood) return _texCache.wood; const c = noiseCanvas(256, 256, '#b08850', 30, (g, w, h) => { g.strokeStyle = 'rgba(80,50,20,.35)'; for (let i = 0; i < 18; i++) { g.lineWidth = 1 + Math.random() * 2; g.beginPath(); g.moveTo(0, i * 14 + Math.random() * 6); g.bezierCurveTo(w / 3, i * 14 + (Math.random() - .5) * 10, 2 * w / 3, i * 14 + (Math.random() - .5) * 10, w, i * 14 + Math.random() * 6); g.stroke(); } }); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; _texCache.wood = upgradeTex(t, 'madera.jpg'); return t; }
@@ -6788,7 +6792,7 @@
                     if ((r + q + v) % 3 === 0) { g.fillStyle = '#f4f4f0'; g.fillRect(x + 12, y + rh - 46, 62, 34); g.fillStyle = '#1D2586'; g.fillRect(x + 12, y + rh - 46, 62, 8); g.fillStyle = '#222'; for (let b = 0; b < 12; b++) g.fillRect(x + 16 + b * 4.5, y + rh - 22, b % 3 ? 2 : 1, 8); }   // etiqueta con código de barras
                     g.strokeStyle = 'rgba(60,40,15,.55)'; g.lineWidth = 3; g.strokeRect(x + 1.5, y + 1.5, cw - 3, rh - 3); }       // junta entre cajas
                 for (let i = 0; i < 22; i++) { g.strokeStyle = `rgba(255,255,255,${0.05 + Math.random() * 0.08})`; g.lineWidth = 2 + Math.random() * 6; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.lineTo(w, y + (Math.random() - .5) * 60); g.stroke(); } });   // brillo del emplaye
-            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; _texCache[k] = t; return t; }
+            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; cartonUpgrade(c, t); _texCache[k] = t; return t; }
         function unitLoadMat(v) { return new THREE.MeshStandardMaterial({ map: unitLoadTex(v), roughness: 0.55, metalness: 0.02 }); }
         function cardboardMat(v) { return new THREE.MeshStandardMaterial({ map: cardboardTex(v), roughness: 0.92 }); }
         // Tarima real: 3 largueros + 7 tablas arriba + 3 abajo
@@ -7713,7 +7717,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v7.4 piel y guantes';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v7.5 cartón real';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
