@@ -608,6 +608,19 @@
         body.minihud .hud { top: 12px; }
         .mission-float { position: absolute; left: 50%; bottom: 28%; transform: translateX(-50%); z-index: 7; background: rgba(1,17,49,.92); color: #fff; border: 2px solid #f5c400; border-radius: 12px; padding: .6rem 1.1rem; font-weight: 700; font-size: 14px; text-align: center; max-width: 70%; pointer-events: none; opacity: 0; transition: opacity .3s; }
         .mission-float.show { opacity: 1; }
+        .brief { display:none; position:absolute; inset:0; z-index:30; background:rgba(1,17,49,.88); align-items:center; justify-content:center; padding:12px; }
+        .brief.open { display:flex; }
+        .brief-card { background:#fff; color:#011131; border-radius:16px; width:min(640px,100%); max-height:92%; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+        .brief-head { background:#2138D3; color:#fff; padding:.8rem 1rem; border-radius:16px 16px 0 0; font-weight:900; letter-spacing:.5px; }
+        .brief-head small { display:block; font-weight:600; opacity:.85; font-size:12px; letter-spacing:0; }
+        .brief-body { padding:.8rem 1rem 1rem; font-size:14px; line-height:1.4; }
+        .brief-body h4 { margin:.7rem 0 .3rem; font-size:13px; color:#2138D3; text-transform:uppercase; letter-spacing:.5px; }
+        .brief-body ol { margin:0; padding-left:1.3rem; } .brief-body ol li { margin:.25rem 0; }
+        .brief-body .goal { background:#fff7d6; border-left:5px solid #f5c400; padding:.5rem .7rem; border-radius:8px; font-weight:700; }
+        .brief-body .fail { background:#fdecec; border-left:5px solid #c62828; padding:.5rem .7rem; border-radius:8px; font-size:13px; }
+        .brief-body kbd { background:#011131; color:#fff; border-radius:5px; padding:0 6px; font-size:12px; font-family:inherit; white-space:nowrap; }
+        .brief-body .all { font-size:12px; color:#444; } .brief-body .all span.cur { font-weight:900; color:#2138D3; }
+        .brief-go { display:block; width:100%; margin-top:.9rem; background:#2e9e5b; color:#fff; border:0; border-radius:10px; padding:.8rem; font-size:16px; font-weight:900; cursor:pointer; }
         .mission-step { font-size: 10px; color: #8fa3ff; letter-spacing: 2px; }
         .mission-text { font-size: 16px; font-weight: 700; margin: 0.2rem 0; }
         .mission-dist { font-size: 22px; font-weight: 800; color: #f5c400; }
@@ -993,6 +1006,7 @@
                     <div class="mission-dist" id="missionDist">— m</div>
                 </div>
                 <div class="acts-panel" id="actsPanel"></div>
+                <div class="brief" id="brief"><div class="brief-card"><div class="brief-head" id="briefHead"></div><div class="brief-body" id="briefBody"></div></div></div>
                 <div class="mission-float" id="missionFloat"></div>
 
                 <!-- Checklist pre-operativo -->
@@ -7793,7 +7807,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v8.2 casco';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v8.3 misiones';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8927,6 +8941,67 @@
             { id: 'estacionar', name: 'Estacionamiento en zona de baterías', icon: '🔋', text: 'Estaciona en la zona azul: horquillas abajo, reach retraído y detenido 2 s', type: 'park',
               goal: { x: 22.5, z: 40.5, r: 2.2 } }
         ];
+        // ====== Fichas de misión: qué hacer, paso a paso, con los controles exactos (teclado · pantalla · joystick) ======
+        const K = (kb, scr, joy) => `<kbd>${kb}</kbd> · pantalla <kbd>${scr}</kbd>${joy ? ' · joystick <kbd>' + joy + '</kbd>' : ''}`;
+        const CTL = { fwd: K('W', 'palanca ↑', 'palanca adelante'), back: K('S', 'palanca ↓', 'palanca atrás'), turn: K('A / D', 'palanca ← →', 'palanca lados'), up: K('Q', '▲', 'botón 5'), down: K('E', '▼', 'botón 6'), reach: K('X', 'EXTENDER / RETRAER', 'botón 3 / 4'), grab: K('Espacio', 'AGARRAR / SOLTAR', 'botón pulgar'), horn: K('H', '📣 claxon', 'gatillo'), cam: '<kbd>C</kbd> cambia de cámara' };
+        const BRIEF = {
+            inspeccion: { goal: 'Revisar el montacargas ANTES de usarlo y detectar la falla que tiene hoy.', steps: [
+                'Primero confirma que cada control responde (pantalla "Verificación de controles"): mueve la palanca, sube y baja el mástil, extiende el reach, toca el claxon.',
+                'En la lista de inspección revisa punto por punto y marca <b>Cumple</b>, <b>No cumple</b> o <b>N/A</b>.',
+                'Hay UNA falla escondida en el equipo: márcala como <b>No cumple</b>.',
+                'Usa N/A solo en lo que de verdad no aplica a tu equipo.',
+                'Presiona <b>Terminar inspección</b>.'], fail: 'No detectar la falla (marcarla Cumple o N/A) reprueba la práctica: nunca se opera un equipo con falla.' },
+            piso: { goal: 'Mover una tarima del piso al área de STAGING amarilla.', steps: [
+                'Sigue la columna de luz amarilla: marca dónde está la tarima. Avanza con ' + '__fwd__' + ' y gira con ' + '__turn__' + '.',
+                'Llega DE FRENTE a la tarima, centrado, con las horquillas abajo (a ras de piso) y a menos de 3 km/h.',
+                'Mete las horquillas por debajo hasta que la tarima toque el respaldo. Si tu equipo es reach, extiende con ' + '__reach__' + '.',
+                'Agarra con ' + '__grab__' + ' y sube un poco (10–15 cm) con ' + '__up__' + '.',
+                'Retrae el reach y viaja con la carga baja hacia el STAGING (la columna amarilla se mueve ahí).',
+                'Dentro del STAGING detente, baja la tarima al piso con ' + '__down__' + ' y suelta con ' + '__grab__' + '.',
+                'Retrocede despacio con ' + '__back__' + ' para sacar las horquillas.'], fail: 'Reprueba: chocar, atropellar, tirar la carga o volcar. Resta puntos: exceso de velocidad, viajar con carga alta, pasar cerca de peatones.' },
+            rack2: { goal: 'Estibar la tarima en la ubicación EXACTA del rack (caja verde transparente).', steps: [
+                'Toma la tarima marcada por la columna amarilla igual que en la misión anterior (de frente, horquillas abajo, ' + '__grab__' + ').',
+                'Lee la UBICACIÓN que aparece en pantalla (pasillo, rack, nivel) y entra a ese pasillo despacio.',
+                'Detente FRENTE a la caja verde y gira 90° para quedar de frente al rack, centrado.',
+                'Con el equipo DETENIDO sube las horquillas con ' + '__up__' + ' hasta que la tarima quede un poco arriba de la viga (__lvl__, mira la altura en pantalla).',
+                'Extiende el reach con ' + '__reach__' + ' (o avanza muy lento) hasta meter la tarima sobre la viga.',
+                'Baja suavemente con ' + '__down__' + ' hasta que la tarima se apoye y suelta con ' + '__grab__' + '.',
+                'Retrae, baja las horquillas a ras de piso y sal del pasillo en reversa, mirando hacia atrás.'], fail: 'Reprueba: golpear el rack, dejar caer la carga o colocarla fuera de la caja verde. Nunca subas la carga con el equipo en movimiento.' },
+            rack3: { goal: 'Bajar una tarima de un nivel alto del rack y dejarla en RECEPCIÓN (zona verde).', steps: [
+                'Ve al pasillo y ubicación indicados (columna amarilla y código en pantalla).',
+                'Colócate de frente al rack, centrado y detenido.',
+                'Sube las horquillas con ' + '__up__' + ' hasta quedar justo DEBAJO de la tarima (entre los bloques), mira la altura en pantalla.',
+                'Extiende el reach con ' + '__reach__' + ' para meter las horquillas por completo.',
+                'Sube un poco para despegarla de la viga y agarra con ' + '__grab__' + '.',
+                'Retrae el reach para sacarla del rack y BAJA la carga casi al piso ANTES de moverte.',
+                'Lleva la tarima a RECEPCIÓN, bájala al piso y suelta con ' + '__grab__' + '.'], fail: 'Reprueba: tirar la carga, golpear el rack o viajar con la carga elevada.' },
+            peatonal: { goal: 'Cruzar el paso peatonal de forma segura.', steps: [
+                'Avanza hacia la línea blanca de ALTO (señal roja de alto a la derecha).',
+                'Haz ALTO TOTAL antes de la línea (velocidad 0) al menos 1 segundo.',
+                'Mira a ambos lados; si hay peatones, espera a que crucen.',
+                'Toca el claxon con ' + '__horn__' + ' y cruza la zona verde a MENOS de 3 km/h.',
+                'Llega al punto marcado por la columna amarilla y detente.'], fail: 'Resta puntos: no hacer alto total, cruzar rápido o con peatones en la zona. Atropellar reprueba.' },
+            trailer: { goal: 'Cargar la tarima del STAGING al FONDO de la caja del tráiler por el ANDÉN 3.', steps: [
+                'Toma la tarima del STAGING (de frente, horquillas abajo, ' + '__grab__' + ').',
+                'Ve al ANDÉN 3 y detente antes de la rampa.',
+                'Toca el claxon con ' + '__horn__' + ' ANTES de entrar a la caja.',
+                'Entra derecho y muy despacio (menos de 5 km/h) con la carga baja.',
+                'Avanza hasta el fondo de la caja (columna amarilla), baja la tarima al piso con ' + '__down__' + ' y suelta con ' + '__grab__' + '.',
+                'Sal en reversa, despacio y en línea recta.'], fail: 'Resta puntos: no tocar el claxon, entrar rápido o chocar con las paredes de la caja.' },
+            estacionar: { goal: 'Dejar el equipo estacionado de forma segura en la zona azul de baterías.', steps: [
+                'Ve a la zona azul ESTACIONAR (columna amarilla).',
+                'Dentro de la zona baja las horquillas al piso con ' + '__down__' + '.',
+                'Retrae el reach con ' + '__reach__' + ' (si está extendido).',
+                'Detente por completo y espera 2 segundos sin moverte.'], fail: 'No cuenta si las horquillas quedan arriba, el reach extendido o el equipo en movimiento.' }
+        };
+        function showBrief(i, onGo) { const a = ACTS[i], b = BRIEF[a.id]; if (!b) { onGo && onGo(); return; }
+            const lvl = a.drop && a.drop.level !== undefined ? '≈ ' + (a.drop.level + 0.15).toFixed(1) + ' m' : 'unos cm arriba de la viga'; const fill = t => t.replace(/__(\w+)__/g, (m, k) => k === 'lvl' ? lvl : (CTL[k] || m));
+            document.getElementById('briefHead').innerHTML = `MISIÓN ${i + 1} DE ${ACTS.length} · ${a.icon} ${a.name}<small>Lee los pasos y presiona COMENZAR. Puedes volver a verlos tocando la tarjeta de misión (arriba).</small>`;
+            document.getElementById('briefBody').innerHTML = `<div class="goal">🎯 ${b.goal}${a.locCode ? '<br>📍 Ubicación: ' + a.locCode : ''}</div><h4>Paso a paso</h4><ol>${b.steps.map(t => '<li>' + fill(t) + '</li>').join('')}</ol>
+                <h4>Cuidado</h4><div class="fail">⛔ ${b.fail}</div><h4>Controles útiles</h4><div class="all">${CTL.cam} · velocidad máxima ${SIM_CFG.limitFwd} km/h · respeta pasillos peatonales amarillos.</div>
+                <h4>Tu práctica completa</h4><div class="all">${ACTS.map((x, j) => `<span class="${j === i ? 'cur' : ''}">${j + 1}. ${x.name}${j < i ? ' ✓' : ''}</span>`).join(' · ')}</div>
+                <button class="brief-go" id="briefGo">▶ COMENZAR MISIÓN ${i + 1}</button>`;
+            const el = document.getElementById('brief'); el.classList.add('open'); document.getElementById('briefGo').onclick = () => { el.classList.remove('open'); onGo && onGo(); }; }
         const results = [];   // {name, score, ok, faults, secs}
         // Catálogo de errores críticos (editable): cualquiera de ellos impide aprobar la actividad y la práctica
         const CRITICAL_FAULTS = ['colision', 'atropello', 'volcadura', 'inspeccion', 'caidaCarga'];
@@ -8969,11 +9044,11 @@
         function showMissionCard(ms = 6000) { document.body.classList.remove('minihud'); clearTimeout(miniT); miniT = setTimeout(() => document.body.classList.add('minihud'), ms); }
         function missionFloat(text, ms = 3500) { const el = document.getElementById('missionFloat'); if (!el) return; el.textContent = text; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), ms); }
         function toggleActs() { if (document.body.classList.contains('minihud')) { showMissionCard(7000); return; } const p = document.getElementById('actsPanel'); p.classList.toggle('open'); renderActs(); }
-        function renderActs() { document.getElementById('actsPanel').innerHTML = ACTS.map((a, i) => `<div class="${i === actIdx ? 'cur' : i < actIdx ? 'done' : ''}"><span>${a.icon} ${i + 1}. ${a.name}</span><b>${i < actIdx ? (results[i] ? results[i].score + '%' : '✓') : i === actIdx ? '▶' : '·'}</b></div>`).join(''); }
+        function renderActs() { document.getElementById('actsPanel').innerHTML = `<button class="brief-go" style="margin:0 0 .5rem;padding:.5rem;font-size:13px" onclick="event.stopPropagation();document.getElementById('actsPanel').classList.remove('open');showBrief(actIdx)">📋 VER PASOS DE LA MISIÓN ACTUAL</button>` + ACTS.map((a, i) => `<div class="${i === actIdx ? 'cur' : i < actIdx ? 'done' : ''}"><span>${a.icon} ${i + 1}. ${a.name}</span><b>${i < actIdx ? (results[i] ? results[i].score + '%' : '✓') : i === actIdx ? '▶' : '·'}</b></div>`).join(''); }
         function beginAct(i) {
             actBusy = false; actIdx = i; actStartFaults = faultLog.length; actStartTime = Date.now(); stillFrames = 0; stoppedBeforeCross = false; missionStep = 1;
             const a = ACTS[i]; if (!a) return;
-            if (a.type === 'checklist') { if (!CC.shownOnce) { CC.shownOnce = true; showCtrlCheck(); } else showChecklist(); return; }
+            if (a.type === 'checklist') { showBrief(i, () => { if (!CC.shownOnce) { CC.shownOnce = true; showCtrlCheck(); } else showChecklist(); }); return; }
             if (spec().clamp && a.type === 'move' && a.id !== 'rack2' && a.id !== 'rack3') { a.text = a.text.replace(/tarima/gi, 'espacio doble de línea blanca (2 piezas)').replace(/retrae|extiende/gi, 'abre/cierra las placas'); }
             if (spec().clamp) { if (a.id === 'rack2') a.name = 'Estiba en bahía de piso'; if (a.id === 'rack3') a.name = 'Retiro de bahía de piso'; } else { if (a.id === 'rack2') a.name = 'Estiba en ubicación exacta'; if (a.id === 'rack3') a.name = 'Retiro de ubicación exacta'; }
             if (a.id === 'trailer') { trailerHonked = false; trailerEntered = false; trailerFast = false; trailerWarned = false; }
@@ -8984,7 +9059,7 @@
             slotMarker.visible = !!(a.drop && a.drop.slot); if (slotMarker.visible) slotMarker.position.set(a.drop.x, a.drop.level + 0.7, a.drop.z); if (a.id !== 'rack2' && a.id !== 'rack3' && slotLabel) slotLabel.visible = false; else if (slotLabel) slotLabel.visible = true;
             const b = document.getElementById('faultToast'); showBanner(`ACTIVIDAD ${i + 1}/${ACTS.length} · ${a.icon} ${a.name}`);
             showMissionCard(6500); if (a.locCode) missionFloat('📍 Ubicación: ' + a.locCode, 5000);
-            renderActs();
+            renderActs(); showBrief(i);
         }
         function showBanner(msg) { const t = document.getElementById('faultToast'); t.innerHTML = msg; t.style.background = '#2138D3'; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => { t.classList.remove('show'); t.style.background = ''; }, 2600); }
         function completeAct(extraScore) {
@@ -9046,8 +9121,10 @@
             const a = ACTS[actIdx]; if (!a || actBusy) return;
             let target = null, dist = 0, txt = a.text;
             if (a.type === 'move') {
-                if (!hasLoad) { target = cargo.position; txt = missionStep === 1 ? `Ve a la tarima (${a.spawn.y > 1 ? 'nivel 3, sube horquillas a ~4 m' : 'piso'}) y AGARRA` : txt; }
-                else { target = a.drop; txt = `Lleva la tarima a ${a.drop.label}` + (a.drop.slot ? ' · sube a ~2.3 m y extiende' : ' · horquillas abajo'); }
+                if (!hasLoad) { target = cargo.position; const dd = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z); const hi = a.spawn.y > 1;
+                    txt = dd > 6 ? `PASO 1 · Ve a la columna amarilla (tarima ${hi ? 'en rack, nivel alto' : 'en piso'})` : hi ? (mastM() < a.spawn.y - 0.35 ? 'PASO 2 · De frente y DETENIDO: sube horquillas (Q / ▲) hasta debajo de la tarima' : 'PASO 3 · Extiende (X) y AGARRA (Espacio)') : 'PASO 2 · De frente, horquillas al piso: entra despacio y AGARRA (Espacio)'; }
+                else { target = a.drop; const dd = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z);
+                    txt = dd > 5 ? `PASO 4 · Carga baja: lleva la tarima a ${a.drop.label}` : a.drop.slot ? (mastM() < a.drop.yMin ? `PASO 5 · Detenido y de frente: sube (Q / ▲) a ≈ ${(a.drop.yMin + 0.13).toFixed(1)} m` : 'PASO 6 · Extiende (X), baja suave (E / ▼) y SUELTA (Espacio)') : `PASO 5 · Detente en ${a.drop.label}, baja al piso (E / ▼) y SUELTA (Espacio)`; }
             } else if (a.type === 'cross' || a.type === 'park') target = a.goal;
             if (target) dist = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z);
             // ---- cruce peatonal ----
