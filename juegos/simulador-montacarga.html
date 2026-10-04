@@ -7192,8 +7192,9 @@
         const RAY_MATS = {};
         function rayMats() { if (RAY_MATS.paint) return RAY_MATS;   // colores en sRGB → lineal: el renderer usa sRGBEncoding, sin conversión el rojo se ve rosa
             const C = h => new THREE.Color(h).convertSRGBToLinear();
-            RAY_MATS.paint = new THREE.MeshStandardMaterial({ color: C(RAYMOND), metalness: 0.05, roughness: 0.42, envMapIntensity: 0.6 });   // pintura roja satinada (sin tono rosado)
-            RAY_MATS.charcoal = new THREE.MeshStandardMaterial({ color: C(0x24262b), metalness: 0.2, roughness: 0.55 });
+            const nc = document.createElement('canvas'); nc.width = nc.height = 128; const ng = nc.getContext('2d'); const id = ng.createImageData(128, 128); for (let i = 0; i < id.data.length; i += 4) { const v = 150 + Math.random() * 60; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; } ng.putImageData(id, 0, 0); const flake = new THREE.CanvasTexture(nc); flake.wrapS = flake.wrapT = THREE.RepeatWrapping; flake.repeat.set(4, 4);
+            RAY_MATS.paint = new (THREE.MeshPhysicalMaterial || THREE.MeshStandardMaterial)({ color: C(RAYMOND), metalness: 0.45, roughness: 0.32, roughnessMap: flake, clearcoat: 1.0, clearcoatRoughness: 0.08, envMapIntensity: 1.3 });   // lámina de acero pintada: pintura metálica con barniz (reflejos de la nave)   // pintura roja satinada (sin tono rosado)
+            RAY_MATS.charcoal = new THREE.MeshStandardMaterial({ color: C(0x2a2c31), metalness: 0.75, roughness: 0.38, roughnessMap: flake, envMapIntensity: 1.1 });   // acero negro
             RAY_MATS.rubber = new THREE.MeshStandardMaterial({ color: C(0x0b0b0b), roughness: 0.95 });
             RAY_MATS.chrome = new THREE.MeshStandardMaterial({ color: C(0xd9dde3), metalness: 1.0, roughness: 0.18 });
             RAY_MATS.chain = new THREE.MeshStandardMaterial({ color: C(0x3b3b3b), metalness: 0.8, roughness: 0.5 });
@@ -7749,7 +7750,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v7.5 cartón real';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v7.6 metal';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8242,7 +8243,7 @@
 
         // ---- Marcha procedural sobre el esqueleto del modelo realista (cuando el GLB no trae clip Walk/Idle) ----
         // Parte de la pose de reposo (T-pose) y aplica rotaciones locales: brazos bajados y balanceo, piernas, rodillas, pies, cadera, columna y cabeza.
-        const GLTF_BONES = { hips: /^(Driving|Hips|Pelvis)$/i, spine: /^Spine$/i, spine2: /^Spine2$/i, head: /^Head$/i, lArm: /^LeftArm$/i, rArm: /^RightArm$/i, lFore: /^LeftForeArm$/i, rFore: /^RightForeArm$/i, lUp: /^LeftUpLeg$/i, rUp: /^RightUpLeg$/i, lLeg: /^LeftLeg$/i, rLeg: /^RightLeg$/i, lFoot: /^LeftFoot$/i, rFoot: /^RightFoot$/i };
+        const GLTF_BONES = { hips: /^(Driving|Hips|Pelvis)$/i, spine: /^Spine$/i, spine2: /^Spine2$/i, head: /^Head$/i, lArm: /^LeftArm$/i, rArm: /^RightArm$/i, lFore: /^LeftForeArm$/i, rFore: /^RightForeArm$/i, rHand: /^RightHand$/i, lUp: /^LeftUpLeg$/i, rUp: /^RightUpLeg$/i, lLeg: /^LeftLeg$/i, rLeg: /^RightLeg$/i, lFoot: /^LeftFoot$/i, rFoot: /^RightFoot$/i };
         const GLTF_WALK = { legIn: 0.08, armDown: 1.56, armFwd: 0.30, elbow: 0.30, legSwing: 0.34, knee: 0.70, foot: 0.22, lean: 0.05 };   // signos ajustables según el rig
         function gltfPrepareBones(av) { if (av.bones) return; av.bones = {}; av.rest = {}; av.obj.traverse(o => { if (!o.isBone) return; for (const k in GLTF_BONES) if (GLTF_BONES[k].test(o.name) && !av.bones[k]) { av.bones[k] = o; av.rest[k] = o.quaternion.clone(); } }); av.hipsY0 = av.bones.hips ? av.bones.hips.position.y : 0; }
         const _qa = new THREE.Quaternion(), _qp = new THREE.Quaternion(), _qw = new THREE.Quaternion(), _qr = new THREE.Quaternion(), _ax = new THREE.Vector3(), _mR = new THREE.Matrix4();
@@ -8270,6 +8271,9 @@
             const jg = target.getObjectByName('cabinJoystick'); if (jg) { rh.getWorldPosition(w); const l = target.worldToLocal(w.clone()); jg.position.set(l.x, l.y - 0.27, l.z); jg.rotation.set(0, 0, 0); jg.userData.snapped = true; }
             const rail = target.getObjectByName('cabinRail'); if (rail && lh) { lh.getWorldPosition(w); const l = target.worldToLocal(w.clone()); rail.position.set(l.x, l.y - 0.03, l.z); rail.visible = true; } const floorY = (opG.position.y || 0.2) + 0.02; supportControls(target, floorY); return true; }
         function makeStandingOperator(low) { const av = makeGLTFAvatar(low); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av); const op = new THREE.Group(); op.add(av.obj); const hg = new THREE.Group(); hg.name = 'opHead'; op.add(hg); op.userData.gltf = av; op.userData.standing = true; return op; }
+        // Mano recta y abierta: devuelve muñeca y dedos a la pose de enlace del modelo (sin el agarre de volante que deja el clip de conducción)
+        function straightenHand(av, side) { if (!av.handBones) { av.handBones = {}; const src = {}; GLTF_AVATAR.gltf.scene.traverse(o => { if (o.isBone) src[o.name] = o.quaternion; }); av.obj.traverse(o => { if (o.isBone && /(Left|Right)Hand/.test(o.name) && src[o.name]) { const sd = /Right/.test(o.name) ? 'Right' : 'Left'; (av.handBones[sd] = av.handBones[sd] || []).push([o, src[o.name].clone()]); } }); }
+            (av.handBones[side] || []).forEach(([b, q]) => b.quaternion.copy(q)); }
         function gltfWalkPose(av, walking, w, now, waving, idlePhase) { gltfPrepareBones(av); gltfCalibrate(av); const W = GLTF_WALK, C = av.calib; const t = now / 1000; av.obj.updateMatrixWorld(true);
             // mezcla suave entre reposo y marcha (evita el "salto" de pose al arrancar o detenerse)
             av.blend = av.blend === undefined ? (walking ? 1 : 0) : av.blend + ((walking ? 1 : 0) - av.blend) * 0.12; const k = av.blend;
@@ -8278,7 +8282,7 @@
             const ph = 0.35 + (idlePhase % 1) * 0.1, aswL = Math.sin(w + Math.PI - ph) * k, aswR = Math.sin(w - ph) * k; const armIn = 0.12;
             setBoneWorld(av, 'lArm', C.swing * (aswL * W.armFwd + 0.1), -armIn, C.armL * W.armDown); setBoneWorld(av, 'rArm', C.swing * (aswR * W.armFwd + 0.1), armIn, C.armR * W.armDown);
             setBoneWorld(av, 'lFore', C.swing * (0.2 + Math.max(0, aswL) * W.elbow), 0, C.armL * 0.08); setBoneWorld(av, 'rFore', C.swing * (0.2 + Math.max(0, aswR) * W.elbow), 0, C.armR * 0.08);
-            if (waving) { setBoneWorld(av, 'rArm', 0, 0, C.armR * (-0.3 + Math.sin(t * 7.7) * 0.12)); setBoneWorld(av, 'rFore', 0, 0, C.armR * -1.1); }
+            if (waving) { setBoneWorld(av, 'rArm', 0, 0, C.armR * (-0.3 + Math.sin(t * 7.7) * 0.12)); setBoneWorld(av, 'rFore', 0, 0, C.armR * -0.7); setBoneWorld(av, 'rHand', 0, 0, C.armR * -0.7); }   // mano abierta y recta, alineada al antebrazo
             // piernas: el muslo oscila; la rodilla se flexiona en la fase de vuelo (pierna que avanza) y queda casi recta al apoyar; el pie hace talón-punta
             const kneeL = Math.max(0, Math.sin(w - 0.9)) * W.knee * k, kneeR = Math.max(0, Math.sin(w + Math.PI - 0.9)) * W.knee * k;
             setBoneWorld(av, 'lUp', C.swing * (sw * W.legSwing + kneeL * 0.25), 0, C.armL * W.legIn); setBoneWorld(av, 'rUp', C.swing * (sw2 * W.legSwing + kneeR * 0.25), 0, C.armR * W.legIn);   // muslos ligeramente hacia el centro: pasos sobre una línea, no piernas abiertas
