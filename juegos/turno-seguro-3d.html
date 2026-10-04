@@ -7673,7 +7673,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v3 ambiente + maniobras';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v4 ciclo rack-staging';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8483,7 +8483,7 @@
             if (!opts.length) for (let i = 1; i <= AISLES.length; i++) if (i !== cur && !taken.has(i) && i !== busyByPlayer) opts.push(i);
             if (!opts.length) for (let i = 1; i <= AISLES.length; i++) if (i !== cur) opts.push(i);
             return opts[Math.floor(Math.random() * opts.length)]; }
-        function assignNewRoute(f) { const next = pickNextAisle(f); const startX = f.x; f.aisle = next; const route = buildAisleRoute(startX, next - 1); const { near } = aisleZRange(); if (f.z < near - 3) route.unshift([f.x, f.z], [f.x, near]); else if (Math.hypot(route[0][0] - f.x, route[0][1] - f.z) > 0.3) route.unshift([f.x, f.z]);   /* la nueva ruta parte de donde está el equipo: sin saltos */   // si está dentro del pasillo, primero sale por la entrada
+        function assignNewRoute(f) { if (f.mode) { f.mode = null; if (f.aisleSaved !== undefined) f.aisle = f.aisleSaved; } const next = pickNextAisle(f); const startX = f.x; f.aisle = next; const route = buildAisleRoute(startX, next - 1); const { near } = aisleZRange(); if (f.z < near - 3) route.unshift([f.x, f.z], [f.x, near]); else if (Math.hypot(route[0][0] - f.x, route[0][1] - f.z) > 0.3) route.unshift([f.x, f.z]);   /* la nueva ruta parte de donde está el equipo: sin saltos */   // si está dentro del pasillo, primero sale por la entrada
             f.path = route; f.t = 0; f.dir = 1; f.blockT = 0; f.g.userData.route = next; }
         // ================== RUTAS DINÁMICAS DE PEATONES ==================
         // Al terminar un trayecto el peatón elige otra ruta del catálogo (paso peatonal, cruce de tránsito, perimetral, área de recibo)
@@ -8567,6 +8567,13 @@
         // Separación real entre dos montacargas: distancia mínima entre sus ejes (de la defensa trasera a la punta de horquillas), menos nada → < 1.9 m = cuerpos a menos de ~0.4 m
         function forkGap(ax, az, ar, bx, bz, br) { let m = 99; for (let i = 0; i <= 5; i++) { const u = -1.9 + i * 1.02, px = ax + Math.sin(ar) * u, pz = az + Math.cos(ar) * u; for (let j = 0; j <= 5; j++) { const v = -1.9 + j * 1.02; const d = Math.hypot(px - bx - Math.sin(br) * v, pz - bz - Math.cos(br) * v); if (d < m) m = d; } } return m; }
         // ====== Operadores NPC trabajando: en su pasillo se detienen, giran 90° hacia el rack, elevan el carro al nivel, toman o dejan la tarima, bajan y continúan ======
+        // ====== Ciclo de trabajo NPC: rack → staging (surtido para embarque) y staging → rack (acomodo de recibo) ======
+        function npcGoStaging(f) { const st = (typeof DOCK_STAGE !== 'undefined' && DOCK_STAGE.length && (!DOCK_GRP || DOCK_GRP.visible)) ? DOCK_STAGE : null; if (!st || f.aisle === undefined) return;
+            const ax = AISLES[f.aisle - 1]; if (!ax) return; const { near } = aisleZRange(); const tz = transitZ(); const sx = st[Math.floor(Math.random() * st.length)] + (Math.random() < 0.5 ? -0.85 : 0.85), zs = WAREHOUSE.d / 2 - 9.6 - 2.3;
+            f.aisleSaved = f.aisle; f.aisle = undefined; f.mode = f.pal.visible ? 'deliver' : 'fetch';   // con tarima: la deja en staging · vacío: recoge una para acomodarla
+            f.path = [[f.x, f.z], [ax.x, near], [ax.x, tz], [sx, tz], [sx, zs]]; f.t = 0; f.dir = 1; f.blockT = 0; }
+        function npcStartStagingOp(f) { f.op = { ph: 'turn', t: 0, rot0: f.g.rotation.y, rot1: 0, y: 0.32, load: !f.pal.visible, staging: true };   // de frente a la estiba: horquillas a ras de piso
+            const tz = transitZ(); f.path = [[f.x, f.z], [f.x, tz]]; f.t = 0; f.dir = 1; }
         function npcStartOp(f) { const a = AISLES[f.aisle - 1]; if (!a) return; const side = Math.random() < 0.5 ? -1 : 1; const lvl = 1 + Math.floor(Math.random() * 5);
             f.op = { ph: 'turn', t: 0, rot0: f.g.rotation.y, rot1: side > 0 ? Math.PI / 2 : -Math.PI / 2, y: 0.5 + lvl * 1.8 + 0.06, load: !f.pal.visible }; f.opX = a.x; }
         function npcUpdateOp(f, dt) { const o = f.op; o.t += dt; const ease = k => k < 0 ? 0 : k > 1 ? 1 : k * k * (3 - 2 * k); let d;
@@ -8575,7 +8582,7 @@
             else if (o.ph === 'up') { setCar(0.09 + (o.y - 0.09) * ease(o.t / (o.y / 0.45))); if (o.t >= o.y / 0.45) { o.ph = 'work'; o.t = 0; } }   // ~0.45 m/s de elevación
             else if (o.ph === 'work') { if (o.t >= 1.8) { f.pal.visible = o.load; o.ph = 'down'; o.t = 0; } }   // inserta / retira horquillas: toma o deja la tarima
             else if (o.ph === 'down') { setCar(o.y - (o.y - 0.09) * ease(o.t / (o.y / 0.5))); if (o.t >= o.y / 0.5) { setCar(0.09); o.ph = 'back'; o.t = 0; } }   // baja con la carga a 15 cm antes de moverse
-            else if (o.ph === 'back') { d = o.rot0 - o.rot1; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; f.g.rotation.y = o.rot1 + d * ease(o.t / 1.6); if (o.t >= 1.6) { f.g.rotation.y = o.rot0; f.op = null; f.opCool = 10 + Math.random() * 14; } } }
+            else if (o.ph === 'back') { d = o.rot0 - o.rot1; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; f.g.rotation.y = o.rot1 + d * ease(o.t / 1.6); if (o.t >= 1.6) { f.g.rotation.y = o.rot0; f.op = null; f.opCool = 10 + Math.random() * 14; if (o.staging) { if (!f.pal.visible && !o.second && Math.random() < 0.5) { npcStartStagingOp(f); f.op.load = true; f.op.second = true; f.mode = 'fetch'; return; }   /* dejó su tarima y toma otra de recibo para acomodarla en rack */ f.mode = null; f.aisle = f.aisleSaved; assignNewRoute(f); } else npcGoStaging(f); } } }
         function updateTraffic(dtS) {
             const now = performance.now(); const honkedRecently = now - lastHonk < 5000;
             const px = forkPosition.x, pz = forkPosition.z;
@@ -8601,7 +8608,7 @@
                     const otherFork = NPC.forks.some(o => o !== f && (inForkBox(o, np.x, np.z, 1.8) || inForkBox(probeAt(np, f), o.x, o.z, 1.8)));
                     if (f.backT > 0) { f.backT -= dtS; const bt = Math.max(0, Math.min(1, f.t - v * 0.7 * dtS / L)); const bp = segmentPos(f.path, bt); const bPed = NPC.peds.some(pd => inForkBox(probeAt(bp, f), pd.x, pd.z, 0.9)); const bFork = NPC.forks.some(o => o !== f && (inForkBox(probeAt(bp, f), o.x, o.z, 1.5) || inForkBox(o, bp.x, bp.z, 1.5))); if (bFork) { f.backT = 0; assignNewRoute(f); return; } if (!bPed) f.t = bt; /* en reversa también respeta a los demás montacargas */ if (f.backT <= 0) assignNewRoute(f); return; }   // retrocede 3 s por su ruta para liberar al otro equipo y luego toma otra ruta
                     const sameAisle = f.aisle !== undefined && playerAisle() === f.aisle;   // dos montacargas nunca en el mismo pasillo: el NPC espera fuera
-                    if (dP > 6 && !pedAhead && !otherFork && !(sameAisle && dP < 30) && !(f.resumeAt && now < f.resumeAt)) { f.t = nt; f.blockT = 0; if (f.t >= 1) { if (f.aisle !== undefined) assignNewRoute(f); else { f.t = 1; f.dir = -1; } } if (f.t <= 0) { f.t = 0; f.dir = 1; } }
+                    if (dP > 6 && !pedAhead && !otherFork && !(sameAisle && dP < 30) && !(f.resumeAt && now < f.resumeAt)) { f.t = nt; f.blockT = 0; if (f.t >= 1) { if (f.mode) { f.t = 1; npcStartStagingOp(f); } else if (f.aisle !== undefined) assignNewRoute(f); else { f.t = 1; f.dir = -1; } } if (f.t <= 0) { f.t = 0; f.dir = 1; } }
                     else if (sameAisle && f.aisle !== undefined) { f.t = Math.min(1, f.t + v * dtS / L); if (f.t >= 1) assignNewRoute(f); }   // el jugador entró a su pasillo: el NPC sigue su ruta y sale por la zona de tránsito
                     else if (dP <= 6) { f.resumeAt = now + WAIT_AFTER_PASS * 1000; f.nearT = (f.nearT || 0) + dtS; if (f.nearT > 8 && f.aisle !== undefined) { assignNewRoute(f); f.resumeAt = 0; f.nearT = 0; } }   // si el jugador se queda junto al NPC, éste toma otra ruta
                     else { f.nearT = 0; f.blockT = (f.blockT || 0) + dtS; if (pedAhead) f.beacon.material.emissiveIntensity = Math.sin(now / 120) > 0 ? 2.2 : .4; const limit = otherFork ? 2.5 : (pedAhead ? 4 : 6); if (f.blockT > limit) { if (pedAhead && !otherFork && f.aisle !== undefined) { f.backT = 3; } else if (otherFork && f.aisle !== undefined) { const other = NPC.forks.find(o => o !== f && Math.hypot(o.x - f.x, o.z - f.z) < 8); if (!other || NPC.forks.indexOf(f) > NPC.forks.indexOf(other)) f.backT = 3; } else if (f.aisle !== undefined) assignNewRoute(f); else f.dir *= -1; f.blockT = 0; } } }
