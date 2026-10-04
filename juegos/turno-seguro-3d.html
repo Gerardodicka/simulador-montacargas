@@ -6794,7 +6794,22 @@
                 for (let i = 0; i < 22; i++) { g.strokeStyle = `rgba(255,255,255,${0.05 + Math.random() * 0.08})`; g.lineWidth = 2 + Math.random() * 6; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.lineTo(w, y + (Math.random() - .5) * 60); g.stroke(); } });   // brillo del emplaye
             const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; cartonUpgrade(c, t); _texCache[k] = t; return t; }
         function unitLoadMat(v) { return new THREE.MeshStandardMaterial({ map: unitLoadTex(v), roughness: 0.55, metalness: 0.02 }); }
-        function cardboardMat(v) { return new THREE.MeshStandardMaterial({ map: cardboardTex(v), roughness: 0.92 }); }
+        // Caja de cartón realista: caras distintas (tapa con solapas y cinta, costados con cinta que baja, tinta impresa, etiqueta, bordes gastados)
+        function cbFaceTex(v, face) { const k = 'cbf' + v + face; if (_texCache[k]) return _texCache[k]; const base = ['#c19a64', '#cba674', '#b8915a'][v % 3];
+            const c = noiseCanvas(256, 256, face === 'bot' ? '#a8834e' : base, 12, (g, w, h) => {
+                for (let x = 0; x < w; x += 4) { g.fillStyle = `rgba(90,60,25,${0.05 + Math.random() * 0.04})`; g.fillRect(x, 0, 1.5, h); }          // flautas del corrugado
+                const eg = (x0, y0, x1, y1) => { const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, 'rgba(60,35,10,.35)'); gr.addColorStop(1, 'rgba(60,35,10,0)'); return gr; };
+                g.fillStyle = eg(0, 0, 0, 14); g.fillRect(0, 0, w, 14); g.fillStyle = eg(0, h, 0, h - 14); g.fillRect(0, h - 14, w, 14); g.fillStyle = eg(0, 0, 14, 0); g.fillRect(0, 0, 14, h); g.fillStyle = eg(w, 0, w - 14, 0); g.fillRect(w - 14, 0, 14, h);   // aristas oscurecidas
+                for (let i = 0; i < 5; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? '70,45,15' : '235,215,175'},${0.08 + Math.random() * 0.1})`; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 4 + Math.random() * 16, 2 + Math.random() * 5, Math.random() * 3, 0, 7); g.fill(); }   // raspones y manchas
+                const tape = (x, y, tw, th) => { g.fillStyle = 'rgba(170,125,60,.55)'; g.fillRect(x, y, tw, th); g.fillStyle = 'rgba(255,240,210,.25)'; g.fillRect(x + tw * 0.15, y, tw * 0.12, th); g.fillStyle = 'rgba(90,60,25,.35)'; g.fillRect(x, y, 1, th); g.fillRect(x + tw - 1, y, 1, th); };
+                if (face === 'top') { g.fillStyle = 'rgba(60,35,10,.55)'; g.fillRect(0, h / 2 - 1, w, 2); tape(0, h / 2 - 20, w, 40); }   // unión de solapas + cinta canela
+                else if (face === 'side') { g.fillStyle = 'rgba(55,40,30,.75)'; g.font = '900 22px Arial Black, Arial'; g.textAlign = 'center'; g.fillText('DICKA', w / 2, 110); g.font = '700 11px Arial'; g.fillText('LOGISTICS', w / 2, 126);
+                    g.font = '700 22px Arial'; g.fillText('⇧⇧', 40, h - 26); g.strokeStyle = 'rgba(55,40,30,.75)'; g.lineWidth = 2; g.strokeRect(22, h - 52, 36, 36);
+                    if (v !== 1) { g.fillStyle = '#f2efe6'; g.fillRect(w - 112, h - 72, 92, 54); g.fillStyle = '#1D2586'; g.fillRect(w - 112, h - 72, 92, 10); g.fillStyle = '#222'; g.font = '600 9px Arial'; g.textAlign = 'left'; g.fillText('SKU ' + (10000 + v * 3217 + 231), w - 106, h - 50); for (let i = 0; i < 20; i++) g.fillRect(w - 106 + i * 4, h - 42, Math.random() < .5 ? 1.5 : 2.5, 16); } }
+                else if (face === 'end') { tape(w / 2 - 20, 0, 40, 38); g.fillStyle = 'rgba(55,40,30,.7)'; g.font = '700 13px Arial'; g.textAlign = 'center'; g.fillText('QTY 24 · 8.6 kg', w / 2, h / 2 + 20); g.fillText('↑ ESTE LADO ARRIBA ↑', w / 2, h / 2 + 40); } });
+            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; cartonUpgrade(c, t); _texCache[k] = t; return t; }
+        function cardboardMat(v) { v = v % 3; const k = 'cbm' + v; if (_texCache[k]) return _texCache[k]; const m = f => new THREE.MeshStandardMaterial({ map: cbFaceTex(v, f), bumpMap: cbFaceTex(v, f), bumpScale: 0.004, roughness: 0.9 });
+            const side = m('side'), end = m('end'), top = m('top'), bot = m('bot'); return (_texCache[k] = [end, end, top, bot, side, side]); }   // orden BoxGeometry: +x, -x, +y, -y, +z, -z
         // Tarima real: 3 largueros + 7 tablas arriba + 3 abajo
         function makePallet(w, d) { w = w || 1.0; d = d || 1.2; const g = new THREE.Group(); const m = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.9 });
             for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.022, d / 7 * 0.72), m); b.position.set(0, 0.13, -d / 2 + d / 14 + i * d / 7); b.castShadow = true; g.add(b); }
@@ -6884,7 +6899,7 @@
             if (SIGN_ATLAS.mat) return SIGN_ATLAS.mat;
             const A = SIGN_ATLAS, c = document.createElement('canvas'); c.width = A.cols * A.cw; c.height = A.rows * A.ch; const g = c.getContext('2d');
             SIGN_TYPES.forEach((t, i) => { g.save(); g.translate((i % A.cols) * A.cw, Math.floor(i / A.cols) * A.ch); g.beginPath(); g.rect(0, 0, A.cw, A.ch); g.clip(); drawSign(g, t, A.cw, A.ch); g.restore(); });
-            A.tex = new THREE.CanvasTexture(c); A.tex.anisotropy = 4; A.mat = new THREE.MeshBasicMaterial({ map: A.tex }); return A.mat;
+            A.tex = new THREE.CanvasTexture(c); A.tex.anisotropy = 4; A.tex.encoding = THREE.sRGBEncoding; A.mat = new THREE.MeshBasicMaterial({ map: A.tex }); return A.mat;
         }
         function addSign(type, x, y, z, rotY, size = 1) {
             const A = SIGN_ATLAS, i = SIGN_TYPES.indexOf(type), geo = new THREE.PlaneGeometry(0.8 * size, 1.1 * size);
@@ -7718,7 +7733,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v7.6 metal';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v7.7 cajas';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);

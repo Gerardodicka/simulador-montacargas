@@ -6784,7 +6784,22 @@
                 for (let i = 0; i < 22; i++) { g.strokeStyle = `rgba(255,255,255,${0.05 + Math.random() * 0.08})`; g.lineWidth = 2 + Math.random() * 6; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.lineTo(w, y + (Math.random() - .5) * 60); g.stroke(); } });   // brillo del emplaye
             const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; cartonUpgrade(c, t); _texCache[k] = t; return t; }
         function unitLoadMat(v) { return new THREE.MeshStandardMaterial({ map: unitLoadTex(v), roughness: 0.55, metalness: 0.02 }); }
-        function cardboardMat(v) { return new THREE.MeshStandardMaterial({ map: cardboardTex(v), roughness: 0.92 }); }
+        // Caja de cartón realista: caras distintas (tapa con solapas y cinta, costados con cinta que baja, tinta impresa, etiqueta, bordes gastados)
+        function cbFaceTex(v, face) { const k = 'cbf' + v + face; if (_texCache[k]) return _texCache[k]; const base = ['#c19a64', '#cba674', '#b8915a'][v % 3];
+            const c = noiseCanvas(256, 256, face === 'bot' ? '#a8834e' : base, 12, (g, w, h) => {
+                for (let x = 0; x < w; x += 4) { g.fillStyle = `rgba(90,60,25,${0.05 + Math.random() * 0.04})`; g.fillRect(x, 0, 1.5, h); }          // flautas del corrugado
+                const eg = (x0, y0, x1, y1) => { const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, 'rgba(60,35,10,.35)'); gr.addColorStop(1, 'rgba(60,35,10,0)'); return gr; };
+                g.fillStyle = eg(0, 0, 0, 14); g.fillRect(0, 0, w, 14); g.fillStyle = eg(0, h, 0, h - 14); g.fillRect(0, h - 14, w, 14); g.fillStyle = eg(0, 0, 14, 0); g.fillRect(0, 0, 14, h); g.fillStyle = eg(w, 0, w - 14, 0); g.fillRect(w - 14, 0, 14, h);   // aristas oscurecidas
+                for (let i = 0; i < 5; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? '70,45,15' : '235,215,175'},${0.08 + Math.random() * 0.1})`; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 4 + Math.random() * 16, 2 + Math.random() * 5, Math.random() * 3, 0, 7); g.fill(); }   // raspones y manchas
+                const tape = (x, y, tw, th) => { g.fillStyle = 'rgba(170,125,60,.55)'; g.fillRect(x, y, tw, th); g.fillStyle = 'rgba(255,240,210,.25)'; g.fillRect(x + tw * 0.15, y, tw * 0.12, th); g.fillStyle = 'rgba(90,60,25,.35)'; g.fillRect(x, y, 1, th); g.fillRect(x + tw - 1, y, 1, th); };
+                if (face === 'top') { g.fillStyle = 'rgba(60,35,10,.55)'; g.fillRect(0, h / 2 - 1, w, 2); tape(0, h / 2 - 20, w, 40); }   // unión de solapas + cinta canela
+                else if (face === 'side') { g.fillStyle = 'rgba(55,40,30,.75)'; g.font = '900 22px Arial Black, Arial'; g.textAlign = 'center'; g.fillText('DICKA', w / 2, 110); g.font = '700 11px Arial'; g.fillText('LOGISTICS', w / 2, 126);
+                    g.font = '700 22px Arial'; g.fillText('⇧⇧', 40, h - 26); g.strokeStyle = 'rgba(55,40,30,.75)'; g.lineWidth = 2; g.strokeRect(22, h - 52, 36, 36);
+                    if (v !== 1) { g.fillStyle = '#f2efe6'; g.fillRect(w - 112, h - 72, 92, 54); g.fillStyle = '#1D2586'; g.fillRect(w - 112, h - 72, 92, 10); g.fillStyle = '#222'; g.font = '600 9px Arial'; g.textAlign = 'left'; g.fillText('SKU ' + (10000 + v * 3217 + 231), w - 106, h - 50); for (let i = 0; i < 20; i++) g.fillRect(w - 106 + i * 4, h - 42, Math.random() < .5 ? 1.5 : 2.5, 16); } }
+                else if (face === 'end') { tape(w / 2 - 20, 0, 40, 38); g.fillStyle = 'rgba(55,40,30,.7)'; g.font = '700 13px Arial'; g.textAlign = 'center'; g.fillText('QTY 24 · 8.6 kg', w / 2, h / 2 + 20); g.fillText('↑ ESTE LADO ARRIBA ↑', w / 2, h / 2 + 40); } });
+            const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; cartonUpgrade(c, t); _texCache[k] = t; return t; }
+        function cardboardMat(v) { v = v % 3; const k = 'cbm' + v; if (_texCache[k]) return _texCache[k]; const m = f => new THREE.MeshStandardMaterial({ map: cbFaceTex(v, f), bumpMap: cbFaceTex(v, f), bumpScale: 0.004, roughness: 0.9 });
+            const side = m('side'), end = m('end'), top = m('top'), bot = m('bot'); return (_texCache[k] = [end, end, top, bot, side, side]); }   // orden BoxGeometry: +x, -x, +y, -y, +z, -z
         // Tarima real: 3 largueros + 7 tablas arriba + 3 abajo
         function makePallet(w, d) { w = w || 1.0; d = d || 1.2; const g = new THREE.Group(); const m = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.9 });
             for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.022, d / 7 * 0.72), m); b.position.set(0, 0.13, -d / 2 + d / 14 + i * d / 7); b.castShadow = true; g.add(b); }
@@ -6874,7 +6889,7 @@
             if (SIGN_ATLAS.mat) return SIGN_ATLAS.mat;
             const A = SIGN_ATLAS, c = document.createElement('canvas'); c.width = A.cols * A.cw; c.height = A.rows * A.ch; const g = c.getContext('2d');
             SIGN_TYPES.forEach((t, i) => { g.save(); g.translate((i % A.cols) * A.cw, Math.floor(i / A.cols) * A.ch); g.beginPath(); g.rect(0, 0, A.cw, A.ch); g.clip(); drawSign(g, t, A.cw, A.ch); g.restore(); });
-            A.tex = new THREE.CanvasTexture(c); A.tex.anisotropy = 4; A.mat = new THREE.MeshBasicMaterial({ map: A.tex }); return A.mat;
+            A.tex = new THREE.CanvasTexture(c); A.tex.anisotropy = 4; A.tex.encoding = THREE.sRGBEncoding; A.mat = new THREE.MeshBasicMaterial({ map: A.tex }); return A.mat;
         }
         function addSign(type, x, y, z, rotY, size = 1) {
             const A = SIGN_ATLAS, i = SIGN_TYPES.indexOf(type), geo = new THREE.PlaneGeometry(0.8 * size, 1.1 * size);
@@ -6882,24 +6897,51 @@
             const uv = geo.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) ? u1 : u0, uv.getY(k) ? v1 : v0);
             const m = new THREE.Mesh(geo, signMaterial()); m.position.set(x, y, z); m.rotation.y = rotY; m.name = 'senal-' + type; scene.add(m); return m;
         }
+        // ====== Extintor PQS ABC 6 kg (NOM-002-STPS-2010): parte más alta ≤ 1.50 m del piso, soporte a muro, manómetro, manguera, etiqueta y
+        // marbete de inspección; área de piso libre señalizada en franjas rojo/blanco y señal NOM-026/NOM-003 arriba. Local +Z = hacia el pasillo.
+        const EXT_KIT = {};
+        function makeExtinguisher(x, z, rotY) { const K = EXT_KIT; if (!K.red) { const C = h => new THREE.Color(h).convertSRGBToLinear();
+                K.red = new THREE.MeshPhysicalMaterial ? new THREE.MeshPhysicalMaterial({ color: C(0xc8102e), roughness: 0.3, metalness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.15 }) : new THREE.MeshStandardMaterial({ color: C(0xc8102e), roughness: 0.3 });
+                K.black = new THREE.MeshStandardMaterial({ color: C(0x151515), roughness: 0.6 }); K.metal = new THREE.MeshStandardMaterial({ color: C(0xc9ccd2), metalness: 0.9, roughness: 0.3 }); K.yel = new THREE.MeshStandardMaterial({ color: C(0xf2c200), roughness: 0.7 });
+                const lc = document.createElement('canvas'); lc.width = 128; lc.height = 160; const g = lc.getContext('2d'); g.fillStyle = '#f4f4f0'; g.fillRect(0, 0, 128, 160); g.fillStyle = '#c8102e'; g.fillRect(0, 0, 128, 30); g.fillStyle = '#fff'; g.font = '900 18px Arial'; g.textAlign = 'center'; g.fillText('EXTINTOR', 64, 22);
+                g.fillStyle = '#111'; g.font = '900 30px Arial'; g.fillText('PQS', 64, 66); g.font = '700 16px Arial'; g.fillText('6 kg', 64, 88); [['A', '#1a8f3a'], ['B', '#c8102e'], ['C', '#1D2586']].forEach(([l, c], i) => { g.fillStyle = c; g.fillRect(14 + i * 36, 100, 30, 30); g.fillStyle = '#fff'; g.font = '900 22px Arial'; g.fillText(l, 29 + i * 36, 123); }); g.fillStyle = '#333'; g.font = '600 10px Arial'; g.fillText('NOM-154-SCFI', 64, 150);
+                K.label = new THREE.MeshStandardMaterial({ map: Object.assign(new THREE.CanvasTexture(lc), { encoding: THREE.sRGBEncoding }), roughness: 0.6 });
+                const gc = document.createElement('canvas'); gc.width = gc.height = 64; const q = gc.getContext('2d'); q.fillStyle = '#fff'; q.beginPath(); q.arc(32, 32, 31, 0, 7); q.fill(); q.lineWidth = 8; [['#c8102e', 3.4, 4.1], ['#1a8f3a', 4.1, 5.2], ['#c8102e', 5.2, 6.0]].forEach(([c, a, b]) => { q.strokeStyle = c; q.beginPath(); q.arc(32, 32, 22, a, b); q.stroke(); }); q.strokeStyle = '#111'; q.lineWidth = 3; q.beginPath(); q.moveTo(32, 32); q.lineTo(44, 14); q.stroke();
+                K.gauge = new THREE.MeshBasicMaterial({ map: Object.assign(new THREE.CanvasTexture(gc), { encoding: THREE.sRGBEncoding }) });
+                const fc = document.createElement('canvas'); fc.width = 128; fc.height = 64; const f = fc.getContext('2d'); f.fillStyle = '#fff'; f.fillRect(0, 0, 128, 64); f.fillStyle = '#c8102e'; for (let i = -64; i < 128; i += 24) { f.beginPath(); f.moveTo(i, 64); f.lineTo(i + 12, 64); f.lineTo(i + 76, 0); f.lineTo(i + 64, 0); f.fill(); } f.strokeStyle = '#c8102e'; f.lineWidth = 8; f.strokeRect(4, 4, 120, 56);
+                K.floor = new THREE.MeshStandardMaterial({ map: Object.assign(new THREE.CanvasTexture(fc), { encoding: THREE.sRGBEncoding }), roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2 });
+                K.body = new THREE.CylinderGeometry(0.085, 0.085, 0.40, 20); K.dome = new THREE.SphereGeometry(0.085, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2); K.base = new THREE.CylinderGeometry(0.087, 0.087, 0.03, 20);
+                K.hose = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0.05, 1.33, 0.11), new THREE.Vector3(0.12, 1.30, 0.13), new THREE.Vector3(0.105, 1.05, 0.14), new THREE.Vector3(0.10, 0.92, 0.12)]), 16, 0.011, 6); }
+            const G = new THREE.Group(); G.position.set(x, 0, z); G.rotation.y = rotY; const add = (geo, mat, px, py, pz, rx, ry, rz) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz; G.add(m); return m; };
+            add(new THREE.BoxGeometry(0.14, 0.34, 0.012), K.metal, 0, 1.12, 0.006); add(new THREE.BoxGeometry(0.16, 0.025, 0.06), K.metal, 0, 1.0, 0.035);          // placa y gancho del soporte a muro
+            add(K.base, K.black, 0, 0.885, 0.11); add(K.body, K.red, 0, 1.09, 0.11).castShadow = true; add(K.dome, K.red, 0, 1.29, 0.11);              // cilindro (fondo de hule, cuerpo y domo)
+            add(new THREE.CylinderGeometry(0.025, 0.03, 0.06, 10), K.metal, 0, 1.39, 0.11); add(new THREE.BoxGeometry(0.03, 0.035, 0.05), K.black, 0, 1.43, 0.11);  // cuello y válvula
+            add(new THREE.BoxGeometry(0.025, 0.012, 0.13), K.black, 0, 1.465, 0.07, -0.18); add(new THREE.BoxGeometry(0.025, 0.012, 0.11), K.black, 0, 1.445, 0.08, 0.08);   // palanca y asa (≤ 1.50 m)
+            add(new THREE.TorusGeometry(0.012, 0.003, 4, 10), K.yel, -0.03, 1.44, 0.11, 0, Math.PI / 2);                                                     // seguro con argolla
+            add(new THREE.CylinderGeometry(0.022, 0.022, 0.012, 14), K.metal, 0.03, 1.40, 0.14, Math.PI / 2); add(new THREE.CircleGeometry(0.018, 14), K.gauge, 0.03, 1.40, 0.147);   // manómetro en verde (cargado)
+            add(K.hose, K.black, 0, 0, 0); add(new THREE.CylinderGeometry(0.012, 0.018, 0.07, 8), K.black, 0.10, 0.89, 0.12);                               // manguera y boquilla
+            add(new THREE.CylinderGeometry(0.086, 0.086, 0.18, 20, 1, true, -0.9, 1.8), K.label, 0, 1.08, 0.11);                                            // etiqueta de agente y clases A-B-C
+            add(new THREE.BoxGeometry(0.05, 0.08, 0.002), K.yel, -0.06, 1.33, 0.19, 0, 0, 0.15);                                                            // marbete de inspección mensual
+            const fl = add(new THREE.PlaneGeometry(0.9, 0.6), K.floor, 0, 0.012, 0.42, -Math.PI / 2); fl.receiveShadow = true;                           // área libre de obstáculos
+            scene.add(G); return G; }
         function buildSafetySigns() {
             const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2, xi = hw - 0.26, zf = hd - 0.26, zb = -hd + 0.26, y = 2.5;
             const redMat = new THREE.MeshStandardMaterial({ color: 0xC8102E, roughness: 0.5 }), greyMat = new THREE.MeshStandardMaterial({ color: 0x5b6577, metalness: 0.4, roughness: 0.5 });
             // Muros laterales: ruta de evacuación hacia las salidas (frente, +Z) cada 15 m, alternando con señales de obligación, precaución y prohibición
-            const extra = ['extintor', 'precMonta', 'casco', 'noPeaton', 'chaleco', 'extintor', 'vel10', 'calzado', 'botiquin', 'noFumar', 'extintor', 'electrico'];
+            const extra = ['reunion', 'precMonta', 'casco', 'noPeaton', 'chaleco', 'botiquin', 'vel10', 'calzado', 'noFumar', 'electrico'];
             let k = 0;
             for (let z = -hd + 8; z <= hd - 8; z += 15) {
                 [-1, 1].forEach(sd => {
                     const rot = sd < 0 ? Math.PI / 2 : -Math.PI / 2, x = sd * xi, d = sd < 0 ? -1 : 1;   // d: desplazamiento hacia -Z en el plano del muro
                     addSign(sd < 0 ? 'evacIzq' : 'evacDer', x, y, z, rot);
                     const t = extra[k++ % extra.length]; addSign(t, x, y, z - 1.2, rot);
-                    if (t === 'extintor') { const e = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.55, 12), redMat); e.position.set(sd * (xi - 0.14), 1.55, z - 1.2); scene.add(e); const v = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.08, 8), greyMat); v.position.set(e.position.x, 1.86, e.position.z); scene.add(v); }
+                    addSign('extintor', x, y, z + 1.4, rot); makeExtinguisher(sd * (hw - 0.32), z + 1.4, rot);   // extintor cada 15 m en ambos muros: recorrido máximo ≤ 15 m (NOM-002-STPS)
                 });
             }
             // Muro frontal (andenes): salidas de emergencia peatonales en las esquinas, fuera de las cortinas de andén
             [-1, 1].forEach(sd => {
                 const x = sd * (hw - 4); const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.2, 0.12), new THREE.MeshStandardMaterial({ color: 0x007A33, roughness: 0.6 })); door.position.set(x, 1.1, zf - 0.02); scene.add(door);
-                addSign('salida', x, 3.0, zf - 0.1, Math.PI, 1.1); addSign('precMonta', x + sd * 1.6, y, zf - 0.1, Math.PI); addSign('extintor', x - sd * 1.6, y, zf - 0.1, Math.PI);
+                addSign('salida', x, 3.0, zf - 0.1, Math.PI, 1.1); addSign('precMonta', x + sd * 1.6, y, zf - 0.1, Math.PI); addSign('extintor', x - sd * 1.6, y, zf - 0.1, Math.PI); makeExtinguisher(x - sd * 1.6, hd - 0.32, Math.PI);
             });
             // Muro de fondo (bajo el letrero DICKA): equipo de protección obligatorio y reglas del almacén
             ['casco', 'chaleco', 'calzado', 'vel10', 'noFumar', 'precMonta', 'electrico', 'botiquin'].forEach((t, i, a) => addSign(t, (i - (a.length - 1) / 2) * 3.2, y, zb + 0.08, 0, 1.15));
@@ -7110,8 +7152,6 @@
             dropZone.rotation.x = -Math.PI / 2; dropZone.position.set(-20, 0.013, 26); scene.add(dropZone);
             paintLabel('STAGING', -20, 26, 2.5, '#011131');
             // Extintor y estación de carga
-            const ext = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0xcc2222 }));
-            ext.position.set(28.5, 1.2, 20); scene.add(ext);
             const charger = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.6, 0.6), new THREE.MeshStandardMaterial({ color: BRAND.gris }));
             charger.position.set(26, 0.8, 38); scene.add(charger);
             obstacles.push({ minX: 25.2, maxX: 26.8, minZ: 37.5, maxZ: 38.5 });
@@ -7750,7 +7790,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v7.6 metal';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v7.8 marcha y extintores';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8243,8 +8283,8 @@
 
         // ---- Marcha procedural sobre el esqueleto del modelo realista (cuando el GLB no trae clip Walk/Idle) ----
         // Parte de la pose de reposo (T-pose) y aplica rotaciones locales: brazos bajados y balanceo, piernas, rodillas, pies, cadera, columna y cabeza.
-        const GLTF_BONES = { hips: /^(Driving|Hips|Pelvis)$/i, spine: /^Spine$/i, spine2: /^Spine2$/i, head: /^Head$/i, lArm: /^LeftArm$/i, rArm: /^RightArm$/i, lFore: /^LeftForeArm$/i, rFore: /^RightForeArm$/i, rHand: /^RightHand$/i, lUp: /^LeftUpLeg$/i, rUp: /^RightUpLeg$/i, lLeg: /^LeftLeg$/i, rLeg: /^RightLeg$/i, lFoot: /^LeftFoot$/i, rFoot: /^RightFoot$/i };
-        const GLTF_WALK = { legIn: 0.08, armDown: 1.56, armFwd: 0.30, elbow: 0.30, legSwing: 0.34, knee: 0.70, foot: 0.22, lean: 0.05 };   // signos ajustables según el rig
+        const GLTF_BONES = { hips: /^(Driving|Hips|Pelvis)$/i, spine: /^Spine$/i, spine2: /^Spine2$/i, head: /^Head$/i, lArm: /^LeftArm$/i, rArm: /^RightArm$/i, lFore: /^LeftForeArm$/i, rFore: /^RightForeArm$/i, rHand: /^RightHand$/i, lHand: /^LeftHand$/i, lUp: /^LeftUpLeg$/i, rUp: /^RightUpLeg$/i, lLeg: /^LeftLeg$/i, rLeg: /^RightLeg$/i, lFoot: /^LeftFoot$/i, rFoot: /^RightFoot$/i };
+        const GLTF_WALK = { legIn: 0.08, armDown: 1.56, armFwd: 0.42, elbow: 0.38, legSwing: 0.40, knee: 0.80, foot: 0.24, lean: 0.07 };   // signos ajustables según el rig
         function gltfPrepareBones(av) { if (av.bones) return; av.bones = {}; av.rest = {}; av.obj.traverse(o => { if (!o.isBone) return; for (const k in GLTF_BONES) if (GLTF_BONES[k].test(o.name) && !av.bones[k]) { av.bones[k] = o; av.rest[k] = o.quaternion.clone(); } }); av.hipsY0 = av.bones.hips ? av.bones.hips.position.y : 0; }
         const _qa = new THREE.Quaternion(), _qp = new THREE.Quaternion(), _qw = new THREE.Quaternion(), _qr = new THREE.Quaternion(), _ax = new THREE.Vector3(), _mR = new THREE.Matrix4();
         // Rotación de un hueso alrededor de ejes del MUNDO relativos al personaje (lateral = X, vertical = Y, frontal = Z), sobre su pose de reposo
@@ -8277,22 +8317,27 @@
         function gltfWalkPose(av, walking, w, now, waving, idlePhase) { gltfPrepareBones(av); gltfCalibrate(av); const W = GLTF_WALK, C = av.calib; const t = now / 1000; av.obj.updateMatrixWorld(true);
             // mezcla suave entre reposo y marcha (evita el "salto" de pose al arrancar o detenerse)
             av.blend = av.blend === undefined ? (walking ? 1 : 0) : av.blend + ((walking ? 1 : 0) - av.blend) * 0.12; const k = av.blend;
-            const sw = Math.sin(w) * k, sw2 = Math.sin(w + Math.PI) * k; const breathe = Math.sin(t / 1.1 + idlePhase) * 0.012 * (1 - k);
+            if (!av.gait) { const r = () => 0.88 + Math.random() * 0.24; av.gait = { arm: r(), leg: r(), lean: r(), sway: r(), loose: Math.random() * 0.08 }; }   // cada persona camina distinto
+            const G = av.gait, thigh = x => Math.sin(x) + 0.14 * Math.sin(2 * x + 0.6);   // muslo: avance rápido y apoyo largo (no senoidal pura)
+            const sw = thigh(w) * k * G.leg, sw2 = thigh(w + Math.PI) * k * G.leg; const breathe = Math.sin(t / 1.1 + idlePhase) * 0.012 * (1 - k);
             // brazos: pegados al cuerpo (bajados casi 90° desde la T-pose y rotados un poco hacia el frente), balanceo con retraso de fase respecto a las piernas y codo relajado que se flexiona al ir adelante
             const ph = 0.35 + (idlePhase % 1) * 0.1, aswL = Math.sin(w + Math.PI - ph) * k, aswR = Math.sin(w - ph) * k; const armIn = 0.12;
-            setBoneWorld(av, 'lArm', C.swing * (aswL * W.armFwd + 0.1), -armIn, C.armL * W.armDown); setBoneWorld(av, 'rArm', C.swing * (aswR * W.armFwd + 0.1), armIn, C.armR * W.armDown);
-            setBoneWorld(av, 'lFore', C.swing * (0.2 + Math.max(0, aswL) * W.elbow), 0, C.armL * 0.08); setBoneWorld(av, 'rFore', C.swing * (0.2 + Math.max(0, aswR) * W.elbow), 0, C.armR * 0.08);
+            const aF = W.armFwd * G.arm; setBoneWorld(av, 'lArm', C.swing * (aswL * aF + 0.03), -armIn, C.armL * W.armDown); setBoneWorld(av, 'rArm', C.swing * (aswR * aF + 0.03), armIn, C.armR * W.armDown);
+            const eL = C.swing * (0.12 + G.loose + (aswL * 0.5 + 0.5) * W.elbow * k), eR = C.swing * (0.12 + G.loose + (aswR * 0.5 + 0.5) * W.elbow * k);   // codo relajado: se dobla más al ir adelante
+            setBoneWorld(av, 'lFore', eL, 0, C.armL * 0.08); setBoneWorld(av, 'rFore', eR, 0, C.armR * 0.08);
+            setBoneWorld(av, 'lHand', eL * 0.9, 0, C.armL * 0.12); setBoneWorld(av, 'rHand', eR * 0.9, 0, C.armR * 0.12);   // muñeca suelta siguiendo al antebrazo, palma hacia el muslo
             if (waving) { setBoneWorld(av, 'rArm', 0, 0, C.armR * (-0.3 + Math.sin(t * 7.7) * 0.12)); setBoneWorld(av, 'rFore', 0, 0, C.armR * -0.7); setBoneWorld(av, 'rHand', 0, 0, C.armR * -0.7); }   // mano abierta y recta, alineada al antebrazo
             // piernas: el muslo oscila; la rodilla se flexiona en la fase de vuelo (pierna que avanza) y queda casi recta al apoyar; el pie hace talón-punta
-            const kneeL = Math.max(0, Math.sin(w - 0.9)) * W.knee * k, kneeR = Math.max(0, Math.sin(w + Math.PI - 0.9)) * W.knee * k;
+            const kn = x => (Math.max(0, Math.sin(x - 0.9)) ** 1.5 * W.knee + Math.max(0, Math.sin(2 * x + 2.2)) * 0.12) * k * G.leg;   // flexión en vuelo + amortiguación al apoyar
+            const kneeL = kn(w), kneeR = kn(w + Math.PI);
             setBoneWorld(av, 'lUp', C.swing * (sw * W.legSwing + kneeL * 0.25), 0, C.armL * W.legIn); setBoneWorld(av, 'rUp', C.swing * (sw2 * W.legSwing + kneeR * 0.25), 0, C.armR * W.legIn);   // muslos ligeramente hacia el centro: pasos sobre una línea, no piernas abiertas
             setBoneWorld(av, 'lLeg', -C.swing * kneeL); setBoneWorld(av, 'rLeg', -C.swing * kneeR);
             setBoneWorld(av, 'lFoot', C.swing * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + 0.4) * 0.28)) * k - kneeL * 0.35)); setBoneWorld(av, 'rFoot', C.swing * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + 0.4) * 0.28)) * k - kneeR * 0.35));
             // cadera: rebote doble por zancada, vaivén lateral y contrarrotación; tronco inclinado al frente al caminar; hombros compensan
             if (av.bones.hips) { av.bones.hips.position.y = av.hipsY0 + (Math.abs(Math.cos(w)) * 2.2 - 1.1) * k + breathe * 100 * 0.3; }
-            setBoneWorld(av, 'hips', C.swing * W.lean * k, Math.sin(w) * 0.07 * k, Math.sin(w) * 0.03 * k);
-            setBoneWorld(av, 'spine', C.swing * W.lean * 0.5 * k, -Math.sin(w) * 0.05 * k, -Math.sin(w) * 0.03 * k); setBoneWorld(av, 'spine2', 0, -Math.sin(w) * 0.04 * k, 0);
-            setBoneWorld(av, 'head', -C.swing * W.lean * 1.2 * k, walking ? Math.sin(t / 1.4 + idlePhase) * 0.18 : Math.sin(t / 1.8 + idlePhase) * 0.4, -Math.sin(w) * 0.02 * k); }
+            const ln = W.lean * G.lean, sy = G.sway; setBoneWorld(av, 'hips', C.swing * ln * k, Math.sin(w) * 0.10 * k * sy, Math.sin(w + 0.5) * 0.05 * k * sy);   // pelvis gira y cae del lado que avanza
+            setBoneWorld(av, 'spine', C.swing * ln * 0.5 * k, -Math.sin(w) * 0.06 * k * sy, -Math.sin(w + 0.5) * 0.04 * k * sy); setBoneWorld(av, 'spine2', C.swing * ln * 0.3 * k, -Math.sin(w) * 0.12 * k * sy, 0);   // hombros contrarrotan a la cadera
+            setBoneWorld(av, 'head', -C.swing * ln * 1.6 * k, (walking ? Math.sin(t / 1.4 + idlePhase) * 0.18 : Math.sin(t / 1.8 + idlePhase) * 0.4) + Math.sin(w) * 0.06 * k * sy, -Math.sin(w) * 0.02 * k); }   // la cabeza compensa el giro del tronco y mira al frente
 
         function gltfPlay(av, name, fade = 0.25) { if (!av) return; if (!av.acts[name]) { if (name === 'idle' && av.acts.walk) { if (av.current !== 'idle') { av.acts.walk.paused = true; av.acts.walk.time = 0; av.current = 'idle'; } return; } if (name === 'wave') name = 'idle'; if (!av.acts[name]) return; } if (av.current === name) { if (name === 'walk') av.acts.walk.paused = false; return; } const to = av.acts[name]; to.paused = false; to.reset().fadeIn(fade).play(); if (av.current && av.acts[av.current] && av.current !== name) av.acts[av.current].fadeOut(fade); av.current = name; }
 
