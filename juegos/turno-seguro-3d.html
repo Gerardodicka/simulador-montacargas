@@ -8253,11 +8253,14 @@
                 const hb = o.skeleton.bones.map(b => /Hand/i.test(b.name) ? 1 : 0); if (!hb.some(Boolean)) return; const si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, n = si.count, gw = new Float32Array(n);
                 for (let i = 0; i < n; i++) gw[i] = hb[si.getX(i)] * sw.getX(i) + hb[si.getY(i)] * sw.getY(i) + hb[si.getZ(i)] * sw.getZ(i) + hb[si.getW(i)] * sw.getW(i);
                 o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); const m = o.material; if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
-                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nvarying float vGlove;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGlove = aGlove;');
-                    sh.fragmentShader = 'varying float vGlove;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-                    float gk = smoothstep(0.04, 0.16, vGlove); if (gk > 0.0) { vec2 gu = vUv * vec2(900.0, 1800.0); float knit = 0.82 + 0.18 * abs(sin(gu.x)) * (0.7 + 0.3 * sin(gu.y));
-                      vec3 gy = vec3(0.86, 0.62, 0.02) * knit; float cuffB = smoothstep(0.04, 0.12, vGlove) * (1.0 - smoothstep(0.30, 0.45, vGlove)); gy = mix(gy, vec3(0.55, 0.40, 0.02), cuffB * 0.7);
-                      diffuseColor.rgb = mix(diffuseColor.rgb, gy, gk); }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix(roughnessFactor, 0.95, smoothstep(0.04, 0.16, vGlove));'); };
+                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nvarying float vGlove;\nvarying float vPalm;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGlove = aGlove; vPalm = smoothstep(-0.15, -0.55, normalize(objectNormal).y);');
+                    sh.fragmentShader = 'varying float vGlove;\nvarying float vPalm;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+                    float gk = smoothstep(0.003, 0.03, vGlove); if (gk > 0.0) { vec2 gu = vUv * vec2(1400.0, 2600.0); float rib = abs(sin(gu.x)); float loopv = abs(sin(gu.y + (sin(gu.x * 0.5) > 0.0 ? 1.57 : 0.0)));
+                      float knit = 0.62 + 0.38 * rib * (0.55 + 0.45 * loopv); float fz = fract(sin(dot(floor(gu * 0.5), vec2(12.9898, 78.233))) * 43758.5453);   // punto de tejido con pelusa
+                      vec3 gy = vec3(0.90, 0.68, 0.04) * knit * (0.92 + 0.12 * fz);
+                      float wr = 0.85 + 0.15 * sin(vUv.y * 9000.0 + sin(vUv.x * 4000.0) * 2.0); vec3 nit = vec3(0.16, 0.17, 0.19) * wr * (0.9 + 0.1 * fz);   // recubrimiento de nitrilo con arrugas
+                      gy = mix(gy, nit, vPalm * smoothstep(0.35, 0.6, vGlove)); float cuffB = smoothstep(0.003, 0.03, vGlove) * (1.0 - smoothstep(0.12, 0.3, vGlove)); gy = mix(gy, vec3(0.55, 0.40, 0.02), cuffB * 0.7);
+                      diffuseColor.rgb = mix(diffuseColor.rgb, gy, gk); }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix(roughnessFactor, mix(0.97, 0.5, vPalm * smoothstep(0.35, 0.6, vGlove)), smoothstep(0.003, 0.03, vGlove));'); };
                 m.customProgramCacheKey = () => 'glove'; m.needsUpdate = true; }); }
         function dickaVest(scene) { return new Promise(done => { const skin = new Image(); skin.onload = () => { SKIN_IMG = skin; go(); }; skin.onerror = () => go(); skin.src = 'assets/textures/piel.jpg'; const go = () => { const logo = new Image(); logo.onload = () => { const seen = new Set();
             scene.traverse(o => { if (!o.isMesh || !o.material || !o.material.map || !o.material.map.image || seen.has(o.material.map)) return; const m = o.material, img = m.map.image; seen.add(m.map); if (!/body/i.test(m.name || '')) return;
