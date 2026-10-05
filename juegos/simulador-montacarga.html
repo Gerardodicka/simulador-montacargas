@@ -7825,7 +7825,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.05 · v9.2 guante tejido amarillo';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.05 · v9.3 guante 3D';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8332,15 +8332,22 @@
                     sh.fragmentShader = 'uniform sampler2D uLogo;\nvarying vec3 vHP;\nvarying vec3 vHN;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
                     vec2 lu = vec2((vHP.x + 0.055) / 0.11, (vHP.y - 1.69) / 0.055); if (vHN.z > 0.35 && vHP.z > 0.0 && lu.x > 0.0 && lu.x < 1.0 && lu.y > 0.0 && lu.y < 1.0) { vec4 lc = texture2D(uLogo, lu); diffuseColor.rgb = mix(diffuseColor.rgb, lc.rgb, lc.a); }`); };
                 m.customProgramCacheKey = () => 'abs'; o.material = m; }); }
+        // Puño elástico 3D en la muñeca: tubo tejido amarillo acanalado con orilla negra, que sobresale de la mano (da borde real al guante)
+        let CUFF_MAT = null;
+        function gloveCuffs(mesh) { if (!CUFF_MAT) { const c = document.createElement('canvas'); c.width = 128; c.height = 64; const g = c.getContext('2d'); for (let x = 0; x < 128; x += 4) { g.fillStyle = x % 8 ? '#e2ad16' : '#b9870c'; g.fillRect(x, 0, 4, 64); } for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(255,240,180,${Math.random() * .25})`; g.fillRect(Math.random() * 128, Math.random() * 64, 1.5, 1.5); }
+                g.fillStyle = '#111'; g.fillRect(0, 56, 128, 8); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = THREE.RepeatWrapping; t.repeat.set(3, 1); CUFF_MAT = new THREE.MeshStandardMaterial({ map: t, roughness: .95, side: THREE.DoubleSide }); }
+            mesh.updateMatrixWorld(true); mesh.skeleton.bones.forEach(b => { if (!/(Left|Right)Hand$/.test(b.name) || b.getObjectByName('gloveCuff')) return; const ws = new THREE.Vector3(); b.getWorldScale(ws);
+                const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.041, 0.039, 0.065, 20, 1, true), CUFF_MAT); cuff.name = 'gloveCuff'; cuff.scale.set(1 / ws.x, 1 / ws.y, (1 / ws.z) * 0.78); cuff.position.y = -0.012 / ws.y; cuff.castShadow = false; b.add(cuff);
+                const rim = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.004, 6, 20), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: .9 })); rim.rotation.x = Math.PI / 2; rim.position.y = -0.0325; cuff.add(rim); }); }
         function workGloves(scene) { scene.traverse(o => { if (!o.isSkinnedMesh || !o.skeleton || !o.geometry.attributes.skinIndex || o.geometry.attributes.aGlove) return;
                 const B = o.skeleton.bones, si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, n = si.count;
                 const W = re => { const hb = B.map(b => re.test(b.name) ? 1 : 0); const a = new Float32Array(n); for (let i = 0; i < n; i++) a[i] = hb[si.getX(i)] * sw.getX(i) + hb[si.getY(i)] * sw.getY(i) + hb[si.getZ(i)] * sw.getZ(i) + hb[si.getW(i)] * sw.getW(i); return a; };
                 if (!B.some(b => /Hand/i.test(b.name))) return; const gw = W(/Hand/i);
                 let mx = 0; for (let i = 0; i < n; i++) if (gw[i] > mx) mx = gw[i]; const m = o.material; if (mx < 0.5 || !m || Array.isArray(m) || !m.map) return;   // solo la malla que contiene las manos (con textura); el casco y otras piezas no se tocan
                 const tip = W(/Hand(Thumb|Index|Middle|Ring|Pinky)[34]$/i), kn = W(/Hand(Index|Middle|Ring|Pinky)1$/i);   // puntas de dedos y nudillos (refuerzos negros)
-                o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); o.geometry.setAttribute('aTip', new THREE.BufferAttribute(tip, 1)); o.geometry.setAttribute('aKn', new THREE.BufferAttribute(kn, 1)); if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
+                o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); gloveCuffs(o); o.geometry.setAttribute('aTip', new THREE.BufferAttribute(tip, 1)); o.geometry.setAttribute('aKn', new THREE.BufferAttribute(kn, 1)); if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
                 // Guante tipo mecánico (referencia "gription"): dorso sintético amarillo, palma negra con puntos de silicón, puntas y nudillos negros, puño negro con ajuste y ribete amarillo
-                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nattribute float aTip;\nattribute float aKn;\nvarying float vGlove;\nvarying float vPalm;\nvarying float vTip;\nvarying float vKn;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGlove = aGlove; vTip = aTip; vKn = aKn; vPalm = smoothstep(-0.1, -0.5, normalize(objectNormal).y);');
+                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nattribute float aTip;\nattribute float aKn;\nvarying float vGlove;\nvarying float vPalm;\nvarying float vTip;\nvarying float vKn;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed += normalize(objectNormal) * smoothstep(0.003, 0.05, aGlove) * 0.0045;   // grosor del tejido: el guante queda por encima de la piel\n vGlove = aGlove; vTip = aTip; vKn = aKn; vPalm = smoothstep(-0.1, -0.5, normalize(objectNormal).y);');
                     sh.fragmentShader = 'varying float vGlove;\nvarying float vPalm;\nvarying float vTip;\nvarying float vKn;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
                     float gk = smoothstep(0.003, 0.03, vGlove); if (gk > 0.0) {
                       // Guante tejido amarillo (referencia DICKA): punto de algodón jaspeado, palma con chevrones de PVC negro, puño acanalado con orilla negra
