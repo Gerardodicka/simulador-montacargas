@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Uso de Extintores 3D | DICKA Logistics</title>
+<style>
+:root{--azul:#1D2586;--brillante:#2138D3;--marino:#011131;--gris:#838383;--amarillo:#f5c400;--verde:#2e9e5b;--rojo:#c62828}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,var(--azul) 0%,var(--marino) 100%);color:#333}
+.hidden{display:none!important}
+.page{position:absolute;inset:0;overflow:auto;padding:1rem}
+.wrap{max-width:860px;margin:0 auto}
+.head{text-align:center;color:#fff;margin-bottom:1rem}.head h1{font-size:24px;font-weight:900}.head p{font-size:12px;color:#c5cdf5}
+.card{background:#fff;border-radius:16px;padding:1.3rem;box-shadow:0 20px 60px rgba(0,0,0,.3);margin-bottom:1rem}
+.card h2{color:var(--azul);font-size:20px;margin-bottom:.5rem}
+.big{font-size:54px;text-align:center}
+.lead{color:#555;font-size:14px;line-height:1.6}
+.info{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.8rem 1rem;border-radius:8px;margin:.8rem 0;font-size:13px;color:#444;line-height:1.7}
+.info b{color:var(--azul)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:.6rem 0}
+.cls{border-radius:10px;padding:.6rem;color:#fff;font-size:12px;line-height:1.4}.cls b{font-size:22px;display:block}
+.lbl{font-size:11px;font-weight:800;color:var(--azul);display:block;margin-top:.7rem;letter-spacing:1px}
+input.name,select.name{width:100%;padding:.7rem;border:2px solid #dfe3f0;border-radius:8px;font-size:15px;margin-top:.3rem}
+.btn{width:100%;padding:.85rem;border:none;border-radius:10px;background:linear-gradient(135deg,var(--azul),var(--brillante));color:#fff;font-weight:800;font-size:14px;cursor:pointer;letter-spacing:1px;margin-top:.8rem}
+.btn.ghost{background:#fff;color:var(--brillante);border:2px solid var(--brillante)}
+.pass{display:flex;gap:8px;flex-wrap:wrap;margin:.5rem 0}.pass div{flex:1;min-width:120px;background:var(--marino);color:#fff;border-radius:10px;padding:.6rem;font-size:12px}.pass b{color:var(--amarillo);font-size:20px;display:block}
+/* juego */
+#game{position:absolute;inset:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.hud{position:absolute;color:#fff;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.6);pointer-events:none}
+#ctrl button,#pad button,#msg,#insp{pointer-events:auto}
+#top{top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;pointer-events:none}
+.pill{background:rgba(1,17,49,.82);border:2px solid var(--brillante);border-radius:12px;padding:.45rem .8rem;font-size:13px}
+#obj{top:62px;left:10px;width:min(360px,58vw);background:rgba(1,17,49,.86);border:2px solid var(--amarillo);border-radius:12px;padding:.6rem .8rem;font-size:13px;line-height:1.45}
+#obj h3{color:var(--amarillo);font-size:14px;margin-bottom:.3rem}
+#obj ol{padding-left:1.1rem}#obj li{margin:.15rem 0;color:#c9d2ff;font-weight:600}#obj li.cur{color:#fff;font-weight:900}#obj li.ok{color:#8ff0b0}#obj li.ok::marker{content:'✓ '}
+#gauge{top:62px;right:10px;width:170px;background:rgba(1,17,49,.86);border:2px solid var(--brillante);border-radius:12px;padding:.6rem;font-size:12px}
+.bar{height:10px;background:#333a55;border-radius:6px;overflow:hidden;margin:.25rem 0 .5rem}.bar div{height:100%;transition:width .15s}
+#ctrl{left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:min(940px,96vw)}
+#ctrl button{padding:.75rem 1rem;border-radius:12px;border:2px solid #fff;background:rgba(29,37,134,.92);color:#fff;font-weight:800;font-size:14px;cursor:pointer;min-width:120px}
+#ctrl button.red{background:#c62828}#ctrl button.green{background:#2e9e5b}#ctrl button.yel{background:var(--amarillo);color:var(--marino)}
+#pad{right:12px;bottom:90px;display:grid;grid-template-columns:repeat(3,52px);gap:4px}
+#pad button{height:48px;border-radius:10px;border:2px solid #fff;background:rgba(1,17,49,.8);color:#fff;font-size:20px;font-weight:900}
+#squeeze{position:absolute;left:14px;bottom:90px;width:110px;height:110px;border-radius:50%;border:4px solid #fff;background:#c62828;color:#fff;font-weight:900;font-size:14px;touch-action:none}
+#msg{top:40%;left:50%;transform:translate(-50%,-50%);background:rgba(1,17,49,.94);border:3px solid var(--amarillo);border-radius:16px;padding:1rem 1.2rem;width:min(560px,92vw);font-size:15px;line-height:1.55;text-align:left;pointer-events:auto}
+#msg h3{color:var(--amarillo);margin-bottom:.4rem}#msg button{margin-top:.8rem;width:100%;padding:.7rem;border-radius:10px;border:0;background:#2e9e5b;color:#fff;font-weight:900;font-size:15px;cursor:pointer}
+#toast{top:16px;left:50%;transform:translateX(-50%);padding:.55rem 1.1rem;border-radius:10px;font-size:14px;opacity:0;transition:opacity .3s;z-index:40;pointer-events:none}
+#toast.show{opacity:1}
+#cross{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:3px solid #fff;border-radius:50%;pointer-events:none;box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+#cross::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#ff3b3b}
+#insp{right:10px;top:62px;width:min(400px,92vw);max-height:calc(100% - 160px);overflow:auto;background:rgba(255,255,255,.97);color:#222;border-radius:12px;padding:.7rem;font-size:13px;text-shadow:none;font-weight:600}
+#insp h3{color:var(--azul);margin-bottom:.3rem}
+.irow{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:.35rem 0;border-bottom:1px solid #e6e9f4}
+.irow span{flex:1}.irow button{padding:.3rem .5rem;border-radius:8px;border:2px solid #ccd;background:#fff;font-weight:800;font-size:12px;cursor:pointer}
+.irow button.on.ok{background:#2e9e5b;color:#fff;border-color:#2e9e5b}.irow button.on.bad{background:#c62828;color:#fff;border-color:#c62828}
+/* resultados */
+.score{font-size:60px;font-weight:900;color:var(--brillante);text-align:center;line-height:1}
+.badge{display:block;width:max-content;margin:.8rem auto;padding:.5rem 1.4rem;border-radius:30px;font-weight:800}.badge.ok{background:#d4edda;color:#155724}.badge.bad{background:#f8d7da;color:#721c24}
+.stats div{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #e6e9f4;font-size:13.5px}.stats b{color:var(--brillante)}
+.code{background:var(--marino);color:#fff;font-family:monospace;font-size:11px;padding:.7rem;border-radius:8px;word-break:break-all;margin-top:.8rem}
+.err{background:#fff7e0;border-left:4px solid var(--amarillo);padding:.7rem 1rem;border-radius:8px;font-size:12.5px;margin-top:.8rem;line-height:1.7}
+@media (max-width:640px){#obj{font-size:11.5px;width:62vw}#gauge{width:130px;font-size:11px}#ctrl button{min-width:96px;font-size:12px;padding:.6rem .5rem}#squeeze{width:88px;height:88px;bottom:150px}#pad{bottom:150px}}
+</style>
+</head>
+<body>
+<!-- ================= REGISTRO E INSTRUCCIÓN ================= -->
+<div class="page" id="intro"><div class="wrap">
+  <div class="head"><h1>🧯 Uso y Manejo de Extintores 3D</h1><p>DICKA Logistics · Brigada contra incendio · NOM-002-STPS-2010 · NOM-154-SCFI-2005 · NOM-003-SEGOB-2011 · Protección Civil</p></div>
+  <div class="card">
+    <div class="big">🔥🧯</div>
+    <h2>Antes de empezar: lo que debes saber</h2>
+    <p class="lead">Un extintor sirve para <b>conatos de incendio</b> (fuego que inicia, pequeño y controlable). Si el fuego crece, hay humo denso o no lo controlas en <b>30 segundos</b>: <b>evacúa</b>.</p>
+    <div class="info"><b>Clases de fuego (NOM-002-STPS-2010)</b></div>
+    <div class="grid">
+      <div class="cls" style="background:#1a8f3a"><b>A</b>Sólidos: madera, cartón, papel, tela, plástico</div>
+      <div class="cls" style="background:#c62828"><b>B</b>Líquidos y gases inflamables: diésel, gasolina, gas LP, aceite</div>
+      <div class="cls" style="background:#1D2586"><b>C</b>Equipo eléctrico energizado: tableros, cargadores, motores</div>
+      <div class="cls" style="background:#c79a00"><b>D</b>Metales combustibles: magnesio, litio, sodio</div>
+      <div class="cls" style="background:#222"><b>K</b>Aceites y grasas de cocina</div>
+    </div>
+    <div class="info"><b>Extintores del almacén</b><br>🔴 <b>PQS ABC</b> (polvo químico seco) · clases A, B y C · alcance 3 a 4 m · descarga ≈ 14 s (6 kg)<br>⚫ <b>CO₂</b> (corneta negra) · clases B y C · alcance 1 a 2 m · no deja residuo · no tocar la corneta (−78 °C)<br>💧 <b>Agua a presión</b> · solo clase A · <b>NUNCA</b> en líquidos inflamables (esparce) ni en eléctrico (electrocución)</div>
+    <div class="info"><b>Antes de atacar el fuego</b><br>1️⃣ Da la voz de <b>¡FUEGO!</b> y activa la alarma · avisa a la brigada y al 911<br>2️⃣ En fuego eléctrico, <b>corta la energía</b> si es seguro<br>3️⃣ Elige el extintor correcto para la clase de fuego<br>4️⃣ Colócate a <b>2–3 m</b>, con el <b>viento a tu espalda</b> y la <b>salida detrás de ti</b></div>
+    <div class="pass"><div><b>J</b>ALA el seguro (rompe el sello)</div><div><b>A</b>PUNTA a la BASE del fuego</div><div><b>A</b>PRIETA la palanca</div><div><b>B</b>ARRE de lado a lado</div></div>
+    <div class="info"><b>Después:</b> retírate <b>sin dar la espalda</b> al fuego (vigila reignición), reporta a tu supervisor y manda el extintor a <b>recarga</b> aunque solo lo hayas usado un poco.<br><b>Ubicación (NOM-002):</b> parte más alta a no más de <b>1.50 m</b> del piso · recorrido máximo <b>15 m</b> · señal visible (NOM-003-SEGOB) · área libre de obstáculos · revisión <b>mensual</b> con marbete.</div>
+    <h2 style="margin-top:1rem">🎮 La práctica: 5 escenarios en un almacén 3D</h2>
+    <div class="info">1. Inspección mensual de un extintor · 2. Conato clase A (cartón y tarimas) · 3. Conato clase B (derrame de diésel) · 4. Conato clase C (cargador de baterías) · 5. Incendio fuera de control (evacuación)<br>
+    <b>Controles:</b> 🖱️ / dedo = apuntar · <b>W A S D</b> o flechas en pantalla = moverte · <b>mantén clic, ESPACIO o el botón rojo</b> = apretar la palanca.<br>Cada escenario vale 100 pts · total 500 · <b>apruebas con 400</b>. Errores críticos: agua en fuego B o C, no dar la alarma, combatir un incendio fuera de control.</div>
+    <label class="lbl">TU NOMBRE COMPLETO</label><input class="name" id="pname" placeholder="Nombre y apellido">
+    <label class="lbl">PUESTO</label><select class="name" id="ppuesto"><option>Aux de Almacén</option><option>Montacarguista</option><option>Surtidor</option><option>Verificador</option><option>Brigadista</option><option>Supervisor de Operaciones</option><option>Jefe de Operaciones</option><option>Seguridad e Higiene</option></select>
+    <label class="lbl">ÁREA</label><select class="name" id="parea"><option>Operaciones</option><option>Seguridad</option><option>Distribución</option><option>Inventarios</option><option>Mantenimiento</option><option>Administración</option></select>
+    <label class="lbl">ALMACÉN</label><select class="name" id="pwh"><option>Agave 1</option><option>Agave 3</option><option>Mezquite 1</option><option>Mezquite 2</option><option>BIC</option><option>Celaya</option><option>Toluca</option><option>Escobedo</option><option>Apodaca</option><option>Guadalajara</option></select>
+    <button class="btn" onclick="start()">▶ COMENZAR PRÁCTICA</button>
+    <button class="btn ghost" onclick="location.href='../index.html'">🏠 INICIO · TODOS LOS SIMULADORES</button>
+  </div>
+</div></div>
+
+<!-- ================= JUEGO 3D ================= -->
+<div id="game" class="hidden">
+  <canvas id="cv"></canvas>
+  <div id="cross" class="hidden"></div>
+  <div class="hud" id="top"><span class="pill" id="tScen">ESCENARIO 1/5</span><span class="pill" id="tPts">⭐ 0 pts</span><span class="pill" id="tTime">⏱ 0:00</span></div>
+  <div class="hud" id="obj"><h3 id="oTitle"></h3><div id="oDesc" style="font-weight:600;color:#ffe58a;margin-bottom:.3rem"></div><ol id="oSteps"></ol></div>
+  <div class="hud hidden" id="gauge">AGENTE EXTINTOR<div class="bar"><div id="gAgent" style="width:100%;background:#2e9e5b"></div></div>FUEGO<div class="bar"><div id="gFire" style="width:100%;background:#ff6a00"></div></div><div id="gDist">Distancia: — m</div><div id="gWind" style="margin-top:.3rem"></div></div>
+  <div class="hud hidden" id="insp"></div>
+  <div class="hud hidden" id="pad"><span></span><button data-k="w">▲</button><span></span><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div>
+  <button id="squeeze" class="hidden">APRETAR<br>palanca</button>
+  <div class="hud" id="ctrl"></div>
+  <div class="hud hidden" id="msg"></div>
+  <div class="hud" id="toast"></div>
+</div>
+
+<!-- ================= RESULTADOS ================= -->
+<div class="page hidden" id="end"><div class="wrap"><div class="card">
+  <div class="big" id="eicon">🏆</div><h2 id="etitle" style="text-align:center"></h2>
+  <div class="score" id="escore">0</div><p class="lead" style="text-align:center">de 500 puntos · apruebas con 400</p>
+  <span class="badge" id="ebadge"></span>
+  <div class="stats" id="estats"></div>
+  <div class="err hidden" id="review"></div>
+  <div class="code" id="ecode"></div>
+  <button class="btn" onclick="share()">📲 ENVIAR RESULTADO POR WHATSAPP</button>
+  <button class="btn ghost" onclick="copyRes()">📋 COPIAR RESULTADO</button>
+  <button class="btn ghost" onclick="location.reload()">🔄 REPETIR</button>
+  <button class="btn ghost" onclick="location.href='../index.html'">🏠 INICIO</button>
+</div></div></div>
+
+<script src="js/three.min.js"></script>
+<script>
+// ======================================================================================
+//  USO Y MANEJO DE EXTINTORES 3D · DICKA Logistics
+//  Reglas: NOM-002-STPS-2010 (prevención y protección contra incendios), NOM-154-SCFI-2005 (extintores: mantenimiento y recarga),
+//  NOM-003-SEGOB-2011 (señales de protección civil), Ley General de Protección Civil (brigadas, evacuación, punto de reunión).
+// ======================================================================================
+const GAME_ID = 'extintores-3d', GAME_NAME = 'Uso y Manejo de Extintores 3D', PASS = 400, MAX = 500;
+const $ = id => document.getElementById(id);
+let who = {}, t0 = 0, score = 0, errors = [], REG = '', sIdx = 0, sPts = 0, scen = null, phase = '', stepIdx = 0;
+
+function toast(m, good) { const t = $('toast'); t.textContent = m; t.style.background = good ? '#2e9e5b' : '#c62828'; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400); if (!good && navigator.vibrate) navigator.vibrate(80); }
+function pts(n, why) { sPts += n; setTimeout(hud, 0); if (n < 0) { errors.push(why); toast(`${n} · ${why}`); } else if (why) toast(`+${n} · ${why}`, true); }
+function msg(title, html, btn, cb) { const m = $('msg'); m.innerHTML = `<h3>${title}</h3><div>${html}</div><button>${btn || 'Continuar'}</button>`; m.classList.remove('hidden'); m.querySelector('button').onclick = () => { m.classList.add('hidden'); cb && cb(); }; }
+function ctrl(list) { $('ctrl').innerHTML = ''; list.forEach(([label, cls, fn]) => { const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; b.onclick = fn; $('ctrl').appendChild(b); }); }
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ================= ESCENA 3D =================
+let renderer, scene, camera, clock, fireGroup = null, fire = null, sprayParts = [], smokeParts = [], viewModel = null, wallExt = [], player = { x: 0, z: 10, yaw: Math.PI }, keys = {}, aimNDC = new THREE.Vector2(0, -0.2), squeezing = false;
+const C = h => new THREE.Color(h).convertSRGBToLinear();
+function canvasTex(w, h, draw, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } t.anisotropy = 4; return t; }
+function initScene() {
+  renderer = new THREE.WebGLRenderer({ canvas: $('cv'), antialias: true }); renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.outputEncoding = THREE.sRGBEncoding; renderer.shadowMap.enabled = true;
+  scene = new THREE.Scene(); scene.background = C(0x2a3346); scene.fog = new THREE.Fog(0x2a3346, 25, 70);
+  camera = new THREE.PerspectiveCamera(68, 1, 0.05, 200); clock = new THREE.Clock();
+  scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x3a3a3a, 0.75)); const sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(8, 18, 6); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -25, right: 25, top: 25, bottom: -25 }); scene.add(sun);
+  // piso de concreto con juntas y franjas peatonales
+  const floorT = canvasTex(512, 512, (g, w, h) => { g.fillStyle = '#9a9da3'; g.fillRect(0, 0, w, h); const id = g.getImageData(0, 0, w, h); for (let i = 0; i < id.data.length; i += 4) { const v = (Math.random() - .5) * 18; id.data[i] += v; id.data[i + 1] += v; id.data[i + 2] += v; } g.putImageData(id, 0, 0); g.strokeStyle = 'rgba(60,60,60,.5)'; g.lineWidth = 2; g.strokeRect(0, 0, w, h); for (let i = 0; i < 25; i++) { g.fillStyle = `rgba(40,40,40,${Math.random() * .08})`; g.beginPath(); g.arc(Math.random() * w, Math.random() * h, Math.random() * 40, 0, 7); g.fill(); } }, [12, 12]);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ map: floorT, roughness: .85 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+  const wallT = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#c9ced8'; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 16) { g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(x, 0, 4, h); } }, [10, 2]);
+  const wm = new THREE.MeshStandardMaterial({ map: wallT, roughness: .9 }), base = new THREE.MeshStandardMaterial({ color: C(0x1d4f9e), roughness: .8 });
+  [[0, -22, 0], [0, 22, Math.PI], [-22, 0, Math.PI / 2], [22, 0, -Math.PI / 2]].forEach(([x, z, r]) => { const w = new THREE.Mesh(new THREE.PlaneGeometry(44, 9), wm); w.position.set(x, 4.5, z); w.rotation.y = r; scene.add(w); const b = new THREE.Mesh(new THREE.PlaneGeometry(44, 1.2), base); b.position.set(x * 0.999, 0.6, z * 0.999); b.rotation.y = r; scene.add(b); });
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(44, 44), new THREE.MeshStandardMaterial({ color: C(0x22304d) })); ceil.rotation.x = Math.PI / 2; ceil.position.y = 9; scene.add(ceil);
+  for (let i = -2; i <= 2; i++) { const l = new THREE.Mesh(new THREE.BoxGeometry(1.4, .08, .4), new THREE.MeshBasicMaterial({ color: 0xffffff })); l.position.set(i * 8, 8.6, 0); scene.add(l); }
+  // racks con tarimas (fondo)
+  const up = new THREE.MeshStandardMaterial({ color: C(0x1D2586), metalness: .5, roughness: .5 }), beam = new THREE.MeshStandardMaterial({ color: C(0xe8711a), metalness: .4, roughness: .5 }), box = new THREE.MeshStandardMaterial({ map: canvasTex(128, 128, (g) => { g.fillStyle = '#c9a26b'; g.fillRect(0, 0, 128, 128); g.fillStyle = 'rgba(150,110,50,.6)'; g.fillRect(56, 0, 16, 128); g.strokeStyle = 'rgba(90,60,25,.6)'; g.strokeRect(2, 2, 124, 124); }), roughness: .9 });
+  for (let r = 0; r < 2; r++) for (let b = 0; b < 7; b++) { const x = -18 + b * 2.8, z = -17 + r * 3.2; [-1.2, 1.2].forEach(dz => [0, 2.8].forEach(dx => { const p = new THREE.Mesh(new THREE.BoxGeometry(.1, 6.2, .1), up); p.position.set(x + dx, 3.1, z + dz); scene.add(p); })); for (let l = 0; l < 3; l++) { [-1.2, 1.2].forEach(dz => { const be = new THREE.Mesh(new THREE.BoxGeometry(2.8, .12, .08), beam); be.position.set(x + 1.4, 0.4 + l * 2, z + dz); scene.add(be); }); if ((b + l + r) % 4) { const bx = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 1.0), box); bx.position.set(x + 1.4, 1.05 + l * 2, z); bx.castShadow = true; scene.add(bx); } } }
+  // señal de ruta de evacuación y salida (NOM-003-SEGOB: verde con pictograma)
+  const sign = (txt, x, y, z, ry, bg, w = 1.4) => { const t = canvasTex(256, 128, (g) => { g.fillStyle = bg; g.fillRect(0, 0, 256, 128); g.strokeStyle = '#fff'; g.lineWidth = 6; g.strokeRect(6, 6, 244, 116); g.fillStyle = '#fff'; g.font = '900 30px Arial'; g.textAlign = 'center'; txt.split('\n').forEach((l, i, a) => g.fillText(l, 128, 64 + (i - (a.length - 1) / 2) * 34 + 10)); }); const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 2), new THREE.MeshBasicMaterial({ map: t })); m.position.set(x, y, z); m.rotation.y = ry; scene.add(m); return m; };
+  sign('SALIDA DE\nEMERGENCIA', 0, 3.2, 21.9, Math.PI, '#0a7d3b', 2.2); sign('RUTA DE\nEVACUACIÓN ➜', 21.9, 2.6, 6, -Math.PI / 2, '#0a7d3b'); sign('RUTA DE\nEVACUACIÓN ➜', -21.9, 2.6, 6, Math.PI / 2, '#0a7d3b'); sign('EXTINTOR', -6.5, 2.4, 21.9, Math.PI, '#c62828', 1);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.4, .1), new THREE.MeshStandardMaterial({ color: C(0x0a7d3b) })); door.position.set(0, 1.2, 21.95); scene.add(door);
+  // estación de extintores en muro (fondo de la sala de práctica): PQS, CO2 y agua
+  buildViewModel(); resize(); addEventListener('resize', resize);
+}
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+
+// ---- extintores (modelo 3D) ----
+const EXT_TYPES = {
+  pqs: { name: 'PQS ABC (polvo químico seco)', short: 'PQS ABC', body: 0xc8102e, classes: 'ABC', range: [2, 3.5], dur: 14, cloud: 0xf4f1e8, label: 'PQS\nABC 6 kg' },
+  co2: { name: 'CO₂ (bióxido de carbono)', short: 'CO₂', body: 0xb0101e, classes: 'BC', range: [1, 2.2], dur: 11, cloud: 0xffffff, label: 'CO₂\nBC 4.5 kg', horn: true },
+  agua: { name: 'Agua a presión', short: 'AGUA', body: 0xc9ccd2, classes: 'A', range: [2.5, 4.5], dur: 40, cloud: 0x9fd0ff, label: 'AGUA\nCLASE A', stripe: true } };
+function makeExtinguisher(type, opts = {}) { const T = EXT_TYPES[type], g = new THREE.Group(); const P = THREE.MeshPhysicalMaterial || THREE.MeshStandardMaterial;
+  const body = new P({ color: C(T.body), roughness: .3, metalness: type === 'agua' ? .8 : .2, clearcoat: .8 }), blk = new THREE.MeshStandardMaterial({ color: C(0x151515), roughness: .6 }), met = new THREE.MeshStandardMaterial({ color: C(0xc9ccd2), metalness: .9, roughness: .3 });
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
+  const H = type === 'co2' ? .5 : .42, R = type === 'co2' ? .075 : .085;
+  add(new THREE.CylinderGeometry(R, R, H, 24), body, 0, H / 2 + .03, 0); add(new THREE.SphereGeometry(R, 24, 10, 0, Math.PI * 2, 0, Math.PI / 2), body, 0, H + .03, 0); add(new THREE.CylinderGeometry(R + .002, R + .002, .03, 24), blk, 0, .015, 0);
+  const lab = canvasTex(128, 160, (q) => { q.fillStyle = '#f4f4f0'; q.fillRect(0, 0, 128, 160); q.fillStyle = type === 'agua' ? '#1a8f3a' : '#c8102e'; q.fillRect(0, 0, 128, 28); q.fillStyle = '#fff'; q.font = '900 17px Arial'; q.textAlign = 'center'; q.fillText('EXTINTOR', 64, 21); q.fillStyle = '#111'; q.font = '900 26px Arial'; T.label.split('\n').forEach((l, i) => { q.font = (i ? '700 16px' : '900 28px') + ' Arial'; q.fillText(l, 64, 66 + i * 30); }); [...T.classes].forEach((c, i, a) => { q.fillStyle = { A: '#1a8f3a', B: '#c62828', C: '#1D2586' }[c]; const x = 64 - a.length * 16 + i * 32; q.fillRect(x, 118, 28, 28); q.fillStyle = '#fff'; q.font = '900 20px Arial'; q.fillText(c, x + 14, 140); }); });
+  const lbl = new THREE.Mesh(new THREE.CylinderGeometry(R + .001, R + .001, H * .45, 24, 1, true, -0.9, 1.8), new THREE.MeshStandardMaterial({ map: lab, roughness: .6 })); lbl.position.y = H * .5; g.add(lbl);
+  add(new THREE.CylinderGeometry(.022, .028, .06, 12), met, 0, H + .1, 0); add(new THREE.BoxGeometry(.03, .035, .05), blk, 0, H + .145, 0);
+  const lever = add(new THREE.BoxGeometry(.025, .012, .13), blk, 0, H + .18, .045); lever.rotation.x = -.18; add(new THREE.BoxGeometry(.025, .012, .11), blk, 0, H + .155, .05);
+  const pin = new THREE.Group(); const ring = new THREE.Mesh(new THREE.TorusGeometry(.016, .0035, 6, 14), new THREE.MeshStandardMaterial({ color: C(0xf5c400), metalness: .5 })); ring.rotation.y = Math.PI / 2; pin.add(ring); const seal = new THREE.Mesh(new THREE.BoxGeometry(.008, .012, .004), new THREE.MeshStandardMaterial({ color: C(0x2e9e5b) })); seal.position.set(0, -.02, 0); pin.add(seal); pin.position.set(-.03, H + .16, .01); g.add(pin); g.userData.pin = pin; g.userData.seal = seal;
+  const gaugeT = canvasTex(64, 64, (q) => { q.fillStyle = '#fff'; q.beginPath(); q.arc(32, 32, 31, 0, 7); q.fill(); q.lineWidth = 8; [['#c62828', 3.4, 4.1], ['#1a8f3a', 4.1, 5.2], ['#c62828', 5.2, 6.0]].forEach(([c, a, b]) => { q.strokeStyle = c; q.beginPath(); q.arc(32, 32, 22, a, b); q.stroke(); }); q.strokeStyle = '#111'; q.lineWidth = 3; q.beginPath(); q.moveTo(32, 32); const a = opts.lowPressure ? 3.6 : 4.65; q.lineTo(32 + Math.cos(a) * 22, 32 + Math.sin(a) * 22); q.stroke(); });
+  if (type !== 'co2') { const gg = add(new THREE.CircleGeometry(.02, 16), new THREE.MeshBasicMaterial({ map: gaugeT }), .03, H + .11, .03); gg.rotation.y = .6; }
+  if (T.horn) { const horn = add(new THREE.CylinderGeometry(.035, .012, .2, 14, 1, true), blk, .11, H * .3, .05); horn.material = blk; horn.material.side = THREE.DoubleSide; }
+  const hose = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(.02, H + .12, .02), new THREE.Vector3(.1, H + .08, .04), new THREE.Vector3(.11, H * .5, .05), new THREE.Vector3(.1, H * .25, .04)]), 16, .01, 6), opts.badHose ? new THREE.MeshStandardMaterial({ color: C(0x5a3b1a), roughness: 1 }) : blk); g.add(hose);
+  if (T.stripe) add(new THREE.CylinderGeometry(R + .002, R + .002, .04, 24), new THREE.MeshStandardMaterial({ color: C(0xc8102e) }), 0, H * .82, 0);
+  const tag = add(new THREE.BoxGeometry(.05, .075, .002), new THREE.MeshStandardMaterial({ color: C(opts.oldTag ? 0x9aa0a6 : 0xf5c400) }), -.06, H - .02, .085); tag.rotation.z = .15;
+  g.userData.type = type; return g; }
+// ---- vista en primera persona: el extintor en las manos con la manguera apuntando ----
+function buildViewModel() { viewModel = new THREE.Group(); camera.add(viewModel); scene.add(camera); viewModel.position.set(.28, -.38, -.55); viewModel.visible = false; }
+function setViewModel(type) { viewModel.clear(); if (!type) { viewModel.visible = false; return; } const e = makeExtinguisher(type); e.scale.setScalar(.65); e.position.set(.12, -.22, -.05); e.rotation.y = -0.4; viewModel.add(e); const nz = new THREE.Group(); const n = new THREE.Mesh(new THREE.CylinderGeometry(.012, EXT_TYPES[type].horn ? .045 : .016, EXT_TYPES[type].horn ? .22 : .1, 12, 1, true), new THREE.MeshStandardMaterial({ color: C(0x111111), side: THREE.DoubleSide })); n.rotation.x = -Math.PI / 2; nz.add(n); nz.position.set(-.12, .02, -.2); viewModel.add(nz); viewModel.userData.nozzle = nz; viewModel.userData.ext = e; viewModel.visible = true; }
+
+// ---- fuego y humo con sprites ----
+const flameTex = canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 40, 2, 32, 36, 30); r.addColorStop(0, 'rgba(255,250,200,1)'); r.addColorStop(.3, 'rgba(255,190,60,.9)'); r.addColorStop(.6, 'rgba(255,90,10,.5)'); r.addColorStop(1, 'rgba(120,20,0,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
+const smokeTex = canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 2, 32, 32, 30); r.addColorStop(0, 'rgba(60,60,60,.8)'); r.addColorStop(1, 'rgba(60,60,60,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
+const puffTex = canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 2, 32, 32, 30); r.addColorStop(0, 'rgba(255,255,255,.95)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
+function makeFire(x, z, radius, height) { if (fireGroup) scene.remove(fireGroup); fireGroup = new THREE.Group(); fireGroup.position.set(x, 0, z); scene.add(fireGroup); const flames = [];
+  for (let i = 0; i < 46; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); s.userData = { a: Math.random() * 6.28, r: Math.random() * radius, life: Math.random(), speed: .6 + Math.random() * .8 }; fireGroup.add(s); flames.push(s); }
+  const light = new THREE.PointLight(0xff7a20, 2.2, 14, 2); light.position.set(0, 1, 0); fireGroup.add(light);
+  fire = { x, z, radius, height, hp: 100, flames, light, out: false, grow: 1.6 }; smokeParts.forEach(p => scene.remove(p)); smokeParts = []; }
+function updateFire(dt, wind) { if (!fire) return; const k = fire.hp / 100; fire.flames.forEach(s => { const u = s.userData; u.life += dt * u.speed; if (u.life > 1) { u.life = 0; u.a = Math.random() * 6.28; u.r = Math.random() * fire.radius * Math.max(.3, k); }
+    const h = fire.height * (0.35 + k * .65); s.position.set(Math.cos(u.a) * u.r + wind.x * u.life * .6, u.life * h, Math.sin(u.a) * u.r + wind.z * u.life * .6); const sc = (1 - u.life) * (0.6 + k * 1.1) * (fire.radius * 1.1 + .45); s.scale.set(sc, sc * 1.4, 1); s.material.opacity = k > 0.02 ? (1 - u.life) * .9 : 0; });
+  fire.light.intensity = (0.8 + Math.random() * .6) * 2.2 * k; if (k > .05 && Math.random() < dt * 12 * (0.4 + k)) { const p = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: .55 })); p.position.set(fire.x + (Math.random() - .5) * fire.radius, fire.height * .8, fire.z + (Math.random() - .5) * fire.radius); p.userData = { life: 0, v: new THREE.Vector3(wind.x * .8, 1.2 + Math.random() * .6, wind.z * .8) }; scene.add(p); smokeParts.push(p); }
+  smokeParts = smokeParts.filter(p => { p.userData.life += dt * .25; p.position.addScaledVector(p.userData.v, dt); const s = 1 + p.userData.life * 5; p.scale.set(s, s, 1); p.material.opacity = .55 * (1 - p.userData.life); if (p.userData.life >= 1) { scene.remove(p); return false; } return true; }); }
+function spray(dt, from, to, color) { for (let i = 0; i < 5; i++) { const p = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, color, transparent: true, depthWrite: false, opacity: .8 })); p.position.copy(from); const dir = to.clone().sub(from); const len = dir.length(); dir.normalize(); p.userData = { life: 0, v: dir.multiplyScalar(len * 1.4).add(new THREE.Vector3((Math.random() - .5) * .8, (Math.random() - .3) * .5, (Math.random() - .5) * .8)) }; scene.add(p); sprayParts.push(p); } }
+function updateSpray(dt) { sprayParts = sprayParts.filter(p => { p.userData.life += dt * 1.4; p.position.addScaledVector(p.userData.v, dt); p.userData.v.multiplyScalar(1 - dt * 1.5); const s = .15 + p.userData.life * 1.6; p.scale.set(s, s, 1); p.material.opacity = .8 * (1 - p.userData.life); if (p.userData.life >= 1) { scene.remove(p); return false; } return true; }); }
+
+// ---- objetos del escenario ----
+let props = [];
+function clearProps() { props.forEach(o => scene.remove(o)); props = []; wallExt = []; if (fireGroup) { scene.remove(fireGroup); fireGroup = null; } fire = null; smokeParts.forEach(p => scene.remove(p)); smokeParts = []; }
+function prop(o) { scene.add(o); props.push(o); return o; }
+function pallet(x, z, burnt) { const g = new THREE.Group(); const w = new THREE.MeshStandardMaterial({ color: C(burnt ? 0x3a2a1a : 0xb08850), roughness: .9 }); for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.2, .022, .12), w); b.position.set(0, .133, -.54 + i * .18); g.add(b); } [-.47, 0, .47].forEach(zz => { const s = new THREE.Mesh(new THREE.BoxGeometry(1.2, .1, .05), w); s.position.set(0, .072, zz); g.add(s); }); g.position.set(x, 0, z); return prop(g); }
+function cartons(x, z, n) { const m = new THREE.MeshStandardMaterial({ color: C(0xc9a26b), roughness: .9 }); for (let i = 0; i < n; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(.5, .4, .45), m); b.position.set(x + (i % 2) * .55 - .27, .35 + Math.floor(i / 2) * .41, z + ((i >> 1) % 2) * .2); b.rotation.y = Math.random() * .3; b.castShadow = true; prop(b); } }
+function extinguisherStation(z0) { // muro con 3 extintores en gabinetes, a 1.50 m máx. (NOM-002)
+  const wall = prop(new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.8, .2), new THREE.MeshStandardMaterial({ color: C(0xd7dbe3) }))); wall.position.set(-6.5, 1.4, z0);
+  ['pqs', 'co2', 'agua'].forEach((t, i) => { const e = makeExtinguisher(t); e.position.set(-7.8 + i * 1.3, .92, z0 - .2); e.rotation.y = Math.PI; prop(e); e.userData.pick = t; wallExt.push(e);
+    const lab = canvasTex(256, 64, (g) => { g.fillStyle = '#011131'; g.fillRect(0, 0, 256, 64); g.fillStyle = '#fff'; g.font = '900 30px Arial'; g.textAlign = 'center'; g.fillText(EXT_TYPES[t].short, 128, 44); }); const p = prop(new THREE.Mesh(new THREE.PlaneGeometry(.9, .22), new THREE.MeshBasicMaterial({ map: lab }))); p.position.set(-7.8 + i * 1.3, 1.85, z0 - .11); p.rotation.y = Math.PI; }); }
+
+// ================= ESCENARIOS =================
+const INSP_ITEMS = [
+  { k: 'gauge', t: 'Manómetro en zona verde (presión correcta)', def: 'Aguja en zona roja: descargado' },
+  { k: 'pin', t: 'Seguro y sello (cincho) colocados', def: 'Sin seguro / sello roto' },
+  { k: 'hose', t: 'Manguera y boquilla sin grietas ni obstrucción', def: 'Manguera reseca y agrietada' },
+  { k: 'tag', t: 'Marbete con fecha de recarga vigente (NOM-154: anual)', def: 'Marbete vencido (más de 1 año)' },
+  { k: 'height', t: 'Parte más alta a no más de 1.50 m del piso', def: 'Colgado a 1.90 m' },
+  { k: 'clear', t: 'Área libre de obstáculos frente al extintor', def: 'Tarima bloqueando el acceso' },
+  { k: 'sign', t: 'Señal de extintor visible (NOM-003-SEGOB)', def: 'Sin señalización' },
+  { k: 'body', t: 'Cilindro sin golpes, corrosión ni fugas', def: 'Cilindro abollado y oxidado' } ];
+const SCENARIOS = [
+  { id: 'insp', title: '1 · Inspección mensual del extintor', cls: '', type: 'insp', desc: 'Revisa el extintor de la estación como lo marca la NOM-002-STPS-2010 y la NOM-154-SCFI-2005. Marca cada punto como CUMPLE o NO CUMPLE.' },
+  { id: 'A', title: '2 · Conato clase A · cartón y tarimas', cls: 'A', type: 'fight', desc: 'Se incendian cajas de cartón sobre una tarima en el área de staging. El fuego es pequeño (conato).', ok: ['pqs', 'agua'], weak: ['co2'], fire: [2, -2, .7, 1.6], wind: [1, 0] },
+  { id: 'B', title: '3 · Conato clase B · derrame de diésel', cls: 'B', type: 'fight', desc: 'Junto a un montacargas de combustión se encendió un derrame de diésel en el piso.', ok: ['pqs', 'co2'], bad: ['agua'], fire: [3, -3, 1.1, 1.2], wind: [0, 1], puddle: true },
+  { id: 'C', title: '4 · Conato clase C · cargador de baterías', cls: 'C', type: 'fight', desc: 'Sale fuego del cargador de baterías de montacargas (equipo eléctrico energizado).', ok: ['co2', 'pqs'], bad: ['agua'], fire: [-1, -4, .45, 1.3], wind: [-1, 0], power: true },
+  { id: 'E', title: '5 · Incendio fuera de control · evacuación', cls: '', type: 'evac', desc: 'El fuego subió a los niveles altos del rack, hay humo denso y llamas de más de 2 m. Ya NO es un conato.' } ];
+
+function start() { const n = $('pname').value.trim(); if (n.length < 3) { alert('Escribe tu nombre completo'); return; } who = { name: n, puesto: $('ppuesto').value, area: $('parea').value, wh: $('pwh').value }; $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); initScene(); t0 = Date.now(); bindInput(); requestAnimationFrame(loop); loadScenario(0); }
+function setSteps(title, desc, steps) { $('oTitle').textContent = title; $('oDesc').textContent = desc; scen.steps = steps; stepIdx = 0; renderSteps(); }
+function renderSteps() { $('oSteps').innerHTML = scen.steps.map((s, i) => `<li class="${i < stepIdx ? 'ok' : i === stepIdx ? 'cur' : ''}">${s}</li>`).join(''); }
+function nextStep() { stepIdx++; renderSteps(); }
+function hud() { $('tScen').textContent = `ESCENARIO ${sIdx + 1}/${SCENARIOS.length}`; $('tPts').textContent = `⭐ ${score + Math.max(0, sPts)} pts`; }
+
+function loadScenario(i) { sIdx = i; sPts = 0; scen = Object.assign({}, SCENARIOS[i]); clearProps(); setViewModel(null); $('gauge').classList.add('hidden'); $('insp').classList.add('hidden'); $('pad').classList.add('hidden'); $('squeeze').classList.add('hidden'); $('cross').classList.add('hidden'); hud();
+  if (scen.type === 'insp') { const w = prop(new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.8, .2), new THREE.MeshStandardMaterial({ color: C(0xd7dbe3) }))); w.position.set(-6.5, 1.4, 8); return startInspection(); } extinguisherStation(8); if (scen.type === 'evac') return startEvacuation(); startFight(); }
+
+// ---------- 1. INSPECCIÓN ----------
+function startInspection() { const defects = shuffle(INSP_ITEMS.map(x => x.k)).slice(0, 3); scen.defects = new Set(defects); scen.ans = {};
+  const e = makeExtinguisher('pqs', { lowPressure: scen.defects.has('gauge'), badHose: scen.defects.has('hose'), oldTag: scen.defects.has('tag') }); e.position.set(-6.5, scen.defects.has('height') ? 1.38 : .92, 7.8); e.rotation.y = Math.PI; e.scale.setScalar(1.3); prop(e);
+  if (scen.defects.has('pin')) e.userData.pin.visible = false; if (scen.defects.has('body')) e.children[0].material = new THREE.MeshStandardMaterial({ color: C(0x7a3020), roughness: 1 });
+  if (scen.defects.has('clear')) pallet(-6.5, 7.0); if (!scen.defects.has('sign')) { const t = canvasTex(128, 192, (g) => { g.fillStyle = '#c62828'; g.fillRect(0, 0, 128, 192); g.fillStyle = '#fff'; g.font = '900 20px Arial'; g.textAlign = 'center'; g.fillText('EXTINTOR', 64, 176); g.fillRect(48, 30, 32, 110); g.fillRect(40, 22, 40, 14); }); const s = prop(new THREE.Mesh(new THREE.PlaneGeometry(.45, .68), new THREE.MeshBasicMaterial({ map: t }))); s.position.set(-6.5, 2.35, 7.88); s.rotation.y = Math.PI; }
+  // marca de altura 1.50 m
+  const ruler = prop(new THREE.Mesh(new THREE.BoxGeometry(.04, 1.5, .02), new THREE.MeshBasicMaterial({ color: 0x2138D3 }))); ruler.position.set(-5.7, .75, 7.88); const rl = canvasTex(128, 32, (g) => { g.fillStyle = '#2138D3'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#fff'; g.font = '900 20px Arial'; g.fillText('1.50 m', 18, 24); }); const rt = prop(new THREE.Mesh(new THREE.PlaneGeometry(.4, .1), new THREE.MeshBasicMaterial({ map: rl }))); rt.position.set(-5.7, 1.56, 7.87); rt.rotation.y = Math.PI;
+  player = { x: -6.5, z: 5.6, yaw: 0 }; camLook = new THREE.Vector3(-6.5, 1.2, 7.8);
+  setSteps(scen.title, scen.desc, ['Observa el extintor (arrastra para mirar)', 'Marca los 8 puntos de inspección', 'Firma la inspección']);
+  const p = $('insp'); p.classList.remove('hidden'); p.innerHTML = '<h3>📋 Hoja de inspección mensual</h3>' + INSP_ITEMS.map(x => `<div class="irow" data-k="${x.k}"><span>${x.t}</span><button data-v="ok">CUMPLE</button><button data-v="bad">NO CUMPLE</button></div>`).join('') + '<button class="btn" id="sign">✍️ FIRMAR INSPECCIÓN</button>';
+  p.querySelectorAll('.irow button').forEach(b => b.onclick = () => { const k = b.parentNode.dataset.k; scen.ans[k] = b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x => x.className = ''); b.className = 'on ' + b.dataset.v; if (stepIdx === 0) nextStep(); if (Object.keys(scen.ans).length === INSP_ITEMS.length && stepIdx < 2) { stepIdx = 2; renderSteps(); } });
+  $('sign').onclick = () => { if (Object.keys(scen.ans).length < INSP_ITEMS.length) { toast('Falta marcar puntos de la hoja'); return; } let ok = 0; const wrong = []; INSP_ITEMS.forEach(x => { const isBad = scen.defects.has(x.k); if ((scen.ans[x.k] === 'bad') === isBad) ok++; else wrong.push((isBad ? '❌ No detectaste: ' + x.def : '⚠️ Marcaste como falla algo que estaba bien: ' + x.t)); });
+    const missed = [...scen.defects].filter(k => scen.ans[k] !== 'bad').length; sPts = Math.max(0, Math.round(ok / INSP_ITEMS.length * 100) - missed * 10); if (missed) errors.push('Inspección: fallas no detectadas (' + missed + ')');
+    $('insp').classList.add('hidden'); msg('Resultado de la inspección', `Correctos: <b>${ok}/8</b><br>${wrong.join('<br>') || '¡Detectaste todas las fallas!'}<br><br><b>Fallas reales:</b> ${[...scen.defects].map(k => INSP_ITEMS.find(x => x.k === k).def).join(' · ')}<br><br>Un extintor con cualquier falla se <b>retira de servicio</b>, se coloca uno de respaldo y se envía a mantenimiento con un proveedor acreditado (NOM-154-SCFI).`, 'Siguiente escenario', endScenario); };
+  ctrl([]); }
+
+// ---------- 2-4. COMBATE DE CONATO ----------
+function startFight() { const [fx, fz, fr, fh] = scen.fire; scen.wind = new THREE.Vector3(scen.wind[0], 0, scen.wind[1]).normalize(); scen.alarm = false; scen.power = !scen.power; scen.ext = null; scen.pinOut = false; scen.agent = 100; scen.sweep = { last: 0, dir: 0, flips: 0, t: 0 }; scen.aimHits = { base: 0, flames: 0, miss: 0 };
+  if (scen.cls === 'A') { pallet(fx, fz); cartons(fx, fz, 6); } if (scen.puddle) { const pd = prop(new THREE.Mesh(new THREE.CircleGeometry(1.4, 24), new THREE.MeshStandardMaterial({ color: C(0x1a1410), roughness: .1, metalness: .3 }))); pd.rotation.x = -Math.PI / 2; pd.position.set(fx, .011, fz); forkliftProp(fx - 2.2, fz - .6); }
+  if (scen.cls === 'C') { const ch = prop(new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.5, .6), new THREE.MeshStandardMaterial({ color: C(0x5b6577), metalness: .4 }))); ch.position.set(fx, .75, fz - .2); const cb = prop(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(fx + .3, .5, fz), new THREE.Vector3(fx + 1.2, .05, fz + .6), new THREE.Vector3(fx + 2.4, .05, fz + .3)]), 20, .03, 6), new THREE.MeshStandardMaterial({ color: 0x111111 }))); forkliftProp(fx + 3.2, fz + .2, true);
+    const panel = prop(new THREE.Mesh(new THREE.BoxGeometry(.7, 1, .2), new THREE.MeshStandardMaterial({ color: C(0x8a8f99) }))); panel.position.set(fx - 3.2, 1.3, fz - .4); const pl = canvasTex(128, 64, (g) => { g.fillStyle = '#f5c400'; g.fillRect(0, 0, 128, 64); g.fillStyle = '#111'; g.font = '900 16px Arial'; g.textAlign = 'center'; g.fillText('⚡ TABLERO', 64, 26); g.fillText('CARGADORES', 64, 50); }); const pp = prop(new THREE.Mesh(new THREE.PlaneGeometry(.6, .3), new THREE.MeshBasicMaterial({ map: pl }))); pp.position.set(fx - 3.2, 1.95, fz - .29); }
+  makeFire(fx, fz, fr, fh); fire.hp = 70; player = { x: 0, z: 9.5, yaw: Math.PI }; camLook = null;
+  const steps = ['Da la voz de ¡FUEGO! y activa la alarma']; if (scen.cls === 'C') steps.push('Corta la energía en el tablero'); steps.push('Toma el extintor correcto para clase ' + scen.cls, 'Colócate a la distancia correcta, viento a tu espalda', 'JALA el seguro', 'APUNTA a la base, APRIETA y BARRE', 'Retírate sin dar la espalda y reporta');
+  setSteps(scen.title, scen.desc, steps); $('gauge').classList.remove('hidden'); $('pad').classList.remove('hidden'); phase = 'alarm'; fightControls(); }
+function forkliftProp(x, z, electric) { const g = new THREE.Group(); const red = new THREE.MeshStandardMaterial({ color: C(0xc8102e), metalness: .3, roughness: .45 }), blk = new THREE.MeshStandardMaterial({ color: C(0x1a1a1a) }); const b = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1, 2), red); b.position.y = .7; g.add(b); const m = new THREE.Mesh(new THREE.BoxGeometry(.9, 2.6, .12), blk); m.position.set(0, 1.4, 1.1); g.add(m); [[-.5, .7], [.5, .7], [-.5, -.7], [.5, -.7]].forEach(([wx, wz]) => { const w = new THREE.Mesh(new THREE.CylinderGeometry(.25, .25, .2, 16), blk); w.rotation.z = Math.PI / 2; w.position.set(wx, .25, wz); g.add(w); }); if (!electric) { const t = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, .8, 14), new THREE.MeshStandardMaterial({ color: C(0xe8e8e8) })); t.rotation.z = Math.PI / 2; t.position.set(0, 1.35, -.8); g.add(t); } g.position.set(x, 0, z); g.rotation.y = .4; prop(g); }
+function fightControls() {
+  if (phase === 'alarm') ctrl([['🔔 ¡FUEGO! ACTIVAR ALARMA', 'red', () => { if (scen.alarm) return; scen.alarm = true; pts(15, 'Diste la voz de alarma y avisaste a la brigada'); nextStep(); phase = scen.power ? 'choose' : 'power'; fightControls(); }], ['🧯 Ir directo por el extintor', '', () => { pts(-15, 'No diste la alarma antes de atacar el fuego'); scen.alarm = true; nextStep(); phase = scen.power ? 'choose' : 'power'; fightControls(); }]]);
+  else if (phase === 'power') ctrl([['⚡ CORTAR ENERGÍA EN EL TABLERO', 'yel', () => { scen.power = true; pts(15, 'Cortaste la energía antes de atacar'); nextStep(); phase = 'choose'; fightControls(); }], ['🧯 Atacar con el equipo energizado', '', () => { pts(-20, 'Atacaste un fuego eléctrico sin cortar la energía'); scen.power = true; nextStep(); phase = 'choose'; fightControls(); }]]);
+  else if (phase === 'choose') { ctrl(['pqs', 'co2', 'agua'].map(t => ['Tomar ' + EXT_TYPES[t].short, t === 'pqs' ? 'red' : t === 'co2' ? '' : 'green', () => chooseExt(t)])); toast('Elige el extintor de la estación (también puedes tocarlo)', true); }
+  else if (phase === 'approach') ctrl([['✔ ESTOY EN POSICIÓN', 'green', checkPosition]]);
+  else if (phase === 'pin') ctrl([['🔓 JALAR EL SEGURO', 'yel', () => { scen.pinOut = true; if (viewModel.userData.ext) viewModel.userData.ext.userData.pin.visible = false; pts(10, 'Retiraste el seguro y rompiste el sello'); nextStep(); phase = 'fight'; fightControls(); }]]);
+  else if (phase === 'fight') { ctrl([['🏳️ No logro controlarlo · EVACUAR', '', () => abortFight()]]); $('squeeze').classList.remove('hidden'); $('cross').classList.remove('hidden'); toast('Apunta a la BASE del fuego · mantén APRETAR y barre de lado a lado', true); }
+  else if (phase === 'retreat') { $('squeeze').classList.add('hidden'); $('cross').classList.add('hidden'); ctrl(shuffle([['↩️ Retirarme de frente al fuego, vigilando que no reavive', 'green', () => retreat(true)], ['🏃 Dar la espalda y salir rápido', '', () => retreat(false)]])); } }
+function chooseExt(t) { if (phase !== 'choose') return; if ((scen.bad || []).includes(t)) { pts(-40, `Usaste AGUA en fuego clase ${scen.cls}`); msg('⛔ Extintor INCORRECTO', scen.cls === 'B' ? 'El agua <b>esparce el líquido inflamable</b> y extiende el incendio.' : 'El agua <b>conduce la electricidad</b>: riesgo de <b>electrocución</b>.', 'Elegir otro', () => {}); return; }
+  if ((scen.weak || []).includes(t)) { pts(-10, 'CO₂ es poco eficaz en clase A (no penetra en brasas)'); }
+  else pts(15, `Elegiste ${EXT_TYPES[t].short}: adecuado para clase ${scen.cls}`); scen.ext = t; setViewModel(t); wallExt.forEach(e => { if (e.userData.pick === t) e.visible = false; }); nextStep(); phase = 'approach'; fightControls(); toast(`Acércate al fuego: ${EXT_TYPES[t].range[0]}–${EXT_TYPES[t].range[1]} m · con el viento a tu espalda`, true); }
+function distFire() { return Math.hypot(player.x - fire.x, player.z - fire.z); }
+function upwind() { const v = new THREE.Vector3(player.x - fire.x, 0, player.z - fire.z).normalize(); return v.dot(scen.wind) < -0.3; }   // el operador está del lado de donde viene el viento
+function checkPosition() { const d = distFire(), [a, b] = EXT_TYPES[scen.ext].range; if (d < a - .3) { pts(-10, 'Demasiado cerca: riesgo de quemaduras'); return; } if (d > b + .4) { toast(`Aún estás lejos (${d.toFixed(1)} m): el agente no alcanza`); return; } if (!upwind()) { pts(-10, 'El humo y el calor van hacia ti: colócate con el viento a tu espalda'); return; } pts(15, 'Buena posición: distancia correcta y viento a tu espalda'); nextStep(); phase = 'pin'; fightControls(); }
+const ray = new THREE.Raycaster(), ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function fightTick(dt) { if (!fire || fire.out) return; const T = scen.ext && EXT_TYPES[scen.ext];
+  // el fuego crece si no se ataca
+  if (phase !== 'retreat') fire.hp = Math.min(100, fire.hp + dt * (phase === 'fight' ? .8 : fire.grow));
+  if (phase === 'fight' && squeezing && scen.agent > 0) { scen.agent = Math.max(0, scen.agent - dt * 100 / T.dur); ray.setFromCamera(aimNDC, camera); const hit = new THREE.Vector3(); ray.ray.intersectPlane(ground, hit); const dGround = hit ? Math.hypot(hit.x - fire.x, hit.z - fire.z) : 99;
+    const toFire = new THREE.Vector3(fire.x, fire.height * .6, fire.z); const flameDist = ray.ray.distanceToPoint(toFire); const d = distFire(); const inRange = d <= T.range[1] + .3;
+    let eff = 0; if (dGround < fire.radius * 1.3 + .3) { eff = 1; scen.aimHits.base += dt; } else if (flameDist < fire.radius + .4) { eff = .15; scen.aimHits.flames += dt; } else scen.aimHits.miss += dt;
+    // barrido: cambios de dirección horizontales del puntero
+    const sx = aimNDC.x; const dx = sx - scen.sweep.last; const dir = Math.abs(dx) > .004 ? Math.sign(dx) : 0; if (dir && dir !== scen.sweep.dir) { scen.sweep.flips++; scen.sweep.dir = dir; } scen.sweep.last = sx; scen.sweep.t += dt; const sweeping = scen.sweep.flips / Math.max(1, scen.sweep.t) > .5;
+    if (!inRange) eff = 0; if (scen.ext === 'co2' && scen.cls === 'A') eff *= .4; if (scen.ext === 'agua' && scen.cls === 'A') eff *= 1.1;
+    fire.hp = Math.max(0, fire.hp - dt * 13 * eff * (sweeping ? 1.25 : .7)); const nz = viewModel.userData.nozzle; const from = new THREE.Vector3(); nz.getWorldPosition(from); spray(dt, from, hit && dGround < 20 ? hit.clone().setY(.15) : ray.ray.at(6, new THREE.Vector3()), T.cloud);
+    if (Math.random() < dt * 1.2 && eff < .5) toast(eff > 0 ? 'Apuntas a las llamas: apunta a la BASE' : 'No estás alcanzando el fuego');
+    if (fire.hp <= 0) { fire.out = true; fire.flames.forEach(s => s.visible = false); const acc = scen.aimHits.base / Math.max(.1, scen.aimHits.base + scen.aimHits.flames + scen.aimHits.miss); pts(Math.round(10 * acc), 'Precisión a la base ' + Math.round(acc * 100) + '%'); if (scen.sweep.flips >= 4) pts(5, 'Barriste de lado a lado'); else pts(-5, 'No barriste el agente de lado a lado'); toast('🔥 ¡Conato extinguido!', true); nextStep(); phase = 'retreat'; setTimeout(fightControls, 600); }
+    if (scen.agent <= 0 && !fire.out) { msg('El extintor se vació', 'El agente se terminó y el fuego sigue. Ya no es un conato que puedas controlar: <b>retírate, evacúa y deja actuar a la brigada / bomberos</b>.', 'Evacuar', () => abortFight(true)); phase = 'done'; } } }
+function abortFight(empty) { if (phase === 'done' && !empty) return; phase = 'done'; $('squeeze').classList.add('hidden'); if (!empty) pts(-10, 'No controlaste el conato'); pts(10, 'Evacuaste cuando el fuego no se controló'); endScenario(); }
+function retreat(ok) { if (ok) pts(10, 'Te retiraste sin dar la espalda (vigilando reignición)'); else pts(-10, 'Diste la espalda al fuego: puede reavivarse'); nextStep();
+  msg('Después del conato', '¿Qué haces con el extintor que usaste?', 'Ver opciones', () => ctrl(shuffle([['📋 Reportar al supervisor y enviarlo a RECARGA', 'green', () => { pts(5, 'Reportaste y enviaste a recarga (NOM-154)'); endScenario(); }], ['↩️ Regresarlo a su lugar porque aún tiene polvo', '', () => { pts(-10, 'Un extintor usado se envía a recarga aunque quede agente'); endScenario(); }]]))); }
+
+// ---------- 5. EVACUACIÓN ----------
+function startEvacuation() { makeFire(-10, -14, 3.2, 7.5); fire.hp = 100; fire.grow = 0; for (let i = 0; i < 4; i++) cartons(-11 + i, -14, 4); player = { x: 0, z: 2, yaw: 0 }; camLook = new THREE.Vector3(-10, 3, -14);
+  setSteps(scen.title, scen.desc, ['Activa la alarma de evacuación (no es un conato)', 'Sal por la ruta de evacuación señalizada', 'Ve al punto de reunión y repórtate']); scen.bad = 0;
+  toast('Observa el tamaño del fuego antes de decidir', true); evacMenu(); }
+function evacMenu() { const opts = shuffle([['🧯 Combatir con el extintor PQS', 'Un incendio fuera de control NO se combate con extintor portátil'], ['🔔 Activar alarma de evacuación', 0], ['🚪 Salir por la ruta de evacuación (señales verdes)', 1], ['📍 Ir al punto de reunión y pasar lista', 2], ['🎒 Regresar por mis pertenencias', 'Nunca regreses por objetos personales'], ['🚜 Mover el montacargas para salvar la carga', 'Abandona el equipo y evacúa: tu vida vale más que la carga'], ['🏃 Atajar por el pasillo de racks', 'Usa SIEMPRE la ruta señalizada: un atajo puede quedar bloqueado por humo']]);
+  ctrl(opts.filter(o => !(typeof o[1] === 'number' && o[1] < stepIdx)).map(([l, v]) => [l, typeof v === 'number' ? '' : '', () => { if (typeof v === 'string') { scen.bad++; pts(-20, v); return; } if (v !== stepIdx) { toast('Ese paso va después. Primero: ' + scen.steps[stepIdx]); return; } pts(30, scen.steps[v]); nextStep();
+    if (v === 1) walkTo(0, 18); if (v === 2) { if (!scen.bad) pts(10, 'Evacuación sin errores'); msg('✅ Evacuación correcta', 'Diste la alarma, saliste por la ruta señalizada, llegaste al <b>punto de reunión</b> y te reportaste con el brigadista para el pase de lista (Protección Civil). No regreses hasta que el responsable lo autorice.', 'Ver resultados', endScenario); return; } evacMenu(); }])); }
+let walkTarget = null; function walkTo(x, z) { walkTarget = new THREE.Vector3(x, 0, z); camLook = null; }
+function endScenario() { const p = Math.max(0, Math.min(100, Math.round(sPts))); score += p; hud(); if (sIdx + 1 < SCENARIOS.length) msg(`Escenario ${sIdx + 1} terminado`, `Obtuviste <b>${p}/100</b> puntos.`, 'Siguiente escenario ▶', () => loadScenario(sIdx + 1)); else finish(); }
+
+// ================= ENTRADA =================
+let dragging = false, lastPX = 0, camLook = null;
+function bindInput() { const cv = $('cv');
+  const setAim = e => { const r = cv.getBoundingClientRect(); aimNDC.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); const c = $('cross'); c.style.left = (e.clientX) + 'px'; c.style.top = (e.clientY) + 'px'; };
+  cv.addEventListener('pointerdown', e => { setAim(e); if (phase === 'fight') squeezing = true; else if (phase === 'choose') { ray.setFromCamera(aimNDC, camera); const h = ray.intersectObjects(wallExt, true)[0]; if (h) { let o = h.object; while (o && !o.userData.pick) o = o.parent; if (o) chooseExt(o.userData.pick); } } else { dragging = true; lastPX = e.clientX; } });
+  cv.addEventListener('pointermove', e => { if (phase === 'fight' || phase === 'choose') setAim(e); if (dragging) { player.yaw -= (e.clientX - lastPX) * .005; lastPX = e.clientX; camLook = null; } });
+  addEventListener('pointerup', () => { squeezing = false; dragging = false; });
+  const sq = $('squeeze'); sq.addEventListener('pointerdown', e => { e.preventDefault(); if (phase === 'fight') squeezing = true; }); sq.addEventListener('pointerup', () => squeezing = false); sq.addEventListener('pointerleave', () => squeezing = false);
+  addEventListener('keydown', e => { const k = e.key.toLowerCase(); keys[k] = true; if (k === ' ' && phase === 'fight') { squeezing = true; e.preventDefault(); } });
+  addEventListener('keyup', e => { const k = e.key.toLowerCase(); keys[k] = false; if (k === ' ') squeezing = false; });
+  $('pad').querySelectorAll('button').forEach(b => { const k = b.dataset.k; b.addEventListener('pointerdown', e => { e.preventDefault(); keys[k] = true; }); b.addEventListener('pointerup', () => keys[k] = false); b.addEventListener('pointerleave', () => keys[k] = false); }); }
+
+// ================= BUCLE =================
+function loop() { requestAnimationFrame(loop); const dt = Math.min(.05, clock.getDelta());
+  // movimiento (adelante = hacia donde miras); en combate el operador siempre mira al fuego
+  const fwd = (keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0), str = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0);
+  if (scen && scen.type === 'fight' && fire && ['approach', 'pin', 'fight', 'alarm', 'power', 'choose'].includes(phase)) { if (phase === 'choose') player.yaw = Math.atan2(-(-6.5 - player.x), -(8 - player.z)) + Math.PI; else player.yaw = Math.atan2(player.x - fire.x, player.z - fire.z); }
+  if (fwd || str) { const sp = 2.2 * dt, sy = Math.sin(player.yaw), cy = Math.cos(player.yaw); player.x += (-sy * fwd + cy * str) * sp; player.z += (-cy * fwd - sy * str) * sp; player.x = Math.max(-20, Math.min(20, player.x)); player.z = Math.max(-20, Math.min(20, player.z)); if (fire && !fire.out && fire.hp > 5 && distFire() < .9) { player.x += (player.x - fire.x) * .2; player.z += (player.z - fire.z) * .2; toast('¡Demasiado cerca del fuego!'); } }
+  if (walkTarget) { const d = walkTarget.clone().sub(new THREE.Vector3(player.x, 0, player.z)); if (d.length() > .2) { d.normalize(); player.x += d.x * 3 * dt; player.z += d.z * 3 * dt; player.yaw = Math.atan2(-d.x, -d.z); } else walkTarget = null; }
+  camera.position.set(player.x, 1.62, player.z); let pitch = -0.12; if (scen && scen.type === 'fight' && fire && phase !== 'choose') pitch = -Math.atan2(1.62, Math.max(.8, distFire())) + 0.32;   // mirar hacia la base del fuego
+  if (camLook) camera.lookAt(camLook); else camera.rotation.set(pitch, player.yaw, 0, 'YXZ');
+  const wind = scen && scen.wind ? scen.wind : new THREE.Vector3(.3, 0, 0); updateFire(dt, wind); updateSpray(dt); if (scen && scen.type === 'fight') fightTick(dt);
+  if (fire && scen && scen.type === 'fight') { $('gAgent').style.width = (scen.agent || 0) + '%'; $('gFire').style.width = fire.hp + '%'; const d = distFire(); const T = scen.ext && EXT_TYPES[scen.ext]; $('gDist').innerHTML = `Distancia: <b style="color:${T && d >= T.range[0] && d <= T.range[1] ? '#8ff0b0' : '#ffd36a'}">${d.toFixed(1)} m</b>${T ? ` (ideal ${T.range[0]}–${T.range[1]} m)` : ''}`; $('gWind').innerHTML = `Viento: ${['⬅️', '➡️', '⬆️', '⬇️'][scen.wind.x < -.5 ? 0 : scen.wind.x > .5 ? 1 : scen.wind.z < -.5 ? 2 : 3]} · tú: ${upwind() ? '<b style="color:#8ff0b0">a favor ✓</b>' : '<b style="color:#ff8a8a">humo hacia ti</b>'}`; }
+  if (viewModel.visible) { viewModel.rotation.z = squeezing ? Math.sin(performance.now() / 60) * .01 : 0; const nz = viewModel.userData.nozzle; if (nz && phase === 'fight') { nz.lookAt(new THREE.Vector3(aimNDC.x * 2, aimNDC.y * 2 + 0.3, -5).applyMatrix4(camera.matrixWorld)); } }
+  $('tTime').textContent = '⏱ ' + fmt(Math.round((Date.now() - t0) / 1000)); renderer.render(scene, camera); }
+function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+
+// ================= RESULTADOS =================
+function chk(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h.toString(36).toUpperCase().slice(0, 6); }
+function finish() { $('game').classList.add('hidden'); $('end').classList.remove('hidden'); const ok = score >= PASS, secs = Math.round((Date.now() - t0) / 1000), date = new Date(); const critical = errors.some(e => /AGUA|alarma|fuera de control|NO se combate/.test(e)); const pass = ok && !critical;
+  const base = `REG|${GAME_ID}|${who.name}|${who.puesto}|${who.area}|${who.wh}|${score}|${MAX}|${pass ? 'APROBADO' : 'NO APROBADO'}|${date.toISOString().slice(0, 16)}`; REG = base + '|' + chk(base + 'DICKA');
+  $('eicon').textContent = pass ? '🏆' : '📚'; $('etitle').textContent = pass ? '¡Aprobaste el curso de extintores!' : (critical && ok ? 'Puntaje suficiente, pero con error crítico' : 'Aún no apruebas'); $('escore').textContent = score; $('ebadge').textContent = pass ? '✓ APROBADO' : '✗ NO APROBADO'; $('ebadge').className = 'badge ' + (pass ? 'ok' : 'bad');
+  $('estats').innerHTML = `<div><span>Participante</span><b>${who.name}</b></div><div><span>Puesto</span><b>${who.puesto}</b></div><div><span>Área</span><b>${who.area}</b></div><div><span>Almacén</span><b>${who.wh}</b></div><div><span>Tiempo</span><b>${fmt(secs)}</b></div><div><span>Fecha</span><b>${date.toLocaleDateString('es-MX')} ${date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</b></div>`;
+  if (errors.length) { const by = {}; errors.forEach(e => by[e] = (by[e] || 0) + 1); $('review').classList.remove('hidden'); $('review').innerHTML = '<b>Puntos a reforzar:</b><br>' + Object.entries(by).map(([k, v]) => `• ${k}${v > 1 ? ' ×' + v : ''}`).join('<br>'); }
+  $('ecode').textContent = 'Código de verificación: ' + REG;
+  try { const k = 'dicka_console_results', l = JSON.parse(localStorage.getItem(k) || '[]'); l.push({ juego: GAME_NAME, nombre: who.name, puesto: who.puesto, area: who.area, almacen: who.wh, score: `${score}/${MAX}`, aprobado: pass, fecha: date.toISOString(), reg: REG }); localStorage.setItem(k, JSON.stringify(l)); } catch (e) {}
+  try { parent.postMessage({ type: 'dicka-result', juego: GAME_NAME, nombre: who.name, score: `${score}/${MAX}`, aprobado: pass }, '*'); } catch (e) {} }
+function txt() { return `🧯 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombre: ${who.name}\nPuesto: ${who.puesto}\nÁrea: ${who.area}\nAlmacén: ${who.wh}\nPuntaje: ${score}/${MAX}\nEstado: ${$('ebadge').textContent}\n\n${REG}`; }
+function share() { window.open('https://wa.me/?text=' + encodeURIComponent(txt()), '_blank'); }
+function copyRes() { navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
+</script>
+</body>
+</html>
