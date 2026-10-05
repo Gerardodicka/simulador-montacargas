@@ -7825,7 +7825,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.05 · v9.5 operarias';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.06 · v9.6 operarias';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8419,6 +8419,8 @@
             return new Promise(res => { const urls = GLTF_AVATAR.urls.map(u => u.replace('operario.glb', 'operaria.glb')); const tryUrl = i => { if (i >= urls.length) { res(false); return; }
                 new THREE.GLTFLoader().load(urls[i], g => { try { g.scene.traverse(o => { if (o.isBone) o.name = o.name.replace(/^mixamorig:?/, '').replace(/_\d+$/, ''); });
                     { let main = null; g.scene.traverse(o => { if (o.isSkinnedMesh && /Body/.test(o.name)) main = o; }); const by = {}; main.skeleton.bones.forEach(b => by[b.name] = b); const keep = new Set(main.skeleton.bones);   // un solo esqueleto: el FBX trae una copia por malla
+                      const PAR = { Spine2: 'Spine1', Neck: 'Spine2', Head: 'Neck', HeadTop_End: 'Head', LeftShoulder: 'Spine2', RightShoulder: 'Spine2', LeftArm: 'LeftShoulder', RightArm: 'RightShoulder', LeftUpLeg: 'Hips', RightUpLeg: 'Hips', LeftLeg: 'LeftUpLeg', RightLeg: 'RightUpLeg', LeftFoot: 'LeftLeg', RightFoot: 'RightLeg', LeftToeBase: 'LeftFoot', RightToeBase: 'RightFoot', LeftToe_End: 'LeftToeBase', RightToe_End: 'RightToeBase' };
+                      g.scene.updateMatrixWorld(true); main.skeleton.bones.forEach(b => { if (b.parent && b.parent.isBone) return; const pn = PAR[b.name]; if (pn && by[pn]) by[pn].attach(b); });   // reconectar huesos que quedaron colgando de copias del FBX (pies, cuello, hombros)
                       g.scene.traverse(o => { if (o.isSkinnedMesh && o !== main) o.bind(new THREE.Skeleton(o.skeleton.bones.map(b => by[b.name] || b), o.skeleton.boneInverses), o.bindMatrix); });
                       const orphans = []; g.scene.traverse(o => { if (o.isBone && !keep.has(o) && !(o.parent && o.parent.isBone)) orphans.push(o); }); orphans.forEach(o => o.parent.remove(o)); }
                     g.scene.updateMatrixWorld(true); let hb = null, fb = null; g.scene.traverse(o => { if (o.isBone) { if (/Head$/.test(o.name)) hb = o; if (/LeftFoot$/.test(o.name)) fb = o; } });
@@ -8440,7 +8442,7 @@
                         vec3 denim = vec3(0.07, 0.12, 0.24) * twill * (0.9 + 0.2 * n1); vec3 shirt = vec3(0.05, 0.08, 0.18) * (0.9 + 0.15 * n1);
                         float legM = smoothstep(0.25, 0.5, vLeg) * (1.0 - smoothstep(0.3, 0.6, vFoot)); diffuseColor.rgb = mix(diffuseColor.rgb, denim, legM);   // pantalón
                         ${isBody ? '' : `diffuseColor.rgb = mix(diffuseColor.rgb, shirt, smoothstep(0.3, 0.6, vArm + vTorso) * (1.0 - legM));   // camisa
-                        float vest = smoothstep(0.35, 0.6, vTorso) * step(0.95, vOP.y) * step(vOP.y, 1.47); vec3 vc = vec3(0.04, 0.16, 0.55) * (0.9 + 0.1 * n1);
+                        float vest = smoothstep(0.35, 0.6, vTorso) * step(0.95, vOP.y) * step(vOP.y, 1.47); vec3 vc = vec3(0.007, 0.05, 0.19) * (0.88 + 0.2 * n1);   // mismo azul DICKA que el chaleco de los operarios
                         float band = (1.0 - smoothstep(0.012, 0.02, abs(vOP.y - 1.06))) + (1.0 - smoothstep(0.012, 0.02, abs(vOP.y - 1.16))) + (1.0 - smoothstep(0.012, 0.02, abs(abs(vOP.x) - 0.075))) * step(1.16, vOP.y);
                         vc = mix(vc, vec3(0.85, 0.95, 0.25), clamp(band, 0.0, 1.0)); diffuseColor.rgb = mix(diffuseColor.rgb, vc, vest);   // chaleco DICKA con bandas reflejantes`}`}`); };
                 m.customProgramCacheKey = () => 'fem-' + o.name; });
@@ -8472,7 +8474,9 @@
             const wp = new THREE.Vector3(); const yOf = () => { av.obj.updateMatrixWorld(true); hand.getWorldPosition(wp); return wp.y; };
             setBoneWorld(av, 'lArm', 0, 0, 1.2); const y1 = yOf(); setBoneWorld(av, 'lArm', 0, 0, -1.2); const y2 = yOf(); av.calib = { armL: y1 < y2 ? 1 : -1 }; av.calib.armR = -av.calib.armL;
             setBoneWorld(av, 'lArm', 0, 0, av.calib.armL * 1.25); av.obj.updateMatrixWorld(true); const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(av.obj.getWorldQuaternion(new THREE.Quaternion())); hand.getWorldPosition(wp); const z0 = wp.clone();
-            setBoneWorld(av, 'lArm', 0.6, 0, av.calib.armL * 1.25); av.obj.updateMatrixWorld(true); hand.getWorldPosition(wp); av.calib.swing = wp.clone().sub(z0).dot(fwd) > 0 ? 1 : -1; setBoneWorld(av, 'lArm'); }
+            setBoneWorld(av, 'lArm', 0.6, 0, av.calib.armL * 1.25); av.obj.updateMatrixWorld(true); hand.getWorldPosition(wp); av.calib.swing = wp.clone().sub(z0).dot(fwd) > 0 ? 1 : -1; setBoneWorld(av, 'lArm');
+            av.calib.leg = av.calib.swing; const foot = av.obj.getObjectByName('LeftFoot'); if (foot && av.bones.lUp) { av.obj.updateMatrixWorld(true); foot.getWorldPosition(wp); const f0 = wp.clone(); setBoneWorld(av, 'lUp', 0.5, 0, 0); av.obj.updateMatrixWorld(true); foot.getWorldPosition(wp); av.calib.leg = wp.clone().sub(f0).dot(fwd) > 0 ? 1 : -1; setBoneWorld(av, 'lUp'); }
+            av.calib.knee = av.calib.leg; if (foot && av.bones.lLeg) { av.obj.updateMatrixWorld(true); foot.getWorldPosition(wp); const k0 = wp.clone(); setBoneWorld(av, 'lLeg', 0.5, 0, 0); av.obj.updateMatrixWorld(true); foot.getWorldPosition(wp); av.calib.knee = wp.clone().sub(k0).dot(fwd) > 0 ? 1 : -1; setBoneWorld(av, 'lLeg'); } }   // la rodilla siempre flexiona hacia atrás   // sentido propio de las piernas (no siempre coincide con el de los brazos)
         function gltfStandPose(av, armFwd = 0.95, headYaw = 0) { gltfPrepareBones(av); gltfCalibrate(av); const C = av.calib; av.obj.updateMatrixWorld(true);
             setBoneWorld(av, 'lArm', C.swing * (armFwd - 0.45), -0.08, C.armL * 1.52); setBoneWorld(av, 'rArm', C.swing * (armFwd - 0.4), 0.08, C.armR * 1.5); setBoneWorld(av, 'lFore', C.swing * 1.05, 0, C.armL * 0.05); setBoneWorld(av, 'rFore', C.swing * 1.1, 0, C.armR * 0.05);   // brazos pegados al torso y antebrazos al frente sobre los controles (antes quedaban abiertos en "A")
             setBoneWorld(av, 'head', 0, headYaw); if (av.bones.hips) av.bones.hips.position.y = av.hipsY0; }
@@ -8504,9 +8508,9 @@
             // piernas: el muslo oscila; la rodilla se flexiona en la fase de vuelo (pierna que avanza) y queda casi recta al apoyar; el pie hace talón-punta
             const kn = x => (Math.max(0, Math.sin(x - 0.9)) ** 1.5 * W.knee + Math.max(0, Math.sin(2 * x + 2.2)) * 0.12) * k * G.leg;   // flexión en vuelo + amortiguación al apoyar
             const kneeL = kn(w), kneeR = kn(w + Math.PI);
-            setBoneWorld(av, 'lUp', C.swing * (sw * W.legSwing + kneeL * 0.25), 0, C.armL * W.legIn); setBoneWorld(av, 'rUp', C.swing * (sw2 * W.legSwing + kneeR * 0.25), 0, C.armR * W.legIn);   // muslos ligeramente hacia el centro: pasos sobre una línea, no piernas abiertas
-            setBoneWorld(av, 'lLeg', -C.swing * kneeL); setBoneWorld(av, 'rLeg', -C.swing * kneeR);
-            setBoneWorld(av, 'lFoot', C.swing * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + 0.4) * 0.28)) * k - kneeL * 0.35)); setBoneWorld(av, 'rFoot', C.swing * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + 0.4) * 0.28)) * k - kneeR * 0.35));
+            const CL = C.leg ?? C.swing; setBoneWorld(av, 'lUp', CL * (sw * W.legSwing + kneeL * 0.25), 0, C.armL * W.legIn); setBoneWorld(av, 'rUp', CL * (sw2 * W.legSwing + kneeR * 0.25), 0, C.armR * W.legIn);   // muslos ligeramente hacia el centro: pasos sobre una línea, no piernas abiertas
+            const CK = C.knee ?? CL; setBoneWorld(av, 'lLeg', -CK * kneeL); setBoneWorld(av, 'rLeg', -CK * kneeR);
+            setBoneWorld(av, 'lFoot', CL * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + 0.4) * 0.28)) * k - kneeL * 0.35)); setBoneWorld(av, 'rFoot', CL * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + 0.4) * 0.28)) * k - kneeR * 0.35));
             // cadera: rebote doble por zancada, vaivén lateral y contrarrotación; tronco inclinado al frente al caminar; hombros compensan
             if (av.bones.hips) { av.bones.hips.position.y = av.hipsY0 + (Math.abs(Math.cos(w)) * 2.2 - 1.1) * k + breathe * 100 * 0.3; }
             const ln = W.lean * G.lean, sy = G.sway; setBoneWorld(av, 'hips', C.swing * ln * k, Math.sin(w) * 0.10 * k * sy, Math.sin(w + 0.5) * 0.05 * k * sy);   // pelvis gira y cae del lado que avanza
