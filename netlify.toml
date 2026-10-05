@@ -16,3 +16,17 @@
   to = "/404.html"
   status = 404
   force = true
+
+# Siempre revalidar páginas, scripts y modelos: evita que el navegador muestre versiones anteriores tras un deploy
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/juegos/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
