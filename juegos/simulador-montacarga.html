@@ -608,6 +608,19 @@
         body.minihud .hud { top: 12px; }
         .mission-float { position: absolute; left: 50%; bottom: 28%; transform: translateX(-50%); z-index: 7; background: rgba(1,17,49,.92); color: #fff; border: 2px solid #f5c400; border-radius: 12px; padding: .6rem 1.1rem; font-weight: 700; font-size: 14px; text-align: center; max-width: 70%; pointer-events: none; opacity: 0; transition: opacity .3s; }
         .mission-float.show { opacity: 1; }
+        .brief { display:none; position:absolute; inset:0; z-index:30; background:rgba(1,17,49,.88); align-items:center; justify-content:center; padding:12px; }
+        .brief.open { display:flex; }
+        .brief-card { background:#fff; color:#011131; border-radius:16px; width:min(640px,100%); max-height:92%; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+        .brief-head { background:#2138D3; color:#fff; padding:.8rem 1rem; border-radius:16px 16px 0 0; font-weight:900; letter-spacing:.5px; }
+        .brief-head small { display:block; font-weight:600; opacity:.85; font-size:12px; letter-spacing:0; }
+        .brief-body { padding:.8rem 1rem 1rem; font-size:14px; line-height:1.4; }
+        .brief-body h4 { margin:.7rem 0 .3rem; font-size:13px; color:#2138D3; text-transform:uppercase; letter-spacing:.5px; }
+        .brief-body ol { margin:0; padding-left:1.3rem; } .brief-body ol li { margin:.25rem 0; }
+        .brief-body .goal { background:#fff7d6; border-left:5px solid #f5c400; padding:.5rem .7rem; border-radius:8px; font-weight:700; }
+        .brief-body .fail { background:#fdecec; border-left:5px solid #c62828; padding:.5rem .7rem; border-radius:8px; font-size:13px; }
+        .brief-body kbd { background:#011131; color:#fff; border-radius:5px; padding:0 6px; font-size:12px; font-family:inherit; white-space:nowrap; }
+        .brief-body .all { font-size:12px; color:#444; } .brief-body .all span.cur { font-weight:900; color:#2138D3; }
+        .brief-go { display:block; width:100%; margin-top:.9rem; background:#2e9e5b; color:#fff; border:0; border-radius:10px; padding:.8rem; font-size:16px; font-weight:900; cursor:pointer; }
         .mission-step { font-size: 10px; color: #8fa3ff; letter-spacing: 2px; }
         .mission-text { font-size: 16px; font-weight: 700; margin: 0.2rem 0; }
         .mission-dist { font-size: 22px; font-weight: 800; color: #f5c400; }
@@ -920,7 +933,7 @@
                         <div class="cc-row" id="ccWheel"><span class="cc-ico">🛞</span><div><b>Volante Logitech G920 (solo dirección)</b><small id="ccWheelTxt">Buscando… gira el volante o presiona un botón</small></div><span class="cc-st" id="ccWheelSt">…</span></div>
                         <div class="cc-tests"><div id="cc1">⬜ Palanca adelante</div><div id="cc2">⬜ Palanca a un lado</div><div id="cc3">⬜ Gatillo (claxon)</div><div id="cc4">⬜ Volante derecha</div><div id="cc5">⬜ Volante izquierda</div><div id="cc6">⬜ Botón Y (cámara)</div></div>
                         <div class="cc-note" id="ccNote">Si no aparecen, presiona un botón de cada aparato: el navegador no los muestra hasta la primera pulsación. Sin ellos puedes practicar con joystick táctil o teclado.</div>
-                        <div class="cc-actions"><button class="btn-next" id="ccGo" onclick="ctrlCheckDone()" style="background:#838383">▶ Continuar con táctil / teclado</button><button class="btn-next" onclick="toggleGpHelp(true); renderDeviceList(); refreshSwitches();" style="background:#2138D3">⚙️ Configurar dispositivos</button></div>
+                        <div class="cc-actions"><button class="btn-next" id="ccQuest" onclick="questChoose()" style="background:#5b2bd9;display:none">🥽 Uso gafas META QUEST</button><button class="btn-next" id="ccGo" onclick="ctrlCheckDone()" style="background:#838383">▶ Continuar con táctil / teclado</button><button class="btn-next" onclick="toggleGpHelp(true); renderDeviceList(); refreshSwitches();" style="background:#2138D3">⚙️ Configurar dispositivos</button></div>
                     </div>
                 </div></div>
                 <div class="gp-help" id="gpHelp">
@@ -993,6 +1006,7 @@
                     <div class="mission-dist" id="missionDist">— m</div>
                 </div>
                 <div class="acts-panel" id="actsPanel"></div>
+                <div class="brief" id="brief"><div class="brief-card"><div class="brief-head" id="briefHead"></div><div class="brief-body" id="briefBody"></div></div></div>
                 <div class="mission-float" id="missionFloat"></div>
 
                 <!-- Checklist pre-operativo -->
@@ -1057,7 +1071,7 @@
                         <button class="big horn" id="btnHorn" onclick="honk()" style="flex:1;height:56px;font-size:20px;background:#c8102e;border-color:#ff5252">📣<small>CLAXON</small></button>
                         <button class="big" id="btnCam" onclick="cycleCam()" style="flex:1;height:56px;font-size:18px">📷<small id="camLbl">HORQ.</small></button>
                         <button class="big" id="btnGp" onclick="openGpPanel()" style="flex:1;height:56px;font-size:18px;background:rgba(29,37,134,.85)">🎮<small id="gpLbl">USB</small></button>
-                        <button class="big" id="btnWheel" onclick="openGpPanel()" style="flex:1;height:56px;font-size:18px;background:rgba(29,37,134,.85)">🛞<small id="wheelLbl">G920</small></button><button class="big" id="btnHyb" onclick="SCREENS.mode = 'single'; document.body.classList.remove('surround3'); document.getElementById('screensPanel').classList.remove('open'); document.getElementById('hybPanel').classList.toggle('open')" style="flex:1;height:56px;font-size:18px;background:#7a2bd9">📱<small>CABINA VR</small></button><button class="big" id="btnMVR" onclick="mvrAsk()" style="flex:1;height:56px;font-size:18px;background:#7a2bd9;display:none">📱<small>VR CELULAR</small></button><button class="big" id="btnVR" onclick="xrEnter()" style="flex:1;height:56px;font-size:18px;background:#5b2bd9;display:none">🥽<small>VR QUEST</small></button><button class="big" id="btnScreens" onclick="document.getElementById('screensPanel').classList.toggle('open')" style="flex:1;height:56px;font-size:18px;background:rgba(29,37,134,.85)">🖥️<small>3 PANT.</small></button>
+                        <button class="big" id="btnWheel" onclick="openGpPanel()" style="flex:1;height:56px;font-size:18px;background:rgba(29,37,134,.85)">🛞<small id="wheelLbl">G920</small></button><button class="big" id="btnHyb" onclick="SCREENS.mode = 'single'; document.body.classList.remove('surround3'); document.getElementById('screensPanel').classList.remove('open'); document.getElementById('hybPanel').classList.toggle('open')" style="flex:1;height:56px;font-size:18px;background:#7a2bd9">📱<small>CABINA VR</small></button><button class="big" id="btnMVR" onclick="mvrAsk()" style="flex:1;height:56px;font-size:18px;background:#7a2bd9;display:none">📱<small>VR CELULAR</small></button><button class="big" id="btnVR" onclick="questChoose()" style="flex:1;height:56px;font-size:18px;background:#5b2bd9;display:none">🥽<small>META QUEST</small></button><button class="big" id="btnScreens" onclick="document.getElementById('screensPanel').classList.toggle('open')" style="flex:1;height:56px;font-size:18px;background:rgba(29,37,134,.85)">🖥️<small>3 PANT.</small></button>
                     </div>
                 </div>
                 <div class="npc-reply" id="npcReply"></div>
@@ -7793,7 +7807,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.04 · v8.1 tarima y emplaye';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.04 · v8.4 Meta Quest';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -7856,9 +7870,18 @@
         // gira con el equipo; la cabeza del usuario mira libremente. Controles Touch: stick izq = avanzar/girar · stick der = mástil (↕) y reach/placas (↔)
         // gatillo der = agarrar/soltar · gatillo izq = claxon · A = cámara (altura del asiento) · B = cerrar/abrir placas · X = reiniciar práctica · Y = menú.
         const XR = { rig: null, hud: null, hudCtx: null, hudTex: null, ctrl: [null, null], supported: false, active: false, seatHeight: 0, ray: null };
-        async function xrInit() { if (!navigator.xr) return; try { XR.supported = await navigator.xr.isSessionSupported('immersive-vr'); } catch (e) { XR.supported = false; }
-            const b = document.getElementById('btnVR'); if (b) { b.style.display = XR.supported ? 'inline-flex' : 'none'; } }
-        async function xrEnter() { if (!XR.supported) { toast('Este navegador no soporta WebXR. Ábrelo en el navegador del Meta Quest con https.'); return; }
+        // ---- Modo META QUEST (independiente del VR de celular): los controles Touch solo existen dentro de la sesión WebXR, por eso no aparecen
+        // en la verificación de joystick USB. Aquí se verifican en el panel de VR y el resto de la práctica se maneja con ellos.
+        const IS_QUEST = /OculusBrowser|Quest|Oculus/i.test(navigator.userAgent);
+        const QUEST = { mode: false, cc: { ls: false, rs: false, rt: false, lt: false } };
+        function questChoose() { QUEST.mode = true; if (CC.open) { document.getElementById('ctrlCheck').classList.remove('open'); CC.open = false; }
+            const a = ACTS[actIdx]; if (a && a.type === 'checklist' && !XR.active) { if (typeof showChecklist === 'function') showChecklist(); toast('🥽 Modo Meta Quest: responde la inspección con el rayo del control (gatillo = tocar). Al terminar entrarás a VR.'); return; }
+            xrEnter(); }
+        async function xrInit() { if (IS_QUEST) { const m = document.getElementById('btnMVR'); if (m) m.remove(); }   // en el Quest no se ofrece el VR de celular
+            const q = document.getElementById('ccQuest'); if (q && (IS_QUEST || navigator.xr)) q.style.display = '';
+            if (!navigator.xr) return; try { XR.supported = await navigator.xr.isSessionSupported('immersive-vr'); } catch (e) { XR.supported = false; }
+            const b = document.getElementById('btnVR'); if (b) { b.style.display = (XR.supported || IS_QUEST) ? 'inline-flex' : 'none'; } if (q) q.style.display = XR.supported || IS_QUEST ? '' : 'none'; }
+        async function xrEnter() { if (!XR.supported && navigator.xr) { try { XR.supported = await navigator.xr.isSessionSupported('immersive-vr'); } catch (e) {} } if (!XR.supported) { toast(location.protocol !== 'https:' ? 'La VR del Quest requiere https: abre https://simuladordickalogistics.netlify.app' : 'Este navegador no soporta WebXR. Ábrelo en el navegador del Meta Quest (Meta Browser).'); return; } QUEST.mode = true; QUEST.cc = { ls: false, rs: false, rt: false, lt: false };
             try { const session = await navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] });
                 renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor'); renderer.xr.setFramebufferScaleFactor(0.9); await renderer.xr.setSession(session);
                 XR.active = true; document.body.classList.add('xr'); xrBuildRig(); if (window.sunLight) { window.sunLight.shadow.mapSize.set(1024, 1024); if (window.sunLight.shadow.map) { window.sunLight.shadow.map.dispose(); window.sunLight.shadow.map = null; } }   // Quest 3S: sombra 1024 y framebuffer 0.9 para mantener 72 fps session.addEventListener('end', () => { XR.active = false; document.body.classList.remove('xr'); if (XR.rig) { XR.rig.remove(camera); scene.add(camera); } renderer.setAnimationLoop(null); const op = forklift && (forklift.getObjectByName('operator') || forklift.getObjectByName('platform')); if (op) op.visible = true; requestAnimationFrame(animateSimulator); toast('Saliste de VR'); });
@@ -7873,8 +7896,11 @@
         function xrSelect(c) { if (typeof CS !== 'undefined' && CS.on) { xrPickCS(c); return; } if (c.userData.handedness === 'left') { honk(); return; } hasLoad ? releaseLoad() : grabLoad(); }
         function xrPoll() { const session = renderer.xr.getSession(); if (!session) return { fwd: 0, turn: 0, mast: 0, reach: 0 }; let fwd = 0, turn = 0, mast = 0, reach = 0;
             for (const src of session.inputSources) { const gp = src.gamepad; if (!gp) continue; const ax = gp.axes; const dz = v => Math.abs(v) < 0.15 ? 0 : v; XR.ctrl.forEach(ct => { if (ct && renderer.xr.getController(ct.userData.index) === ct) {} });
-                if (src.handedness === 'left') { fwd = -dz(ax[3] || 0); turn = dz(ax[2] || 0); if (gp.buttons[0] && gp.buttons[0].pressed && !XR.lHonk) { honk(); } XR.lHonk = gp.buttons[0] && gp.buttons[0].pressed; if (gp.buttons[4] && gp.buttons[4].pressed && !XR.xBtn) { if (typeof resetPractice === 'function') resetPractice(); } XR.xBtn = gp.buttons[4] && gp.buttons[4].pressed; }
-                if (src.handedness === 'right') { mast = -dz(ax[3] || 0); reach = dz(ax[2] || 0); if (gp.buttons[4] && gp.buttons[4].pressed && !XR.aBtn) { XR.seatHeight = XR.seatHeight === 0 ? 0.35 : XR.seatHeight === 0.35 ? -0.25 : 0; toast('Altura del punto de vista ajustada'); } XR.aBtn = gp.buttons[4] && gp.buttons[4].pressed; if (gp.buttons[5] && gp.buttons[5].pressed && !XR.bBtn) { reachOut = !reachOut; if (spec().clamp && !reachOut && hasLoad) clampRelease(); } XR.bBtn = gp.buttons[5] && gp.buttons[5].pressed; }
+                const sx = ax.length >= 4 ? (ax[2] || 0) : (ax[0] || 0), sy = ax.length >= 4 ? (ax[3] || 0) : (ax[1] || 0); const trig = gp.buttons[0] && gp.buttons[0].pressed;   // Touch: palanca en ejes 2-3 (xr-standard); otros mandos: 0-1
+                if (src.handedness === 'left') { if (Math.abs(sx) > .5 || Math.abs(sy) > .5) QUEST.cc.ls = true; if (trig) QUEST.cc.lt = true; } if (src.handedness === 'right') { if (Math.abs(sx) > .5 || Math.abs(sy) > .5) QUEST.cc.rs = true; if (trig || (gp.buttons[1] && gp.buttons[1].pressed)) QUEST.cc.rt = true; }
+                if (src.handedness === 'right' && gp.buttons[1] && gp.buttons[1].pressed && !XR.rGrip) { hasLoad ? releaseLoad() : grabLoad(); } if (src.handedness === 'right') XR.rGrip = gp.buttons[1] && gp.buttons[1].pressed;   // botón lateral (grip) derecho = agarrar/soltar también
+                if (src.handedness === 'left') { fwd = -dz(sy); turn = dz(sx); if (gp.buttons[0] && gp.buttons[0].pressed && !XR.lHonk) { honk(); } XR.lHonk = gp.buttons[0] && gp.buttons[0].pressed; if (gp.buttons[4] && gp.buttons[4].pressed && !XR.xBtn) { if (typeof resetPractice === 'function') resetPractice(); } XR.xBtn = gp.buttons[4] && gp.buttons[4].pressed; }
+                if (src.handedness === 'right') { mast = -dz(sy); reach = dz(sx); if (gp.buttons[4] && gp.buttons[4].pressed && !XR.aBtn) { XR.seatHeight = XR.seatHeight === 0 ? 0.35 : XR.seatHeight === 0.35 ? -0.25 : 0; toast('Altura del punto de vista ajustada'); } XR.aBtn = gp.buttons[4] && gp.buttons[4].pressed; if (gp.buttons[5] && gp.buttons[5].pressed && !XR.bBtn) { reachOut = !reachOut; if (spec().clamp && !reachOut && hasLoad) clampRelease(); } XR.bBtn = gp.buttons[5] && gp.buttons[5].pressed; }
                 const ct = XR.ctrl.find(x => x && renderer.xr.getController(x.userData.index) === x); }
             // emparejar lateralidad con los controladores de three
             session.inputSources.forEach((src, i) => { const c = renderer.xr.getController(i); if (c) c.userData.handedness = src.handedness; });
@@ -7884,8 +7910,11 @@
             XR.rig.rotation.y = forkRotation.y + (sp.stand && !sp.platform && (sp.type === 'Reach' || sp.type === 'Double Reach') ? -Math.PI / 2 : 0); if (op) op.visible = false;   // en VR el operador eres tú
             xrDrawHud(); }
         function xrDrawHud() { const g = XR.hudCtx; if (!g) return; g.clearRect(0, 0, 1024, 512); g.fillStyle = 'rgba(1,17,49,.78)'; g.beginPath(); g.roundRect ? g.roundRect(0, 0, 1024, 512, 40) : g.rect(0, 0, 1024, 512); g.fill();
-            const a = ACTS[actIdx]; g.fillStyle = '#9fb0ff'; g.font = '700 30px Arial'; g.textAlign = 'left'; g.fillText(a ? `ACTIVIDAD ${actIdx + 1}/${ACTS.length} · ${a.name}` : 'PRÁCTICA', 36, 60);
-            g.fillStyle = '#fff'; g.font = '700 38px Arial'; wrapText(g, a ? (a.text || '') : '', 36, 115, 950, 44, 3);
+            const a = ACTS[actIdx]; const qc = QUEST.cc; if (!(qc.ls && qc.rs && qc.rt && qc.lt)) { g.textAlign = 'left'; g.fillStyle = '#f5c400'; g.font = '900 40px Arial'; g.fillText('VERIFICACIÓN DE CONTROLES META QUEST', 36, 70);
+                [['ls', 'Palanca IZQUIERDA: avanzar / girar'], ['rs', 'Palanca DERECHA: mástil ↕ y reach ↔'], ['rt', 'Gatillo DERECHO: agarrar / soltar'], ['lt', 'Gatillo IZQUIERDO: claxon']].forEach(([k, t], i) => { g.fillStyle = qc[k] ? '#8ff0b0' : '#fff'; g.font = '700 36px Arial'; g.fillText((qc[k] ? '✅ ' : '⬜ ') + t, 36, 140 + i * 62); });
+                g.fillStyle = '#9fb0ff'; g.font = '700 28px Arial'; g.fillText('Mueve / presiona cada uno para comprobarlo', 36, 410); XR.hudTex.needsUpdate = true; return; }
+            g.fillStyle = '#9fb0ff'; g.font = '700 30px Arial'; g.textAlign = 'left'; g.fillText(a ? `MISIÓN ${actIdx + 1}/${ACTS.length} · ${a.name}` : 'PRÁCTICA', 36, 60);
+            const mt = document.getElementById('missionText'); g.fillStyle = '#fff'; g.font = '700 38px Arial'; wrapText(g, (mt && mt.textContent) || (a ? a.text || '' : ''), 36, 115, 950, 44, 3);
             g.fillStyle = '#f5c400'; g.font = '900 72px Arial'; g.fillText(Math.abs(simSpeed).toFixed(0) + ' km/h', 36, 330); g.fillStyle = '#9fb0ff'; g.font = '700 28px Arial'; g.fillText(`LÍMITE ${SIM_CFG.limitFwd} · mástil ${mastM().toFixed(1)} m${spec().reachStages ? ' · reach ' + Math.round(reachM(1) * 100 + reachM(2) * 100) + ' cm' : ''}${spec().clamp ? ' · placas ' + (CLAMP.closed ? 'CERRADAS' : 'abiertas') : ''}`, 36, 375);
             g.fillStyle = '#fff'; g.font = '700 32px Arial'; g.fillText(`⭐ ${simScore} pts · ⚠️ ${faultLog.length} faltas · ${hasLoad ? 'CARGA SUJETA' : 'sin carga'}`, 36, 440); const dist = document.getElementById('missionDist'); if (dist) { g.textAlign = 'right'; g.fillStyle = '#f5c400'; g.font = '900 60px Arial'; g.fillText(dist.textContent, 990, 330); } XR.hudTex.needsUpdate = true; }
         function wrapText(g, text, x, y, maxW, lh, maxLines) { const words = String(text).split(' '); let line = '', lines = 0; for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { g.fillText(line, x, y); y += lh; line = w; if (++lines >= maxLines - 1) { line += '…'; break; } } else line = t; } g.fillText(line, x, y); }
@@ -8233,10 +8262,25 @@
         const VEST_UV = { x0: 0.0, x1: 0.47, y0: 0.66, y1: 1.0 }, VEST_LOGOS = [[0.232, 0.765, 0.13], [0.232, 0.93, 0.15]];   // [u, v, ancho] en fracción del atlas
         let SKIN_IMG = null;
         // Guantes de trabajo amarillos (NOM-017-STPS-2008) pintados sobre la malla de la mano: siguen dedos y muñeca porque usan los pesos de los huesos
+        // Casco ABS (NOM-115-STPS): plástico amarillo brillante con granulado, raspones y calcomanía DICKA al frente (proyectada, no depende de las UV del modelo)
+        function hardHat(scene) { scene.traverse(o => { if (!o.isMesh || !/Helmet/i.test(o.name) || (o.material && o.material.userData.abs)) return;
+                const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'); g.fillStyle = '#f2c200'; g.fillRect(0, 0, 512, 512);
+                const id = g.getImageData(0, 0, 512, 512); for (let i = 0; i < id.data.length; i += 4) { const v = (Math.random() - .5) * 16; id.data[i] += v; id.data[i + 1] += v; id.data[i + 2] += v * .4; } g.putImageData(id, 0, 0);
+                for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(${Math.random() < .6 ? '255,250,225' : '120,90,20'},${0.15 + Math.random() * 0.3})`; g.lineWidth = .6 + Math.random() * 1.6; g.beginPath(); const x = Math.random() * 512, y = Math.random() * 512, a = Math.random() * 6.3, l = 6 + Math.random() * 40; g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }   // raspones
+                for (let i = 0; i < 12; i++) { g.fillStyle = `rgba(90,70,30,${0.06 + Math.random() * 0.08})`; g.beginPath(); g.ellipse(Math.random() * 512, Math.random() * 512, 8 + Math.random() * 30, 4 + Math.random() * 14, Math.random() * 3, 0, 7); g.fill(); }   // polvo y uso
+                const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+                const lc = document.createElement('canvas'); lc.width = 256; lc.height = 128; const l = lc.getContext('2d'); l.fillStyle = '#011131'; l.beginPath(); l.roundRect ? l.roundRect(4, 14, 248, 100, 18) : l.rect(4, 14, 248, 100); l.fill(); l.fillStyle = '#fff'; l.font = '900 56px Arial Black, Arial'; l.textAlign = 'center'; l.fillText('DICKA', 128, 78); l.font = '700 18px Arial'; l.fillText('LOGISTICS', 128, 102);
+                const logo = new THREE.CanvasTexture(lc); logo.encoding = THREE.sRGBEncoding;
+                const P = THREE.MeshPhysicalMaterial || THREE.MeshStandardMaterial; const m = new P({ skinning: !!o.isSkinnedMesh, map: tex, bumpMap: tex, bumpScale: 0.0015, roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.25, envMapIntensity: 1.1 }); m.userData.abs = true;
+                m.onBeforeCompile = sh => { sh.uniforms.uLogo = { value: logo }; sh.vertexShader = 'varying vec3 vHP;\nvarying vec3 vHN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vHP = position; vHN = normal;');
+                    sh.fragmentShader = 'uniform sampler2D uLogo;\nvarying vec3 vHP;\nvarying vec3 vHN;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+                    vec2 lu = vec2((vHP.x + 0.055) / 0.11, (vHP.y - 1.69) / 0.055); if (vHN.z > 0.35 && vHP.z > 0.0 && lu.x > 0.0 && lu.x < 1.0 && lu.y > 0.0 && lu.y < 1.0) { vec4 lc = texture2D(uLogo, lu); diffuseColor.rgb = mix(diffuseColor.rgb, lc.rgb, lc.a); }`); };
+                m.customProgramCacheKey = () => 'abs'; o.material = m; }); }
         function workGloves(scene) { scene.traverse(o => { if (!o.isSkinnedMesh || !o.skeleton || !o.geometry.attributes.skinIndex || o.geometry.attributes.aGlove) return;
                 const hb = o.skeleton.bones.map(b => /Hand/i.test(b.name) ? 1 : 0); if (!hb.some(Boolean)) return; const si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, n = si.count, gw = new Float32Array(n);
                 for (let i = 0; i < n; i++) gw[i] = hb[si.getX(i)] * sw.getX(i) + hb[si.getY(i)] * sw.getY(i) + hb[si.getZ(i)] * sw.getZ(i) + hb[si.getW(i)] * sw.getW(i);
-                o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); const m = o.material; if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
+                let mx = 0; for (let i = 0; i < n; i++) if (gw[i] > mx) mx = gw[i]; const m = o.material; if (mx < 0.5 || !m || Array.isArray(m) || !m.map) return;   // solo la malla que contiene las manos (con textura); el casco y otras piezas no se tocan
+                o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
                 m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nvarying float vGlove;\nvarying float vPalm;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGlove = aGlove; vPalm = smoothstep(-0.15, -0.55, normalize(objectNormal).y);');
                     sh.fragmentShader = 'varying float vGlove;\nvarying float vPalm;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
                     float gk = smoothstep(0.003, 0.03, vGlove); if (gk > 0.0) { vec2 gu = vUv * vec2(1400.0, 2600.0); float rib = abs(sin(gu.x)); float loopv = abs(sin(gu.y + (sin(gu.x * 0.5) > 0.0 ? 1.57 : 0.0)));
@@ -8262,12 +8306,12 @@
                 VEST_LOGOS.forEach(([u, v, w]) => { const lw = w * c.width, lh = lw * logo.height / logo.width; g.drawImage(logo, u * c.width - lw / 2, v * c.height - lh / 2, lw, lh); });
                 const t = new THREE.CanvasTexture(c); t.flipY = m.map.flipY; t.encoding = THREE.sRGBEncoding; t.wrapS = m.map.wrapS; t.wrapT = m.map.wrapT; t.anisotropy = 4; m.map = t; m.needsUpdate = true; });
             done(); }; logo.onerror = () => done(); logo.src = LOGO_DATA_W; }; }); }
-        function loadOperarioLod() { if (GLTF_LOD.tried || !THREE.GLTFLoader) return; GLTF_LOD.tried = true; const urls = GLTF_AVATAR.urls.map(u => u.replace('operario.glb', 'operario_lod.glb')); const tryUrl = i => { if (i >= urls.length) return; new THREE.GLTFLoader().load(urls[i], g => { workGloves(g.scene); dickaVest(g.scene); GLTF_LOD.gltf = g; console.log('[SIM] Avatar glTF ligero cargado'); }, undefined, () => tryUrl(i + 1)); }; tryUrl(0); }
+        function loadOperarioLod() { if (GLTF_LOD.tried || !THREE.GLTFLoader) return; GLTF_LOD.tried = true; const urls = GLTF_AVATAR.urls.map(u => u.replace('operario.glb', 'operario_lod.glb')); const tryUrl = i => { if (i >= urls.length) return; new THREE.GLTFLoader().load(urls[i], g => { hardHat(g.scene); workGloves(g.scene); dickaVest(g.scene); GLTF_LOD.gltf = g; console.log('[SIM] Avatar glTF ligero cargado'); }, undefined, () => tryUrl(i + 1)); }; tryUrl(0); }
         const GLTF_AVATAR = { url: 'assets/models/operario.glb', urls: ['assets/models/operario.glb', 'juegos/assets/models/operario.glb', '/juegos/assets/models/operario.glb', '/assets/models/operario.glb'], gltf: null, tried: false, clips: {}, scale: 1, ok: false };
         function loadOperarioModel() { return new Promise(res => { if (GLTF_AVATAR.tried || !THREE.GLTFLoader) { res(GLTF_AVATAR.ok); return; } GLTF_AVATAR.tried = true; if (location.protocol === 'file:' && !/\/juegos\//.test(location.pathname)) { res(false); return; }
             const tryUrl = (i) => { if (i >= GLTF_AVATAR.urls.length) { console.info('[SIM] Sin operario.glb en ninguna ruta: se usa el avatar procedural v5'); res(false); return; } new THREE.GLTFLoader().load(GLTF_AVATAR.urls[i], g => onLoad0(g), undefined, () => tryUrl(i + 1)); };
             loadOperarioLod();
-            const onLoad0 = g => { workGloves(g.scene); dickaVest(g.scene).then(() => onLoad(g)); };
+            const onLoad0 = g => { hardHat(g.scene); workGloves(g.scene); dickaVest(g.scene).then(() => onLoad(g)); };
             const onLoad = g => { GLTF_AVATAR.gltf = g; g.scene.updateMatrixWorld(true); let h = 0; let headB = null, footB = null; g.scene.traverse(o => { if (o.isBone) { if (/Head$/i.test(o.name) && !/End/i.test(o.name)) headB = o; if (/(LeftFoot|RightFoot|LeftToeBase)$/i.test(o.name) && !footB) footB = o; } }); if (headB) { const hp = new THREE.Vector3(); headB.getWorldPosition(hp); const fp = new THREE.Vector3(); if (footB) footB.getWorldPosition(fp); h = (hp.y - Math.min(fp.y, 0)) + 0.13; }   // altura por huesos: la caja de un SkinnedMesh no considera la escala de la armadura
                 if (!(h > 0.2)) { const box = new THREE.Box3().setFromObject(g.scene); h = box.max.y - box.min.y || 1.8; } GLTF_AVATAR.scale = 1.74 / h; { let sc = 1; g.scene.traverse(o => { if (o.isSkinnedMesh && sc === 1) { const v = new THREE.Vector3(); o.getWorldScale(v); sc = v.x || 1; } }); GLTF_AVATAR.rigScale = sc / GLTF_AVATAR.scale; }
                 g.animations.forEach(c => { const n = c.name.toLowerCase(); if (/walk/.test(n)) GLTF_AVATAR.clips.walk = c; else if (/idle|stand/.test(n)) GLTF_AVATAR.clips.idle = c; else if (/wave/.test(n)) GLTF_AVATAR.clips.wave = c; else if (/sit|seat|driv/.test(n)) GLTF_AVATAR.clips.sit = c; });
@@ -8912,6 +8956,67 @@
             { id: 'estacionar', name: 'Estacionamiento en zona de baterías', icon: '🔋', text: 'Estaciona en la zona azul: horquillas abajo, reach retraído y detenido 2 s', type: 'park',
               goal: { x: 22.5, z: 40.5, r: 2.2 } }
         ];
+        // ====== Fichas de misión: qué hacer, paso a paso, con los controles exactos (teclado · pantalla · joystick) ======
+        const K = (kb, scr, joy) => `<kbd>${kb}</kbd> · pantalla <kbd>${scr}</kbd>${joy ? ' · joystick <kbd>' + joy + '</kbd>' : ''}`;
+        const CTL = { fwd: K('W', 'palanca ↑', 'palanca adelante'), back: K('S', 'palanca ↓', 'palanca atrás'), turn: K('A / D', 'palanca ← →', 'palanca lados'), up: K('Q', '▲', 'botón 5'), down: K('E', '▼', 'botón 6'), reach: K('X', 'EXTENDER / RETRAER', 'botón 3 / 4'), grab: K('Espacio', 'AGARRAR / SOLTAR', 'botón pulgar'), horn: K('H', '📣 claxon', 'gatillo'), cam: '<kbd>C</kbd> cambia de cámara' };
+        const BRIEF = {
+            inspeccion: { goal: 'Revisar el montacargas ANTES de usarlo y detectar la falla que tiene hoy.', steps: [
+                'Primero confirma que cada control responde (pantalla "Verificación de controles"): mueve la palanca, sube y baja el mástil, extiende el reach, toca el claxon.',
+                'En la lista de inspección revisa punto por punto y marca <b>Cumple</b>, <b>No cumple</b> o <b>N/A</b>.',
+                'Hay UNA falla escondida en el equipo: márcala como <b>No cumple</b>.',
+                'Usa N/A solo en lo que de verdad no aplica a tu equipo.',
+                'Presiona <b>Terminar inspección</b>.'], fail: 'No detectar la falla (marcarla Cumple o N/A) reprueba la práctica: nunca se opera un equipo con falla.' },
+            piso: { goal: 'Mover una tarima del piso al área de STAGING amarilla.', steps: [
+                'Sigue la columna de luz amarilla: marca dónde está la tarima. Avanza con ' + '__fwd__' + ' y gira con ' + '__turn__' + '.',
+                'Llega DE FRENTE a la tarima, centrado, con las horquillas abajo (a ras de piso) y a menos de 3 km/h.',
+                'Mete las horquillas por debajo hasta que la tarima toque el respaldo. Si tu equipo es reach, extiende con ' + '__reach__' + '.',
+                'Agarra con ' + '__grab__' + ' y sube un poco (10–15 cm) con ' + '__up__' + '.',
+                'Retrae el reach y viaja con la carga baja hacia el STAGING (la columna amarilla se mueve ahí).',
+                'Dentro del STAGING detente, baja la tarima al piso con ' + '__down__' + ' y suelta con ' + '__grab__' + '.',
+                'Retrocede despacio con ' + '__back__' + ' para sacar las horquillas.'], fail: 'Reprueba: chocar, atropellar, tirar la carga o volcar. Resta puntos: exceso de velocidad, viajar con carga alta, pasar cerca de peatones.' },
+            rack2: { goal: 'Estibar la tarima en la ubicación EXACTA del rack (caja verde transparente).', steps: [
+                'Toma la tarima marcada por la columna amarilla igual que en la misión anterior (de frente, horquillas abajo, ' + '__grab__' + ').',
+                'Lee la UBICACIÓN que aparece en pantalla (pasillo, rack, nivel) y entra a ese pasillo despacio.',
+                'Detente FRENTE a la caja verde y gira 90° para quedar de frente al rack, centrado.',
+                'Con el equipo DETENIDO sube las horquillas con ' + '__up__' + ' hasta que la tarima quede un poco arriba de la viga (__lvl__, mira la altura en pantalla).',
+                'Extiende el reach con ' + '__reach__' + ' (o avanza muy lento) hasta meter la tarima sobre la viga.',
+                'Baja suavemente con ' + '__down__' + ' hasta que la tarima se apoye y suelta con ' + '__grab__' + '.',
+                'Retrae, baja las horquillas a ras de piso y sal del pasillo en reversa, mirando hacia atrás.'], fail: 'Reprueba: golpear el rack, dejar caer la carga o colocarla fuera de la caja verde. Nunca subas la carga con el equipo en movimiento.' },
+            rack3: { goal: 'Bajar una tarima de un nivel alto del rack y dejarla en RECEPCIÓN (zona verde).', steps: [
+                'Ve al pasillo y ubicación indicados (columna amarilla y código en pantalla).',
+                'Colócate de frente al rack, centrado y detenido.',
+                'Sube las horquillas con ' + '__up__' + ' hasta quedar justo DEBAJO de la tarima (entre los bloques), mira la altura en pantalla.',
+                'Extiende el reach con ' + '__reach__' + ' para meter las horquillas por completo.',
+                'Sube un poco para despegarla de la viga y agarra con ' + '__grab__' + '.',
+                'Retrae el reach para sacarla del rack y BAJA la carga casi al piso ANTES de moverte.',
+                'Lleva la tarima a RECEPCIÓN, bájala al piso y suelta con ' + '__grab__' + '.'], fail: 'Reprueba: tirar la carga, golpear el rack o viajar con la carga elevada.' },
+            peatonal: { goal: 'Cruzar el paso peatonal de forma segura.', steps: [
+                'Avanza hacia la línea blanca de ALTO (señal roja de alto a la derecha).',
+                'Haz ALTO TOTAL antes de la línea (velocidad 0) al menos 1 segundo.',
+                'Mira a ambos lados; si hay peatones, espera a que crucen.',
+                'Toca el claxon con ' + '__horn__' + ' y cruza la zona verde a MENOS de 3 km/h.',
+                'Llega al punto marcado por la columna amarilla y detente.'], fail: 'Resta puntos: no hacer alto total, cruzar rápido o con peatones en la zona. Atropellar reprueba.' },
+            trailer: { goal: 'Cargar la tarima del STAGING al FONDO de la caja del tráiler por el ANDÉN 3.', steps: [
+                'Toma la tarima del STAGING (de frente, horquillas abajo, ' + '__grab__' + ').',
+                'Ve al ANDÉN 3 y detente antes de la rampa.',
+                'Toca el claxon con ' + '__horn__' + ' ANTES de entrar a la caja.',
+                'Entra derecho y muy despacio (menos de 5 km/h) con la carga baja.',
+                'Avanza hasta el fondo de la caja (columna amarilla), baja la tarima al piso con ' + '__down__' + ' y suelta con ' + '__grab__' + '.',
+                'Sal en reversa, despacio y en línea recta.'], fail: 'Resta puntos: no tocar el claxon, entrar rápido o chocar con las paredes de la caja.' },
+            estacionar: { goal: 'Dejar el equipo estacionado de forma segura en la zona azul de baterías.', steps: [
+                'Ve a la zona azul ESTACIONAR (columna amarilla).',
+                'Dentro de la zona baja las horquillas al piso con ' + '__down__' + '.',
+                'Retrae el reach con ' + '__reach__' + ' (si está extendido).',
+                'Detente por completo y espera 2 segundos sin moverte.'], fail: 'No cuenta si las horquillas quedan arriba, el reach extendido o el equipo en movimiento.' }
+        };
+        function showBrief(i, onGo) { const a = ACTS[i], b = BRIEF[a.id]; if (!b) { onGo && onGo(); return; }
+            const lvl = a.drop && a.drop.level !== undefined ? '≈ ' + (a.drop.level + 0.15).toFixed(1) + ' m' : 'unos cm arriba de la viga'; const fill = t => t.replace(/__(\w+)__/g, (m, k) => k === 'lvl' ? lvl : (CTL[k] || m));
+            document.getElementById('briefHead').innerHTML = `MISIÓN ${i + 1} DE ${ACTS.length} · ${a.icon} ${a.name}<small>Lee los pasos y presiona COMENZAR. Puedes volver a verlos tocando la tarjeta de misión (arriba).</small>`;
+            document.getElementById('briefBody').innerHTML = `<div class="goal">🎯 ${b.goal}${a.locCode ? '<br>📍 Ubicación: ' + a.locCode : ''}</div><h4>Paso a paso</h4><ol>${b.steps.map(t => '<li>' + fill(t) + '</li>').join('')}</ol>
+                <h4>Cuidado</h4><div class="fail">⛔ ${b.fail}</div><h4>Controles útiles</h4><div class="all">${CTL.cam} · velocidad máxima ${SIM_CFG.limitFwd} km/h · respeta pasillos peatonales amarillos.</div>
+                <h4>Tu práctica completa</h4><div class="all">${ACTS.map((x, j) => `<span class="${j === i ? 'cur' : ''}">${j + 1}. ${x.name}${j < i ? ' ✓' : ''}</span>`).join(' · ')}</div>
+                <button class="brief-go" id="briefGo">▶ COMENZAR MISIÓN ${i + 1}</button>`;
+            const el = document.getElementById('brief'); el.classList.add('open'); const go = document.getElementById('briefGo'); if (QUEST.mode && !XR.active && a.type !== 'checklist') go.textContent = '🥽 ENTRAR A VR Y COMENZAR MISIÓN ' + (i + 1); go.onclick = () => { el.classList.remove('open'); if (QUEST.mode && !XR.active && a.type !== 'checklist') xrEnter(); onGo && onGo(); }; }
         const results = [];   // {name, score, ok, faults, secs}
         // Catálogo de errores críticos (editable): cualquiera de ellos impide aprobar la actividad y la práctica
         const CRITICAL_FAULTS = ['colision', 'atropello', 'volcadura', 'inspeccion', 'caidaCarga'];
@@ -8954,11 +9059,11 @@
         function showMissionCard(ms = 6000) { document.body.classList.remove('minihud'); clearTimeout(miniT); miniT = setTimeout(() => document.body.classList.add('minihud'), ms); }
         function missionFloat(text, ms = 3500) { const el = document.getElementById('missionFloat'); if (!el) return; el.textContent = text; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), ms); }
         function toggleActs() { if (document.body.classList.contains('minihud')) { showMissionCard(7000); return; } const p = document.getElementById('actsPanel'); p.classList.toggle('open'); renderActs(); }
-        function renderActs() { document.getElementById('actsPanel').innerHTML = ACTS.map((a, i) => `<div class="${i === actIdx ? 'cur' : i < actIdx ? 'done' : ''}"><span>${a.icon} ${i + 1}. ${a.name}</span><b>${i < actIdx ? (results[i] ? results[i].score + '%' : '✓') : i === actIdx ? '▶' : '·'}</b></div>`).join(''); }
+        function renderActs() { document.getElementById('actsPanel').innerHTML = `<button class="brief-go" style="margin:0 0 .5rem;padding:.5rem;font-size:13px" onclick="event.stopPropagation();document.getElementById('actsPanel').classList.remove('open');showBrief(actIdx)">📋 VER PASOS DE LA MISIÓN ACTUAL</button>` + ACTS.map((a, i) => `<div class="${i === actIdx ? 'cur' : i < actIdx ? 'done' : ''}"><span>${a.icon} ${i + 1}. ${a.name}</span><b>${i < actIdx ? (results[i] ? results[i].score + '%' : '✓') : i === actIdx ? '▶' : '·'}</b></div>`).join(''); }
         function beginAct(i) {
             actBusy = false; actIdx = i; actStartFaults = faultLog.length; actStartTime = Date.now(); stillFrames = 0; stoppedBeforeCross = false; missionStep = 1;
             const a = ACTS[i]; if (!a) return;
-            if (a.type === 'checklist') { if (!CC.shownOnce) { CC.shownOnce = true; showCtrlCheck(); } else showChecklist(); return; }
+            if (a.type === 'checklist') { showBrief(i, () => { if (!CC.shownOnce) { CC.shownOnce = true; showCtrlCheck(); } else showChecklist(); }); return; }
             if (spec().clamp && a.type === 'move' && a.id !== 'rack2' && a.id !== 'rack3') { a.text = a.text.replace(/tarima/gi, 'espacio doble de línea blanca (2 piezas)').replace(/retrae|extiende/gi, 'abre/cierra las placas'); }
             if (spec().clamp) { if (a.id === 'rack2') a.name = 'Estiba en bahía de piso'; if (a.id === 'rack3') a.name = 'Retiro de bahía de piso'; } else { if (a.id === 'rack2') a.name = 'Estiba en ubicación exacta'; if (a.id === 'rack3') a.name = 'Retiro de ubicación exacta'; }
             if (a.id === 'trailer') { trailerHonked = false; trailerEntered = false; trailerFast = false; trailerWarned = false; }
@@ -8969,7 +9074,7 @@
             slotMarker.visible = !!(a.drop && a.drop.slot); if (slotMarker.visible) slotMarker.position.set(a.drop.x, a.drop.level + 0.7, a.drop.z); if (a.id !== 'rack2' && a.id !== 'rack3' && slotLabel) slotLabel.visible = false; else if (slotLabel) slotLabel.visible = true;
             const b = document.getElementById('faultToast'); showBanner(`ACTIVIDAD ${i + 1}/${ACTS.length} · ${a.icon} ${a.name}`);
             showMissionCard(6500); if (a.locCode) missionFloat('📍 Ubicación: ' + a.locCode, 5000);
-            renderActs();
+            renderActs(); showBrief(i);
         }
         function showBanner(msg) { const t = document.getElementById('faultToast'); t.innerHTML = msg; t.style.background = '#2138D3'; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => { t.classList.remove('show'); t.style.background = ''; }, 2600); }
         function completeAct(extraScore) {
@@ -9031,8 +9136,10 @@
             const a = ACTS[actIdx]; if (!a || actBusy) return;
             let target = null, dist = 0, txt = a.text;
             if (a.type === 'move') {
-                if (!hasLoad) { target = cargo.position; txt = missionStep === 1 ? `Ve a la tarima (${a.spawn.y > 1 ? 'nivel 3, sube horquillas a ~4 m' : 'piso'}) y AGARRA` : txt; }
-                else { target = a.drop; txt = `Lleva la tarima a ${a.drop.label}` + (a.drop.slot ? ' · sube a ~2.3 m y extiende' : ' · horquillas abajo'); }
+                if (!hasLoad) { target = cargo.position; const dd = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z); const hi = a.spawn.y > 1;
+                    txt = dd > 6 ? `PASO 1 · Ve a la columna amarilla (tarima ${hi ? 'en rack, nivel alto' : 'en piso'})` : hi ? (mastM() < a.spawn.y - 0.35 ? 'PASO 2 · De frente y DETENIDO: sube horquillas (Q / ▲) hasta debajo de la tarima' : 'PASO 3 · Extiende (X) y AGARRA (Espacio)') : 'PASO 2 · De frente, horquillas al piso: entra despacio y AGARRA (Espacio)'; }
+                else { target = a.drop; const dd = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z);
+                    txt = dd > 5 ? `PASO 4 · Carga baja: lleva la tarima a ${a.drop.label}` : a.drop.slot ? (mastM() < a.drop.yMin ? `PASO 5 · Detenido y de frente: sube (Q / ▲) a ≈ ${(a.drop.yMin + 0.13).toFixed(1)} m` : 'PASO 6 · Extiende (X), baja suave (E / ▼) y SUELTA (Espacio)') : `PASO 5 · Detente en ${a.drop.label}, baja al piso (E / ▼) y SUELTA (Espacio)`; }
             } else if (a.type === 'cross' || a.type === 'park') target = a.goal;
             if (target) dist = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z);
             // ---- cruce peatonal ----
