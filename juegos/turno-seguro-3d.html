@@ -7736,7 +7736,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.05 · v9.1 guantes';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.05 · v9.2 guante tejido amarillo';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8276,16 +8276,18 @@
                 // Guante tipo mecánico (referencia "gription"): dorso sintético amarillo, palma negra con puntos de silicón, puntas y nudillos negros, puño negro con ajuste y ribete amarillo
                 m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nattribute float aTip;\nattribute float aKn;\nvarying float vGlove;\nvarying float vPalm;\nvarying float vTip;\nvarying float vKn;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGlove = aGlove; vTip = aTip; vKn = aKn; vPalm = smoothstep(-0.1, -0.5, normalize(objectNormal).y);');
                     sh.fragmentShader = 'varying float vGlove;\nvarying float vPalm;\nvarying float vTip;\nvarying float vKn;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-                    float gk = smoothstep(0.003, 0.03, vGlove); if (gk > 0.0) { vec2 gu = vUv * 2200.0; float grain = fract(sin(dot(floor(gu), vec2(12.9898, 78.233))) * 43758.5453);
-                      vec3 yel = vec3(0.92, 0.66, 0.05) * (0.9 + 0.1 * grain);                                   // sintético amarillo del dorso
-                      vec3 blk = vec3(0.05, 0.05, 0.055) * (0.85 + 0.3 * grain);                                // material negro
-                      vec2 dg = fract(vUv * vec2(900.0, 900.0)) - 0.5; float dot_ = 1.0 - smoothstep(0.18, 0.26, length(dg)); vec3 palm = mix(blk, vec3(0.28, 0.29, 0.31), dot_ * 0.9);   // puntos de silicón
-                      vec3 col = yel; col = mix(col, blk, smoothstep(0.35, 0.6, vKn) * (1.0 - vPalm));         // nudillos acolchados
-                      col = mix(col, blk, smoothstep(0.3, 0.55, vTip));                                         // puntas reforzadas
-                      col = mix(col, palm, vPalm * smoothstep(0.25, 0.5, vGlove + vTip));                       // palma
-                      float cuff = 1.0 - smoothstep(0.18, 0.3, vGlove); col = mix(col, blk, cuff);               // puño negro
-                      float trim = smoothstep(0.16, 0.18, vGlove) * (1.0 - smoothstep(0.2, 0.22, vGlove)); col = mix(col, yel * 1.05, trim);   // ribete del ajuste
-                      diffuseColor.rgb = mix(diffuseColor.rgb, col, gk); }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix(roughnessFactor, mix(0.55, 0.85, vPalm), smoothstep(0.003, 0.03, vGlove));'); };
+                    float gk = smoothstep(0.003, 0.03, vGlove); if (gk > 0.0) {
+                      // Guante tejido amarillo (referencia DICKA): punto de algodón jaspeado, palma con chevrones de PVC negro, puño acanalado con orilla negra
+                      vec2 gu = vUv * vec2(1500.0, 2600.0); float rib = abs(sin(gu.x)); float loopv = abs(sin(gu.y + (sin(gu.x * 0.5) > 0.0 ? 1.57 : 0.0))); float knit = 0.70 + 0.30 * rib * (0.55 + 0.45 * loopv);
+                      float hz = fract(sin(dot(floor(vUv * vec2(260.0, 90.0)), vec2(12.9898, 78.233))) * 43758.5453);   // jaspeado del hilo
+                      vec3 blue = mix(vec3(0.78, 0.55, 0.03), vec3(0.95, 0.72, 0.08), hz) * knit;   // hilo amarillo jaspeado
+                      vec2 cv = vUv * vec2(520.0, 340.0); vec2 cc = fract(cv) - 0.5; float vy = abs(cc.x) * 0.9 - cc.y * 0.9;   // chevrón en "Y": dos brazos y un tallo
+                      float arms = (1.0 - smoothstep(0.06, 0.11, abs(vy - 0.05))) * step(abs(cc.x), 0.42); float stem = (1.0 - smoothstep(0.05, 0.09, abs(cc.x))) * step(cc.y, 0.0) * step(-0.38, cc.y);
+                      float pvc = clamp(arms + stem, 0.0, 1.0) * vPalm * smoothstep(0.3, 0.55, vGlove + vTip);
+                      vec3 col = mix(blue, vec3(0.03, 0.03, 0.035), pvc);
+                      float cuffRib = 1.0 - smoothstep(0.16, 0.3, vGlove); col *= mix(1.0, 0.85 + 0.15 * abs(sin(vUv.x * 2600.0)), cuffRib);   // puño acanalado
+                      float edge = 1.0 - smoothstep(0.012, 0.045, vGlove); col = mix(col, vec3(0.04, 0.04, 0.05), edge);   // orilla negra (overlock)
+                      diffuseColor.rgb = mix(diffuseColor.rgb, col, gk); }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix(roughnessFactor, 0.95, smoothstep(0.003, 0.03, vGlove));'); };
                 m.customProgramCacheKey = () => 'glove'; m.needsUpdate = true; }); }
         function dickaVest(scene) { return new Promise(done => { const skin = new Image(); skin.onload = () => { SKIN_IMG = skin; go(); }; skin.onerror = () => go(); skin.src = 'assets/textures/piel.jpg'; const go = () => { const logo = new Image(); logo.onload = () => { const seen = new Set();
             scene.traverse(o => { if (!o.isMesh || !o.material || !o.material.map || !o.material.map.image || seen.has(o.material.map)) return; const m = o.material, img = m.map.image; seen.add(m.map); if (!/body/i.test(m.name || '')) return;
