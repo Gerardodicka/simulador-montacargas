@@ -997,7 +997,7 @@
                     <div class="kmh"><span id="kmh">0</span><small>KM/H</small></div>
                 </div>
 
-                <button class="back-btn" onclick="backToMenu()" style="position:absolute; top:12px; left:12px; z-index:6; background:#011131;">← MENÚ</button>
+                <button class="back-btn" onclick="backToMenu()" style="position:absolute; top:12px; left:12px; z-index:6; background:#011131;">← MENÚ</button><button class="back-btn" onclick="goHome()" style="position:absolute; top:12px; left:118px; z-index:6; background:#2138D3;">🏠 INICIO</button>
 
                 <!-- Misión -->
                 <div class="mission" id="mission" onclick="toggleActs()">
@@ -7227,14 +7227,31 @@
         // Joystick de cabina (control multifunción) + barra de sujeción izquierda; se inclina con la entrada y se ancla bajo las manos del operador
         function buildCabinJoystick(target, sp) { const seated = !sp.stand; const jg = new THREE.Group(); jg.name = 'cabinJoystick';
                 const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .6, metalness: .2 }, o || {}));
-                const base = new THREE.Mesh(new THREE.CylinderGeometry(.075, .085, .03, 18), M(0x1a1a1a)); jg.add(base);
-                const console_ = new THREE.Mesh(new THREE.BoxGeometry(.22, .05, .16), M(0x2b2f36)); console_.position.set(0, -.03, 0); jg.add(console_);
+                const C = h => new THREE.Color(h).convertSRGBToLinear(); const T = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t; };
+                // consola: base con apoyabrazos acolchado, panel de funciones con pictogramas, pantalla, llave y paro de emergencia
+                const shell = new THREE.Mesh(new THREE.BoxGeometry(.26, .06, .2), M(C(0x2b2f36), { roughness: .5, metalness: .3 })); shell.position.set(0, -.035, 0); jg.add(shell);
+                const pad = new THREE.Mesh(new THREE.BoxGeometry(.1, .035, .2), M(C(0x111111), { roughness: .95 })); pad.position.set(-.085, .008, .0); jg.add(pad);   // apoyabrazos
+                const panelTex = T(256, 128, (g, w, h) => { g.fillStyle = '#1b1f26'; g.fillRect(0, 0, w, h); const icons = [['▲', 'SUBIR'], ['▼', 'BAJAR'], ['⇥', 'REACH'], ['⤢', 'INCL.'], ['⇆', 'DESPL.'], ['📣', 'CLAXON']];
+                    icons.forEach(([ic, tx], i) => { const x = 10 + (i % 3) * 82, y = 8 + Math.floor(i / 3) * 60; g.fillStyle = '#3a404b'; g.beginPath(); g.roundRect ? g.roundRect(x, y, 72, 52, 8) : g.rect(x, y, 72, 52); g.fill(); g.fillStyle = '#f5c400'; g.font = '900 24px Arial'; g.textAlign = 'center'; g.fillText(ic, x + 36, y + 28); g.fillStyle = '#fff'; g.font = '700 11px Arial'; g.fillText(tx, x + 36, y + 46); }); });
+                const panel = new THREE.Mesh(new THREE.PlaneGeometry(.11, .055), new THREE.MeshStandardMaterial({ map: panelTex, roughness: .5 })); panel.rotation.x = -Math.PI / 2 + .35; panel.position.set(.075, .006, -.04); jg.add(panel);
+                const scrTex = T(256, 128, (g, w, h) => { g.fillStyle = '#04121f'; g.fillRect(0, 0, w, h); g.strokeStyle = '#1D2586'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6); g.fillStyle = '#8ff0b0'; g.font = '900 34px Arial'; g.fillText('0.0 km/h', 16, 50); g.fillStyle = '#9fb0ff'; g.font = '700 18px Arial'; g.fillText('ALT 0.00 m', 16, 82); g.fillText('🔋', 170, 82); g.fillStyle = '#2e9e5b'; g.fillRect(16, 96, 180, 14); g.fillStyle = '#fff'; g.font = '700 12px Arial'; g.fillText('RAYMOND · 85%', 200, 108); });
+                const scr = new THREE.Mesh(new THREE.PlaneGeometry(.085, .043), new THREE.MeshBasicMaterial({ map: scrTex })); scr.rotation.x = -Math.PI / 2 + .9; scr.position.set(.075, .03, .065); jg.add(scr);
+                const scrBox = new THREE.Mesh(new THREE.BoxGeometry(.095, .05, .02), M(C(0x15181d))); scrBox.rotation.x = .9 - Math.PI / 2 + Math.PI / 2; scrBox.position.set(.075, .025, .073); jg.add(scrBox);
+                const estop = new THREE.Group(); const ey = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .012, 16), M(C(0xf5c400))); estop.add(ey); const mush = new THREE.Mesh(new THREE.SphereGeometry(.018, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(C(0xc8102e), { roughness: .35 })); mush.position.y = .006; estop.add(mush); estop.position.set(.115, .0, -.085); jg.add(estop);   // paro de emergencia
+                const key = new THREE.Mesh(new THREE.CylinderGeometry(.009, .009, .01, 12), M(C(0xc9ccd2), { metalness: .9, roughness: .3 })); key.position.set(.04, .0, -.085); jg.add(key); const kb = new THREE.Mesh(new THREE.BoxGeometry(.016, .022, .004), M(C(0x111111))); kb.position.set(.04, .016, -.085); jg.add(kb);   // llave de encendido
+                // palanca multifunción: fuelle de hule, eje cromado y empuñadura ergonómica con botones de pulgar, gatillo y presencia (hombre muerto)
                 const lever = new THREE.Group(); lever.name = 'lever'; jg.add(lever);
-                const boot = new THREE.Mesh(new THREE.CylinderGeometry(.03, .06, .06, 14), M(0x111111, { roughness: .95 })); boot.position.y = .035; lever.add(boot);
-                const stick = new THREE.Mesh(new THREE.CylinderGeometry(.014, .016, .16, 12), M(0x3a3a3a)); stick.position.y = .13; lever.add(stick);
-                const knob = new THREE.Mesh(new THREE.SphereGeometry(.036, 16, 12), M(0xc8102e, { roughness: .4 })); knob.scale.set(1, 1.25, .9); knob.position.y = .235; lever.add(knob);
-                [[-.02, .255, .02, 0xf5c400], [.02, .255, .02, 0x2138D3], [0, .27, -.02, 0x2e9e5b]].forEach(([x, y, z, c]) => { const b = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, .006, 10), M(c)); b.position.set(x, y, z); lever.add(b); });
-                const trig = new THREE.Mesh(new THREE.BoxGeometry(.016, .03, .012), M(0x1a1a1a)); trig.position.set(0, .215, .034); lever.add(trig);
+                const rubber = M(C(0x0d0d0d), { roughness: .95 }); for (let i = 0; i < 5; i++) { const r = .045 - i * .005; const ring = new THREE.Mesh(new THREE.TorusGeometry(r, .008, 8, 20), rubber); ring.rotation.x = Math.PI / 2; ring.position.y = .012 + i * .013; lever.add(ring); }   // fuelle
+                const collar = new THREE.Mesh(new THREE.CylinderGeometry(.018, .022, .012, 14), M(C(0x2b2b2b), { metalness: .5 })); collar.position.y = .075; lever.add(collar);
+                const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.011, .013, .07, 14), M(C(0xd9dde3), { metalness: 1, roughness: .18 })); shaft.position.y = .115; lever.add(shaft);   // eje cromado
+                const prof = [[0, 0], [.022, 0], [.027, .02], [.025, .05], [.029, .08], [.031, .1], [.026, .118], [.012, .128], [0, .13]].map(([x, y]) => new THREE.Vector2(x, y));
+                const grip = new THREE.Mesh(new THREE.LatheGeometry(prof, 22), M(C(0x1c1d21), { roughness: .75 })); grip.scale.set(1, 1, .82); grip.position.y = .15; lever.add(grip);   // empuñadura
+                for (let i = 0; i < 4; i++) { const gr = new THREE.Mesh(new THREE.TorusGeometry(.026, .003, 6, 18, Math.PI), M(C(0x08090a), { roughness: 1 })); gr.rotation.y = Math.PI / 2; gr.position.set(0, .175 + i * .016, .0); gr.scale.z = .82; lever.add(gr); }   // estrías de agarre al frente
+                const cap = new THREE.Mesh(new THREE.SphereGeometry(.03, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(C(0xc8102e), { roughness: .35 })); cap.scale.set(1, .55, .85); cap.position.y = .272; lever.add(cap);   // tapa roja Raymond
+                const thumb = new THREE.Mesh(new THREE.BoxGeometry(.03, .008, .018), M(C(0x3a3a3a))); thumb.position.set(0, .283, -.006); thumb.rotation.x = -.25; lever.add(thumb);   // rocker de pulgar (subir/bajar)
+                [[-.012, 0xf5c400], [.012, 0x2138D3]].forEach(([x, c]) => { const b = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .005, 12), M(C(c), { roughness: .4 })); b.position.set(x, .27, -.024); b.rotation.x = -.6; lever.add(b); });   // botones reach / claxon
+                const trig = new THREE.Mesh(new THREE.BoxGeometry(.018, .035, .012), M(C(0x111111))); trig.position.set(0, .235, .03); trig.rotation.x = .2; lever.add(trig);   // gatillo
+                const dead = new THREE.Mesh(new THREE.BoxGeometry(.022, .034, .005), M(C(0xf5c400), { roughness: .6 })); dead.position.set(0, .2, -.027); lever.add(dead);   // sensor de presencia (palma)
                 if (seated) { jg.position.set(0.34, 1.2, -1.15); jg.rotation.z = -0.12; setTimeout(() => supportControls(target, 1.0), 0); }   // apoyabrazos derecho con soporte hasta el asiento
                 else if (sp.type === 'Reach' || sp.type === 'Double Reach') { jg.position.set(-0.42, 1.12, -0.05); jg.rotation.y = -Math.PI / 2; }   // consola de control del reach (operador de costado)
                 else if (sp.type === 'Orderpicker') { jg.position.set(0.3, 1.1, 0.55); }
@@ -7808,7 +7825,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.05 · v8.6 Quest';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.05 · v9.0 recordatorios';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -7870,7 +7887,7 @@
         // Requiere https (Netlify) y el navegador del visor. El operador va "sentado/de pie" en el equipo: el rig XR se ancla al punto del operador y
         // gira con el equipo; la cabeza del usuario mira libremente. Controles Touch: stick izq = avanzar/girar · stick der = mástil (↕) y reach/placas (↔)
         // gatillo der = agarrar/soltar · gatillo izq = claxon · A = cámara (altura del asiento) · B = cerrar/abrir placas · X = reiniciar práctica · Y = menú.
-        const XR = { rig: null, hud: null, hudCtx: null, hudTex: null, ctrl: [null, null], supported: false, active: false, seatHeight: 0, ray: null };
+        const XR = { view: 'cabina', rig: null, hud: null, hudCtx: null, hudTex: null, ctrl: [null, null], supported: false, active: false, seatHeight: 0, ray: null };
         // ---- Modo META QUEST (independiente del VR de celular): los controles Touch solo existen dentro de la sesión WebXR, por eso no aparecen
         // en la verificación de joystick USB. Aquí se verifican en el panel de VR y el resto de la práctica se maneja con ellos.
         const IS_QUEST = /OculusBrowser|Quest|Oculus/i.test(navigator.userAgent);
@@ -7890,7 +7907,7 @@
             try { const session = await navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] });
                 renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor'); renderer.xr.setFramebufferScaleFactor(0.9); await renderer.xr.setSession(session);
                 XR.active = true; document.body.classList.add('xr'); { const qt = document.getElementById('questTop'); if (qt) qt.style.display = 'none'; } xrBuildRig(); if (window.sunLight) { window.sunLight.shadow.mapSize.set(1024, 1024); if (window.sunLight.shadow.map) { window.sunLight.shadow.map.dispose(); window.sunLight.shadow.map = null; } }   // Quest 3S: sombra 1024 y framebuffer 0.9 para mantener 72 fps session.addEventListener('end', () => { XR.active = false; document.body.classList.remove('xr'); if (XR.rig) { XR.rig.remove(camera); scene.add(camera); } renderer.setAnimationLoop(null); const op = forklift && (forklift.getObjectByName('operator') || forklift.getObjectByName('platform')); if (op) op.visible = true; requestAnimationFrame(animateSimulator); toast('Saliste de VR'); });
-                renderer.setAnimationLoop(animateSimulator); toast('🥽 VR activa · stick izq mover · stick der mástil/reach · gatillo der agarrar · gatillo izq claxon'); }
+                renderer.setAnimationLoop(animateSimulator); toast('🥽 VR activa · stick izq mover · stick der mástil/reach · gatillo der agarrar · gatillo izq claxon · Y cambiar vista'); }
             catch (e) { toast('No se pudo iniciar VR: ' + e.message); } }
         function xrBuildRig() { if (!XR.rig) { XR.rig = new THREE.Group(); XR.rig.name = 'xrRig'; scene.add(XR.rig); } XR.rig.add(camera);
             // HUD en el mundo: panel de 0.6×0.3 m a 1.2 m frente al operador, ligeramente abajo
@@ -7898,19 +7915,53 @@
             // Controladores con rayo
             for (let i = 0; i < 2; i++) { if (XR.ctrl[i]) continue; const c = renderer.xr.getController(i); c.userData.index = i; const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -3)]), new THREE.LineBasicMaterial({ color: 0xf5c400 })); line.scale.z = 1; c.add(line); XR.rig.add(c); XR.ctrl[i] = c;
                 c.addEventListener('selectstart', () => xrSelect(c)); } }
-        function xrSelect(c) { if (typeof CS !== 'undefined' && CS.on) { xrPickCS(c); return; } if (c.userData.handedness === 'left') { honk(); return; } hasLoad ? releaseLoad() : grabLoad(); }
+        function xrSelect(c) { if (XR.missPanel && XR.missPanel.visible) { xrMissions(false); return; } if (XR.menu && XR.menu.visible) { xrMenuPick(c); return; } if (typeof CS !== 'undefined' && CS.on) { xrPickCS(c); return; } if (c.userData.handedness === 'left') { honk(); return; } hasLoad ? releaseLoad() : grabLoad(); }
         function xrPoll() { const session = renderer.xr.getSession(); if (!session) return { fwd: 0, turn: 0, mast: 0, reach: 0 }; let fwd = 0, turn = 0, mast = 0, reach = 0;
             for (const src of session.inputSources) { const gp = src.gamepad; if (!gp) continue; const ax = gp.axes; const dz = v => Math.abs(v) < 0.15 ? 0 : v; XR.ctrl.forEach(ct => { if (ct && renderer.xr.getController(ct.userData.index) === ct) {} });
                 const sx = ax.length >= 4 ? (ax[2] || 0) : (ax[0] || 0), sy = ax.length >= 4 ? (ax[3] || 0) : (ax[1] || 0); const trig = gp.buttons[0] && gp.buttons[0].pressed;   // Touch: palanca en ejes 2-3 (xr-standard); otros mandos: 0-1
                 if (src.handedness === 'left') { if (Math.abs(sx) > .5 || Math.abs(sy) > .5) QUEST.cc.ls = true; if (trig) QUEST.cc.lt = true; } if (src.handedness === 'right') { if (Math.abs(sx) > .5 || Math.abs(sy) > .5) QUEST.cc.rs = true; if (trig || (gp.buttons[1] && gp.buttons[1].pressed)) QUEST.cc.rt = true; }
                 if (src.handedness === 'right' && gp.buttons[1] && gp.buttons[1].pressed && !XR.rGrip) { hasLoad ? releaseLoad() : grabLoad(); } if (src.handedness === 'right') XR.rGrip = gp.buttons[1] && gp.buttons[1].pressed;   // botón lateral (grip) derecho = agarrar/soltar también
-                if (src.handedness === 'left') { fwd = -dz(sy); turn = dz(sx); if (gp.buttons[0] && gp.buttons[0].pressed && !XR.lHonk) { honk(); } XR.lHonk = gp.buttons[0] && gp.buttons[0].pressed; if (gp.buttons[4] && gp.buttons[4].pressed && !XR.xBtn) { if (typeof resetPractice === 'function') resetPractice(); } XR.xBtn = gp.buttons[4] && gp.buttons[4].pressed; }
+                const yBtn = src.handedness === 'left' && gp.buttons[5] && gp.buttons[5].pressed, rClick = src.handedness === 'right' && gp.buttons[3] && gp.buttons[3].pressed; if (src.handedness === 'left') { if (yBtn && !XR.yBtn) xrToggleView(); XR.yBtn = yBtn; } if (src.handedness === 'right') { if (rClick && !XR.rClick) xrToggleView(); XR.rClick = rClick; }   // Y (izq) o presionar palanca derecha = cambiar vista
+                if (src.handedness === 'left') { fwd = -dz(sy); turn = dz(sx); if (gp.buttons[0] && gp.buttons[0].pressed && !XR.lHonk) { honk(); } XR.lHonk = gp.buttons[0] && gp.buttons[0].pressed; if (gp.buttons[4] && gp.buttons[4].pressed && !XR.xBtn) { if (XR.missPanel && XR.missPanel.visible) xrMissions(false); else xrMenuToggle(); } XR.xBtn = gp.buttons[4] && gp.buttons[4].pressed; }
                 if (src.handedness === 'right') { mast = -dz(sy); reach = dz(sx); if (gp.buttons[4] && gp.buttons[4].pressed && !XR.aBtn) { XR.seatHeight = XR.seatHeight === 0 ? 0.35 : XR.seatHeight === 0.35 ? -0.25 : 0; toast('Altura del punto de vista ajustada'); } XR.aBtn = gp.buttons[4] && gp.buttons[4].pressed; if (gp.buttons[5] && gp.buttons[5].pressed && !XR.bBtn) { reachOut = !reachOut; if (spec().clamp && !reachOut && hasLoad) clampRelease(); } XR.bBtn = gp.buttons[5] && gp.buttons[5].pressed; }
                 const ct = XR.ctrl.find(x => x && renderer.xr.getController(x.userData.index) === x); }
             // emparejar lateralidad con los controladores de three
             session.inputSources.forEach((src, i) => { const c = renderer.xr.getController(i); if (c) c.userData.handedness = src.handedness; });
+            if ((XR.menu && XR.menu.visible) || (XR.missPanel && XR.missPanel.visible)) return { fwd: 0, turn: 0, mast: 0, reach: 0 };   // con el menú abierto el equipo no se mueve
             return { fwd, turn, mast, reach }; }
-        function xrUpdateRig() { if (!XR.rig) return; const sp = spec(); const op = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); const seated = !sp.stand; const headLocal = op ? op.position.clone().add(new THREE.Vector3(0, seated ? 1.25 : 1.7, 0)) : new THREE.Vector3(0, 1.7, -0.3);
+        // Vista en VR: CABINA (inmersiva, eres el operador) o TERCERA PERSONA (detrás y arriba del equipo, ves al operador y la carga)
+        function goHome() { if (XR.active) { try { renderer.xr.getSession().end(); } catch (e) {} } location.href = '/index.html'; }   // portal con todos los simuladores
+        // ---- Menú dentro de la VR (botón X): se elige apuntando con el rayo y apretando el gatillo ----
+        const XR_MENU = [['▶ CONTINUAR', () => xrMenuToggle(false)], ['📋 MISIONES Y PASOS', () => { xrMenuToggle(false); xrMissions(true); }], ['🎥 CAMBIAR VISTA (cabina / 3ª persona)', () => { xrToggleView(); xrMenuToggle(false); }], ['🔄 REINICIAR PRÁCTICA', () => { xrMenuToggle(false); if (typeof resetPractice === 'function') resetPractice(); }],
+            ['🥽 SALIR DE VR (seguir en pantalla)', () => { xrMenuToggle(false); try { renderer.xr.getSession().end(); } catch (e) {} }], ['← MENÚ DEL SIMULADOR', () => { xrMenuToggle(false); try { renderer.xr.getSession().end(); } catch (e) {} setTimeout(backToMenu, 300); }], ['🏠 INICIO · TODOS LOS SIMULADORES', () => goHome()]];
+        function xrMenuBuild() { const g = new THREE.Group(); g.name = 'xrMenu'; g.userData.items = [];
+            const bg = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.12 + XR_MENU.length * 0.085), new THREE.MeshBasicMaterial({ color: 0x011131, transparent: true, opacity: .92, depthTest: false })); bg.renderOrder = 1000; g.add(bg);
+            const tt = document.createElement('canvas'); tt.width = 512; tt.height = 64; const q = tt.getContext('2d'); q.fillStyle = '#f5c400'; q.font = '900 40px Arial'; q.textAlign = 'center'; q.fillText('MENÚ · DICKA', 256, 46); const title = new THREE.Mesh(new THREE.PlaneGeometry(.5, .0625), new THREE.MeshBasicMaterial({ map: Object.assign(new THREE.CanvasTexture(tt), { encoding: THREE.sRGBEncoding }), transparent: true, depthTest: false })); title.position.set(0, (XR_MENU.length * 0.085) / 2 + .02, .001); title.renderOrder = 1001; g.add(title);
+            XR_MENU.forEach(([label], i) => { const c = document.createElement('canvas'); c.width = 768; c.height = 96; const x = c.getContext('2d'); const draw = hl => { x.clearRect(0, 0, 768, 96); x.fillStyle = hl ? '#f5c400' : (i === XR_MENU.length - 1 ? '#2138D3' : '#1D2586'); x.beginPath(); x.roundRect ? x.roundRect(4, 4, 760, 88, 18) : x.rect(4, 4, 760, 88); x.fill(); x.fillStyle = hl ? '#011131' : '#fff'; x.font = '800 38px Arial'; x.textAlign = 'center'; x.fillText(label, 384, 62); };
+                draw(false); const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; const m = new THREE.Mesh(new THREE.PlaneGeometry(.56, .07), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false })); m.position.set(0, (XR_MENU.length * 0.085) / 2 - .06 - i * .085, .002); m.renderOrder = 1002; m.userData = { i, draw, tex, hl: false }; g.add(m); g.userData.items.push(m); });
+            g.position.set(0, 1.35, -0.9); g.visible = false; XR.rig.add(g); XR.menu = g; }
+        function xrMenuToggle(open) { if (!XR.rig) return; if (!XR.menu) xrMenuBuild(); XR.menu.visible = open === undefined ? !XR.menu.visible : open; if (XR.menu.visible) { const cam = renderer.xr.isPresenting ? renderer.xr.getCamera(camera) : camera; const e = new THREE.Euler().setFromQuaternion(cam.quaternion, 'YXZ'); XR.menu.position.set(Math.sin(e.y) * -0.9, 1.35, Math.cos(e.y) * -0.9); XR.menu.rotation.y = e.y; toast('Menú VR · apunta y aprieta el gatillo'); } }
+        function xrMenuRay(c) { const m = new THREE.Matrix4().extractRotation(c.matrixWorld); const rc = new THREE.Raycaster(); rc.ray.origin.setFromMatrixPosition(c.matrixWorld); rc.ray.direction.set(0, 0, -1).applyMatrix4(m); return rc.intersectObjects(XR.menu.userData.items, false)[0]; }
+        function xrMenuPick(c) { const h = xrMenuRay(c); if (h) XR_MENU[h.object.userData.i][1](); }
+        // ---- Panel de misiones (como el diario de objetivos de una consola): lista de misiones + objetivo y pasos de la actual ----
+        function xrMissionCanvas(c, mode) { const g = c.getContext('2d'), W = c.width, H = c.height; g.clearRect(0, 0, W, H); g.fillStyle = 'rgba(1,17,49,.95)'; g.beginPath(); g.roundRect ? g.roundRect(0, 0, W, H, 30) : g.rect(0, 0, W, H); g.fill(); g.strokeStyle = '#f5c400'; g.lineWidth = 6; g.stroke();
+            const a = ACTS[actIdx], b = a && BRIEF[a.id]; const clean = t => String(t).replace(/<[^>]+>/g, '').replace(/__(\w+)__/g, (m, k) => ({ fwd: 'palanca izq ↑', back: 'palanca izq ↓', turn: 'palanca izq ← →', up: 'palanca der ↑', down: 'palanca der ↓', reach: 'palanca der → / ←', grab: 'gatillo der', horn: 'gatillo izq', lvl: a && a.drop && a.drop.level !== undefined ? '≈ ' + (a.drop.level + 0.15).toFixed(1) + ' m' : 'arriba de la viga' }[k] || ''));
+            let y = 60; g.textAlign = 'left';
+            if (mode === 'new') { g.fillStyle = '#f5c400'; g.font = '900 44px Arial'; g.fillText('★ NUEVA MISIÓN ' + (actIdx + 1) + ' / ' + ACTS.length, 40, y); y += 58; g.fillStyle = '#fff'; g.font = '900 40px Arial'; g.fillText(a ? a.icon + ' ' + a.name : '', 40, y); y += 54; g.fillStyle = '#ffe58a'; g.font = '700 30px Arial'; y = wrapLines(g, '🎯 ' + (b ? b.goal : a ? a.text : ''), 40, y, W - 80, 38, 3); y += 10; g.fillStyle = '#9fb0ff'; g.font = '700 26px Arial'; g.fillText('X = menú → 📋 Misiones para ver los pasos', 40, H - 30); }
+            else { g.fillStyle = '#f5c400'; g.font = '900 38px Arial'; g.fillText('📋 MISIONES', 40, y); y += 46;
+                ACTS.forEach((x, i) => { g.fillStyle = i < actIdx ? '#8ff0b0' : i === actIdx ? '#f5c400' : '#c9d2ff'; g.font = (i === actIdx ? '900 ' : '700 ') + '27px Arial'; g.fillText((i < actIdx ? '✓ ' : i === actIdx ? '▶ ' : '· ') + (i + 1) + '. ' + x.name + (i < actIdx && results[i] ? '  ' + results[i].score + '%' : ''), 40, y); y += 34; });
+                y += 14; g.fillStyle = '#fff'; g.font = '900 30px Arial'; g.fillText('MISIÓN ACTUAL · PASOS', 40, y); y += 40; g.fillStyle = '#ffe58a'; g.font = '700 25px Arial'; y = wrapLines(g, '🎯 ' + (b ? b.goal : ''), 40, y, W - 80, 31, 2) + 4;
+                if (b) b.steps.forEach((t, i) => { g.fillStyle = '#fff'; g.font = '600 23px Arial'; y = wrapLines(g, (i + 1) + '. ' + clean(t), 50, y, W - 100, 28, 2) + 2; }); g.fillStyle = '#9fb0ff'; g.font = '700 24px Arial'; g.fillText('Gatillo o X = cerrar', 40, H - 24); } }
+        function wrapLines(g, text, x, y, maxW, lh, maxLines) { const words = String(text).split(' '); let line = '', n = 0; for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { g.fillText(line, x, y); y += lh; line = w; if (++n >= maxLines) { line = ''; break; } } else line = t; } if (line) { g.fillText(line, x, y); y += lh; } return y; }
+        function xrPanel(name, w, h, cw, ch) { let p = XR[name]; if (!p) { const c = document.createElement('canvas'); c.width = cw; c.height = ch; const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false })); p.renderOrder = 1003; p.userData.c = c; p.userData.t = t; p.visible = false; XR.rig.add(p); XR[name] = p; } return p; }
+        function xrFacePanel(p, dist, y) { const cam = renderer.xr.isPresenting ? renderer.xr.getCamera(camera) : camera; const e = new THREE.Euler().setFromQuaternion(cam.quaternion, 'YXZ'); p.position.set(Math.sin(e.y) * -dist, y, Math.cos(e.y) * -dist); p.rotation.y = e.y; }
+        function xrMissions(open) { if (!XR.rig) return; const p = xrPanel('missPanel', .8, 1.0, 800, 1000); p.visible = open; if (open) { xrMissionCanvas(p.userData.c, 'list'); p.userData.t.needsUpdate = true; xrFacePanel(p, 1.0, 1.4); } }
+        function xrNewMission() { if (!XR.active || !XR.rig) return; const p = xrPanel('newPanel', .8, .32, 1000, 400); xrMissionCanvas(p.userData.c, 'new'); p.userData.t.needsUpdate = true; xrFacePanel(p, 1.1, 1.55); p.visible = true; clearTimeout(XR.newT); XR.newT = setTimeout(() => { p.visible = false; }, 7000); }
+        function xrMenuHover() { if (!XR.menu || !XR.menu.visible) return; const hits = XR.ctrl.filter(Boolean).map(xrMenuRay).filter(Boolean); const on = new Set(hits.map(h => h.object)); XR.menu.userData.items.forEach(m => { const hl = on.has(m); if (hl !== m.userData.hl) { m.userData.hl = hl; m.userData.draw(hl); m.userData.tex.needsUpdate = true; } }); }
+        function xrToggleView() { XR.view = XR.view === 'cabina' ? 'tercera' : 'cabina'; const op = forklift && (forklift.getObjectByName('operator') || forklift.getObjectByName('platform')); if (op) op.visible = XR.view === 'tercera'; toast(XR.view === 'cabina' ? '🥽 Vista CABINA (inmersiva)' : '🎥 Vista TERCERA PERSONA'); }
+        function xrUpdateRig() { if (!XR.rig) return; xrMenuHover();
+            if (XR.view === 'tercera') { const a = forkRotation.y, fx = Math.sin(a), fz = Math.cos(a); const back = 6.5, eye = 3.4 + Math.min(4, mastM() * 0.4);   // detrás del equipo; sube un poco con el mástil para ver la carga
+                XR.rig.position.set(forkPosition.x - fx * back, eye - 1.6 + XR.seatHeight, forkPosition.z - fz * back); XR.rig.rotation.y = a + Math.PI; const op = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); if (op) op.visible = true; xrDrawHud(); return; } const sp = spec(); const op = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); const seated = !sp.stand; const headLocal = op ? op.position.clone().add(new THREE.Vector3(0, seated ? 1.25 : 1.7, 0)) : new THREE.Vector3(0, 1.7, -0.3);
             if (sp.platform) headLocal.y += mastM(); const world = forklift.localToWorld(headLocal); XR.rig.position.set(world.x, world.y - 1.6 + XR.seatHeight, world.z);   // local-floor: el piso del rig a 1.6 m bajo los ojos
             XR.rig.rotation.y = forkRotation.y + (sp.stand && !sp.platform && (sp.type === 'Reach' || sp.type === 'Double Reach') ? -Math.PI / 2 : 0); if (op) op.visible = false;   // en VR el operador eres tú
             xrDrawHud(); }
@@ -7921,7 +7972,7 @@
             g.fillStyle = '#9fb0ff'; g.font = '700 30px Arial'; g.textAlign = 'left'; g.fillText(a ? `MISIÓN ${actIdx + 1}/${ACTS.length} · ${a.name}` : 'PRÁCTICA', 36, 60);
             const mt = document.getElementById('missionText'); g.fillStyle = '#fff'; g.font = '700 38px Arial'; wrapText(g, (mt && mt.textContent) || (a ? a.text || '' : ''), 36, 115, 950, 44, 3);
             g.fillStyle = '#f5c400'; g.font = '900 72px Arial'; g.fillText(Math.abs(simSpeed).toFixed(0) + ' km/h', 36, 330); g.fillStyle = '#9fb0ff'; g.font = '700 28px Arial'; g.fillText(`LÍMITE ${SIM_CFG.limitFwd} · mástil ${mastM().toFixed(1)} m${spec().reachStages ? ' · reach ' + Math.round(reachM(1) * 100 + reachM(2) * 100) + ' cm' : ''}${spec().clamp ? ' · placas ' + (CLAMP.closed ? 'CERRADAS' : 'abiertas') : ''}`, 36, 375);
-            g.fillStyle = '#fff'; g.font = '700 32px Arial'; g.fillText(`⭐ ${simScore} pts · ⚠️ ${faultLog.length} faltas · ${hasLoad ? 'CARGA SUJETA' : 'sin carga'}`, 36, 440); const dist = document.getElementById('missionDist'); if (dist) { g.textAlign = 'right'; g.fillStyle = '#f5c400'; g.font = '900 60px Arial'; g.fillText(dist.textContent, 990, 330); } XR.hudTex.needsUpdate = true; }
+            g.fillStyle = '#fff'; g.font = '700 32px Arial'; g.fillText(`⭐ ${simScore} pts · ⚠️ ${faultLog.length} faltas · ${hasLoad ? 'CARGA SUJETA' : 'sin carga'}`, 36, 440); g.fillStyle = '#9fb0ff'; g.font = '700 26px Arial'; g.fillText(`Vista: ${XR.view === 'cabina' ? 'CABINA' : '3ª PERSONA'} · Y = vista · X = MENÚ`, 36, 485); const dist = document.getElementById('missionDist'); if (dist) { g.textAlign = 'right'; g.fillStyle = '#f5c400'; g.font = '900 60px Arial'; g.fillText(dist.textContent, 990, 330); } XR.hudTex.needsUpdate = true; }
         function wrapText(g, text, x, y, maxW, lh, maxLines) { const words = String(text).split(' '); let line = '', lines = 0; for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { g.fillText(line, x, y); y += lh; line = w; if (++lines >= maxLines - 1) { line += '…'; break; } } else line = t; } g.fillText(line, x, y); }
         // CLAMP SAFE en VR: señalar el riesgo con el rayo del control y apretar el gatillo
         function xrPickCS(c) { if (typeof CS === 'undefined' || CS.phase !== 'find') return; const m = new THREE.Matrix4().extractRotation(c.matrixWorld); const rc = new THREE.Raycaster(); rc.ray.origin.setFromMatrixPosition(c.matrixWorld); rc.ray.direction.set(0, 0, -1).applyMatrix4(m); const hits = rc.intersectObjects(CS.markers, false);
@@ -9079,7 +9130,7 @@
             slotMarker.visible = !!(a.drop && a.drop.slot); if (slotMarker.visible) slotMarker.position.set(a.drop.x, a.drop.level + 0.7, a.drop.z); if (a.id !== 'rack2' && a.id !== 'rack3' && slotLabel) slotLabel.visible = false; else if (slotLabel) slotLabel.visible = true;
             const b = document.getElementById('faultToast'); showBanner(`ACTIVIDAD ${i + 1}/${ACTS.length} · ${a.icon} ${a.name}`);
             showMissionCard(6500); if (a.locCode) missionFloat('📍 Ubicación: ' + a.locCode, 5000);
-            renderActs(); showBrief(i);
+            renderActs(); showBrief(i); xrNewMission();
         }
         function showBanner(msg) { const t = document.getElementById('faultToast'); t.innerHTML = msg; t.style.background = '#2138D3'; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => { t.classList.remove('show'); t.style.background = ''; }, 2600); }
         function completeAct(extraScore) {
@@ -9137,6 +9188,19 @@
             const falseNa = ckAns.filter((a, i) => a === 'na' && i !== ckDefect).length; if (falseNa) toast('⚠️ ' + falseNa + ' punto(s) marcados N/A que sí aplican a este equipo');
             completeAct(score);
         }
+        // ---- Recordatorio de misión (como en consola): si no hay avance en 25 s, se recuerda el paso actual ----
+        const NUDGE = { last: 0, best: Infinity, load: null, mast: 0, idx: -1, shown: 0, every: 25000 };
+        function missionNudge(a, txt, dist) { const now = Date.now(); const mh = mastM();
+            if (NUDGE.idx !== actIdx) { NUDGE.idx = actIdx; NUDGE.last = now; NUDGE.best = dist ?? Infinity; NUDGE.load = hasLoad; NUDGE.mast = mh; NUDGE.shown = 0; return; }
+            const briefOpen = document.getElementById('brief') && document.getElementById('brief').classList.contains('open');
+            if ((dist !== null && dist < NUDGE.best - 0.7) || hasLoad !== NUDGE.load || Math.abs(mh - NUDGE.mast) > 0.25 || briefOpen || CC.open) { NUDGE.last = now; NUDGE.best = Math.min(NUDGE.best, dist ?? Infinity); NUDGE.load = hasLoad; NUDGE.mast = mh; return; }
+            if (dist !== null && dist > NUDGE.best + 3) NUDGE.best = dist;   // se alejó: el progreso se mide desde ahí
+            if (now - NUDGE.last < NUDGE.every) return; NUDGE.last = now; NUDGE.shown++;
+            const msg = `⏰ RECORDATORIO · Misión ${actIdx + 1}: ${txt}${dist !== null ? ' (' + dist.toFixed(0) + ' m, sigue la columna amarilla)' : ''}`;
+            missionFloat(msg, 6000); showMissionCard(8000); try { if (typeof honkBeep === 'function') honkBeep(); else { const ac = window.__nudgeAC || (window.__nudgeAC = new (window.AudioContext || window.webkitAudioContext)()); [880, 1175].forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.0001, ac.currentTime + i * .18); g.gain.exponentialRampToValueAtTime(.15, ac.currentTime + i * .18 + .02); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + i * .18 + .16); o.connect(g).connect(ac.destination); o.start(ac.currentTime + i * .18); o.stop(ac.currentTime + i * .18 + .2); }); } } catch (e) {}
+            if (XR.active && XR.rig) { const p = xrPanel('nudgePanel', .8, .26, 1000, 320); const g = p.userData.c.getContext('2d'); g.clearRect(0, 0, 1000, 320); g.fillStyle = 'rgba(120,20,20,.92)'; g.beginPath(); g.roundRect ? g.roundRect(0, 0, 1000, 320, 30) : g.rect(0, 0, 1000, 320); g.fill(); g.strokeStyle = '#f5c400'; g.lineWidth = 6; g.stroke();
+                g.fillStyle = '#f5c400'; g.font = '900 44px Arial'; g.textAlign = 'left'; g.fillText('⏰ RECORDATORIO · MISIÓN ' + (actIdx + 1), 36, 64); g.fillStyle = '#fff'; g.font = '700 34px Arial'; wrapLines(g, txt, 36, 120, 930, 42, 3); g.fillStyle = '#ffd7d7'; g.font = '700 26px Arial'; g.fillText((dist !== null ? 'Faltan ' + dist.toFixed(0) + ' m · ' : '') + 'X = menú → 📋 Misiones', 36, 295);
+                p.userData.t.needsUpdate = true; xrFacePanel(p, 1.1, 1.3); p.visible = true; clearTimeout(XR.nudgeT); XR.nudgeT = setTimeout(() => { p.visible = false; }, 6000); } }
         function updateMission() {
             const a = ACTS[actIdx]; if (!a || actBusy) return;
             let target = null, dist = 0, txt = a.text;
@@ -9165,6 +9229,7 @@
                 if (held >= 2) completeAct();
             }
             if (beacon && target) { beacon.position.x = target.x; beacon.position.z = target.z; beacon.visible = true; beacon.material.opacity = 0.15 + 0.1 * Math.sin(Date.now() / 250); }
+            missionNudge(a, txt, target ? dist : null);
             document.getElementById('missionStep').textContent = `ACTIVIDAD ${actIdx + 1} / ${ACTS.length} · ${a.icon} ${a.name}`;
             document.getElementById('missionText').textContent = txt;
             document.getElementById('missionDist').textContent = target ? `${dist.toFixed(0)} m` : '';
