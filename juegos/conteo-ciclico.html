@@ -149,5 +149,6 @@ function act(a){ if(a.ok){ score+=8; diffFound++; toast('✓ Acción correcta',t
   $('sc').textContent=Math.max(0,score); idx++; if(idx<12) setTimeout(nextLoc,500); else { clearInterval(tick); const bonus=secs<420?20:secs<600?10:0; score+=bonus; finish(`<div><span>Conteos exactos</span><b>${exact}/12</b></div><div><span>Acciones correctas</span><b>${diffFound}/12</b></div><div><span>Faltas graves</span><b>${badAdj}</b></div><div><span>Bono por tiempo</span><b>+${bonus}</b></div>`); } }
 
 </script>
+<script src="js/dicka-sync.js"></script>
 </body>
 </html>
