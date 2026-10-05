@@ -8232,7 +8232,7 @@
                 // si el punto queda dentro de un rack, acércala y súbela para no perder al equipo
                 if (pointBlocked(target.x, target.y, target.z)) { target.set(px - sx * 3.2, 5.5, pz - cz * 3.2); } }
             else if (mode === 'first') { // ojos del operador según el puesto: sentado (contrabalanceo/clamp), de pie (reach/patín) o plataforma (orderpicker)
-                const seatedT = !sp.stand; const eyeY = sp.platform ? 1.95 + mastHeight : seatedT ? 1.62 : 1.85; const back = seatedT ? 1.05 : sp.type === 'Orderpicker' ? -0.25 : 0.3; const lat = seatedT ? 0.32 : 0.0;
+                const seatedT = !sp.stand; const eyeY = sp.platform ? 1.95 + mastHeight : seatedT ? 1.82 : 1.85; const back = seatedT ? 1.38 : sp.type === 'Orderpicker' ? -0.25 : 0.3; const lat = seatedT ? 0.0 : 0.0;
                 target = new THREE.Vector3(px - sx * back + cz * lat, eyeY, pz - cz * back - sx * lat); const fz = sp.forkZ + reach + 1.0; const lookY = Math.min(eyeY + 2.5, Math.max(0.5, mastHeight + 0.5)); look = new THREE.Vector3(px + sx * fz, lookY, pz + cz * fz); lerp = 0.2; lerp = 0.35; }
             else if (mode === 'forks') { const fz = sp.forkZ + reach; target = new THREE.Vector3(px - sx * 1.6 + cz * 0.7, 1.9 + mastHeight, pz - cz * 1.6 - sx * 0.7); look = new THREE.Vector3(px + sx * (fz + 1.0), 0.35 + mastHeight, pz + cz * (fz + 1.0)); lerp = 0.14; }
             { const wantFar = (mode === 'bird' || mode === 'map') ? 400 : 150; if (camera.far !== wantFar) { camera.far = wantFar; camera.updateProjectionMatrix(); } }
@@ -8504,11 +8504,11 @@
             const G = av.gait, thigh = x => Math.sin(x) + 0.14 * Math.sin(2 * x + 0.6);   // muslo: avance rápido y apoyo largo (no senoidal pura)
             const sw = thigh(w) * k * G.leg, sw2 = thigh(w + Math.PI) * k * G.leg; const breathe = Math.sin(t / 1.1 + idlePhase) * 0.012 * (1 - k);
             // brazos: pegados al cuerpo (bajados casi 90° desde la T-pose y rotados un poco hacia el frente), balanceo con retraso de fase respecto a las piernas y codo relajado que se flexiona al ir adelante
-            const ph = 0.35 + (idlePhase % 1) * 0.1, aswL = Math.sin(w + Math.PI - ph) * k, aswR = Math.sin(w - ph) * k; const armIn = 0.12;
-            const aF = W.armFwd * G.arm; setBoneWorld(av, 'lArm', C.swing * (aswL * aF + 0.03), -armIn, C.armL * W.armDown); setBoneWorld(av, 'rArm', C.swing * (aswR * aF + 0.03), armIn, C.armR * W.armDown);
-            const eL = C.swing * (0.12 + G.loose + (aswL * 0.5 + 0.5) * W.elbow * k), eR = C.swing * (0.12 + G.loose + (aswR * 0.5 + 0.5) * W.elbow * k);   // codo relajado: se dobla más al ir adelante
-            setBoneWorld(av, 'lFore', eL, 0, C.armL * 0.08); setBoneWorld(av, 'rFore', eR, 0, C.armR * 0.08);
-            setBoneWorld(av, 'lHand', eL * 0.9, 0, C.armL * 0.12); setBoneWorld(av, 'rHand', eR * 0.9, 0, C.armR * 0.12);   // muñeca suelta siguiendo al antebrazo, palma hacia el muslo
+            const ph = 0.35 + (idlePhase % 1) * 0.1, aswL = Math.sin(w + Math.PI - ph) * k, aswR = Math.sin(w - ph) * k; const armIn = 0.12;   // operarias: brazos un poco abiertos para no cruzar las manos sobre el cuerpo
+            const aF = W.armFwd * G.arm, aD = W.armDown * (av.fem ? 0.84 : 1); setBoneWorld(av, 'lArm', C.swing * (aswL * aF + 0.03), -armIn, C.armL * aD); setBoneWorld(av, 'rArm', C.swing * (aswR * aF + 0.03), armIn, C.armR * aD);
+            const eL = C.swing * (0.12 + G.loose + (aswL * 0.5 + 0.5) * W.elbow * k), eR = C.swing * (0.12 + G.loose + (aswR * 0.5 + 0.5) * W.elbow * k); const eS = av.fem ? 0.45 : 1;   // codo relajado: se dobla más al ir adelante
+            setBoneWorld(av, 'lFore', eL * eS, 0, C.armL * 0.08); setBoneWorld(av, 'rFore', eR * eS, 0, C.armR * 0.08);
+            setBoneWorld(av, 'lHand', eL * eS * 0.9, 0, C.armL * 0.12); setBoneWorld(av, 'rHand', eR * eS * 0.9, 0, C.armR * 0.12);   // muñeca suelta siguiendo al antebrazo, palma hacia el muslo
             if (waving) { setBoneWorld(av, 'rArm', 0, 0, C.armR * (-0.3 + Math.sin(t * 7.7) * 0.12)); setBoneWorld(av, 'rFore', 0, 0, C.armR * -0.7); setBoneWorld(av, 'rHand', 0, 0, C.armR * -0.7); }   // mano abierta y recta, alineada al antebrazo
             // piernas: el muslo oscila; la rodilla se flexiona en la fase de vuelo (pierna que avanza) y queda casi recta al apoyar; el pie hace talón-punta
             const kn = x => (Math.max(0, Math.sin(x - 0.9)) ** 1.5 * W.knee + Math.max(0, Math.sin(2 * x + 2.2)) * 0.12) * k * G.leg;   // flexión en vuelo + amortiguación al apoyar
