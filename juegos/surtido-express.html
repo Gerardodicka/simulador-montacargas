@@ -154,5 +154,6 @@ function pickQty(q){ if(q===cur.qty){ score+=5; toast('✓ Cantidad correcta',tr
 function end(){ clearInterval(tick); finish(`<div><span>Líneas correctas</span><b>${correct}/21</b></div><div><span>Ubicaciones erradas</span><b>${wrongLoc}</b></div><div><span>Cantidades erradas</span><b>${wrongQty}</b></div><div><span>Pedidos fuera de tiempo</span><b>${timeouts}</b></div>`); }
 
 </script>
+<script src="js/dicka-sync.js"></script>
 </body>
 </html>
