@@ -7351,7 +7351,7 @@
             else if (sp.type === 'Contrabalanceo' || sp.clamp) {
                 add(new THREE.BoxGeometry(W, 0.6, 2.6), red, 0, 0.55, -0.9);              // chasis
                 add(new THREE.BoxGeometry(W, 0.9, 0.7), dark, 0, 0.75, -2.0);             // contrapeso
-                add(new THREE.BoxGeometry(W - 0.2, 0.5, 1.0), red, 0, 1.1, -0.6);          // cofre
+                add(new THREE.BoxGeometry(W - 0.2, 0.32, 0.5), red, 0, 1.0, -0.35);        // cofre (bajo, deja espacio a las piernas del operador)
                 add(new THREE.BoxGeometry(0.55, 0.12, 0.5), dark, 0, 1.05, -1.4); add(new THREE.BoxGeometry(0.55, 0.6, 0.1), dark, 0, 1.4, -1.65); // asiento
                 const wheelS = add(new THREE.TorusGeometry(0.18, 0.02, 8, 24), dark, 0, 1.45, -0.85); wheelS.rotation.x = Math.PI / 3; // volante
                 [[-1, -1.7], [1, -1.7], [-1, -0.1], [1, -0.1]].forEach(([sx, sz]) => add(new THREE.BoxGeometry(0.06, 1.5, 0.06), steel, sx * (W / 2 - 0.05), 1.6, sz));
@@ -8513,7 +8513,7 @@
             setBoneWorld(av, 'lFoot', CL * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + 0.4) * 0.28)) * k - kneeL * 0.35)); setBoneWorld(av, 'rFoot', CL * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + 0.4) * 0.28)) * k - kneeR * 0.35));
             // cadera: rebote doble por zancada, vaivén lateral y contrarrotación; tronco inclinado al frente al caminar; hombros compensan
             if (av.bones.hips) { av.bones.hips.position.y = av.hipsY0 + (Math.abs(Math.cos(w)) * 2.2 - 1.1) * k + breathe * 100 * 0.3; }
-            const ln = W.lean * G.lean, sy = G.sway; setBoneWorld(av, 'hips', C.swing * ln * k, Math.sin(w) * 0.10 * k * sy, Math.sin(w + 0.5) * 0.05 * k * sy);   // pelvis gira y cae del lado que avanza
+            const ln = W.lean * G.lean + (av.fem ? -0.14 : 0), sy = G.sway; setBoneWorld(av, 'hips', C.swing * ln * k, Math.sin(w) * 0.10 * k * sy, Math.sin(w + 0.5) * 0.05 * k * sy);   // pelvis gira y cae del lado que avanza
             setBoneWorld(av, 'spine', C.swing * ln * 0.5 * k, -Math.sin(w) * 0.06 * k * sy, -Math.sin(w + 0.5) * 0.04 * k * sy); setBoneWorld(av, 'spine2', C.swing * ln * 0.3 * k, -Math.sin(w) * 0.12 * k * sy, 0);   // hombros contrarrotan a la cadera
             setBoneWorld(av, 'head', -C.swing * ln * 1.6 * k, (walking ? Math.sin(t / 1.4 + idlePhase) * 0.18 : Math.sin(t / 1.8 + idlePhase) * 0.4) + Math.sin(w) * 0.06 * k * sy, -Math.sin(w) * 0.02 * k); }   // la cabeza compensa el giro del tronco y mira al frente
 
