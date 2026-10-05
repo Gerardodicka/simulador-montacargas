@@ -7252,7 +7252,12 @@
                 [[-.012, 0xf5c400], [.012, 0x2138D3]].forEach(([x, c]) => { const b = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .005, 12), M(C(c), { roughness: .4 })); b.position.set(x, .27, -.024); b.rotation.x = -.6; lever.add(b); });   // botones reach / claxon
                 const trig = new THREE.Mesh(new THREE.BoxGeometry(.018, .035, .012), M(C(0x111111))); trig.position.set(0, .235, .03); trig.rotation.x = .2; lever.add(trig);   // gatillo
                 const dead = new THREE.Mesh(new THREE.BoxGeometry(.022, .034, .005), M(C(0xf5c400), { roughness: .6 })); dead.position.set(0, .2, -.027); lever.add(dead);   // sensor de presencia (palma)
-                if (seated) { jg.position.set(0.34, 1.2, -1.15); jg.rotation.z = -0.12; setTimeout(() => supportControls(target, 1.0), 0); }   // apoyabrazos derecho con soporte hasta el asiento
+                if (seated) { jg.children.slice().forEach(o => jg.remove(o)); const lv = new THREE.Group(); lv.name = 'lever'; jg.add(lv);   // Raymond sentado (4250 / clamp): volante + palancas hidráulicas de dedo en el tablero, no joystick
+                    const base = new THREE.Mesh(new THREE.BoxGeometry(.2, .04, .1), M(C(0x2b2f36), { roughness: .5, metalness: .3 })); jg.add(base);
+                    const knobC = sp.clamp ? [0x111111, 0x111111, 0x111111, 0xf5c400] : [0x111111, 0x111111, 0x111111, 0x111111];
+                    for (let i = 0; i < 4; i++) { const f = new THREE.Group(); f.name = 'fingerLever' + i; const st = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .09, 8), M(C(0xb0b4ba), { metalness: .9, roughness: .3 })); st.position.y = .045; f.add(st); const kn = new THREE.Mesh(new THREE.SphereGeometry(.016, 12, 8), M(C(knobC[i]), { roughness: .5 })); kn.scale.set(1, 1.3, 1); kn.position.y = .095; f.add(kn); f.position.set(-.07 + i * .047, .02, 0); f.rotation.x = .25; jg.add(f); }
+                    const lab = new THREE.Mesh(new THREE.PlaneGeometry(.2, .03), new THREE.MeshStandardMaterial({ map: T(256, 40, (g, w, h) => { g.fillStyle = '#1b1f26'; g.fillRect(0, 0, w, h); g.fillStyle = '#f5c400'; g.font = '700 16px Arial'; g.textAlign = 'center'; (sp.clamp ? ['ELEV', 'INCL', 'DESPL', 'CLAMP'] : ['ELEV', 'INCL', 'DESPL', 'AUX']).forEach((t, i) => g.fillText(t, 32 + i * 64, 26)); }) })); lab.rotation.x = -Math.PI / 2; lab.position.set(0, .021, -.04); jg.add(lab);
+                    jg.position.set(0.3, 1.12, -0.62); }
                 else if (sp.type === 'Reach' || sp.type === 'Double Reach') { jg.position.set(-0.42, 1.12, -0.05); jg.rotation.y = -Math.PI / 2; }   // consola de control del reach (operador de costado)
                 else if (sp.type === 'Orderpicker') { jg.position.set(0.3, 1.1, 0.55); }
                 else return;   // patín: timón
@@ -7351,7 +7356,7 @@
             else if (sp.type === 'Contrabalanceo' || sp.clamp) {
                 add(new THREE.BoxGeometry(W, 0.6, 2.6), red, 0, 0.55, -0.9);              // chasis
                 add(new THREE.BoxGeometry(W, 0.9, 0.7), dark, 0, 0.75, -2.0);             // contrapeso
-                add(new THREE.BoxGeometry(W - 0.2, 0.5, 1.0), red, 0, 1.1, -0.6);          // cofre
+                add(new THREE.BoxGeometry(W - 0.2, 0.32, 0.5), red, 0, 1.0, -0.35);        // cofre (bajo, deja espacio a las piernas del operador)
                 add(new THREE.BoxGeometry(0.55, 0.12, 0.5), dark, 0, 1.05, -1.4); add(new THREE.BoxGeometry(0.55, 0.6, 0.1), dark, 0, 1.4, -1.65); // asiento
                 const wheelS = add(new THREE.TorusGeometry(0.18, 0.02, 8, 24), dark, 0, 1.45, -0.85); wheelS.rotation.x = Math.PI / 3; // volante
                 [[-1, -1.7], [1, -1.7], [-1, -0.1], [1, -0.1]].forEach(([sx, sz]) => add(new THREE.BoxGeometry(0.06, 1.5, 0.06), steel, sx * (W / 2 - 0.05), 1.6, sz));
@@ -8289,7 +8294,7 @@
         // ================== NIVEL C · AVATAR glTF RIGGEADO (opcional) ==================
         // Si existe assets/models/operario.glb (Mixamo, con clips walk/idle y opcionalmente wave/sit), los peatones lo usan.
         // Si no está disponible, se mantiene el avatar procedural v5. El modelo se carga una vez y se clona por personaje (SkeletonUtils).
-        const GLTF_SEAT = { y: 0.58, z: -1.0 };   // posición del modelo realista sentado respecto al equipo (pies a la altura del piso de la cabina)
+        const GLTF_SEAT = { y: 0.8, z: -1.45 };   // posición del modelo realista sentado respecto al equipo (pies a la altura del piso de la cabina)
         // ================== CALIDAD GRÁFICA ==================
         // Auto detecta GPU integrada o móvil → Media. Alta: PC con tarjeta dedicada. Baja: laptops lentas.
         const QUALITY_PRESETS = { alta: { dpr: 1.0, shadow: 1536, hiDist: 18, shadows: true, label: 'Alta' }, media: { dpr: 0.85, shadow: 1024, hiDist: 8, shadows: true, label: 'Media' }, baja: { dpr: 0.7, shadow: 768, hiDist: 0, shadows: false, label: 'Baja' } };
@@ -8513,7 +8518,7 @@
             setBoneWorld(av, 'lFoot', CL * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + 0.4) * 0.28)) * k - kneeL * 0.35)); setBoneWorld(av, 'rFoot', CL * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + 0.4) * 0.28)) * k - kneeR * 0.35));
             // cadera: rebote doble por zancada, vaivén lateral y contrarrotación; tronco inclinado al frente al caminar; hombros compensan
             if (av.bones.hips) { av.bones.hips.position.y = av.hipsY0 + (Math.abs(Math.cos(w)) * 2.2 - 1.1) * k + breathe * 100 * 0.3; }
-            const ln = W.lean * G.lean, sy = G.sway; setBoneWorld(av, 'hips', C.swing * ln * k, Math.sin(w) * 0.10 * k * sy, Math.sin(w + 0.5) * 0.05 * k * sy);   // pelvis gira y cae del lado que avanza
+            const ln = W.lean * G.lean + (av.fem ? -0.14 : 0), sy = G.sway; setBoneWorld(av, 'hips', C.swing * ln * k, Math.sin(w) * 0.10 * k * sy, Math.sin(w + 0.5) * 0.05 * k * sy);   // pelvis gira y cae del lado que avanza
             setBoneWorld(av, 'spine', C.swing * ln * 0.5 * k, -Math.sin(w) * 0.06 * k * sy, -Math.sin(w + 0.5) * 0.04 * k * sy); setBoneWorld(av, 'spine2', C.swing * ln * 0.3 * k, -Math.sin(w) * 0.12 * k * sy, 0);   // hombros contrarrotan a la cadera
             setBoneWorld(av, 'head', -C.swing * ln * 1.6 * k, (walking ? Math.sin(t / 1.4 + idlePhase) * 0.18 : Math.sin(t / 1.8 + idlePhase) * 0.4) + Math.sin(w) * 0.06 * k * sy, -Math.sin(w) * 0.02 * k); }   // la cabeza compensa el giro del tronco y mira al frente
 
