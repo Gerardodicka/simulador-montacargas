@@ -7825,7 +7825,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.05 · v9.3 guante 3D';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.05 · v9.4 patín andén';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8777,18 +8777,38 @@
                 obstacles.push({ minX: x - 1.6, maxX: x + 1.6, minZ: z0, maxZ: z0 + 3.0 });
                 // cargador: va de la estiba al tráiler con una caja y regresa vacío
                 if (GLTF_AVATAR.ok) { const av = makeGLTFAvatar(true); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); const g = new THREE.Group(); g.add(av.obj);
-                    const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.34), cardboardMat(k % 3)); box.position.set(0, 0.92, 0.3); g.add(box); scene.add(g);
+                    const jack = makeWalkieJack(k); g.add(jack.g); const box = jack.load; scene.add(g);   // patín eléctrico con tarima emplayada
                     /* guantes ya pintados en la malla (workGloves) */   // guantes de trabajo: NOM-017-STPS-2008 (EPP) para manejo manual de cajas
-                    DOCKW.push({ g, av, box, x: x + 1.3 * (k % 2 ? -1 : 1) * 0 + (k % 2 ? -0.55 : 0.55), za: z0 + 3.7, zb: hd + 1.6, t: k * 0.37 % 1, dir: 1, wait: 0, walk: k * 2, idle: k }); }
+                    DOCKW.push({ g, av, box, jack: true, x: x + 1.3 * (k % 2 ? -1 : 1) * 0 + (k % 2 ? -0.55 : 0.55), za: z0 + 3.7, zb: hd + 1.6, t: k * 0.37 % 1, dir: 1, wait: 0, walk: k * 2, idle: k }); }
             }); }
+        // Patín eléctrico de conductor a pie (walkie pallet truck, estilo Raymond 8210): timón con manubrio, cuerpo con batería, rueda de tracción,
+        // horquillas con rodillos de carga; la tarima emplayada va sobre las horquillas (se ve al ir al tráiler, vacío al regresar)
+        let JACK_MATS = null;
+        function makeWalkieJack(k) { if (!JACK_MATS) { const C = h => new THREE.Color(h).convertSRGBToLinear(); JACK_MATS = { red: new (THREE.MeshPhysicalMaterial || THREE.MeshStandardMaterial)({ color: C(0xc8102e), metalness: .4, roughness: .35, clearcoat: .8 }), blk: new THREE.MeshStandardMaterial({ color: C(0x1a1a1c), roughness: .7, metalness: .3 }), steel: new THREE.MeshStandardMaterial({ color: C(0x3b3e44), metalness: .7, roughness: .45 }), rub: new THREE.MeshStandardMaterial({ color: C(0x0b0b0b), roughness: .95 }), yel: new THREE.MeshStandardMaterial({ color: C(0xf5c400), roughness: .6 }) }; }
+            const M = JACK_MATS, g = new THREE.Group(); const add = (geo, mat, x, y, z, rx, rz) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; if (rz) m.rotation.z = rz; g.add(m); return m; };
+            add(new THREE.BoxGeometry(0.72, 0.62, 0.42), M.red, 0, 0.42, 0.95); add(new THREE.BoxGeometry(0.74, 0.08, 0.44), M.blk, 0, 0.77, 0.95);   // cuerpo y tapa de batería
+            add(new THREE.BoxGeometry(0.74, 0.1, 0.06), M.yel, 0, 0.2, 0.73);                                                                   // defensa amarilla
+            add(new THREE.CylinderGeometry(0.11, 0.11, 0.08, 16), M.rub, 0, 0.11, 0.86, 0, Math.PI / 2);                                        // rueda de tracción
+            [-0.3, 0.3].forEach(x => add(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 10), M.rub, x, 0.05, 0.78, 0, Math.PI / 2));              // ruedas estabilizadoras
+            add(new THREE.BoxGeometry(0.7, 0.55, 0.05), M.steel, 0, 0.42, 1.18);                                                                // respaldo de carga
+            [-0.28, 0.28].forEach(x => { add(new THREE.BoxGeometry(0.17, 0.06, 1.15), M.steel, x, 0.06, 1.78); add(new THREE.CylinderGeometry(0.04, 0.04, 0.08, 10), M.rub, x, 0.04, 2.25, 0, Math.PI / 2); });   // horquillas y rodillos
+            const tiller = new THREE.Group(); tiller.position.set(0, 0.78, 0.8); tiller.rotation.x = -0.7; g.add(tiller);                       // timón inclinado hacia el operador
+            const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.62, 10), M.blk); arm.position.y = 0.31; tiller.add(arm);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.07, 0.12), M.blk); head.position.y = 0.64; tiller.add(head);
+            [-0.2, 0.2].forEach(x => { const gr = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.12, 10), M.rub); gr.rotation.z = Math.PI / 2; gr.position.set(x * 1.05, 0.64, 0); tiller.add(gr); });   // manubrios
+            const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.012, 10), M.red); btn.position.set(0, 0.68, -0.05); tiller.add(btn);   // botón de reversa de emergencia (panza)
+            const load = new THREE.Group(); const pl = new THREE.Mesh(palletGeometry(true), new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 })); pl.position.set(0, 0.15, 1.75); load.add(pl);
+            const bh = 0.95 + (k % 3) * 0.12; const ul = new THREE.Mesh(new THREE.BoxGeometry(0.95, bh, 1.1), unitLoadMat(k % 3)); ul.position.set(0, 0.22 + bh / 2, 1.75); load.add(ul); g.add(load);
+            g.traverse(o => { if (o.isMesh) o.castShadow = false; }); g.scale.setScalar(0.92); return { g, load }; }
         function updateDockWorkers(dtS) { const now = performance.now(); DOCKW.forEach(d => { let walking = false; const L = d.zb - d.za;
                 const zNow = d.za + L * d.t, dP = Math.hypot(forkPosition.x - d.x, forkPosition.z - zNow);
                 if (d.wait > 0) d.wait -= dtS; else if (dP > 4.5) { d.t += d.dir * 1.1 * dtS / L; d.walk += 1.1 * dtS * 4.6; walking = true; if (d.t >= 1) { d.t = 1; d.dir = -1; d.wait = 1.6; } if (d.t <= 0) { d.t = 0; d.dir = 1; d.wait = 1.6; } }   // se detiene si el montacargas del jugador está cerca
                 d.box.visible = d.dir > 0 ? d.wait <= 0 || d.t < 0.5 : d.wait > 0 && d.t > 0.5;   // lleva caja hacia el tráiler y regresa sin ella
                 d.g.position.set(d.x, 0, d.za + L * d.t); d.g.rotation.y = d.dir > 0 ? 0 : Math.PI;
                 gltfWalkPose(d.av, walking, d.walk, now, false, d.idle);
-                if (d.box.visible) { const C = d.av.calib; setBoneWorld(d.av, 'lArm', C.swing * 0.35, -0.12, C.armL * 1.5); setBoneWorld(d.av, 'rArm', C.swing * 0.35, 0.12, C.armR * 1.5); setBoneWorld(d.av, 'lFore', C.swing * 1.35, 0, C.armL * 0.1); setBoneWorld(d.av, 'rFore', C.swing * 1.35, 0, C.armR * 0.1); }   // brazos al frente sosteniendo la caja
-                if (d.box.visible) { if (!d.hands) { d.hands = []; d.av.obj.traverse(o => { if (o.isBone && /(LeftHand|RightHand)$/.test(o.name)) d.hands.push(o); }); }   // la caja va entre las palmas: nunca "flota"
+                if (d.jack) { const C = d.av.calib; setBoneWorld(d.av, 'lArm', C.swing * 0.75, -0.18, C.armL * 1.35); setBoneWorld(d.av, 'rArm', C.swing * 0.75, 0.18, C.armR * 1.35); setBoneWorld(d.av, 'lFore', C.swing * 0.55, 0, C.armL * 0.1); setBoneWorld(d.av, 'rFore', C.swing * 0.55, 0, C.armR * 0.1); }   // manos en los manubrios del timón
+                else if (d.box.visible) { const C = d.av.calib; setBoneWorld(d.av, 'lArm', C.swing * 0.35, -0.12, C.armL * 1.5); setBoneWorld(d.av, 'rArm', C.swing * 0.35, 0.12, C.armR * 1.5); setBoneWorld(d.av, 'lFore', C.swing * 1.35, 0, C.armL * 0.1); setBoneWorld(d.av, 'rFore', C.swing * 1.35, 0, C.armR * 0.1); }   // brazos al frente sosteniendo la caja
+                if (d.box.visible && !d.jack) { if (!d.hands) { d.hands = []; d.av.obj.traverse(o => { if (o.isBone && /(LeftHand|RightHand)$/.test(o.name)) d.hands.push(o); }); }   // la caja va entre las palmas: nunca "flota"
                     if (d.hands.length === 2) { d.g.updateMatrixWorld(true); const a = new THREE.Vector3(), b = new THREE.Vector3(); d.hands[0].getWorldPosition(a); d.hands[1].getWorldPosition(b); const mid = a.add(b).multiplyScalar(0.5); d.g.worldToLocal(mid); d.box.position.set(mid.x, mid.y - 0.04, mid.z + 0.02); } }
             }); }
         function buildTraffic() {
