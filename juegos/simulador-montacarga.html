@@ -595,12 +595,12 @@
         .summary-errors { text-align: left; font-size: 11px; margin-top: 0.6rem; line-height: 1.7; max-height: 150px; overflow-y: auto; }
         .summary .btn-next { padding: 0.6rem; font-size: 12px; }
         .mission {
-            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 92px; right: 12px; left: auto; transform: none; max-width: min(340px, 42%);   /* instrucciones generales a la derecha, bajo los indicadores */
             background: rgba(1,17,49,0.88); border: 2px solid #2138D3; color: #fff; border-radius: 12px;
             padding: 0.6rem 1.2rem; text-align: center; z-index: 6; min-width: 260px; transition: all .35s ease;
         }
-        /* Modo compacto: la tarjeta se vuelve una pastilla pequeña arriba a la derecha para no tapar la carga al elevar */
-        body.minihud .mission { left: auto; right: 12px; top: 54px; transform: none; min-width: 0; padding: .35rem .7rem; border-radius: 20px; background: rgba(1,17,49,.78); }
+        /* Modo compacto: la tarjeta se vuelve una pastilla pequeña arriba a la izquierda para no tapar la carga al elevar */
+        body.minihud .mission { left: 12px; right: auto; top: 92px; transform: none; min-width: 0; padding: .35rem .7rem; border-radius: 20px; background: rgba(1,17,49,.78); }
         body.minihud .mission-text { display: none; }
         body.minihud .mission-step { display: inline; font-size: 9px; letter-spacing: 1px; }
         body.minihud .mission-dist { display: inline; font-size: 13px; margin-left: 6px; }
