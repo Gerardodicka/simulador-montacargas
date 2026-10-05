@@ -7825,7 +7825,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.05 · v9.4 patín andén';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.05 · v9.5 operarias';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8333,10 +8333,10 @@
                     vec2 lu = vec2((vHP.x + 0.055) / 0.11, (vHP.y - 1.69) / 0.055); if (vHN.z > 0.35 && vHP.z > 0.0 && lu.x > 0.0 && lu.x < 1.0 && lu.y > 0.0 && lu.y < 1.0) { vec4 lc = texture2D(uLogo, lu); diffuseColor.rgb = mix(diffuseColor.rgb, lc.rgb, lc.a); }`); };
                 m.customProgramCacheKey = () => 'abs'; o.material = m; }); }
         // Puño elástico 3D en la muñeca: tubo tejido amarillo acanalado con orilla negra, que sobresale de la mano (da borde real al guante)
-        let CUFF_MAT = null;
+        let CUFF_MAT = null, GLOVE_UNIT = 1;   // GLOVE_UNIT: unidades del modelo por metro (operaria.glb viene en cm)
         function gloveCuffs(mesh) { if (!CUFF_MAT) { const c = document.createElement('canvas'); c.width = 128; c.height = 64; const g = c.getContext('2d'); for (let x = 0; x < 128; x += 4) { g.fillStyle = x % 8 ? '#e2ad16' : '#b9870c'; g.fillRect(x, 0, 4, 64); } for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(255,240,180,${Math.random() * .25})`; g.fillRect(Math.random() * 128, Math.random() * 64, 1.5, 1.5); }
                 g.fillStyle = '#111'; g.fillRect(0, 56, 128, 8); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = THREE.RepeatWrapping; t.repeat.set(3, 1); CUFF_MAT = new THREE.MeshStandardMaterial({ map: t, roughness: .95, side: THREE.DoubleSide }); }
-            mesh.updateMatrixWorld(true); mesh.skeleton.bones.forEach(b => { if (!/(Left|Right)Hand$/.test(b.name) || b.getObjectByName('gloveCuff')) return; const ws = new THREE.Vector3(); b.getWorldScale(ws);
+            mesh.updateMatrixWorld(true); const U = GLOVE_UNIT; mesh.skeleton.bones.forEach(b => { if (!/(Left|Right)Hand$/.test(b.name) || b.getObjectByName('gloveCuff')) return; const ws = new THREE.Vector3(); b.getWorldScale(ws); ws.divideScalar(U);
                 const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.041, 0.039, 0.065, 20, 1, true), CUFF_MAT); cuff.name = 'gloveCuff'; cuff.scale.set(1 / ws.x, 1 / ws.y, (1 / ws.z) * 0.78); cuff.position.y = -0.012 / ws.y; cuff.castShadow = false; b.add(cuff);
                 const rim = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.004, 6, 20), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: .9 })); rim.rotation.x = Math.PI / 2; rim.position.y = -0.0325; cuff.add(rim); }); }
         function workGloves(scene) { scene.traverse(o => { if (!o.isSkinnedMesh || !o.skeleton || !o.geometry.attributes.skinIndex || o.geometry.attributes.aGlove) return;
@@ -8347,7 +8347,7 @@
                 const tip = W(/Hand(Thumb|Index|Middle|Ring|Pinky)[34]$/i), kn = W(/Hand(Index|Middle|Ring|Pinky)1$/i);   // puntas de dedos y nudillos (refuerzos negros)
                 o.geometry.setAttribute('aGlove', new THREE.BufferAttribute(gw, 1)); gloveCuffs(o); o.geometry.setAttribute('aTip', new THREE.BufferAttribute(tip, 1)); o.geometry.setAttribute('aKn', new THREE.BufferAttribute(kn, 1)); if (m.userData.glove) return; m.userData.glove = true; const prev = m.onBeforeCompile;
                 // Guante tipo mecánico (referencia "gription"): dorso sintético amarillo, palma negra con puntos de silicón, puntas y nudillos negros, puño negro con ajuste y ribete amarillo
-                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nattribute float aTip;\nattribute float aKn;\nvarying float vGlove;\nvarying float vPalm;\nvarying float vTip;\nvarying float vKn;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed += normalize(objectNormal) * smoothstep(0.003, 0.05, aGlove) * 0.0045;   // grosor del tejido: el guante queda por encima de la piel\n vGlove = aGlove; vTip = aTip; vKn = aKn; vPalm = smoothstep(-0.1, -0.5, normalize(objectNormal).y);');
+                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aGlove;\nattribute float aTip;\nattribute float aKn;\nvarying float vGlove;\nvarying float vPalm;\nvarying float vTip;\nvarying float vKn;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed += normalize(objectNormal) * smoothstep(0.003, 0.05, aGlove) * ' + (0.0045 * GLOVE_UNIT).toFixed(5) + ';   // grosor del tejido: el guante queda por encima de la piel\n vGlove = aGlove; vTip = aTip; vKn = aKn; vPalm = smoothstep(-0.1, -0.5, normalize(objectNormal).y);');
                     sh.fragmentShader = 'varying float vGlove;\nvarying float vPalm;\nvarying float vTip;\nvarying float vKn;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
                     float gk = smoothstep(0.003, 0.03, vGlove); if (gk > 0.0) {
                       // Guante tejido amarillo (referencia DICKA): punto de algodón jaspeado, palma con chevrones de PVC negro, puño acanalado con orilla negra
@@ -8361,7 +8361,7 @@
                       float cuffRib = 1.0 - smoothstep(0.16, 0.3, vGlove); col *= mix(1.0, 0.85 + 0.15 * abs(sin(vUv.x * 2600.0)), cuffRib);   // puño acanalado
                       float edge = 1.0 - smoothstep(0.012, 0.045, vGlove); col = mix(col, vec3(0.04, 0.04, 0.05), edge);   // orilla negra (overlock)
                       diffuseColor.rgb = mix(diffuseColor.rgb, col, gk); }`).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix(roughnessFactor, 0.95, smoothstep(0.003, 0.03, vGlove));'); };
-                m.customProgramCacheKey = () => 'glove'; m.needsUpdate = true; }); }
+                { const pk = m.customProgramCacheKey; m.customProgramCacheKey = () => (pk ? pk.call(m) : '') + '-glove'; } m.needsUpdate = true; }); }
         function dickaVest(scene) { return new Promise(done => { const skin = new Image(); skin.onload = () => { SKIN_IMG = skin; go(); }; skin.onerror = () => go(); skin.src = 'assets/textures/piel.jpg'; const go = () => { const logo = new Image(); logo.onload = () => { const seen = new Set();
             scene.traverse(o => { if (!o.isMesh || !o.material || !o.material.map || !o.material.map.image || seen.has(o.material.map)) return; const m = o.material, img = m.map.image; seen.add(m.map); if (!/body/i.test(m.name || '')) return;
                 const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
@@ -8412,9 +8412,49 @@
             attach(chest, new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.082, 0.004), M.badge), [0.075, -0.03, 0.165]);   // gafete al pecho
             if (hips) attach(hips, new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.03), M.radio), [-0.17, 0.02, 0.03]);       // radio en la cintura
         }
-        function makeGLTFAvatar(low) { const src = (low && GLTF_LOD.gltf) ? GLTF_LOD.gltf.scene : GLTF_AVATAR.gltf.scene; const clone = THREE.SkeletonUtils.clone(src); clone.scale.setScalar(GLTF_AVATAR.scale); clone.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = true; if (o.geometry) { o.geometry.computeBoundingSphere(); const bs = o.geometry.boundingSphere; const sc = GLTF_AVATAR.rigScale || 1; bs.center.set(0, 0.9 / sc, 0); bs.radius = 1.4 / sc; } if (o.material) { o.material.side = THREE.FrontSide; if (o.material.map) o.material.map.encoding = THREE.sRGBEncoding; if (o.material.transparent) { o.material.alphaTest = 0.5; o.material.transparent = false; o.material.depthWrite = true; } } } });
+        // ====== Operarias (assets/models/operaria.glb · Mixamo Ch02): uniforme DICKA pintado por huesos sobre su ropa ======
+        // pantalón de mezclilla en piernas (cubre short y piel), camisa azul marino en brazos/torso, chaleco azul con bandas reflejantes, casco ABS y guantes
+        const GLTF_FEM = { gltf: null, scale: 1, rigScale: 1, tried: false };
+        function loadOperaria() { if (GLTF_FEM.tried || !THREE.GLTFLoader) return Promise.resolve(false); GLTF_FEM.tried = true;
+            return new Promise(res => { const urls = GLTF_AVATAR.urls.map(u => u.replace('operario.glb', 'operaria.glb')); const tryUrl = i => { if (i >= urls.length) { res(false); return; }
+                new THREE.GLTFLoader().load(urls[i], g => { try { g.scene.traverse(o => { if (o.isBone) o.name = o.name.replace(/^mixamorig:?/, '').replace(/_\d+$/, ''); });
+                    { let main = null; g.scene.traverse(o => { if (o.isSkinnedMesh && /Body/.test(o.name)) main = o; }); const by = {}; main.skeleton.bones.forEach(b => by[b.name] = b); const keep = new Set(main.skeleton.bones);   // un solo esqueleto: el FBX trae una copia por malla
+                      g.scene.traverse(o => { if (o.isSkinnedMesh && o !== main) o.bind(new THREE.Skeleton(o.skeleton.bones.map(b => by[b.name] || b), o.skeleton.boneInverses), o.bindMatrix); });
+                      const orphans = []; g.scene.traverse(o => { if (o.isBone && !keep.has(o) && !(o.parent && o.parent.isBone)) orphans.push(o); }); orphans.forEach(o => o.parent.remove(o)); }
+                    g.scene.updateMatrixWorld(true); let hb = null, fb = null; g.scene.traverse(o => { if (o.isBone) { if (/Head$/.test(o.name)) hb = o; if (/LeftFoot$/.test(o.name)) fb = o; } });
+                    const hp = new THREE.Vector3(), fp = new THREE.Vector3(); hb.getWorldPosition(hp); fb.getWorldPosition(fp); const unit = (hp.y - Math.min(fp.y, 0)) / 1.55;   // unidades por metro (cabeza a 1.55 m)
+                    GLTF_FEM.scale = 1 / unit * 0.97; femaleOutfit(g.scene, unit); GLOVE_UNIT = unit; workGloves(g.scene); GLOVE_UNIT = 1;
+                    let sc = 1; g.scene.traverse(o => { if (o.isSkinnedMesh && sc === 1) { const v = new THREE.Vector3(); o.getWorldScale(v); sc = v.x || 1; } }); GLTF_FEM.rigScale = sc / GLTF_FEM.scale; GLTF_FEM.gltf = g; console.log('[SIM] Operaria glTF cargada'); res(true); } catch (e) { console.warn('[SIM] operaria:', e.message); res(false); } }, undefined, () => tryUrl(i + 1)); }; tryUrl(0); }); }
+        function femaleOutfit(scene, U) { const C = h => new THREE.Color(h).convertSRGBToLinear(); let headBone = null;
+            scene.traverse(o => { if (o.isBone && /Head$/.test(o.name)) headBone = o; if (!o.isSkinnedMesh || !o.material || /Hair|Eyelash/i.test(o.name)) return;
+                const B = o.skeleton.bones, si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, n = si.count;
+                const W = re => { const hb = B.map(b => re.test(b.name) ? 1 : 0); const a = new Float32Array(n); for (let i = 0; i < n; i++) a[i] = hb[si.getX(i)] * sw.getX(i) + hb[si.getY(i)] * sw.getY(i) + hb[si.getZ(i)] * sw.getZ(i) + hb[si.getW(i)] * sw.getW(i); return a; };
+                const leg = W(/(UpLeg|Leg)$/), foot = W(/(Foot|Toe)/), torso = W(/(Spine|Spine1|Spine2|Hips|Neck|Shoulder)$/), arm = W(/(Arm|ForeArm)$/);
+                o.geometry.setAttribute('aLeg', new THREE.BufferAttribute(leg, 1)); o.geometry.setAttribute('aFoot', new THREE.BufferAttribute(foot, 1)); o.geometry.setAttribute('aTorso', new THREE.BufferAttribute(torso, 1)); o.geometry.setAttribute('aArm', new THREE.BufferAttribute(arm, 1));
+                const isBody = /Body/i.test(o.name), isShoe = /Sneaker|Sock/i.test(o.name); const m = o.material.clone(); o.material = m; const prev = m.onBeforeCompile;
+                m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.vertexShader = 'attribute float aLeg;\nattribute float aFoot;\nattribute float aTorso;\nattribute float aArm;\nvarying float vLeg;\nvarying float vFoot;\nvarying float vTorso;\nvarying float vArm;\nvarying vec3 vOP;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+                        vLeg = aLeg; vFoot = aFoot; vTorso = aTorso; vArm = aArm; vOP = position / ${U.toFixed(4)}; ${isBody ? 'transformed += normalize(objectNormal) * aLeg * (1.0 - aFoot) * ' + (0.006 * U).toFixed(4) + ';' : ''}`);
+                    sh.fragmentShader = 'varying float vLeg;\nvarying float vFoot;\nvarying float vTorso;\nvarying float vArm;\nvarying vec3 vOP;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+                        ${isShoe ? 'diffuseColor.rgb = mix(vec3(0.20, 0.12, 0.06), vec3(0.32, 0.20, 0.10), diffuseColor.r);   /* botas café */' : `
+                        float n1 = fract(sin(dot(floor(vUv * 900.0), vec2(12.9898, 78.233))) * 43758.5453); float twill = 0.85 + 0.15 * abs(sin((vUv.x + vUv.y) * 1800.0));
+                        vec3 denim = vec3(0.07, 0.12, 0.24) * twill * (0.9 + 0.2 * n1); vec3 shirt = vec3(0.05, 0.08, 0.18) * (0.9 + 0.15 * n1);
+                        float legM = smoothstep(0.25, 0.5, vLeg) * (1.0 - smoothstep(0.3, 0.6, vFoot)); diffuseColor.rgb = mix(diffuseColor.rgb, denim, legM);   // pantalón
+                        ${isBody ? '' : `diffuseColor.rgb = mix(diffuseColor.rgb, shirt, smoothstep(0.3, 0.6, vArm + vTorso) * (1.0 - legM));   // camisa
+                        float vest = smoothstep(0.35, 0.6, vTorso) * step(0.95, vOP.y) * step(vOP.y, 1.47); vec3 vc = vec3(0.04, 0.16, 0.55) * (0.9 + 0.1 * n1);
+                        float band = (1.0 - smoothstep(0.012, 0.02, abs(vOP.y - 1.06))) + (1.0 - smoothstep(0.012, 0.02, abs(vOP.y - 1.16))) + (1.0 - smoothstep(0.012, 0.02, abs(abs(vOP.x) - 0.075))) * step(1.16, vOP.y);
+                        vc = mix(vc, vec3(0.85, 0.95, 0.25), clamp(band, 0.0, 1.0)); diffuseColor.rgb = mix(diffuseColor.rgb, vc, vest);   // chaleco DICKA con bandas reflejantes`}`}`); };
+                m.customProgramCacheKey = () => 'fem-' + o.name; });
+            if (headBone) { const ws = new THREE.Vector3(); headBone.getWorldScale(ws); const k = U / ws.x; const P = THREE.MeshPhysicalMaterial || THREE.MeshStandardMaterial; const hm = new P({ color: C(0xf2c200), roughness: .38, clearcoat: .7, clearcoatRoughness: .25 });   // casco ABS
+                const hat = new THREE.Group(); hat.name = 'femHelmet'; const dome = new THREE.Mesh(new THREE.SphereGeometry(0.118, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2), hm); dome.scale.set(1, 0.85, 1.12); hat.add(dome);
+                const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.135, 0.012, 24), hm); brim.scale.z = 1.15; hat.add(brim); const peak = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2), hm); peak.scale.set(1.05, 0.12, 0.9); peak.position.set(0, 0, 0.12); hat.add(peak);
+                for (let r = -1; r <= 1; r++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(0.117, 0.006, 6, 20, Math.PI), hm); rib.position.x = r * 0.035; rib.rotation.y = Math.PI / 2; rib.scale.set(1, 0.85, 1.12); hat.add(rib); }
+                hat.scale.setScalar(k); hat.position.set(0, 0.165 * k, 0.0); headBone.add(hat); } }
+        function makeGLTFAvatar(low, fem) { if (fem && GLTF_FEM.gltf) return makeFemAvatar();
+            const src = (low && GLTF_LOD.gltf) ? GLTF_LOD.gltf.scene : GLTF_AVATAR.gltf.scene; const clone = THREE.SkeletonUtils.clone(src); clone.scale.setScalar(GLTF_AVATAR.scale); clone.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = true; if (o.geometry) { o.geometry.computeBoundingSphere(); const bs = o.geometry.boundingSphere; const sc = GLTF_AVATAR.rigScale || 1; bs.center.set(0, 0.9 / sc, 0); bs.radius = 1.4 / sc; } if (o.material) { o.material.side = THREE.FrontSide; if (o.material.map) o.material.map.encoding = THREE.sRGBEncoding; if (o.material.transparent) { o.material.alphaTest = 0.5; o.material.transparent = false; o.material.depthWrite = true; } } } });
             const mixer = new THREE.AnimationMixer(clone); const acts = {}; const clipsSrc = (low && GLTF_LOD.gltf) ? { sit: GLTF_LOD.gltf.animations[0] } : GLTF_AVATAR.clips; Object.entries(clipsSrc).forEach(([k, c]) => { if (c) acts[k] = mixer.clipAction(c); }); if (acts.idle) acts.idle.play(); else if (acts.walk) acts.walk.play(); try { if (!low) addAvatarGear(clone); } catch (e) { console.warn('[SIM] EPP avatar:', e.message); } return { obj: clone, mixer, acts, current: acts.idle ? 'idle' : (acts.walk ? 'walk' : null) }; }
 
+        function makeFemAvatar() { const clone = THREE.SkeletonUtils.clone(GLTF_FEM.gltf.scene); clone.scale.setScalar(GLTF_FEM.scale); clone.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material) { o.material.side = THREE.FrontSide; if (o.material.map) o.material.map.encoding = THREE.sRGBEncoding; if (o.material.transparent) { o.material.alphaTest = 0.5; o.material.transparent = false; o.material.depthWrite = true; } } } });
+            const mixer = new THREE.AnimationMixer(clone); try { addAvatarGear(clone); } catch (e) {} return { obj: clone, mixer, acts: {}, current: null, fem: true }; }
         // ---- Marcha procedural sobre el esqueleto del modelo realista (cuando el GLB no trae clip Walk/Idle) ----
         // Parte de la pose de reposo (T-pose) y aplica rotaciones locales: brazos bajados y balanceo, piernas, rodillas, pies, cadera, columna y cabeza.
         const GLTF_BONES = { hips: /^(Driving|Hips|Pelvis)$/i, spine: /^Spine$/i, spine2: /^Spine2$/i, head: /^Head$/i, lArm: /^LeftArm$/i, rArm: /^RightArm$/i, lFore: /^LeftForeArm$/i, rFore: /^RightForeArm$/i, rHand: /^RightHand$/i, lHand: /^LeftHand$/i, lUp: /^LeftUpLeg$/i, rUp: /^RightUpLeg$/i, lLeg: /^LeftLeg$/i, rLeg: /^RightLeg$/i, lFoot: /^LeftFoot$/i, rFoot: /^RightFoot$/i };
@@ -8676,8 +8716,8 @@
             look = Object.assign({ height: 1.0, prop: 'radio', ponytail: false }, look || {});
             const g = new THREE.Group(); let gltfAv = null;
             let gltfLow = null;
-            if (GLTF_AVATAR.ok) { gltfAv = makeGLTFAvatar(); gltfAv.obj.name = 'gltfBody'; g.add(gltfAv.obj); if (!GLTF_AVATAR.clips.walk) { gltfAv.mixer.stopAllAction(); gltfAv.procedural = true; gltfPrepareBones(gltfAv); }
-                if (GLTF_LOD.gltf) { gltfLow = makeGLTFAvatar(true); gltfLow.obj.name = 'gltfBodyLow'; gltfLow.obj.visible = false; gltfLow.mixer.stopAllAction(); gltfLow.procedural = true; gltfPrepareBones(gltfLow); gltfLow.obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); g.add(gltfLow.obj); } }   // peatones realistas: clip Walk si existe, si no marcha procedural sobre el esqueleto
+            if (GLTF_AVATAR.ok) { gltfAv = makeGLTFAvatar(false, look.fem); gltfAv.obj.name = 'gltfBody'; g.add(gltfAv.obj); if (!GLTF_AVATAR.clips.walk || gltfAv.fem) { gltfAv.mixer.stopAllAction(); gltfAv.procedural = true; gltfPrepareBones(gltfAv); }
+                if (GLTF_LOD.gltf && !gltfAv.fem) { gltfLow = makeGLTFAvatar(true); gltfLow.obj.name = 'gltfBodyLow'; gltfLow.obj.visible = false; gltfLow.mixer.stopAllAction(); gltfLow.procedural = true; gltfPrepareBones(gltfLow); gltfLow.obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); g.add(gltfLow.obj); } }   // peatones realistas: clip Walk si existe, si no marcha procedural sobre el esqueleto
             const body = gltfAv ? new THREE.Group() : buildHuman(Object.assign({ radio: look.prop === 'radio' }, look), { seated: false }); body.name = body.name || 'body'; g.add(body);
             const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .85, metalness: 0 }, o || {}));
 
@@ -8812,7 +8852,7 @@
                     if (d.hands.length === 2) { d.g.updateMatrixWorld(true); const a = new THREE.Vector3(), b = new THREE.Vector3(); d.hands[0].getWorldPosition(a); d.hands[1].getWorldPosition(b); const mid = a.add(b).multiplyScalar(0.5); d.g.worldToLocal(mid); d.box.position.set(mid.x, mid.y - 0.04, mid.z + 0.02); } }
             }); }
         function buildTraffic() {
-            if (!GLTF_AVATAR.tried) { loadOperarioModel().then(() => { buildTraffic(); try { buildDockOperations(); } catch (e) { console.warn('[SIM] andenes:', e.message); } try { mergeSceneStatics(); } catch (e) { console.warn('[SIM] fusión de estáticos:', e.message); } }); return; }
+            if (!GLTF_AVATAR.tried) { loadOperarioModel().then(() => loadOperaria()).then(() => { buildTraffic(); try { buildDockOperations(); } catch (e) { console.warn('[SIM] andenes:', e.message); } try { mergeSceneStatics(); } catch (e) { console.warn('[SIM] fusión de estáticos:', e.message); } }); return; }
             // Montacargas a 10 km/h por pasillos 1 y 4 y por la zona de tránsito
             npcForklift('04', [[-15.25, -36], [-15.25, 2]], 0.2); NPC.forks[0].aisle = 1;
             npcForklift('07', [[18.25, -30], [18.25, 2]], 0.7); NPC.forks[1].aisle = 4;
@@ -8821,6 +8861,8 @@
             NPC.forks.forEach((f, i) => { if (f.aisle !== undefined) { const a = AISLES[f.aisle - 1]; f.path = buildAisleRoute(a.x, f.aisle - 1); f.t = 0.15 + i * 0.25; f.dir = 1; const p0 = segmentPos(f.path, f.t); f.x = p0.x; f.z = p0.z; f.g.position.set(f.x, 0, f.z); } });
             npcPed('Operadora de surtido', [[-28.6, 41.8], [28.6, 41.8]], 0.1, { skin: 0xd8a27a, hair: 0x2a1a10, hairStyle: 'medium', shirt: 0xf2f2f2, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf2d21b, height: 0.95, prop: 'scanner', ponytail: true, bodyType: 'slim' });
             npcPed('Auxiliar de almacén', [[0, 7], [0, 15], [0, 15], [0, 7]], 0.5, { skin: 0xb9804f, hair: 0x1a1a1a, hairStyle: 'buzz', shirt: 0x2a5a9c, pants: 0x223f6e, vest: 0x1769aa, helmet: 0xf2d21b, height: 1.02, prop: 'radio', bodyType: 'broad' }); NPC.peds[1].crossing = true;
+            if (GLTF_FEM.gltf) { npcPed('Operaria de surtido', [[28.6, 41.8], [28.6, -41]], 0.25, { fem: true, prop: 'scanner' }); npcPed('Supervisora de turno', [[-28.6, -41], [-28.6, 41.8]], 0.6, { fem: true, prop: 'clipboard' });
+                npcPed('Auxiliar de inventario', [[28.6, 41.8], [-28.6, 41.8]], 0.55, { fem: true, prop: 'radio' }); npcPed('Inspectora de calidad', [[28.6, -41], [28.6, 41.8]], 0.8, { fem: true, prop: 'clipboard' }); }   // 4 operarias
             npcPed('Verificador', [[-28.6, 41.8], [-28.6, -41]], 0.3, { skin: 0xcf9a72, hair: 0x3a2618, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1e4fd8, helmet: 0xffffff, height: 1.0, prop: 'clipboard' });
         }
         function segmentPos(path, t) { // t en [0,1] ida y vuelta
