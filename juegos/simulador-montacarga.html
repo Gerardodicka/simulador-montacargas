@@ -1006,6 +1006,7 @@
                     <div class="mission-dist" id="missionDist">— m</div>
                 </div>
                 <div class="acts-panel" id="actsPanel"></div>
+                <button id="questTop" onclick="questChoose()" style="display:none;position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:12;background:#5b2bd9;color:#fff;border:3px solid #fff;border-radius:14px;padding:.7rem 1.4rem;font-size:20px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.5);cursor:pointer">🥽 ENTRAR CON GAFAS META QUEST</button>
                 <div class="brief" id="brief"><div class="brief-card"><div class="brief-head" id="briefHead"></div><div class="brief-body" id="briefBody"></div></div></div>
                 <div class="mission-float" id="missionFloat"></div>
 
@@ -7807,7 +7808,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.05 · v8.5 Quest PC';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.05 · v8.6 Quest';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -7881,14 +7882,14 @@
             <h4>Opción A · Directo en las gafas (recomendado)</h4><ol><li>Ponte el Quest y abre el <b>navegador del Quest</b> (Meta Browser).</li><li>Entra a <b>https://simuladordickalogistics.netlify.app</b> (código DICKA2026).</li><li>Presiona <b>🥽 META QUEST</b> y acepta el permiso de VR.</li></ol>
             <h4>Opción B · Desde esta PC con cable o Air Link</h4><ol><li>Instala y abre la app <b>Meta Quest Link</b> en la PC.</li><li>En la app: Configuración → General → activa <b>Fuentes desconocidas</b> y presiona <b>Meta Quest Link como runtime de OpenXR activo</b>.</li><li>Conecta el Quest con cable USB-C (o Air Link) y acepta <b>Quest Link</b> dentro de las gafas.</li><li>Abre esta página en <b>Chrome o Edge</b> de la PC, recarga (Ctrl+F5) y presiona <b>🥽 META QUEST</b>.</li></ol>
             <div class="fail">${location.protocol !== 'https:' ? '⛔ La página debe abrirse con https.' : 'Si sigue sin entrar: cierra otras apps de VR (SteamVR) y vuelve a recargar.'}</div><button class="brief-go" onclick="this.closest('.brief').remove()">Entendido</button></div></div>`; document.getElementById('simulatorScreen').appendChild(d); }
-        async function xrInit() { if (IS_QUEST) { const m = document.getElementById('btnMVR'); if (m) m.remove(); }   // en el Quest no se ofrece el VR de celular
+        async function xrInit() { { const qt = document.getElementById('questTop'); if (qt && IS_QUEST) qt.style.display = 'block'; } if (IS_QUEST) { const m = document.getElementById('btnMVR'); if (m) m.remove(); }   // en el Quest no se ofrece el VR de celular
             const q = document.getElementById('ccQuest'); if (q && (IS_QUEST || navigator.xr)) q.style.display = '';
             if (!navigator.xr) return; try { XR.supported = await navigator.xr.isSessionSupported('immersive-vr'); } catch (e) { XR.supported = false; }
-            const b = document.getElementById('btnVR'); if (b) b.style.display = 'inline-flex'; if (q) q.style.display = ''; }   // siempre visible: si la VR no está lista, el botón explica cómo conectar el Quest
+            const b = document.getElementById('btnVR'); if (b) b.style.display = 'inline-flex'; const qt = document.getElementById('questTop'); if (qt && (IS_QUEST || XR.supported)) qt.style.display = 'block'; if (q) q.style.display = ''; }   // siempre visible: si la VR no está lista, el botón explica cómo conectar el Quest
         async function xrEnter() { if (!XR.supported && navigator.xr) { try { XR.supported = await navigator.xr.isSessionSupported('immersive-vr'); } catch (e) {} } if (!XR.supported) { questHelp(); return; } QUEST.mode = true; QUEST.cc = { ls: false, rs: false, rt: false, lt: false };
             try { const session = await navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] });
                 renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor'); renderer.xr.setFramebufferScaleFactor(0.9); await renderer.xr.setSession(session);
-                XR.active = true; document.body.classList.add('xr'); xrBuildRig(); if (window.sunLight) { window.sunLight.shadow.mapSize.set(1024, 1024); if (window.sunLight.shadow.map) { window.sunLight.shadow.map.dispose(); window.sunLight.shadow.map = null; } }   // Quest 3S: sombra 1024 y framebuffer 0.9 para mantener 72 fps session.addEventListener('end', () => { XR.active = false; document.body.classList.remove('xr'); if (XR.rig) { XR.rig.remove(camera); scene.add(camera); } renderer.setAnimationLoop(null); const op = forklift && (forklift.getObjectByName('operator') || forklift.getObjectByName('platform')); if (op) op.visible = true; requestAnimationFrame(animateSimulator); toast('Saliste de VR'); });
+                XR.active = true; document.body.classList.add('xr'); { const qt = document.getElementById('questTop'); if (qt) qt.style.display = 'none'; } xrBuildRig(); if (window.sunLight) { window.sunLight.shadow.mapSize.set(1024, 1024); if (window.sunLight.shadow.map) { window.sunLight.shadow.map.dispose(); window.sunLight.shadow.map = null; } }   // Quest 3S: sombra 1024 y framebuffer 0.9 para mantener 72 fps session.addEventListener('end', () => { XR.active = false; document.body.classList.remove('xr'); if (XR.rig) { XR.rig.remove(camera); scene.add(camera); } renderer.setAnimationLoop(null); const op = forklift && (forklift.getObjectByName('operator') || forklift.getObjectByName('platform')); if (op) op.visible = true; requestAnimationFrame(animateSimulator); toast('Saliste de VR'); });
                 renderer.setAnimationLoop(animateSimulator); toast('🥽 VR activa · stick izq mover · stick der mástil/reach · gatillo der agarrar · gatillo izq claxon'); }
             catch (e) { toast('No se pudo iniciar VR: ' + e.message); } }
         function xrBuildRig() { if (!XR.rig) { XR.rig = new THREE.Group(); XR.rig.name = 'xrRig'; scene.add(XR.rig); } XR.rig.add(camera);
@@ -9019,8 +9020,8 @@
             document.getElementById('briefBody').innerHTML = `<div class="goal">🎯 ${b.goal}${a.locCode ? '<br>📍 Ubicación: ' + a.locCode : ''}</div><h4>Paso a paso</h4><ol>${b.steps.map(t => '<li>' + fill(t) + '</li>').join('')}</ol>
                 <h4>Cuidado</h4><div class="fail">⛔ ${b.fail}</div><h4>Controles útiles</h4><div class="all">${CTL.cam} · velocidad máxima ${SIM_CFG.limitFwd} km/h · respeta pasillos peatonales amarillos.</div>
                 <h4>Tu práctica completa</h4><div class="all">${ACTS.map((x, j) => `<span class="${j === i ? 'cur' : ''}">${j + 1}. ${x.name}${j < i ? ' ✓' : ''}</span>`).join(' · ')}</div>
-                <button class="brief-go" id="briefGo">▶ COMENZAR MISIÓN ${i + 1}</button>`;
-            const el = document.getElementById('brief'); el.classList.add('open'); const go = document.getElementById('briefGo'); if (QUEST.mode && !XR.active && a.type !== 'checklist') go.textContent = '🥽 ENTRAR A VR Y COMENZAR MISIÓN ' + (i + 1); go.onclick = () => { el.classList.remove('open'); if (QUEST.mode && !XR.active && a.type !== 'checklist') xrEnter(); onGo && onGo(); }; }
+                ${(IS_QUEST || XR.supported) && !XR.active ? '<button class="brief-go" id="briefQuest" style="background:#5b2bd9">🥽 USO GAFAS META QUEST</button>' : ''}<button class="brief-go" id="briefGo">▶ COMENZAR MISIÓN ${i + 1}</button>`;
+            const el = document.getElementById('brief'); el.classList.add('open'); const go = document.getElementById('briefGo'); const bq = document.getElementById('briefQuest'); if (bq) bq.onclick = () => { el.classList.remove('open'); QUEST.mode = true; if (a.type === 'checklist') { if (!CC.shownOnce) CC.shownOnce = true; questChoose(); } else { xrEnter(); onGo && onGo(); } }; if (QUEST.mode && !XR.active && a.type !== 'checklist') go.textContent = '🥽 ENTRAR A VR Y COMENZAR MISIÓN ' + (i + 1); go.onclick = () => { el.classList.remove('open'); if (QUEST.mode && !XR.active && a.type !== 'checklist') xrEnter(); onGo && onGo(); }; }
         const results = [];   // {name, score, ok, faults, secs}
         // Catálogo de errores críticos (editable): cualquiera de ellos impide aprobar la actividad y la práctica
         const CRITICAL_FAULTS = ['colision', 'atropello', 'volcadura', 'inspeccion', 'caidaCarga'];
