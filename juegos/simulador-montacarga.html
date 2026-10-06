@@ -7359,13 +7359,19 @@
                 add(new THREE.BoxGeometry(W - 0.25, 0.2, 0.35), dark, 0, 0.95, -0.3);       // tablero bajo frente al operador (deja espacio a las piernas)
                 { const cowl = add(new THREE.BoxGeometry(W - 0.35, 0.3, 0.05), dark, 0, 1.08, -0.45); cowl.rotation.x = -0.45; }   // panel inclinado de instrumentos (como el clamp real)
                 add(new THREE.BoxGeometry(W - 0.15, 0.22, 0.75), red, 0, 0.94, -1.45);       // tapa de batería bajo el asiento
+                { const rub = new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: .95 }); add(new THREE.BoxGeometry(W - 0.22, 0.025, 0.8), rub, 0, 0.862, -0.68);   // piso de hule de la cabina
+                  for (let i = 0; i < 9; i++) add(new THREE.BoxGeometry(W - 0.3, 0.008, 0.025), rub, 0, 0.878, -1.02 + i * 0.085);   // estrías antiderrapantes
+                  [-1, 1].forEach(sd => { add(new THREE.BoxGeometry(0.06, 0.32, 0.85), red, sd * (W / 2 - 0.03), 1.02, -0.68);   // costados de la cabina (piernas protegidas)
+                  });
+                  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.1), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: '0.0 km/h', size: 60, color: '#8ff0b0' }, { text: 'BATERÍA 86%', size: 34, color: '#9fb0ff' }], { w: 256, h: 140, bg: '#04121f' }) })); scr.position.set(0.18, 1.2, -0.43); scr.rotation.set(-0.45, Math.PI, 0); scr.rotation.y = 0; scr.rotateX(0); forklift.add(scr);   // pantalla del tablero
+                  const grab = add(new THREE.CylinderGeometry(0.018, 0.018, 0.45, 10), dark, -(W / 2 - 0.05), 1.55, -0.1); grab.rotation.x = 0.1; }   // asidero en el poste delantero
                 { const seatM = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: .85 }); add(new THREE.BoxGeometry(0.52, 0.1, 0.48), seatM, 0, 1.1, -1.4); add(new THREE.BoxGeometry(0.56, 0.06, 0.5), seatM, 0, 1.06, -1.4);
                   const back = add(new THREE.BoxGeometry(0.5, 0.62, 0.1), seatM, 0, 1.45, -1.68); back.rotation.x = -0.15; const head = add(new THREE.BoxGeometry(0.3, 0.16, 0.08), seatM, 0, 1.85, -1.74); head.rotation.x = -0.15;
                   [-1, 1].forEach(sd => add(new THREE.BoxGeometry(0.06, 0.2, 0.42), seatM, sd * 0.28, 1.18, -1.42)); }   // asiento de suspensión negro con respaldo alto y apoyacabezas
                 const wheelS = add(new THREE.TorusGeometry(0.18, 0.022, 8, 28), dark, 0, 1.6, -0.97); wheelS.rotation.x = 0.81; wheelS.name = 'steerWheel'; // volante perpendicular a la columna, a la altura de las manos del operador sentado
-                { const top = new THREE.Vector3(0, 1.6, -0.97), bot = new THREE.Vector3(0, 1.17, -0.55), dir = top.clone().sub(bot).normalize(); const hub = add(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 14), dark, top.x, top.y, top.z); hub.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-                  [0, 2.1, 4.2].forEach(a => { const sp = add(new THREE.BoxGeometry(0.17, 0.014, 0.022), dark, top.x, top.y, top.z); sp.rotation.x = 0.81; sp.rotateZ(a); sp.translateX(0.085); });
-                  const col = add(new THREE.CylinderGeometry(0.035, 0.05, top.distanceTo(bot), 10), dark, (top.x + bot.x) / 2, (top.y + bot.y) / 2, (top.z + bot.z) / 2); col.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); }   // maza, rayos y columna de dirección
+                { const top = new THREE.Vector3(0, 1.6, -0.97), bot = new THREE.Vector3(0, 1.17, -0.55), dir = top.clone().sub(bot).normalize(); const hub = add(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 14), dark, top.x, top.y, top.z); hub.name = 'steerPart'; hub.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+                  [0, 2.1, 4.2].forEach(a => { const sp = add(new THREE.BoxGeometry(0.17, 0.014, 0.022), dark, top.x, top.y, top.z); sp.rotation.x = 0.81; sp.rotateZ(a); sp.translateX(0.085); sp.name = 'steerPart'; });
+                  const col = add(new THREE.CylinderGeometry(0.035, 0.05, top.distanceTo(bot), 10), dark, (top.x + bot.x) / 2, (top.y + bot.y) / 2, (top.z + bot.z) / 2); col.name = 'steerPart'; col.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); }   // maza, rayos y columna de dirección
                 [[-1, -1.7], [1, -1.7], [-1, -0.1], [1, -0.1]].forEach(([sx, sz]) => add(new THREE.BoxGeometry(0.06, 1.5, 0.06), steel, sx * (W / 2 - 0.05), 1.6, sz));
                 add(new THREE.BoxGeometry(W + 0.05, 0.05, 1.8), steel, 0, 2.35, -0.9);
                 for (let i = -3; i <= 3; i++) add(new THREE.BoxGeometry(0.03, 0.02, 1.8), steel, i * W / 8, 2.33, -0.9);
@@ -7842,7 +7848,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.06 · v9.9 botas';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.06 · v10.0 cabina';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8525,6 +8531,18 @@
         function snapControlsToHands(target, opG) { const av = opG.userData.gltf; if (!av) return false; target.updateMatrixWorld(true); const rh = av.obj.getObjectByName('RightHand'), lh = av.obj.getObjectByName('LeftHand'); if (!rh) return false; const w = new THREE.Vector3();
             const jg = target.getObjectByName('cabinJoystick'); if (jg) { rh.getWorldPosition(w); const l = target.worldToLocal(w.clone()); jg.position.set(l.x, l.y - 0.27, l.z); jg.rotation.set(0, 0, 0); jg.userData.snapped = true; }
             const rail = target.getObjectByName('cabinRail'); if (rail && lh) { lh.getWorldPosition(w); const l = target.worldToLocal(w.clone()); rail.position.set(l.x, l.y - 0.03, l.z); rail.visible = true; } const floorY = (opG.position.y || 0.2) + 0.02; supportControls(target, floorY); return true; }
+        // Manos al volante: IK de dos huesos (CCD) para cada brazo hacia el aro del volante a las 10 y 2
+        function seatHandsOnWheel(av, sw) { forklift.updateMatrixWorld(true); const W = sw.getWorldPosition(new THREE.Vector3()); const fq = forklift.getWorldQuaternion(new THREE.Quaternion());
+            const side = new THREE.Vector3(1, 0, 0).applyQuaternion(fq), up = new THREE.Vector3(0, 1, 0);
+            [['Right', -1], ['Left', 1]].forEach(([sd, sg]) => { const arm = av.obj.getObjectByName(sd + 'Arm'), fore = av.obj.getObjectByName(sd + 'ForeArm'), hand = av.obj.getObjectByName(sd + 'Hand'); if (!arm || !fore || !hand) return;
+                const target = W.clone().addScaledVector(side, sg * 0.15).addScaledVector(up, 0.06);
+                for (let it = 0; it < 30; it++) [fore, arm].forEach(b => { av.obj.updateMatrixWorld(true); const bp = b.getWorldPosition(new THREE.Vector3()), hp = hand.getWorldPosition(new THREE.Vector3());
+                    const v1 = hp.sub(bp).normalize(), v2 = target.clone().sub(bp).normalize(); const q = new THREE.Quaternion().setFromUnitVectors(v1, v2); const bw = b.getWorldQuaternion(new THREE.Quaternion()), pw = b.parent.getWorldQuaternion(new THREE.Quaternion());
+                    b.quaternion.copy(pw.invert().multiply(q.multiply(bw))); });
+            });
+            av.obj.updateMatrixWorld(true); const rh = av.obj.getObjectByName('RightHand'), lh = av.obj.getObjectByName('LeftHand'); if (!rh || !lh) return;   // lo que el brazo no alcance lo ajusta el volante (columna telescópica)
+            const m = forklift.worldToLocal(rh.getWorldPosition(new THREE.Vector3()).add(lh.getWorldPosition(new THREE.Vector3())).multiplyScalar(0.5)); const d = new THREE.Vector3(0, m.y - 0.05 - sw.position.y, m.z + 0.02 - sw.position.z);
+            if (d.length() < 0.35) forklift.children.forEach(o => { if (o.name === 'steerWheel' || o.name === 'steerPart') o.position.add(d); }); }
         function makeStandingOperator(low) { const av = makeGLTFAvatar(low); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av); const op = new THREE.Group(); op.add(av.obj); const hg = new THREE.Group(); hg.name = 'opHead'; op.add(hg); op.userData.gltf = av; op.userData.standing = true; return op; }
         // Mano recta y abierta: devuelve muñeca y dedos a la pose de enlace del modelo (sin el agarre de volante que deja el clip de conducción)
         function straightenHand(av, side) { if (!av.handBones) { av.handBones = {}; const src = {}; GLTF_AVATAR.gltf.scene.traverse(o => { if (o.isBone) src[o.name] = o.quaternion; }); av.obj.traverse(o => { if (o.isBone && /(Left|Right)Hand/.test(o.name) && src[o.name]) { const sd = /Right/.test(o.name) ? 'Right' : 'Left'; (av.handBones[sd] = av.handBones[sd] || []).push([o, src[o.name].clone()]); } }); }
@@ -9479,7 +9497,9 @@
             const r1 = reachM(1);
             const r2 = reachM(2);
             const sp = spec();
-            applyForkliftPose(mastHeight, r1, r2); { const opG = forklift.getObjectByName('operator'); if (opG && opG.userData.gltf) opG.userData.gltf.mixer.update(Math.min(0.05, dtS)); }
+            applyForkliftPose(mastHeight, r1, r2); { const opG = forklift.getObjectByName('operator'); if (opG && opG.userData.gltf) { const av = opG.userData.gltf; if (!av.frozen) av.mixer.update(Math.min(0.05, dtS));
+                    if (!opG.userData.standing && !av.frozen && (av.frames = (av.frames || 0) + 1) > 2) { av.frozen = true; Object.values(av.acts || {}).forEach(a => { a.paused = true; });   // sentado: postura fija (sin movimientos involuntarios del clip)
+                        const sw = forklift.getObjectByName('steerWheel'); if (sw) seatHandsOnWheel(av, sw); } } }
             { const jg = forklift.getObjectByName('cabinJoystick'); if (jg) { const lv = jg.getObjectByName('lever'); const tx = -Math.max(-1, Math.min(1, fwd)) * 0.38, tz = Math.max(-1, Math.min(1, turn)) * 0.32; lv.rotation.x += (tx - lv.rotation.x) * 0.25; lv.rotation.z += (tz - lv.rotation.z) * 0.25;
                 const opG = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); if (opG && !opG.userData.gltf) { const armR = opG.getObjectByName('armR'), elbR = opG.getObjectByName('elbowR'); if (armR && elbR && (spec().type === 'Reach' || spec().type === 'Double Reach' || spec().type === 'Orderpicker')) { armR.rotation.x = -0.55 + lv.rotation.x * 0.3; armR.rotation.z = 0.35; elbR.rotation.x = -1.15 + lv.rotation.x * 0.4;
                     if (!jg.userData.snapped) { const hand = opG.getObjectByName('handR'); if (hand) { forklift.updateMatrixWorld(true); const hw = new THREE.Vector3(); hand.getWorldPosition(hw); const hl = forklift.worldToLocal(hw); jg.position.set(hl.x, hl.y - 0.33, hl.z); jg.userData.snapped = true; supportControls(forklift, (opG.position.y || 0.2) + 0.02); } } } }
