@@ -6943,11 +6943,53 @@
             { const x0 = 20, z0 = -43.6; paintLine(x0 - 4, -41, x0 + 5, -41, 0xf5c400, 0.1); paintLabel('CARGA DE BATERÍAS', x0 + 0.5, -40.2, 0.6, '#f5c400', 0, 5); for (let k = 0; k < 4; k++) { const x = x0 - 3 + k * 2.3; add(new THREE.BoxGeometry(0.7, 1.1, 0.45), M(0x3a3f47), x, 1.6, z0); const sc = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.12), new THREE.MeshBasicMaterial({ color: k % 2 ? 0x33ff77 : 0xffb020 })); sc.position.set(x, 1.85, z0 + 0.23); grp.add(sc); add(new THREE.BoxGeometry(0.05, 1.1, 0.05), dk, x + 0.25, 0.55, z0 + 0.1); }   // cargadores con indicador
               const ew = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'LAVAOJOS', size: 54, color: '#fff' }], { w: 256, h: 120, bg: '#007A33' }) })); ew.position.set(x0 + 5.6, 1.9, z0 + 0.25); grp.add(ew); add(new THREE.CylinderGeometry(0.15, 0.15, 0.9, 14), M(0x2e9e5b), x0 + 5.6, 1.1, z0 + 0.1); }   // estación lavaojos (manejo de baterías)
             mergeStaticMeshes(grp); scene.add(grp); obstacles.push({ minX: -27, maxX: -16.8, minZ: -44.5, maxZ: -41.2 }); obstacles.push({ minX: 16, maxX: 26.5, minZ: -44.5, maxZ: -43.2 }); }
+        // ====== Área de oficinas / mesas de control (ampliación trasera de la nave) ======
+        // Vano de 24 m en el muro de fondo hacia un anexo de 12 m: mesas de control con personal sentado y computadoras a ambos lados,
+        // protegidas con guarda de seguridad amarilla (postes y barandal); al centro queda un pasillo de 13 m para que entre y gire el montacargas.
+        const OFFICE_ANNEX = { hw: 12, depth: 12, oh: 5.5, aisle: 6.5 };
+        function buildOfficeAnnex() { const hd = WAREHOUSE.d / 2, A = OFFICE_ANNEX, z0 = -hd, z1 = -hd - A.depth, zc = (z0 + z1) / 2, H = 6.2; const g = new THREE.Group(); g.name = 'officeAnnex';
+            const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .7 }, o || {})); const box = (w, hh, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), m); b.position.set(x, y, z); g.add(b); return b; };
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(A.hw * 2, A.depth), M(0x9aa0a8, { roughness: .85 })); floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0.004, zc); floor.receiveShadow = true; g.add(floor);
+            const wall = M(0xe4e7ec, { roughness: .9 }), navy = M(BRAND.marino);
+            box(A.hw * 2 + 0.5, H, 0.4, wall, 0, H / 2, z1); [-1, 1].forEach(sd => box(0.4, H, A.depth, wall, sd * A.hw, H / 2, zc));   // muros del anexo
+            box(A.hw * 2 + 0.5, 1.2, 0.45, navy, 0, 0.6, z1 + 0.02); [-1, 1].forEach(sd => box(0.45, 1.2, A.depth, navy, sd * (A.hw - 0.02), 0.6, zc));   // zócalo
+            const roof = new THREE.Mesh(new THREE.PlaneGeometry(A.hw * 2, A.depth), M(0xcfd5de, { side: THREE.DoubleSide })); roof.rotation.x = Math.PI / 2; roof.position.set(0, H, zc); g.add(roof);
+            const lamp = M(0xffffff, { emissive: new THREE.Color(0xfff6e0), emissiveIntensity: 1 }); for (let x = -8; x <= 8; x += 8) for (let z = z0 - 3; z > z1; z -= 4.5) box(1.2, 0.05, 0.3, lamp, x, H - 0.05, z);   // luminarias
+            // pasillo del montacargas: franjas amarillas y leyenda
+            const yel = M(0xf5c400, { roughness: .6 }); [-1, 1].forEach(sd => box(0.12, 0.01, A.depth - 0.4, yel, sd * A.aisle, 0.012, zc));
+            const lbl = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.1), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'ÁREA DE OFICINAS · 5 km/h', size: 64, color: '#f5c400' }], { w: 1024, h: 160, bg: '#20242c' }), transparent: true })); lbl.rotation.x = -Math.PI / 2; lbl.position.set(0, 0.015, z0 - 2.2); g.add(lbl);
+            // guarda de seguridad: postes amarillos con barandal doble, con acceso peatonal
+            const post = M(0xf5c400, { roughness: .45, metalness: .3 }), rail = M(0xf5c400, { roughness: .4, metalness: .5 });
+            [-1, 1].forEach(sd => { const x = sd * (A.aisle + 0.35), za = z0 - 0.6, zb = z1 + 0.6, gate = zc + 0.6;
+                for (let z = za; z >= zb - 0.01; z -= 1.5) { if (Math.abs(z - gate) < 0.8) continue; const p = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.1, 10), post); p.position.set(x, 0.55, z); g.add(p); const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.04, 10), M(0x111111)); cap.position.set(x, 1.12, z); g.add(cap); }
+                [[za, gate + 0.85], [gate - 0.85, zb]].forEach(([a, b]) => [0.5, 1.0].forEach(y => { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, Math.abs(a - b), 8), rail); r.rotation.x = Math.PI / 2; r.position.set(x, y, (a + b) / 2); g.add(r); }));
+                [[za, gate + 0.85], [gate - 0.85, zb]].forEach(([a, b]) => obstacles.push({ minX: x - 0.15, maxX: sd > 0 ? A.hw + 1 : x + 0.15, minZ: Math.min(a, b), maxZ: Math.max(a, b) }));
+                if (sd < 0) obstacles[obstacles.length - 1].minX = -A.hw - 1, obstacles[obstacles.length - 2].minX = -A.hw - 1;
+                obstacles.push({ minX: sd > 0 ? x - 0.15 : -A.hw - 1, maxX: sd > 0 ? A.hw + 1 : x + 0.15, minZ: gate - 0.9, maxZ: gate + 0.9 });   // el acceso peatonal no admite montacargas
+                const sg = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.3), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'SOLO PEATONES', size: 52, color: '#fff' }], { w: 320, h: 160, bg: '#1e6fd8' }) })); sg.position.set(x, 1.5, gate); sg.rotation.y = sd > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(sg); });
+            obstacles.push({ minX: -A.hw - 1, maxX: A.hw + 1, minZ: z1 - 3, maxZ: z1 + 0.3 }); obstacles.push({ minX: -A.hw - 1, maxX: -A.hw + 0.3, minZ: z1, maxZ: z0 }); obstacles.push({ minX: A.hw - 0.3, maxX: A.hw + 1, minZ: z1, maxZ: z0 });
+            // mesas de control: escritorio, 2 monitores encendidos, teclado, CPU, silla; el personal se sienta cuando carga el modelo
+            const wood = M(0xb9a27c, { roughness: .6 }), dark = M(0x1d2026, { roughness: .5 }), chairM = M(0x2b2e34, { roughness: .8 });
+            const scr = t => new THREE.MeshBasicMaterial({ map: makeTextTexture(t, { w: 256, h: 150, bg: '#04121f' }) });
+            const screens = [[{ text: 'WMS · OLAS', size: 30, color: '#8ff0b0' }, { text: 'Ola 14 · 82%', size: 26, color: '#9fb0ff' }], [{ text: 'INVENTARIO', size: 30, color: '#f5c400' }, { text: 'Exactitud 99.2%', size: 24, color: '#fff' }], [{ text: 'ANDENES', size: 30, color: '#8ff0b0' }, { text: 'A3 cargando', size: 26, color: '#fff' }], [{ text: 'CCTV', size: 34, color: '#ff6b6b' }, { text: '8 cámaras OK', size: 24, color: '#fff' }]];
+            const seats = []; let k = 0;
+            [-1, 1].forEach(sd => { for (let z = z0 - 2.2; z > z1 + 1.5; z -= 3.0) { const xd = sd * (A.hw - 1.0), face = sd < 0 ? -Math.PI / 2 : Math.PI / 2;   // escritorio pegado al muro, el personal mira hacia el muro
+                    box(0.8, 0.05, 1.8, wood, xd, 0.75, z); [-0.8, 0.8].forEach(dz => box(0.7, 0.72, 0.05, dark, xd, 0.37, z + dz));   // cubierta y patas de panel
+                    [-0.38, 0.38].forEach((dz, i) => { const mon = box(0.04, 0.34, 0.56, dark, xd + sd * 0.25, 1.05, z + dz); const sc = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.3), scr(screens[(k + i) % 4])); sc.position.set(xd + sd * 0.225, 1.05, z + dz); sc.rotation.y = -face; g.add(sc); box(0.12, 0.12, 0.05, dark, xd + sd * 0.28, 0.83, z + dz); });
+                    box(0.18, 0.02, 0.45, dark, xd - sd * 0.05, 0.785, z); box(0.45, 0.42, 0.2, dark, xd, 0.21, z + 0.6);   // teclado y CPU
+                    const cx = xd - sd * 0.75; box(0.5, 0.08, 0.5, chairM, cx, 0.48, z); box(0.08, 0.6, 0.48, chairM, cx - sd * 0.24, 0.85, z); box(0.06, 0.44, 0.06, dark, cx, 0.24, z);   // silla
+                    seats.push({ x: cx + sd * 0.05, z, ry: face, fem: k % 2 === 1 }); k++; } });
+            g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } }); scene.add(g);
+            // personal sentado (operario con clip "sit" del modelo realista); se agrega cuando el modelo terminó de cargar
+            const seatPeople = () => { if (!GLTF_AVATAR.ok || !GLTF_AVATAR.clips.sit) return false; seats.forEach(st => { try { const av = makeGLTFAvatar(false); gltfPlay(av, 'sit', 0); av.mixer.update(0.05); Object.values(av.acts || {}).forEach(a => { a.paused = true; });
+                    const p = new THREE.Group(); p.add(av.obj); p.position.set(st.x, 0.05, st.z); p.rotation.y = st.ry; p.name = 'officeWorker'; g.add(p); } catch (e) { console.warn('[SIM] oficina:', e.message); } }); return true; };
+            if (!seatPeople()) { const t = setInterval(() => { if (seatPeople()) clearInterval(t); }, 1500); } }
         function buildWalls() {
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xd9dde6, roughness: 0.95 });
             const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2, h = WAREHOUSE.h;
+            const OFF = OFFICE_ANNEX;   // vano trasero hacia el área de oficinas (ancho para que pase el montacargas)
             const walls = [
-                { g: [WAREHOUSE.w, h, 0.5], p: [0, h / 2, -hd] },
+                { g: [hw - OFF.hw, h, 0.5], p: [-(hw + OFF.hw) / 2, h / 2, -hd] }, { g: [hw - OFF.hw, h, 0.5], p: [(hw + OFF.hw) / 2, h / 2, -hd] }, { g: [OFF.hw * 2, h - OFF.oh, 0.5], p: [0, OFF.oh + (h - OFF.oh) / 2, -hd], lintel: true },
                 { g: [0.5, h, WAREHOUSE.d], p: [-hw, h / 2, 0] }, { g: [0.5, h, WAREHOUSE.d], p: [hw, h / 2, 0] }
             ];
             const wc = document.createElement('canvas'); wc.width = 128; wc.height = 384; const wg = wc.getContext('2d'); wg.fillStyle = '#e4e7ec'; wg.fillRect(0, 0, 128, 384);
@@ -6974,19 +7016,20 @@
             roof.rotation.x = Math.PI / 2; roof.position.y = h; roof.name = 'roof'; window.roofMesh = roof; scene.add(roof);
             const beamMat = new THREE.MeshStandardMaterial({ color: BRAND.azul });
             for (let z = -hd + 7.5; z < hd; z += 15) { const b = new THREE.Mesh(new THREE.BoxGeometry(WAREHOUSE.w, 0.6, 0.4), beamMat); b.position.set(0, h - 0.3, z); scene.add(b); }
-            for (let x = -hw + 10; x < hw; x += 20) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.5, h, 0.5), beamMat); c.position.set(x, h / 2, -hd + 0.6); scene.add(c); }
+            for (let x = -hw + 10; x < hw; x += 20) { if (Math.abs(x) < OFF.hw + 0.5) continue; const c = new THREE.Mesh(new THREE.BoxGeometry(0.5, h, 0.5), beamMat); c.position.set(x, h / 2, -hd + 0.6); scene.add(c); }
 
             // Letrero grande DICKA en pared de fondo
             const logoTex = new THREE.TextureLoader().load(LOGO_DATA); logoTex.anisotropy = 4;
-            const bannerBg = new THREE.Mesh(new THREE.PlaneGeometry(38, 12), new THREE.MeshBasicMaterial({ color: 0xffffff })); bannerBg.position.set(0, h - 6.6, -hd + 0.28); scene.add(bannerBg);
-            const banner = new THREE.Mesh(new THREE.PlaneGeometry(32, 32 * 70 / 242), new THREE.MeshBasicMaterial({ map: logoTex, transparent: true }));
-            banner.position.set(0, h - 5.2, -hd + 0.3); scene.add(banner);
+            const bannerBg = new THREE.Mesh(new THREE.PlaneGeometry(22, 5.6), new THREE.MeshBasicMaterial({ color: 0xffffff })); bannerBg.position.set(0, h - 3.0, -hd + 0.28); scene.add(bannerBg);   // logotipo arriba del vano de oficinas
+            const banner = new THREE.Mesh(new THREE.PlaneGeometry(17, 17 * 70 / 242), new THREE.MeshBasicMaterial({ map: logoTex, transparent: true }));
+            banner.position.set(0, h - 3.0, -hd + 0.3); scene.add(banner);
             // Letreros de seguridad en paredes laterales
             const safety = makeTextTexture([{ text: 'SEGURIDAD PRIMERO · VELOCIDAD MÁX 10 km/h', size: 60, color: '#FFFFFF' }], { w: 2048, h: 200, bg: '#2138D3' });
             [-hw + 0.3, hw - 0.3].forEach((x, i) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(30, 3), new THREE.MeshBasicMaterial({ map: safety })); m.position.set(x, 7, 0); m.rotation.y = i === 0 ? Math.PI / 2 : -Math.PI / 2; scene.add(m); });
 
             // Colisión con paredes
-            obstacles.push({ minX: -hw - 5, maxX: hw + 5, minZ: -hd - 5, maxZ: -hd + 0.5 });
+            obstacles.push({ minX: -hw - 5, maxX: -OFF.hw, minZ: -hd - 5, maxZ: -hd + 0.5 }); obstacles.push({ minX: OFF.hw, maxX: hw + 5, minZ: -hd - 5, maxZ: -hd + 0.5 });
+            buildOfficeAnnex();
             obstacles.push({ minX: -hw - 5, maxX: -1.7, minZ: hd - 0.5, maxZ: hd + 5 }); obstacles.push({ minX: 1.7, maxX: hw + 5, minZ: hd - 0.5, maxZ: hd + 5 }); [-20, -10, 10].forEach(ox => obstacles.push({ minX: ox - 1.7, maxX: ox + 1.7, minZ: hd - 0.5, maxZ: hd + 5 }));   /* andenes con tráiler en carga: sólo los cargadores entran */   // vano libre en el Andén 3 (x=0) para el tráiler
             obstacles.push({ minX: -hw - 5, maxX: -hw + 0.5, minZ: -hd, maxZ: hd });
             obstacles.push({ minX: hw - 0.5, maxX: hw + 5, minZ: -hd, maxZ: hd });
