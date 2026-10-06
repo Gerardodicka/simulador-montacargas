@@ -7390,12 +7390,12 @@
                     add(new THREE.BoxGeometry(1.7, 0.9, 0.12), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, metalness: .5, roughness: .45 }), 0, 0.8, 0.85, 'fork');
                     add(new THREE.BoxGeometry(W, 0.12, 0.72), new THREE.MeshStandardMaterial({ color: 0xf5c400 }), 0, 1.22, -2.0);   // franja amarilla de identificación en el contrapeso
                     const ccT = makeTextTexture([{ text: 'CARTON CLAMP', size: 70, color: '#011131' }], { w: 512, h: 128, bg: '#f5c400' }); const ccP = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.22), new THREE.MeshBasicMaterial({ map: ccT })); ccP.position.set(0, 1.0, -2.36); ccP.rotation.y = Math.PI; forklift.add(ccP);
-                    [-1, 1].forEach(sd => { const arm = add(new THREE.BoxGeometry(0.12, 0.12, 0.9), steel, sd * 0.75, 0.9, 1.35, 'clampArm' + (sd < 0 ? 'L' : 'R'));
+                    [-1, 1].forEach(sd => { [0.55, 1.15].forEach(ay => { const ar = add(new THREE.BoxGeometry(1, 0.11, 0.14), steel, sd * 0.575, ay, 1.02, 'clampArm' + (sd < 0 ? 'L' : 'R')); ar.scale.x = 1.15; });   // brazos laterales del bastidor a cada placa (se estiran al abrir)
                         const pad = add(new THREE.BoxGeometry(0.05, 1.25, 1.5), PAD_M, sd * 1.15, 0.75, 1.7, 'clampPad' + (sd < 0 ? 'L' : 'R'));
                         });
                     add(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 10), steel, 0, 1.1, 0.95, 'fork').rotation.z = Math.PI / 2;   // cilindro hidráulico transversal
                 } else { add(new THREE.BoxGeometry(0.95, 1.0, 0.04), black, 0, 0.9, 0.8, 'fork'); forks(1.0, 1.15); }
-                [-1, 1].forEach(sd => add(new THREE.CylinderGeometry(0.05, 0.05, 1.2, 8), steel, sd * 0.3, 1.0, 0.0).rotation.x = 0.3); // cilindros de inclinación
+                [-1, 1].forEach(sd => { const cy = add(new THREE.CylinderGeometry(0.045, 0.045, 0.62, 10), steel, sd * 0.42, 0.78, 0.38); cy.rotation.x = Math.PI / 2 - 0.12; }); // cilindros de inclinación: bajos, casi horizontales entre chasis y mástil (no estorban la vista)
                 logo(0.9, 0, 0.75, -2.36, Math.PI); logo(0.9, -W / 2 - 0.01, 0.55, -0.9, -Math.PI / 2); logo(0.9, W / 2 + 0.01, 0.55, -0.9, Math.PI / 2);
                 dicka(0.5, 0, 1.3, -2.36, Math.PI); beacon(0, 2.45, -1.5);
             }
@@ -7851,7 +7851,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.06 · v10.3 asiento';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.06 · v10.4 clamp brazos';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -9422,7 +9422,7 @@
                 if (child.name === 'reach1') { child.position.y = b.y + mastHeight; child.position.z = b.z + r1 * 0.5; }
                 if (child.name === 'reach2') { child.position.y = b.y + mastHeight; child.position.z = b.z + r1 + r2 * 0.5; }
                 if (child.name === 'fork') { child.position.y = b.y + mastHeight; child.position.z = b.z + r1 + r2; }
-                if (child.name.startsWith('clampPad') || child.name.startsWith('clampArm')) { const sd = child.name.endsWith('L') ? -1 : 1; const uh = (cargo && cargo.userData.cat && WG_CATS[cargo.userData.cat]) ? WG_CATS[cargo.userData.cat].h : 1.78; child.position.y = b.y + mastHeight + (child.name.startsWith('clampPad') ? (uh - 1.78) / 2 : 0); child.position.x = sd * (CLAMP.gap / 2 + (child.name.startsWith('clampArm') ? 0 : 0.03)); if (child.name.startsWith('clampPad')) child.scale.y = Math.max(0.55, uh / 1.78); }
+                if (child.name.startsWith('clampPad') || child.name.startsWith('clampArm')) { const sd = child.name.endsWith('L') ? -1 : 1; const uh = (cargo && cargo.userData.cat && WG_CATS[cargo.userData.cat]) ? WG_CATS[cargo.userData.cat].h : 1.78; child.position.y = b.y + mastHeight + (child.name.startsWith('clampPad') ? (uh - 1.78) / 2 : 0); if (child.name.startsWith('clampArm')) { child.position.x = sd * CLAMP.gap / 4; child.scale.x = Math.max(0.2, CLAMP.gap / 2); } else child.position.x = sd * (CLAMP.gap / 2 + 0.03); if (child.name.startsWith('clampPad')) child.scale.y = Math.max(0.55, uh / 1.78); }
                 if (child.name === 'platform') child.position.y = b.y + mastHeight;
                 if (child.name === 'mastRail') { child.scale.y = b.sy * (1 + mastHeight / Math.max(1, sp.maxMast) * 1.6); child.position.y = b.y * child.scale.y / b.sy; }
             });
