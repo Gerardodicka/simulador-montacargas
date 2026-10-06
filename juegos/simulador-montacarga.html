@@ -7365,9 +7365,12 @@
                   });
                   const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.1), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: '0.0 km/h', size: 60, color: '#8ff0b0' }, { text: 'BATERÍA 86%', size: 34, color: '#9fb0ff' }], { w: 256, h: 140, bg: '#04121f' }) })); scr.position.set(0.18, 1.2, -0.43); scr.rotation.set(-0.45, Math.PI, 0); scr.rotation.y = 0; scr.rotateX(0); forklift.add(scr);   // pantalla del tablero
                   const grab = add(new THREE.CylinderGeometry(0.018, 0.018, 0.45, 10), dark, -(W / 2 - 0.05), 1.55, -0.1); grab.rotation.x = 0.1; }   // asidero en el poste delantero
-                { const seatM = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: .85 }); add(new THREE.BoxGeometry(0.52, 0.1, 0.48), seatM, 0, 1.1, -1.4); add(new THREE.BoxGeometry(0.56, 0.06, 0.5), seatM, 0, 1.06, -1.4);
-                  const back = add(new THREE.BoxGeometry(0.5, 0.62, 0.1), seatM, 0, 1.45, -1.68); back.rotation.x = -0.15; const head = add(new THREE.BoxGeometry(0.3, 0.16, 0.08), seatM, 0, 1.85, -1.74); head.rotation.x = -0.15;
-                  [-1, 1].forEach(sd => add(new THREE.BoxGeometry(0.06, 0.2, 0.42), seatM, sd * 0.28, 1.18, -1.42)); }   // asiento de suspensión negro con respaldo alto y apoyacabezas
+                { const seatM = new THREE.MeshStandardMaterial({ color: 0x2b2e34, roughness: .8 }), baseM = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: .6, metalness: .4 });
+                  add(new THREE.BoxGeometry(0.42, 0.12, 0.38), baseM, 0, 1.1, -1.38);                                   // base de suspensión
+                  { const cu = add(new THREE.BoxGeometry(0.54, 0.16, 0.5), seatM, 0, 1.23, -1.38); cu.rotation.x = -0.1; }                                    // cojín
+                  const back = add(new THREE.BoxGeometry(0.52, 0.66, 0.12), seatM, 0, 1.6, -1.64); back.rotation.x = -0.12; const head = add(new THREE.BoxGeometry(0.32, 0.17, 0.1), seatM, 0, 2.02, -1.7); head.rotation.x = -0.12;   // respaldo alto y cabecera
+                  [-1, 1].forEach(sd => { add(new THREE.BoxGeometry(0.07, 0.06, 0.32), seatM, sd * 0.34, 1.5, -1.44); add(new THREE.BoxGeometry(0.04, 0.2, 0.04), baseM, sd * 0.34, 1.38, -1.56); });   // descansabrazos
+                }   // asiento de suspensión negro con respaldo alto y apoyacabezas
                 const wheelS = add(new THREE.TorusGeometry(0.18, 0.022, 8, 28), dark, 0, 1.6, -0.97); wheelS.rotation.x = 0.81; wheelS.name = 'steerWheel'; // volante perpendicular a la columna, a la altura de las manos del operador sentado
                 { const top = new THREE.Vector3(0, 1.6, -0.97), bot = new THREE.Vector3(0, 1.17, -0.55), dir = top.clone().sub(bot).normalize(); const hub = add(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 14), dark, top.x, top.y, top.z); hub.name = 'steerPart'; hub.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
                   [0, 2.1, 4.2].forEach(a => { const sp = add(new THREE.BoxGeometry(0.17, 0.014, 0.022), dark, top.x, top.y, top.z); sp.rotation.x = 0.81; sp.rotateZ(a); sp.translateX(0.085); sp.name = 'steerPart'; });
@@ -7848,7 +7851,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.06 · v10.2 volante gira';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.06 · v10.3 asiento';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8316,7 +8319,7 @@
         // ================== NIVEL C · AVATAR glTF RIGGEADO (opcional) ==================
         // Si existe assets/models/operario.glb (Mixamo, con clips walk/idle y opcionalmente wave/sit), los peatones lo usan.
         // Si no está disponible, se mantiene el avatar procedural v5. El modelo se carga una vez y se clona por personaje (SkeletonUtils).
-        const GLTF_SEAT = { y: 0.8, z: -1.45 };   // posición del modelo realista sentado respecto al equipo (pies a la altura del piso de la cabina)
+        const GLTF_SEAT = { y: 0.83, z: -1.45 };   // posición del modelo realista sentado respecto al equipo (pies a la altura del piso de la cabina)
         // ================== CALIDAD GRÁFICA ==================
         // Auto detecta GPU integrada o móvil → Media. Alta: PC con tarjeta dedicada. Baja: laptops lentas.
         const QUALITY_PRESETS = { alta: { dpr: 1.0, shadow: 1536, hiDist: 18, shadows: true, label: 'Alta' }, media: { dpr: 0.85, shadow: 1024, hiDist: 8, shadows: true, label: 'Media' }, baja: { dpr: 0.7, shadow: 768, hiDist: 0, shadows: false, label: 'Baja' } };
@@ -8552,6 +8555,14 @@
             if (d.length() < 0.35) forklift.children.forEach(o => { if (o.name === 'steerWheel' || o.name === 'steerPart') o.position.add(d); });
             if (!forklift.getObjectByName('steerPivot')) { const pv = new THREE.Group(); pv.name = 'steerPivot'; pv.position.copy(sw.position); pv.quaternion.copy(sw.quaternion); forklift.add(pv); forklift.updateMatrixWorld(true);   // aro, maza y rayos giran juntos con la dirección
                 const c0 = sw.position.clone(); forklift.children.slice().forEach(o => { if (o === sw || (o.name === 'steerPart' && o.geometry && o.geometry.type !== 'CylinderGeometry') || (o.name === 'steerPart' && o.position.distanceTo(c0) < 0.02)) pv.attach(o); }); } }
+        function captureWheelGrip(av) { const pv = forklift.getObjectByName('steerPivot'); if (!pv) return; forklift.updateMatrixWorld(true); av.obj.updateMatrixWorld(true); const pq = pv.getWorldQuaternion(new THREE.Quaternion()).invert();
+            av.wheelGrip = ['Right', 'Left'].map(sd => { const arm = av.obj.getObjectByName(sd + 'Arm'), fore = av.obj.getObjectByName(sd + 'ForeArm'), hand = av.obj.getObjectByName(sd + 'Hand'); if (!hand) return null;
+                return { arm, fore, hand, lp: pv.worldToLocal(hand.getWorldPosition(new THREE.Vector3())), lq: pq.clone().multiply(hand.getWorldQuaternion(new THREE.Quaternion())) }; }).filter(Boolean); av.gripAng = 0; }
+        // manos que siguen al volante cuando gira: la muñeca va a su punto del aro (IK) y la mano conserva su orientación respecto al volante
+        function followWheel(av) { const pv = forklift.getObjectByName('steerPivot'); if (!pv || !av.wheelGrip || Math.abs(pv.rotation.z - av.gripAng) < 0.004) return; av.gripAng = pv.rotation.z; forklift.updateMatrixWorld(true); const pq = pv.getWorldQuaternion(new THREE.Quaternion());
+            av.wheelGrip.forEach(g => { const target = pv.localToWorld(g.lp.clone());
+                for (let it = 0; it < 8; it++) [g.fore, g.arm].forEach(b => { av.obj.updateMatrixWorld(true); const bp = b.getWorldPosition(new THREE.Vector3()), hp = g.hand.getWorldPosition(new THREE.Vector3()); const q = new THREE.Quaternion().setFromUnitVectors(hp.sub(bp).normalize(), target.clone().sub(bp).normalize()); const bw = b.getWorldQuaternion(new THREE.Quaternion()), pw = b.parent.getWorldQuaternion(new THREE.Quaternion()); b.quaternion.copy(pw.invert().multiply(q.multiply(bw))); });
+                av.obj.updateMatrixWorld(true); const pw = g.hand.parent.getWorldQuaternion(new THREE.Quaternion()); g.hand.quaternion.copy(pw.invert().multiply(pq.clone().multiply(g.lq))); }); av.obj.updateMatrixWorld(true); }
         function makeStandingOperator(low) { const av = makeGLTFAvatar(low); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av); const op = new THREE.Group(); op.add(av.obj); const hg = new THREE.Group(); hg.name = 'opHead'; op.add(hg); op.userData.gltf = av; op.userData.standing = true; return op; }
         // Mano recta y abierta: devuelve muñeca y dedos a la pose de enlace del modelo (sin el agarre de volante que deja el clip de conducción)
         function straightenHand(av, side) { if (!av.handBones) { av.handBones = {}; const src = {}; GLTF_AVATAR.gltf.scene.traverse(o => { if (o.isBone) src[o.name] = o.quaternion; }); av.obj.traverse(o => { if (o.isBone && /(Left|Right)Hand/.test(o.name) && src[o.name]) { const sd = /Right/.test(o.name) ? 'Right' : 'Left'; (av.handBones[sd] = av.handBones[sd] || []).push([o, src[o.name].clone()]); } }); }
@@ -9508,7 +9519,7 @@
             const sp = spec();
             applyForkliftPose(mastHeight, r1, r2); { const opG = forklift.getObjectByName('operator'); if (opG && opG.userData.gltf) { const av = opG.userData.gltf; if (!av.frozen) av.mixer.update(Math.min(0.05, dtS));
                     if (!opG.userData.standing && !av.frozen && (av.frames = (av.frames || 0) + 1) > 2) { av.frozen = true; Object.values(av.acts || {}).forEach(a => { a.paused = true; });   // sentado: postura fija (sin movimientos involuntarios del clip)
-                        const sw = forklift.getObjectByName('steerWheel'); if (sw) seatHandsOnWheel(av, sw); } } }
+                        const sw = forklift.getObjectByName('steerWheel'); if (sw) { seatHandsOnWheel(av, sw); captureWheelGrip(av); } } if (av.frozen) followWheel(av); } }
             { const jg = forklift.getObjectByName('cabinJoystick'); if (jg) { const lv = jg.getObjectByName('lever'); const tx = -Math.max(-1, Math.min(1, fwd)) * 0.38, tz = Math.max(-1, Math.min(1, turn)) * 0.32; lv.rotation.x += (tx - lv.rotation.x) * 0.25; lv.rotation.z += (tz - lv.rotation.z) * 0.25; { const pv = forklift.getObjectByName('steerPivot'); if (pv) pv.rotation.z += (-Math.max(-1, Math.min(1, turn)) * 2.4 - pv.rotation.z) * 0.18; }   // el volante gira al dar vuelta
                 const opG = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); if (opG && !opG.userData.gltf) { const armR = opG.getObjectByName('armR'), elbR = opG.getObjectByName('elbowR'); if (armR && elbR && (spec().type === 'Reach' || spec().type === 'Double Reach' || spec().type === 'Orderpicker')) { armR.rotation.x = -0.55 + lv.rotation.x * 0.3; armR.rotation.z = 0.35; elbR.rotation.x = -1.15 + lv.rotation.x * 0.4;
                     if (!jg.userData.snapped) { const hand = opG.getObjectByName('handR'); if (hand) { forklift.updateMatrixWorld(true); const hw = new THREE.Vector3(); hand.getWorldPosition(hw); const hl = forklift.worldToLocal(hw); jg.position.set(hl.x, hl.y - 0.33, hl.z); jg.userData.snapped = true; supportControls(forklift, (opG.position.y || 0.2) + 0.02); } } } }
