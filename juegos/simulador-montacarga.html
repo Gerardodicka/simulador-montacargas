@@ -7842,7 +7842,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.06 · v9.7 clamp real';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.06 · v9.8 avatares';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8524,14 +8524,14 @@
             const aF = W.armFwd * G.arm, aD = W.armDown * (av.fem ? 0.84 : 1); setBoneWorld(av, 'lArm', C.swing * (aswL * aF + 0.03), -armIn, C.armL * aD); setBoneWorld(av, 'rArm', C.swing * (aswR * aF + 0.03), armIn, C.armR * aD);
             const eL = C.swing * (0.12 + G.loose + (aswL * 0.5 + 0.5) * W.elbow * k), eR = C.swing * (0.12 + G.loose + (aswR * 0.5 + 0.5) * W.elbow * k); const eS = av.fem ? 0.45 : 1;   // codo relajado: se dobla más al ir adelante
             setBoneWorld(av, 'lFore', eL * eS, 0, C.armL * 0.08); setBoneWorld(av, 'rFore', eR * eS, 0, C.armR * 0.08);
-            setBoneWorld(av, 'lHand', eL * eS * 0.9, 0, C.armL * 0.12); setBoneWorld(av, 'rHand', eR * eS * 0.9, 0, C.armR * 0.12);   // muñeca suelta siguiendo al antebrazo, palma hacia el muslo
+            setBoneWorld(av, 'lHand', eL * eS * 0.35, 0, C.armL * 0.12); setBoneWorld(av, 'rHand', eR * eS * 0.35, 0, C.armR * 0.12);   // muñeca suelta siguiendo al antebrazo, palma hacia el muslo
             if (waving) { setBoneWorld(av, 'rArm', 0, 0, C.armR * (-0.3 + Math.sin(t * 7.7) * 0.12)); setBoneWorld(av, 'rFore', 0, 0, C.armR * -0.7); setBoneWorld(av, 'rHand', 0, 0, C.armR * -0.7); }   // mano abierta y recta, alineada al antebrazo
             // piernas: el muslo oscila; la rodilla se flexiona en la fase de vuelo (pierna que avanza) y queda casi recta al apoyar; el pie hace talón-punta
             const kn = x => (Math.max(0, Math.sin(x - 0.9)) ** 1.5 * W.knee + Math.max(0, Math.sin(2 * x + 2.2)) * 0.12) * k * G.leg;   // flexión en vuelo + amortiguación al apoyar
             const kneeL = kn(w), kneeR = kn(w + Math.PI);
             const CL = C.leg ?? C.swing; setBoneWorld(av, 'lUp', CL * (sw * W.legSwing + kneeL * 0.25), 0, C.armL * W.legIn); setBoneWorld(av, 'rUp', CL * (sw2 * W.legSwing + kneeR * 0.25), 0, C.armR * W.legIn);   // muslos ligeramente hacia el centro: pasos sobre una línea, no piernas abiertas
             const CK = C.knee ?? CL; setBoneWorld(av, 'lLeg', -CK * kneeL); setBoneWorld(av, 'rLeg', -CK * kneeR);
-            setBoneWorld(av, 'lFoot', CL * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + 0.4) * 0.28)) * k - kneeL * 0.35)); setBoneWorld(av, 'rFoot', CL * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + 0.4) * 0.28)) * k - kneeR * 0.35));
+            const fS = av.fem ? 0.45 : 1; setBoneWorld(av, 'lFoot', CL * fS * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + 0.4) * 0.28)) * k - kneeL * 0.35)); setBoneWorld(av, 'rFoot', CL * fS * (Math.max(-W.foot, Math.min(W.foot, Math.sin(w + Math.PI + 0.4) * 0.28)) * k - kneeR * 0.35));   // operarias: tobillo más suave (el tenis del modelo exagera la punta)
             // cadera: rebote doble por zancada, vaivén lateral y contrarrotación; tronco inclinado al frente al caminar; hombros compensan
             if (av.bones.hips) { av.bones.hips.position.y = av.hipsY0 + (Math.abs(Math.cos(w)) * 2.2 - 1.1) * k + breathe * 100 * 0.3; }
             const ln = W.lean * G.lean + (av.fem ? -0.14 : 0), sy = G.sway; setBoneWorld(av, 'hips', C.swing * ln * k, Math.sin(w) * 0.10 * k * sy, Math.sin(w + 0.5) * 0.05 * k * sy);   // pelvis gira y cae del lado que avanza
