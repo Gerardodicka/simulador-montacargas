@@ -8044,7 +8044,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v11.0 más avatares';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v11.1 cascos';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8693,7 +8693,12 @@
                 const hat = new THREE.Group(); hat.name = 'femHelmet'; const dome = new THREE.Mesh(new THREE.SphereGeometry(0.118, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2), hm); dome.scale.set(1, 0.85, 1.12); hat.add(dome);
                 const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.135, 0.012, 24), hm); brim.scale.z = 1.15; hat.add(brim); const peak = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2), hm); peak.scale.set(1.05, 0.12, 0.9); peak.position.set(0, 0, 0.12); hat.add(peak);
                 for (let r = -1; r <= 1; r++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(0.117, 0.006, 6, 20, Math.PI), hm); rib.position.x = r * 0.035; rib.rotation.y = Math.PI / 2; rib.scale.set(1, 0.85, 1.12); hat.add(rib); }
-                hat.scale.setScalar(k); hat.position.set(0, 0.165 * k, 0.0); headBone.add(hat); } }
+                hat.scale.setScalar(k); hat.position.set(0, 0.165 * k, 0.0);
+                // ajuste por modelo: se apoya en la coronilla (HeadTop_End) y queda derecho aunque el hueso de la cabeza venga inclinado en la pose de enlace
+                scene.updateMatrixWorld(true); let top = null; headBone.traverse(b => { if (!top && b.isBone && /HeadTop/.test(b.name)) top = b; });
+                if (top) { const tp = headBone.worldToLocal(top.getWorldPosition(new THREE.Vector3())); const up = tp.clone().normalize(); const len = tp.length(); hat.position.copy(up.multiplyScalar(len - 0.085 * k)); }
+                const hq = headBone.getWorldQuaternion(new THREE.Quaternion()), rq = scene.getWorldQuaternion(new THREE.Quaternion()); hat.quaternion.copy(hq.invert().multiply(rq));
+                headBone.add(hat); } }
         function makeGLTFAvatar(low, fem) { if (fem && GLTF_FEM.gltf) return makeFemAvatar();
             const src = (low && GLTF_LOD.gltf) ? GLTF_LOD.gltf.scene : GLTF_AVATAR.gltf.scene; const clone = THREE.SkeletonUtils.clone(src); clone.scale.setScalar(GLTF_AVATAR.scale); clone.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = true; if (o.geometry) { o.geometry.computeBoundingSphere(); const bs = o.geometry.boundingSphere; const sc = GLTF_AVATAR.rigScale || 1; bs.center.set(0, 0.9 / sc, 0); bs.radius = 1.4 / sc; } if (o.material) { o.material.side = THREE.FrontSide; if (o.material.map) o.material.map.encoding = THREE.sRGBEncoding; if (o.material.transparent) { o.material.alphaTest = 0.5; o.material.transparent = false; o.material.depthWrite = true; } } } });
             const mixer = new THREE.AnimationMixer(clone); const acts = {}; const clipsSrc = (low && GLTF_LOD.gltf) ? { sit: GLTF_LOD.gltf.animations[0] } : GLTF_AVATAR.clips; Object.entries(clipsSrc).forEach(([k, c]) => { if (c) acts[k] = mixer.clipAction(c); }); if (acts.idle) acts.idle.play(); else if (acts.walk) acts.walk.play(); try { if (!low) addAvatarGear(clone); else clone.traverse(o => { if (o.isMesh && /Boots/i.test(o.name)) { const m = o.material.clone(); m.skinning = true; m.color = new THREE.Color(0x262422); o.material = m; } }); } catch (e) { console.warn('[SIM] EPP avatar:', e.message); } return { obj: clone, mixer, acts, current: acts.idle ? 'idle' : (acts.walk ? 'walk' : null) }; }
