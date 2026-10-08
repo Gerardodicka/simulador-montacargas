@@ -7019,12 +7019,13 @@
         // convivencia dinámica patinero ↔ montacargas: cuando un montacargas toma el pasillo, el patinero sale y espera a un lado de la entrada;
         // al terminar el montacargas (sale del pasillo) el patinero vuelve a entrar y sigue surtiendo donde se quedó
         function pickAisleFlow(P, dt, now) { const { near } = aisleZRange(), claimed = NPC.forks.some(f => (f.aisle === P.ai && Math.abs(f.x - P.cx) < 3.5 && f.z < near + 6) || (Math.abs(f.x - P.cx) < 1.8 && f.z < near + 1));   // el montacargas ya llega o está dentro del pasillo
-            const waitX = P.cx + P.side * 2.7, waitZ = near + 2.4;
+            const waitX = P.cx + P.side * 2.9, waitZ = 2.5;   // espera frente a la cabecera del rack, fuera del carril de montacargas y de la zona de tránsito
+            if (P.state === 'out') { P.unload = true; P.t = 0; P.resume = { state: 'go', tz: -4 - Math.random() * 30 }; P.state = 'evac'; }
             if (claimed && P.state !== 'evac' && P.state !== 'wait') { P.resume = { state: P.state === 'out' || P.state === 'drop' ? P.state : 'go', tz: P.tz }; P.state = 'evac'; P.hand.visible = false; P.body.rotation.y = 0; if (typeof npcReply === 'function' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 25) npcReply('🛒 Patinero sale del pasillo ' + P.ai + ': entra montacargas'); }
             if (P.state === 'evac') { const d = waitZ - P.z; P.z += Math.sign(d) * Math.min(Math.abs(d), 1.1 * dt); P.dir = 1; P.w += dt * 5.5; gltfWalkPose(P.av, true, P.w, now, false, 0); if (Math.abs(d) < .05) { P.x += (waitX - P.x) * Math.min(1, dt * 1.5); if (Math.abs(waitX - P.x) < .05) P.state = 'wait'; } return true; }
-            if (P.state === 'wait') { gltfWalkPose(P.av, false, P.w, now, false, 0); if (!claimed) { P.x += (P.lane - P.x) * Math.min(1, dt * 1.5); if (Math.abs(P.lane - P.x) < .05) { P.x = P.lane; P.state = P.resume ? P.resume.state : 'go'; P.tz = P.resume ? P.resume.tz : -6; P.resume = null; } } return true; }
+            if (P.state === 'wait') { gltfWalkPose(P.av, false, P.w, now, false, 0); if (P.unload) { P.t = (P.t || 0) + dt; if (P.t > 2.5) { P.unload = false; P.picks = 0; setPickLoad(P); P.t = 0; } return true; }   /* deja la tarima completa en la cabecera */ if (!claimed) { P.x += (P.lane - P.x) * Math.min(1, dt * 1.5); if (Math.abs(P.lane - P.x) < .05) { P.x = P.lane; P.state = P.resume ? P.resume.state : 'go'; P.tz = P.resume ? P.resume.tz : -6; P.resume = null; } } return true; }
             return false; }
-        function pickUpdate(dt, now) { PICKERS.forEach(P => { if (pickAisleFlow(P, dt, now)) { P.g.position.set(P.x, 0, P.z); P.g.rotation.y = P.dir < 0 ? Math.PI : 0; return; } const blocked = NPC.forks.some(f => Math.hypot(f.x - P.x, f.z - P.z) < 4.5) || (typeof forkPosition !== 'undefined' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 4);
+        function pickUpdate(dt, now) { PICKERS.forEach(P => { if (pickAisleFlow(P, dt, now)) { P.g.position.set(P.x, 0, P.z); P.g.rotation.y = P.dir < 0 ? Math.PI : 0; return; } const goDir = Math.sign((P.state === 'go' ? P.tz : 3.2) - P.z) || P.dir; const ahead = (x, z, r) => Math.abs(x - P.x) < 1.8 && (z - P.z) * goDir > -0.5 && Math.abs(z - P.z) < r; const blocked = NPC.forks.some(f => ahead(f.x, f.z, 4.5)) || (typeof forkPosition !== 'undefined' && ahead(forkPosition.x, forkPosition.z, 4));   // solo frena por equipos frente a él en su carril
               const walkTo = tz => { const d = tz - P.z; if (blocked) { gltfWalkPose(P.av, false, P.w, now, false, 0); return false; } const st = Math.sign(d) * Math.min(Math.abs(d), .95 * dt); P.z += st; P.w += dt * 5.5; P.dir = Math.sign(d) || P.dir; gltfWalkPose(P.av, true, P.w, now, false, 0); return Math.abs(d) < .02; };
               if (P.state === 'go') { if (walkTo(P.tz)) { P.state = 'pick'; P.t = 0; } }
               else if (P.state === 'pick') { P.t += dt; gltfWalkPose(P.av, false, P.w, now, false, 0); P.body.rotation.y = P.side * (P.dir < 0 ? -1 : 1) * Math.PI / 2 * Math.min(1, P.t * 2);   // gira hacia el rack
@@ -8081,7 +8082,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v11.6 flujo emplayado-andén';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v11.7 cabeceras libres';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
