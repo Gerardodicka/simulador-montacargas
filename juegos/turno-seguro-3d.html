@@ -6967,6 +6967,28 @@
               gltfWalkPose(S.av, true, S.a * 6, now, false, 0); const ry = .25 + Math.min(1.2, S.h); const rp = new THREE.Vector3(S.x + Math.sin(S.a) * .64, ry, S.z + Math.cos(S.a) * .64); S.roll.position.copy(rp); S.roll.visible = true;
               S.wr.scale.y = Math.max(S.wr.scale.y, Math.min(1.25, S.h + .15)); S.wr.position.y = .17 + S.wr.scale.y / 2;   // la película sube con el rollo
               S.op.updateMatrixWorld(true); ikReach(S.av, 'Right', rp.clone().add(new THREE.Vector3(0, .22, 0)), 6); ikReach(S.av, 'Left', rp.clone().add(new THREE.Vector3(0, -.2, 0)), 6); }); }
+        // ====== Picking con patín eléctrico en los pasillos de rack ======
+        // cada surtidor avanza por el pasillo pegado a un lado, se detiene en una ubicación, toma cajas del nivel 1 y las acomoda en su tarima;
+        // con la tarima completa regresa al frente (staging) a dejarla y vuelve a surtir. Cede el paso si hay un montacargas cerca.
+        const PICKERS = [];
+        function buildPickers() { if (typeof makeWalkieJack !== 'function' || !GLTF_AVATAR.ok || typeof AISLES === 'undefined' || !AISLES.length) return;
+            AISLES.forEach((A, i) => { const side = i % 2 ? 1 : -1, x = A.x + side * .95; let av; try { av = pickAvatar(i % 3 === 2 && !!GLTF_FEM.gltf); } catch (e) { av = makeGLTFAvatar(false, false); }
+                av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; });
+                const g = new THREE.Group(), body = new THREE.Group(); body.add(av.obj); g.add(body); const jack = makeWalkieJack(i); g.add(jack.g); scene.add(g);
+                const ld = jack.load; ld.visible = true; ld.userData.y0 = ld.position.y; ld.userData.sy = ld.scale.y; const hand = new THREE.Mesh(new THREE.BoxGeometry(.4, .28, .3), unitLoadMat(i % 3)); hand.visible = false; scene.add(hand);
+                PICKERS.push({ g, body, av, ld, hand, x, side, z: 1 + i * .5, tz: -6 - i * 7, state: 'go', t: 0, w: i, picks: 0, dir: -1 }); setPickLoad(PICKERS[PICKERS.length - 1]); }); }
+        function setPickLoad(P) { const k = Math.min(1, P.picks / 6); P.ld.visible = k > 0; P.ld.scale.y = P.ld.userData.sy * Math.max(.05, k); P.ld.position.y = P.ld.userData.y0 - (1 - k) * .45; }
+        function pickUpdate(dt, now) { PICKERS.forEach(P => { const blocked = NPC.forks.some(f => Math.hypot(f.x - P.x, f.z - P.z) < 4.5) || (typeof forkPosition !== 'undefined' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 4);
+              const walkTo = tz => { const d = tz - P.z; if (blocked) { gltfWalkPose(P.av, false, P.w, now, false, 0); return false; } const st = Math.sign(d) * Math.min(Math.abs(d), .95 * dt); P.z += st; P.w += dt * 5.5; P.dir = Math.sign(d) || P.dir; gltfWalkPose(P.av, true, P.w, now, false, 0); return Math.abs(d) < .02; };
+              if (P.state === 'go') { if (walkTo(P.tz)) { P.state = 'pick'; P.t = 0; } }
+              else if (P.state === 'pick') { P.t += dt; gltfWalkPose(P.av, false, P.w, now, false, 0); P.body.rotation.y = P.side * (P.dir < 0 ? -1 : 1) * Math.PI / 2 * Math.min(1, P.t * 2);   // gira hacia el rack
+                const cyc = P.t % 3.2, wx = P.x + P.side * .8; P.g.updateMatrixWorld(true);
+                if (cyc < 1.4) { ikReach(P.av, 'Right', new THREE.Vector3(wx, 1.05, P.z), 6); ikReach(P.av, 'Left', new THREE.Vector3(wx, 1.0, P.z + .2), 6); P.hand.visible = cyc > .9; P.hand.position.set(wx - P.side * .1, 1.0, P.z + .1); }   // toma la caja del nivel 1
+                else { const pz = P.z + P.dir * -.0 + (P.dir < 0 ? -.95 : .95); ikReach(P.av, 'Right', new THREE.Vector3(P.x, .95, pz), 6); ikReach(P.av, 'Left', new THREE.Vector3(P.x, .9, pz + .2), 6); P.hand.visible = cyc < 2.4; P.hand.position.set(P.x, .95, pz); }   // la deja en la tarima
+                if (P.t > 3.2 * 2) { P.picks += 2; setPickLoad(P); P.hand.visible = false; P.body.rotation.y = 0; if (P.picks >= 6) { P.state = 'out'; } else { P.tz = Math.max(-36, P.z - 4 - Math.random() * 6); P.state = 'go'; } } }
+              else if (P.state === 'out') { if (walkTo(3.2)) { P.state = 'drop'; P.t = 0; } }
+              else if (P.state === 'drop') { P.t += dt; gltfWalkPose(P.av, false, P.w, now, false, 0); if (P.t > 2.5) { P.picks = 0; setPickLoad(P); P.tz = -4 - Math.random() * 30; P.state = 'go'; } }   // deja la tarima en el staging
+              P.g.position.set(P.x, 0, P.z); P.g.rotation.y = P.dir < 0 ? Math.PI : 0; if (P.state === 'go' || P.state === 'out') { const C = P.av.calib; if (C) { setBoneWorld(P.av, 'lArm', C.swing * .75, -.18, C.armL * 1.35); setBoneWorld(P.av, 'rArm', C.swing * .75, .18, C.armR * 1.35); } } }); }   // manos en el timón al caminar
         const CHARGE_ANNEX = { x0: 14.5, x1: 29, depth: 11, gate: [16.2, 19.6] }, CHARGE = { scr: [], cable: [], hang: [], pct: [], st: ['on', 'on', 'off'], crew: [], lastScr: [] };
         function chargeScreen(k) { const sc = CHARGE.scr[k]; if (!sc) return; const st = CHARGE.st[k], p = Math.round(CHARGE.pct[k] ?? 100), key = st + p; if (CHARGE.lastScr[k] === key) return; CHARGE.lastScr[k] = key;
             const lines = st === 'on' ? [{ text: p >= 100 ? 'LISTO' : 'CARGANDO', size: 40, color: p >= 100 ? '#33ff77' : '#ffb020' }, { text: p + '%', size: 40, color: '#fff' }] : [{ text: 'APAGADO', size: 40, color: '#ff6b6b' }, { text: p + '%', size: 34, color: '#9fb0ff' }];
@@ -7038,7 +7060,7 @@
                     const c = { k, op, av, visor, w: 0, path: [], step: 0, t: k * 9, task: k ? 'work' : 'work' }; op.position.set(18 + k * 2.5, 0, z0 + 4 + k); CHARGE.crew.push(c); } catch (e) { console.warn('[SIM] carga:', e.message); } }); return true; };
             const tryAll = () => { const a = parked.length || parkForks(), b = crew(); return a && b; }; if (!tryAll()) { let tries = 0; const t = setInterval(() => { tries++; if ((parked.length || parkForks()) && (crew() || tries > 40)) clearInterval(t); }, 1500); } }
         // rutina del personal de oficina: captura en la computadora (tecleo) → se levanta, va al archivero por documentos → regresa y los captura
-        function officeUpdate(dt, now) { try { dojoUpdate(dt, now); } catch (e) { } try { chargeUpdate(dt, now); } catch (e) { } try { wrapUpdate(dt, now); } catch (e) { } if (!OFFICE_WORKERS.length) return; const hd = WAREHOUSE.d / 2;
+        function officeUpdate(dt, now) { try { dojoUpdate(dt, now); } catch (e) { } try { chargeUpdate(dt, now); } catch (e) { } try { wrapUpdate(dt, now); } catch (e) { } try { pickUpdate(dt, now); } catch (e) { } if (!OFFICE_WORKERS.length) return; const hd = WAREHOUSE.d / 2;
             OFFICE_WORKERS.forEach(wk => { wk.t += dt;
                 if (wk.state === 'type') { const k = wk.fast > 0 ? 1.6 : 1; wk.fast = Math.max(0, (wk.fast || 0) - dt); wk.typing.forEach((o, i) => { o.b.quaternion.copy(o.q); o.b.rotateX(Math.sin(now * .022 * k + wk.ph + i * 1.7) * (i < 2 ? .16 : .035) * (Math.sin(now * .0011 + wk.ph) > -.3 ? 1 : 0)); });
                   if (wk.walker && wk.t > wk.dur) { const sd = wk.sd, st = wk.st; wk.path = [[st.x - sd * .3, st.z + .5], [sd * 8.0, st.z + .5], [sd * 8.0, -hd - .9], [sd * 9.3, -hd - 1.0]]; wk.pi = 0; wk.state = 'out'; wk.seat.visible = false; const W = wk.walker; W.g.visible = true; W.folder.visible = false; W.g.position.set(wk.path[0][0], 0, wk.path[0][1]); } return; }
@@ -8918,6 +8940,10 @@
             if (GLTF_FEM.gltf) npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { fem: true, prop: 'clipboard' }); else npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { skin: 0xd8a27a, hair: 0x2a1a10, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'clipboard' });
             npcPed('Auditor de inventario', [[RACK_WALKS[0].x, WALK_Z[1] - .2], [RACK_WALKS[0].x, WALK_BACK]], 0.3, { skin: 0xcf9a72, hair: 0x2a1a10, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xffffff, height: 1.0, prop: 'scanner' });
             npcPed('Auxiliar de reabasto', [[RACK_WALKS[2].x, WALK_BACK], [RACK_WALKS[2].x, WALK_Z[1] - .2]], 0.6, { fem: true, skin: 0xd8a27a, hair: 0x2a1a10, shirt: 0xf2f2f2, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'clipboard' });
+            try { buildPickers(); } catch (e) { console.warn('[SIM] picking:', e.message); }
+            const P2 = (n, path, ph, fem, prop) => npcPed(n, path, ph, fem ? { fem: true, prop } : { skin: 0xc68a5e, hair: 0x1a1a1a, shirt: 0x2a5a9c, pants: 0x223f6e, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop });
+            P2('Supervisor de piso', [[-28.6, 41.8], [28.6, 41.8]], 0.86, false, 'radio'); P2('Auxiliar de calidad', [[28.6, -41], [28.6, 41.8]], 0.45, (typeof GLTF_FEM !== 'undefined' && !!GLTF_FEM.gltf), 'clipboard');
+            P2('Checador de embarques', [[RACK_WALKS[1].x, WALK_BACK], [RACK_WALKS[1].x, WALK_Z[1] - .2]], 0.15, false, 'scanner'); P2('Auxiliar de inventario', [[-28.6, -41], [-28.6, 41.8]], 0.95, (typeof GLTF_FEM !== 'undefined' && !!GLTF_FEM.gltf), 'scanner');
             try { buildWrapStations(); } catch (e) { console.warn('[SIM] emplayado:', e.message); }
         }
         function segmentPos(path, t) { // t en [0,1] ida y vuelta
