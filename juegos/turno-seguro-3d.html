@@ -6930,9 +6930,24 @@
                 addSign('salida', x, 3.0, zf - 0.1, Math.PI, 1.1); addSign('precMonta', x + sd * 1.6, y, zf - 0.1, Math.PI); addSign('extintor', x - sd * 1.6, y, zf - 0.1, Math.PI);
             });
             // Muro de fondo (bajo el letrero DICKA): equipo de protección obligatorio y reglas del almacén
-            ['casco', 'chaleco', 'calzado', 'vel10', 'noFumar', 'precMonta', 'electrico', 'botiquin'].forEach((t, i, a) => addSign(t, (i - (a.length - 1) / 2) * 3.2, y, zb + 0.08, 0, 1.15));
+            ['casco', 'chaleco', 'calzado', 'vel10', 'noFumar', 'precMonta', 'electrico', 'botiquin'].forEach((t, i) => { const sd = i < 4 ? -1 : 1, j = i % 4; addSign(t, sd * (OFFICE_ANNEX.hw + 1.4 + j * 2.4), y + 0.6, zb + 0.08, 0, 1.0); });   // en el muro a los lados del vano de oficinas (no flotan en el hueco)
         }
         // ====== Detalles de nave: columnas de acero con protector, ductos de aire, tarimas vacías, contenedores de residuos y estación de carga de baterías ======
+        // Zona de carga de baterías: cajones pintados, 2 montacargas eléctricos conectados (cable al conector de batería), letrero colgante, kit antiderrames y extintor
+        function buildChargingBays(grp, add, M, x0, z0) { const zc = -42.2, red = M(0xc8102e, { roughness: .35, metalness: .3 }), dk = M(0x22252b), steel = M(0x9aa0a8, { metalness: .8, roughness: .3 }), cab = M(0x30343b), orange = M(0xff7a00);
+            const tex = (t, w, h, bg, col, sz) => new THREE.MeshBasicMaterial({ map: makeTextTexture(t.map(x => ({ text: x, size: sz || 60, color: col || '#111' })), { w, h, bg }) });
+            [x0 - 2.4, x0 + 2.6].forEach((bx, i) => { [[bx - 2.1, zc - 0.9, bx + 2.1, zc - 0.9], [bx - 2.1, zc + 0.9, bx + 2.1, zc + 0.9], [bx - 2.1, zc - 0.9, bx - 2.1, zc + 0.9], [bx + 2.1, zc - 0.9, bx + 2.1, zc + 0.9]].forEach(([a, b, c, d]) => paintLine(a, b, c, d, 0xf5c400, 0.08));
+              const f = new THREE.Group(); f.position.set(bx, 0, zc); f.rotation.y = Math.PI / 2;   // montacargas eléctrico estacionado, paralelo al muro (deja libre el pasillo)
+              const a2 = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); f.add(m); return m; };
+              a2(new THREE.BoxGeometry(1.1, .55, 2.2), red, 0, .5, -.6); a2(new THREE.BoxGeometry(.9, .5, .7), dk, 0, 1.0, -1.25); a2(new THREE.BoxGeometry(.5, .08, .45), dk, 0, .82, -.35); a2(new THREE.BoxGeometry(.5, .5, .08), dk, 0, 1.05, -.6);
+              [[-1, -1.5], [1, -1.5], [-1, .25], [1, .25]].forEach(([sx, sz]) => a2(new THREE.BoxGeometry(.06, 1.6, .06), dk, sx * .5, 1.55, sz)); a2(new THREE.BoxGeometry(1.1, .05, 1.85), dk, 0, 2.35, -.62);
+              [-1, 1].forEach(sx => { a2(new THREE.BoxGeometry(.1, 2.2, .12), dk, sx * .35, 1.15, .62); a2(new THREE.BoxGeometry(.12, .05, 1.1), dk, sx * .28, .06, 1.15); [[-.6], [.35]].forEach(([wz]) => { const w = a2(new THREE.CylinderGeometry(.24, .24, .2, 16), dk, sx * .48, .24, wz); w.rotation.z = Math.PI / 2; }); });
+              const sc = a2(new THREE.PlaneGeometry(.55, .2), tex(['CARGANDO ' + (i ? '78%' : '45%')], 256, 90, '#04121f', '#8ff0b0', 40), 0, 1.02, -1.61); sc.rotation.y = Math.PI;
+              grp.add(f); obstacles.push({ minX: bx - 2.05, maxX: bx + 1.6, minZ: zc - 0.62, maxZ: zc + 0.62 });
+              const cx = x0 - 3 + (i ? 3 : 0) * 2.3; const cable = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(cx, 1.1, z0 + 0.15), new THREE.Vector3(cx + .3, .15, z0 + .6), new THREE.Vector3(bx - 1.25, .2, zc - .3), new THREE.Vector3(bx - 1.25, .85, zc)]), 24, .022, 6), orange); grp.add(cable); });   // cable del cargador a la batería
+            const hang = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.0), tex(['⚡ ZONA DE CARGA DE BATERÍAS'], 1024, 200, '#f5c400', '#111', 70)); hang.position.set(x0 + 0.2, 4.2, -41.0); grp.add(hang); [-2.4, 2.8].forEach(dx => add(new THREE.CylinderGeometry(.01, .01, 7.6, 4), dk, x0 + dx, 8.0, -41.0));
+            const rules = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.1), tex(['NO FUMAR · NO FLAMAS', 'USE CARETA Y GUANTES', 'VENTILACIÓN OBLIGATORIA'], 512, 320, '#c8102e', '#fff', 40)); rules.position.set(x0 - 4.6, 2.2, z0 + 0.24); grp.add(rules);
+            add(new THREE.CylinderGeometry(.3, .3, .8, 16), M(0xf5c400), x0 + 6.6, .4, z0 + .1); const sk = new THREE.Mesh(new THREE.PlaneGeometry(.5, .25), tex(['KIT ANTIDERRAMES'], 256, 128, '#f5c400', '#111', 30)); sk.position.set(x0 + 6.6, .6, z0 + .41); grp.add(sk); }
         function buildWarehouseProps() { const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2, h = WAREHOUSE.h; const C = x => new THREE.Color(x).convertSRGBToLinear(); const grp = new THREE.Group(); grp.name = 'props';
             const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: C(c), roughness: .6, metalness: .2 }, o || {})); const steel = M(0x2b3a66, { metalness: .5, roughness: .45 }), yel = M(0xf5c400, { roughness: .5 }), duct = M(0xc9ced6, { metalness: .7, roughness: .3 }), dk = M(0x30343b);
             const add = (geo, mat, x, y, z, ry) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (ry) m.rotation.y = ry; m.castShadow = false; m.receiveShadow = true; grp.add(m); return m; };   /* sin sombra proyectada: ahorra el pase de sombras */
@@ -6941,12 +6956,23 @@
             const wood = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 }); [[-26, -43.2, 9], [-24.6, -43.2, 6], [-26, -41.8, 4]].forEach(([x, z, n]) => { for (let k = 0; k < n; k++) add(palletGeometry(), wood, x, 0.072 + k * 0.146, z, (k % 2) * 0.02); });   // tarimas vacías estibadas
             [[-21, 0x1e6fd8, 'PAPEL'], [-19.8, 0x2e9e5b, 'PLÁSTICO'], [-18.6, 0x8a8f99, 'BASURA'], [-17.4, 0xc8102e, 'RPBI']].forEach(([x, col, t]) => { add(new THREE.BoxGeometry(1.0, 1.1, 0.8), M(col, { roughness: .5 }), x, 0.55, -43.8); const l = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.22), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: t, size: 70, color: '#fff' }], { w: 320, h: 90, bg: '#011131' }) })); l.position.set(x, 0.85, -43.39); grp.add(l); });   // contenedores de separación de residuos
             { const x0 = 20, z0 = -43.6; paintLine(x0 - 4, -41, x0 + 5, -41, 0xf5c400, 0.1); paintLabel('CARGA DE BATERÍAS', x0 + 0.5, -40.2, 0.6, '#f5c400', 0, 5); for (let k = 0; k < 4; k++) { const x = x0 - 3 + k * 2.3; add(new THREE.BoxGeometry(0.7, 1.1, 0.45), M(0x3a3f47), x, 1.6, z0); const sc = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.12), new THREE.MeshBasicMaterial({ color: k % 2 ? 0x33ff77 : 0xffb020 })); sc.position.set(x, 1.85, z0 + 0.23); grp.add(sc); add(new THREE.BoxGeometry(0.05, 1.1, 0.05), dk, x + 0.25, 0.55, z0 + 0.1); }   // cargadores con indicador
-              const ew = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'LAVAOJOS', size: 54, color: '#fff' }], { w: 256, h: 120, bg: '#007A33' }) })); ew.position.set(x0 + 5.6, 1.9, z0 + 0.25); grp.add(ew); add(new THREE.CylinderGeometry(0.15, 0.15, 0.9, 14), M(0x2e9e5b), x0 + 5.6, 1.1, z0 + 0.1); }   // estación lavaojos (manejo de baterías)
+              const ew = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'LAVAOJOS', size: 54, color: '#fff' }], { w: 256, h: 120, bg: '#007A33' }) })); ew.position.set(x0 + 5.6, 1.9, z0 + 0.25); grp.add(ew); add(new THREE.CylinderGeometry(0.15, 0.15, 0.9, 14), M(0x2e9e5b), x0 + 5.6, 1.1, z0 + 0.1);
+              buildChargingBays(grp, add, M, x0, z0); }   // estación lavaojos (manejo de baterías)
             mergeStaticMeshes(grp); scene.add(grp); obstacles.push({ minX: -27, maxX: -16.8, minZ: -44.5, maxZ: -41.2 }); obstacles.push({ minX: 16, maxX: 26.5, minZ: -44.5, maxZ: -43.2 }); }
         // ====== Área de oficinas / mesas de control (ampliación trasera de la nave) ======
         // Vano de 24 m en el muro de fondo hacia un anexo de 12 m: mesas de control con personal sentado y computadoras a ambos lados,
         // protegidas con guarda de seguridad amarilla (postes y barandal); al centro queda un pasillo de 13 m para que entre y gire el montacargas.
-        const OFFICE_ANNEX = { hw: 12, depth: 12, oh: 5.5, aisle: 6.5 };
+        const OFFICE_ANNEX = { hw: 12, depth: 12, oh: 5.5, aisle: 6.5 }, OFFICE_WORKERS = [];
+        // rutina del personal de oficina: captura en la computadora (tecleo) → se levanta, va al archivero por documentos → regresa y los captura
+        function officeUpdate(dt, now) { if (!OFFICE_WORKERS.length) return; const hd = WAREHOUSE.d / 2;
+            OFFICE_WORKERS.forEach(wk => { wk.t += dt;
+                if (wk.state === 'type') { const k = wk.fast > 0 ? 1.6 : 1; wk.fast = Math.max(0, (wk.fast || 0) - dt); wk.typing.forEach((o, i) => { o.b.quaternion.copy(o.q); o.b.rotateX(Math.sin(now * .018 * k + wk.ph + i * 1.7) * (i < 2 ? .05 : .12) * (Math.sin(now * .0011 + wk.ph) > -.3 ? 1 : 0)); });
+                  if (wk.walker && wk.t > wk.dur) { const sd = wk.sd, st = wk.st; wk.path = [[st.x - sd * .3, st.z + .5], [sd * 8.0, st.z + .5], [sd * 8.0, -hd - .9], [sd * 9.3, -hd - 1.0]]; wk.pi = 0; wk.state = 'out'; wk.seat.visible = false; const W = wk.walker; W.g.visible = true; W.folder.visible = false; W.g.position.set(wk.path[0][0], 0, wk.path[0][1]); } return; }
+                const W = wk.walker; if (!W) return; W.w += dt * 6;
+                if (wk.state === 'pick') { gltfWalkPose(W.av, false, W.w, now, false, 0); if (wk.t > 3) { W.folder.visible = true; wk.path = wk.path.slice().reverse(); wk.pi = 0; wk.state = 'back'; } return; }
+                const tgt = wk.path[wk.pi + 1]; if (!tgt) { if (wk.state === 'out') { wk.state = 'pick'; wk.t = 0; W.g.rotation.y = wk.sd > 0 ? Math.PI / 2 : -Math.PI / 2; } else { W.g.visible = false; wk.seat.visible = true; wk.state = 'type'; wk.t = 0; wk.dur = 18 + Math.random() * 25; wk.fast = 10; } return; }
+                const dx = tgt[0] - W.g.position.x, dz = tgt[1] - W.g.position.z, d = Math.hypot(dx, dz), sp = 1.1 * dt; if (d <= sp) { W.g.position.set(tgt[0], 0, tgt[1]); wk.pi++; } else { W.g.position.x += dx / d * sp; W.g.position.z += dz / d * sp; }
+                const ry = Math.atan2(dx, dz); let dr = ry - W.g.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); W.g.rotation.y += dr * Math.min(1, dt * 8); gltfWalkPose(W.av, true, W.w, now, false, 0); }); }
         function buildOfficeAnnex() { const hd = WAREHOUSE.d / 2, A = OFFICE_ANNEX, z0 = -hd, z1 = -hd - A.depth, zc = (z0 + z1) / 2, H = 6.2; const g = new THREE.Group(); g.name = 'officeAnnex';
             const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .7 }, o || {})); const box = (w, hh, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), m); b.position.set(x, y, z); g.add(b); return b; };
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(A.hw * 2, A.depth), M(0x9aa0a8, { roughness: .85 })); floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0.004, zc); floor.receiveShadow = true; g.add(floor);
@@ -6979,10 +7005,21 @@
                     box(0.18, 0.02, 0.45, dark, xd - sd * 0.05, 0.785, z); box(0.45, 0.42, 0.2, dark, xd, 0.21, z + 0.6);   // teclado y CPU
                     const cx = xd - sd * 0.75; box(0.5, 0.08, 0.5, chairM, cx, 0.48, z); box(0.08, 0.6, 0.48, chairM, cx - sd * 0.24, 0.85, z); box(0.06, 0.44, 0.06, dark, cx, 0.24, z);   // silla
                     seats.push({ x: cx + sd * 0.05, z, ry: face, fem: k % 2 === 1 }); k++; } });
+            [-1, 1].forEach(sd => { box(.5, 1.3, .6, M(0x8a9099, { metalness: .4, roughness: .4 }), sd * 9.6, .65, z0 - .55); for (let d = 0; d < 4; d++) box(.42, .02, .02, M(0x2b2e34), sd * 9.6, .3 + d * .3, z0 - .86);   // archivero de 4 cajones
+              box(.6, .75, .5, M(0xd9dde4), sd * 8.6, .375, z0 - .5); box(.48, .25, .4, M(0x3a3f47), sd * 8.6, .87, z0 - .5);   // mueble con impresora
+              const nm = sd < 0 ? 'ÁREA ADMINISTRATIVA' : 'MESA DE CONTROL'; const hs = new THREE.Mesh(new THREE.PlaneGeometry(4.2, .8), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: nm, size: 70, color: '#fff' }], { w: 1024, h: 196, bg: sd < 0 ? '#1D2586' : '#c8102e' }) })); hs.position.set(sd * 9.4, 3.4, zc); hs.rotation.y = -sd * Math.PI / 2; g.add(hs); const hs2 = hs.clone(); hs2.rotation.y += Math.PI; hs2.position.x += sd * .01; g.add(hs2);   // legible desde el pasillo y desde los escritorios   // letrero colgante de la zona
+              [-1.4, 1.4].forEach(dz => { const c = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, H - 3.8, 4), M(0x333333)); c.position.set(sd * 9.4, 3.8 + (H - 3.8) / 2, zc + dz); g.add(c); }); });
+            { const vw = new THREE.Group(); const feeds = ['ANDÉN 1', 'ANDÉN 3', 'PASILLO A', 'RACK P2', 'CARGA BAT.', 'STAGING', 'ACCESO', 'PATIO']; feeds.forEach((t, i) => { const sc = new THREE.Mesh(new THREE.PlaneGeometry(1.15, .66), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'CAM ' + (i + 1), size: 34, color: '#8ff0b0' }, { text: t, size: 40, color: '#fff' }, { text: '● REC', size: 28, color: '#ff4d4d' }], { w: 256, h: 150, bg: i % 2 ? '#0b2a1d' : '#10233f' }) })); sc.position.set((i % 4 - 1.5) * 1.22, 2.05 + Math.floor(i / 4) * .72, .01); vw.add(sc); });
+              const fr = new THREE.Mesh(new THREE.BoxGeometry(5.05, 1.6, .06), M(0x15181d)); fr.position.set(0, 2.41, -.04); vw.add(fr); vw.position.set(A.hw - .3, 0, zc); vw.rotation.y = -Math.PI / 2; g.add(vw); }   // video-wall de cámaras de la mesa de control
             g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } }); scene.add(g);
             // personal sentado (operario con clip "sit" del modelo realista); se agrega cuando el modelo terminó de cargar
-            const seatPeople = () => { if (!GLTF_AVATAR.ok || !GLTF_AVATAR.clips.sit) return false; seats.forEach(st => { try { const av = makeGLTFAvatar(false); gltfPlay(av, 'sit', 0); av.mixer.update(0.05); Object.values(av.acts || {}).forEach(a => { a.paused = true; });
-                    const p = new THREE.Group(); p.add(av.obj); p.position.set(st.x, 0.05, st.z); p.rotation.y = st.ry; p.name = 'officeWorker'; g.add(p); } catch (e) { console.warn('[SIM] oficina:', e.message); } }); return true; };
+            const seatPeople = () => { if (!GLTF_AVATAR.ok || !GLTF_AVATAR.clips.sit) return false; seats.forEach((st, i) => { try { const av = makeGLTFAvatar(false); gltfPlay(av, 'sit', 0); av.mixer.update(0.05); Object.values(av.acts || {}).forEach(a => { a.paused = true; });
+                    const p = new THREE.Group(); p.add(av.obj); p.position.set(st.x, 0.05, st.z); p.rotation.y = st.ry; p.name = 'officeWorker'; g.add(p);
+                    const typing = ['RightForeArm', 'LeftForeArm', 'RightHand', 'LeftHand'].map(n => av.obj.getObjectByName(n)).filter(Boolean).map(b => ({ b, q: b.quaternion.clone() }));   // tecleo: antebrazos y muñecas
+                    const wk = { seat: p, typing, st, sd: Math.sign(st.x), t: Math.random() * 10, dur: 14 + Math.random() * 20, state: 'type', ph: Math.random() * 6 };
+                    if (i % 3 === 0) { const wa = makeGLTFAvatar(false); wa.mixer.stopAllAction(); wa.procedural = true; gltfPrepareBones(wa); const wg = new THREE.Group(); wg.add(wa.obj); wg.visible = false; g.add(wg);   // este puesto se levanta por documentos
+                      const folder = new THREE.Mesh(new THREE.BoxGeometry(.24, .32, .03), new THREE.MeshStandardMaterial({ color: 0x1e6fd8, roughness: .6 })); folder.position.set(.12, 1.05, .22); folder.rotation.x = -.3; folder.visible = false; wg.add(folder); wk.walker = { g: wg, av: wa, folder, w: 0 }; }
+                    OFFICE_WORKERS.push(wk); } catch (e) { console.warn('[SIM] oficina:', e.message); } }); return true; };
             if (!seatPeople()) { const t = setInterval(() => { if (seatPeople()) clearInterval(t); }, 1500); } }
         function buildWalls() {
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xd9dde6, roughness: 0.95 });
@@ -8817,6 +8854,7 @@
                 if (dP > 7) f.warned = false;
                 if (dP < 2.1 && collideCooldown <= 0) { registerFault('colision'); collideCooldown = 60; velKmh *= -0.3; }
             });
+            try { officeUpdate(dtS, performance.now()); } catch (e) { }   // personal de oficinas
             // --- peatones ---
             NPC.peds.forEach(pd => {
                 const L = pathLen(pd.path); const v = 1.3; const dP = Math.hypot(pd.x - px, pd.z - pz);
