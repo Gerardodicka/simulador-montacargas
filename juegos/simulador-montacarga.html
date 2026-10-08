@@ -606,8 +606,13 @@
         body.minihud .mission-dist { display: inline; font-size: 13px; margin-left: 6px; }
         body.minihud .mission::before { content: '📋 '; font-size: 12px; }
         body.minihud .hud { top: 12px; }
-        .mission-float { position: absolute; left: 50%; bottom: 28%; transform: translateX(-50%); z-index: 7; background: rgba(1,17,49,.92); color: #fff; border: 2px solid #f5c400; border-radius: 12px; padding: .6rem 1.1rem; font-weight: 700; font-size: 14px; text-align: center; max-width: 70%; pointer-events: none; opacity: 0; transition: opacity .3s; }
-        .mission-float.show { opacity: 1; }
+        .mission-float { position: absolute; left: 50%; bottom: 26%; transform: translateX(-50%) scale(.96); z-index: 7; background: rgba(245,196,0,.82); color: #011131; border: 3px solid #011131; border-radius: 16px; padding: .8rem 1.4rem; font-weight: 800; font-size: clamp(17px, 2.4vw, 26px); line-height: 1.3; text-align: center; max-width: min(860px, 88%); pointer-events: none; opacity: 0; transition: opacity .3s, transform .3s; box-shadow: 0 8px 24px rgba(0,0,0,.35); backdrop-filter: blur(3px); text-shadow: 0 1px 0 rgba(255,255,255,.35); }
+        .mission-float.show { opacity: 1; transform: translateX(-50%) scale(1); }
+        .mission-float .mf-h { display: block; font-size: .72em; font-weight: 900; letter-spacing: .08em; margin-bottom: .2rem; }
+        .mission-float .mf-d { display: inline-block; margin-top: .35rem; background: #011131; color: #f5c400; border-radius: 999px; padding: .1rem .7rem; font-size: .7em; font-weight: 900; }
+        .mission-float.nudge { animation: mfPulse 1.2s ease-in-out 2; }
+        @keyframes mfPulse { 0%,100% { box-shadow: 0 8px 24px rgba(0,0,0,.35); } 50% { box-shadow: 0 0 0 6px rgba(245,196,0,.45), 0 8px 24px rgba(0,0,0,.35); } }
+        @media (max-width: 700px) { .mission-float { bottom: 30%; font-size: 17px; padding: .6rem .9rem; } }
         .brief { display:none; position:absolute; inset:0; z-index:30; background:rgba(1,17,49,.88); align-items:center; justify-content:center; padding:12px; }
         .brief.open { display:flex; }
         .brief-card { background:#fff; color:#011131; border-radius:16px; width:min(640px,100%); max-height:92%; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.6); }
@@ -8045,7 +8050,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v11.2 pasos peatonales';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v11.3 recordatorios';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -9504,7 +9509,7 @@
         }
         let miniT = null;
         function showMissionCard(ms = 6000) { document.body.classList.remove('minihud'); clearTimeout(miniT); miniT = setTimeout(() => document.body.classList.add('minihud'), ms); }
-        function missionFloat(text, ms = 3500) { const el = document.getElementById('missionFloat'); if (!el) return; el.textContent = text; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), ms); }
+        function missionFloat(text, ms = 3500, html) { const el = document.getElementById('missionFloat'); if (!el) return; if (html) el.innerHTML = html; else el.textContent = text; el.classList.toggle('nudge', !!html); void el.offsetWidth; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), ms); }
         function toggleActs() { if (document.body.classList.contains('minihud')) { showMissionCard(7000); return; } const p = document.getElementById('actsPanel'); p.classList.toggle('open'); renderActs(); }
         function renderActs() { document.getElementById('actsPanel').innerHTML = `<button class="brief-go" style="margin:0 0 .5rem;padding:.5rem;font-size:13px" onclick="event.stopPropagation();document.getElementById('actsPanel').classList.remove('open');showBrief(actIdx)">📋 VER PASOS DE LA MISIÓN ACTUAL</button>` + ACTS.map((a, i) => `<div class="${i === actIdx ? 'cur' : i < actIdx ? 'done' : ''}"><span>${a.icon} ${i + 1}. ${a.name}</span><b>${i < actIdx ? (results[i] ? results[i].score + '%' : '✓') : i === actIdx ? '▶' : '·'}</b></div>`).join(''); }
         function beginAct(i) {
@@ -9588,7 +9593,7 @@
             if (dist !== null && dist > NUDGE.best + 3) NUDGE.best = dist;   // se alejó: el progreso se mide desde ahí
             if (now - NUDGE.last < NUDGE.every) return; NUDGE.last = now; NUDGE.shown++;
             const msg = `⏰ RECORDATORIO · Misión ${actIdx + 1}: ${txt}${dist !== null ? ' (' + dist.toFixed(0) + ' m, sigue la columna amarilla)' : ''}`;
-            missionFloat(msg, 6000); showMissionCard(8000); try { if (typeof honkBeep === 'function') honkBeep(); else { const ac = window.__nudgeAC || (window.__nudgeAC = new (window.AudioContext || window.webkitAudioContext)()); [880, 1175].forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.0001, ac.currentTime + i * .18); g.gain.exponentialRampToValueAtTime(.15, ac.currentTime + i * .18 + .02); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + i * .18 + .16); o.connect(g).connect(ac.destination); o.start(ac.currentTime + i * .18); o.stop(ac.currentTime + i * .18 + .2); }); } } catch (e) {}
+            const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); missionFloat(msg, 7000, `<span class="mf-h">⏰ RECORDATORIO · MISIÓN ${actIdx + 1}</span>${esc(txt)}${dist !== null ? `<br><span class="mf-d">📍 ${dist.toFixed(0)} m · sigue la columna amarilla</span>` : ''}`); showMissionCard(8000); try { if (typeof honkBeep === 'function') honkBeep(); else { const ac = window.__nudgeAC || (window.__nudgeAC = new (window.AudioContext || window.webkitAudioContext)()); [880, 1175].forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.0001, ac.currentTime + i * .18); g.gain.exponentialRampToValueAtTime(.15, ac.currentTime + i * .18 + .02); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + i * .18 + .16); o.connect(g).connect(ac.destination); o.start(ac.currentTime + i * .18); o.stop(ac.currentTime + i * .18 + .2); }); } } catch (e) {}
             if (XR.active && XR.rig) { const p = xrPanel('nudgePanel', .8, .26, 1000, 320); const g = p.userData.c.getContext('2d'); g.clearRect(0, 0, 1000, 320); g.fillStyle = 'rgba(120,20,20,.92)'; g.beginPath(); g.roundRect ? g.roundRect(0, 0, 1000, 320, 30) : g.rect(0, 0, 1000, 320); g.fill(); g.strokeStyle = '#f5c400'; g.lineWidth = 6; g.stroke();
                 g.fillStyle = '#f5c400'; g.font = '900 44px Arial'; g.textAlign = 'left'; g.fillText('⏰ RECORDATORIO · MISIÓN ' + (actIdx + 1), 36, 64); g.fillStyle = '#fff'; g.font = '700 34px Arial'; wrapLines(g, txt, 36, 120, 930, 42, 3); g.fillStyle = '#ffd7d7'; g.font = '700 26px Arial'; g.fillText((dist !== null ? 'Faltan ' + dist.toFixed(0) + ' m · ' : '') + 'X = menú → 📋 Misiones', 36, 295);
                 p.userData.t.needsUpdate = true; xrFacePanel(p, 1.1, 1.3); p.visible = true; clearTimeout(XR.nudgeT); XR.nudgeT = setTimeout(() => { p.visible = false; }, 6000); } }
