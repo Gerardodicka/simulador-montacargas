@@ -7017,7 +7017,7 @@
         function setPickLoad(P) { const k = Math.min(1, P.picks / 6); P.ld.visible = k > 0; P.ld.scale.y = P.ld.userData.sy * Math.max(.05, k); P.ld.position.y = P.ld.userData.y0 - (1 - k) * .45; }
         // convivencia dinámica patinero ↔ montacargas: cuando un montacargas toma el pasillo, el patinero sale y espera a un lado de la entrada;
         // al terminar el montacargas (sale del pasillo) el patinero vuelve a entrar y sigue surtiendo donde se quedó
-        function pickAisleFlow(P, dt, now) { const { near } = aisleZRange(), claimed = NPC.forks.some(f => f.aisle === P.ai && Math.abs(f.x - P.cx) < 3.5 && f.z < near + 6);   // el montacargas ya llega o está dentro del pasillo
+        function pickAisleFlow(P, dt, now) { const { near } = aisleZRange(), claimed = NPC.forks.some(f => (f.aisle === P.ai && Math.abs(f.x - P.cx) < 3.5 && f.z < near + 6) || (Math.abs(f.x - P.cx) < 1.8 && f.z < near + 1));   // el montacargas ya llega o está dentro del pasillo
             const waitX = P.cx + P.side * 2.7, waitZ = near + 2.4;
             if (claimed && P.state !== 'evac' && P.state !== 'wait') { P.resume = { state: P.state === 'out' || P.state === 'drop' ? P.state : 'go', tz: P.tz }; P.state = 'evac'; P.hand.visible = false; P.body.rotation.y = 0; if (typeof npcReply === 'function' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 25) npcReply('🛒 Patinero sale del pasillo ' + P.ai + ': entra montacargas'); }
             if (P.state === 'evac') { const d = waitZ - P.z; P.z += Math.sign(d) * Math.min(Math.abs(d), 1.1 * dt); P.dir = 1; P.w += dt * 5.5; gltfWalkPose(P.av, true, P.w, now, false, 0); if (Math.abs(d) < .05) { P.x += (waitX - P.x) * Math.min(1, dt * 1.5); if (Math.abs(waitX - P.x) < .05) P.state = 'wait'; } return true; }
