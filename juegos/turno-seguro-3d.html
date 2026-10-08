@@ -7294,6 +7294,7 @@
             if (typeof buildFridges === 'function') { buildFridges(); setFridgesVisible(false); }
             if (typeof buildTrailer === 'function') buildTrailer();
             if (typeof buildBays === 'function') buildBays();
+            buildRackWalkways();   // franjas detrás de racks espalda con espalda = pasos peatonales
             // Pasillos entre pares de racks
             const aisleCenters = [-15.25, -4, 7.25, 18.25];
             aisleCenters.forEach((cx, i) => {
@@ -8797,6 +8798,20 @@
             f.path = route; f.t = 0; f.dir = 1; f.blockT = 0; f.g.userData.route = next; }
         // ================== RUTAS DINÁMICAS DE PEATONES ==================
         // Al terminar un trayecto el peatón elige otra ruta del catálogo (paso peatonal, cruce de tránsito, perimetral, área de recibo)
+        // ====== Pasos peatonales detrás de los racks (espacio entre racks espalda con espalda) ======
+        // franja verde con bordes amarillos y leyendas; conectan con un cruce peatonal al fondo del almacén. Los montacargas no deben entrar (falta: invadir paso peatonal).
+        const RACK_WALKS = [{ x: -9.625, w: 2.6 }, { x: 1.625, w: 2.6 }, { x: 12.75, w: 2.4 }], WALK_Z = [-38.4, 1.4], WALK_BACK = -40.6;
+        function buildRackWalkways() { const g = new THREE.Group(); g.name = 'rackWalks'; const green = new THREE.MeshStandardMaterial({ color: 0x2e9e5b, roughness: .85 }), L = WALK_Z[1] - WALK_Z[0], zc = (WALK_Z[0] + WALK_Z[1]) / 2;
+            RACK_WALKS.forEach(W => { const p = new THREE.Mesh(new THREE.PlaneGeometry(W.w, L), green); p.rotation.x = -Math.PI / 2; p.position.set(W.x, .006, zc); g.add(p);
+                [-1, 1].forEach(sd => paintLine(W.x + sd * W.w / 2, WALK_Z[0], W.x + sd * W.w / 2, WALK_Z[1], 0xf5c400, .1));
+                for (let z = WALK_Z[0] + 4; z < WALK_Z[1] - 2; z += 9) paintLabel('PASO PEATONAL', W.x, z, .42, '#ffffff', Math.PI / 2, W.w - .4);
+                [WALK_Z[0], WALK_Z[1]].forEach(z => { const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .55), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: '🚶 SOLO PEATONES', size: 44, color: '#fff' }, { text: 'prohibido montacargas', size: 30, color: '#fff' }], { w: 400, h: 200, bg: '#2e9e5b' }), side: THREE.DoubleSide })); sg.position.set(W.x, 2.2, z); g.add(sg);
+                    const po = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 2.0, 8), new THREE.MeshStandardMaterial({ color: 0x9aa0a8, metalness: .6 })); po.position.set(W.x, 1.0, z); g.add(po); }); });
+            const hw = WAREHOUSE.w / 2 - 1.4; const cross = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2, 1.6), green); cross.rotation.x = -Math.PI / 2; cross.position.set(0, .005, WALK_BACK); g.add(cross);   // cruce peatonal al fondo
+            for (let x = -hw; x < hw; x += 1.2) { const st = new THREE.Mesh(new THREE.PlaneGeometry(.55, 1.4), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .8 })); st.rotation.x = -Math.PI / 2; st.position.set(x, .007, WALK_BACK); g.add(st); }
+            g.traverse(o => { if (o.isMesh) o.receiveShadow = true; }); scene.add(g); }
+        function walkwayCheck() { if (typeof registerFault !== 'function' || typeof forkPosition === 'undefined') return; const inW = RACK_WALKS.some(W => Math.abs(forkPosition.x - W.x) < W.w / 2 && forkPosition.z > WALK_Z[0] && forkPosition.z < WALK_Z[1]);
+            if (inW && !walkwayCheck.flag) { walkwayCheck.flag = true; registerFault('peatonal'); if (typeof toast === 'function') toast('⚠️ Estás en un PASO PEATONAL detrás de los racks: sal de la franja verde'); } if (!inW) walkwayCheck.flag = false; }
         function pedRouteCatalog() { const { near } = aisleZRange(); const tz = transitZ(); const hw = WAREHOUSE.w / 2, hd = WAREHOUSE.d / 2, xl = hw - 1.4, zf = hd - 3.2, zr = tz + 8;
             // Sólo tramos sobre pasillos peatonales delimitados (y el cruce peatonal de la zona de tránsito); se conectan por sus extremos
             return [ { path: [[-xl, zf], [xl, zf]], crossing: false },          // pasillo peatonal frente a andenes
@@ -8804,7 +8819,8 @@
                      { path: [[xl, zf], [xl, zr]], crossing: false }, { path: [[xl, zr], [xl, -hd + 4]], crossing: false },       // perimetral derecho
                      { path: [[-xl, zr], [-hw + 20, zr]], crossing: false },    // hacia recibo
                      { path: [[xl, zr], [hw - 20, zr]], crossing: false },      // hacia embarque
-                     { path: [[0, near + 3], [0, tz + 6]], crossing: true } ]; }   // cruce peatonal (cebra) de la zona de tránsito
+                     { path: [[0, near + 3], [0, tz + 6]], crossing: true },
+                     { path: [[-xl, WALK_BACK], [xl, WALK_BACK]], crossing: false } ].concat(RACK_WALKS.map(W => ({ path: [[W.x, WALK_BACK], [W.x, WALK_Z[1] - .2]], crossing: false }))); }   // pasos detrás de racks y cruce del fondo   // cruce peatonal (cebra) de la zona de tránsito
         function assignPedRoute(pd) { // al llegar a un extremo continúa por otro tramo que empiece donde está (nunca cruza el piso de montacargas fuera de los pasillos)
             const here = [pd.x, pd.z], cat = pedRouteCatalog(); const opts = [];
             cat.forEach((r, k) => { if (k === pd.routeIdx) return; const a = r.path[0], b = r.path[r.path.length - 1];
@@ -8900,6 +8916,8 @@
             npcPed('Auxiliar de embarque', [[28.6, 41.8], [-28.6, 41.8]], 0.72, { skin: 0xc68a5e, hair: 0x1a1a1a, shirt: 0x2a5a9c, pants: 0x223f6e, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'scanner' });
             npcPed('Montacarguista en relevo', [[-28.6, -41], [-28.6, 41.8]], 0.62, { skin: 0xb9804f, hair: 0x2a1a10, shirt: 0xf2f2f2, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'radio' });
             if (GLTF_FEM.gltf) npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { fem: true, prop: 'clipboard' }); else npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { skin: 0xd8a27a, hair: 0x2a1a10, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'clipboard' });
+            npcPed('Auditor de inventario', [[RACK_WALKS[0].x, WALK_Z[1] - .2], [RACK_WALKS[0].x, WALK_BACK]], 0.3, { skin: 0xcf9a72, hair: 0x2a1a10, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xffffff, height: 1.0, prop: 'scanner' });
+            npcPed('Auxiliar de reabasto', [[RACK_WALKS[2].x, WALK_BACK], [RACK_WALKS[2].x, WALK_Z[1] - .2]], 0.6, { fem: true, skin: 0xd8a27a, hair: 0x2a1a10, shirt: 0xf2f2f2, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'clipboard' });
             try { buildWrapStations(); } catch (e) { console.warn('[SIM] emplayado:', e.message); }
         }
         function segmentPos(path, t) { // t en [0,1] ida y vuelta
@@ -8971,7 +8989,7 @@
                 if (dP > 7) f.warned = false;
                 if (dP < 2.1 && collideCooldown <= 0) { registerFault('colision'); collideCooldown = 60; velKmh *= -0.3; }
             });
-            try { officeUpdate(dtS, performance.now()); } catch (e) { }   // personal de oficinas
+            try { officeUpdate(dtS, performance.now()); } catch (e) { } try { walkwayCheck(); } catch (e) { }   // personal de oficinas
             // --- peatones ---
             NPC.peds.forEach(pd => {
                 const L = pathLen(pd.path); const v = 1.3; const dP = Math.hypot(pd.x - px, pd.z - pz);
