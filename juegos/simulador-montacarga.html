@@ -6990,16 +6990,17 @@
         const WRAP = { st: [] };
         function buildWrapStations() { const hd = WAREHOUSE.d / 2, z = hd - 7.9; const film = new THREE.MeshStandardMaterial({ color: 0xdcecff, transparent: true, opacity: .5, roughness: .15, metalness: .1, depthWrite: false });
             [-25, 5, 15].forEach((x, k) => { const pl = new THREE.Mesh(palletGeometry(), new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 })); pl.position.set(x, .072, z); scene.add(pl);
-                const ld = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.2, .95), unitLoadMat(k % 3)); ld.position.set(x, .78, z); scene.add(ld);
+                const ld = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.2, .95), unitLoadMat(k % 3)); ld.position.set(x, .78, z); scene.add(ld); WRAP.pls = WRAP.pls || []; WRAP.pls[k] = pl;
                 const wr = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1, 1.0), film); wr.position.set(x, .2, z); wr.scale.y = .01; scene.add(wr);
                 const roll = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .5, 12), new THREE.MeshStandardMaterial({ color: 0xe8f1f8, roughness: .3, transparent: true, opacity: .85 })); scene.add(roll);
                 paintLabel('EMPLAYADO MANUAL', x, z + 1.5, .38, '#f5c400', Math.PI, 2.6); obstacles.push({ minX: x - 1.4, maxX: x + 1.4, minZ: z - 1.3, maxZ: z + 1.3 });
-                WRAP.st.push({ x, z, wr, roll, ld, a: k * 2, h: 0, dir: 1, pass: 0, pause: 0, op: null }); });
+                WRAP.st.push({ x, z, wr, roll, ld, pl, a: k * 2, h: 0, dir: 1, pass: 0, pause: 0, op: null }); });
             const crew = () => { if (typeof makeStandingOperator !== 'function' || !GLTF_AVATAR.ok) return false; WRAP.st.forEach(S => { try { S.op = makeStandingOperator(false); S.av = S.op.userData.gltf; scene.add(S.op); } catch (e) { } }); return true; };
             if (!crew()) { let n = 0; const t = setInterval(() => { if (crew() || ++n > 40) clearInterval(t); }, 1500); } }
         function wrapUpdate(dt, now) { WRAP.st.forEach(S => { if (!S.op || !S.av) return; const R = .98;
+              if (S.ready || S.gone) { gltfWalkPose(S.av, false, S.a * 3, now, false, 0); S.roll.visible = false; if (S.gone && (S.wait = (S.wait || 0) + dt) > 4) { S.gone = false; S.wait = 0; S.h = 0; S.dir = 1; S.pass = 0; S.wr.scale.y = .01; S.ld.material = unitLoadMat(Math.floor(Math.random() * 3)); S.ld.visible = true; S.wr.visible = true; S.pl && (S.pl.visible = true); } return; }   // tarima lista: espera a que el patinero la recoja
               if (S.pause > 0) { S.pause -= dt; gltfWalkPose(S.av, false, S.a * 3, now, false, 0); if (S.pause <= 0) { S.h = 0; S.dir = 1; S.pass = 0; S.wr.scale.y = .01; S.ld.material = unitLoadMat(Math.floor(Math.random() * 3)); } S.roll.visible = S.pause > 2; return; }   // corta la película y cambia de tarima
-              S.a += dt * .55; S.h += S.dir * dt * .045; if (S.h > 1.2) { S.dir = -1; S.pass++; } if (S.h < .02 && S.dir < 0) { S.dir = 1; S.pass++; } if (S.pass >= 2) { S.pause = 5; }
+              S.a += dt * .55; S.h += S.dir * dt * .045; if (S.h > 1.2) { S.dir = -1; S.pass++; } if (S.h < .02 && S.dir < 0) { S.dir = 1; S.pass++; } if (S.pass >= 2) { S.ready = true; S.roll.visible = false; S.wr.scale.y = 1.25; S.wr.position.y = .17 + .625; }
               const px = S.x + Math.sin(S.a) * R, pz = S.z + Math.cos(S.a) * R; S.op.position.set(px, 0, pz); S.op.rotation.y = Math.atan2(S.x - px, S.z - pz) - Math.PI / 2;   // camina de lado alrededor de la tarima
               gltfWalkPose(S.av, true, S.a * 6, now, false, 0); const ry = .25 + Math.min(1.2, S.h); const rp = new THREE.Vector3(S.x + Math.sin(S.a) * .64, ry, S.z + Math.cos(S.a) * .64); S.roll.position.copy(rp); S.roll.visible = true;
               S.wr.scale.y = Math.max(S.wr.scale.y, Math.min(1.25, S.h + .15)); S.wr.position.y = .17 + S.wr.scale.y / 2;   // la película sube con el rollo
@@ -7013,9 +7014,17 @@
                 av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; });
                 const g = new THREE.Group(), body = new THREE.Group(); body.add(av.obj); g.add(body); const jack = makeWalkieJack(i); g.add(jack.g); scene.add(g);
                 const ld = jack.load; ld.visible = true; ld.userData.y0 = ld.position.y; ld.userData.sy = ld.scale.y; const hand = new THREE.Mesh(new THREE.BoxGeometry(.4, .28, .3), unitLoadMat(i % 3)); hand.visible = false; scene.add(hand);
-                PICKERS.push({ g, body, av, ld, hand, x, side, z: 1 + i * .5, tz: -6 - i * 7, state: 'go', t: 0, w: i, picks: 0, dir: -1 }); setPickLoad(PICKERS[PICKERS.length - 1]); }); }
+                PICKERS.push({ g, body, av, ld, hand, x, lane: x, cx: A.x, ai: i + 1, side, z: 1 + i * .5, tz: -6 - i * 7, state: 'go', t: 0, w: i, picks: 0, dir: -1 }); setPickLoad(PICKERS[PICKERS.length - 1]); }); }
         function setPickLoad(P) { const k = Math.min(1, P.picks / 6); P.ld.visible = k > 0; P.ld.scale.y = P.ld.userData.sy * Math.max(.05, k); P.ld.position.y = P.ld.userData.y0 - (1 - k) * .45; }
-        function pickUpdate(dt, now) { PICKERS.forEach(P => { const blocked = NPC.forks.some(f => Math.hypot(f.x - P.x, f.z - P.z) < 4.5) || (typeof forkPosition !== 'undefined' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 4);
+        // convivencia dinámica patinero ↔ montacargas: cuando un montacargas toma el pasillo, el patinero sale y espera a un lado de la entrada;
+        // al terminar el montacargas (sale del pasillo) el patinero vuelve a entrar y sigue surtiendo donde se quedó
+        function pickAisleFlow(P, dt, now) { const { near } = aisleZRange(), claimed = NPC.forks.some(f => (f.aisle === P.ai && Math.abs(f.x - P.cx) < 3.5 && f.z < near + 6) || (Math.abs(f.x - P.cx) < 1.8 && f.z < near + 1));   // el montacargas ya llega o está dentro del pasillo
+            const waitX = P.cx + P.side * 2.7, waitZ = near + 2.4;
+            if (claimed && P.state !== 'evac' && P.state !== 'wait') { P.resume = { state: P.state === 'out' || P.state === 'drop' ? P.state : 'go', tz: P.tz }; P.state = 'evac'; P.hand.visible = false; P.body.rotation.y = 0; if (typeof npcReply === 'function' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 25) npcReply('🛒 Patinero sale del pasillo ' + P.ai + ': entra montacargas'); }
+            if (P.state === 'evac') { const d = waitZ - P.z; P.z += Math.sign(d) * Math.min(Math.abs(d), 1.1 * dt); P.dir = 1; P.w += dt * 5.5; gltfWalkPose(P.av, true, P.w, now, false, 0); if (Math.abs(d) < .05) { P.x += (waitX - P.x) * Math.min(1, dt * 1.5); if (Math.abs(waitX - P.x) < .05) P.state = 'wait'; } return true; }
+            if (P.state === 'wait') { gltfWalkPose(P.av, false, P.w, now, false, 0); if (!claimed) { P.x += (P.lane - P.x) * Math.min(1, dt * 1.5); if (Math.abs(P.lane - P.x) < .05) { P.x = P.lane; P.state = P.resume ? P.resume.state : 'go'; P.tz = P.resume ? P.resume.tz : -6; P.resume = null; } } return true; }
+            return false; }
+        function pickUpdate(dt, now) { PICKERS.forEach(P => { if (pickAisleFlow(P, dt, now)) { P.g.position.set(P.x, 0, P.z); P.g.rotation.y = P.dir < 0 ? Math.PI : 0; return; } const blocked = NPC.forks.some(f => Math.hypot(f.x - P.x, f.z - P.z) < 4.5) || (typeof forkPosition !== 'undefined' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 4);
               const walkTo = tz => { const d = tz - P.z; if (blocked) { gltfWalkPose(P.av, false, P.w, now, false, 0); return false; } const st = Math.sign(d) * Math.min(Math.abs(d), .95 * dt); P.z += st; P.w += dt * 5.5; P.dir = Math.sign(d) || P.dir; gltfWalkPose(P.av, true, P.w, now, false, 0); return Math.abs(d) < .02; };
               if (P.state === 'go') { if (walkTo(P.tz)) { P.state = 'pick'; P.t = 0; } }
               else if (P.state === 'pick') { P.t += dt; gltfWalkPose(P.av, false, P.w, now, false, 0); P.body.rotation.y = P.side * (P.dir < 0 ? -1 : 1) * Math.PI / 2 * Math.min(1, P.t * 2);   // gira hacia el rack
@@ -8072,7 +8081,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v11.4 picking';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v11.6 flujo emplayado-andén';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -9164,7 +9173,21 @@
             const load = new THREE.Group(); const pl = new THREE.Mesh(palletGeometry(true), new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 })); pl.position.set(0, 0.15, 1.75); load.add(pl);
             const bh = 0.95 + (k % 3) * 0.12; const ul = new THREE.Mesh(new THREE.BoxGeometry(0.95, bh, 1.1), unitLoadMat(k % 3)); ul.position.set(0, 0.22 + bh / 2, 1.75); load.add(ul); g.add(load);
             g.traverse(o => { if (o.isMesh) o.castShadow = false; }); g.scale.setScalar(0.92); return { g, load }; }
-        function updateDockWorkers(dtS) { const now = performance.now(); DOCKW.forEach(d => { let walking = false; const L = d.zb - d.za;
+        // flujo dinámico emplayado → andén: cuando una tarima queda emplayada, el patinero libre más cercano va por ella con su patín,
+        // la lleva al staging de su andén, entra al tráiler, la deja al fondo y regresa; la estación de emplayado recibe otra tarima
+        function dockJob(d, dtS, now) { const J = d.job, tg = J.pts[0]; if (!tg) return; const dx = tg[0] - d.px, dz = tg[1] - d.pz, dist = Math.hypot(dx, dz), sp = 1.1 * dtS;
+            const near = Math.hypot(forkPosition.x - d.px, forkPosition.z - d.pz) < 4; let walking = false;
+            if (J.hold > 0) J.hold -= dtS; else if (!near) { if (dist <= sp) { d.px = tg[0]; d.pz = tg[1]; J.pts.shift(); const ev = J.ev.shift(); if (ev) ev(); } else { d.px += dx / dist * sp; d.pz += dz / dist * sp; walking = true; d.walk += 1.1 * dtS * 4.6; } }
+            if (dist > .02) { let r = Math.atan2(dx, dz) - d.g.rotation.y; r = Math.atan2(Math.sin(r), Math.cos(r)); d.g.rotation.y += r * Math.min(1, dtS * 6); }
+            d.g.position.set(d.px, 0, d.pz); gltfWalkPose(d.av, walking, d.walk, now, false, d.idle); const C = d.av.calib; setBoneWorld(d.av, 'lArm', C.swing * 0.75, -0.18, C.armL * 1.35); setBoneWorld(d.av, 'rArm', C.swing * 0.75, 0.18, C.armR * 1.35); setBoneWorld(d.av, 'lFore', C.swing * 0.55, 0, C.armL * 0.1); setBoneWorld(d.av, 'rFore', C.swing * 0.55, 0, C.armR * 0.1);
+            if (!J.pts.length) { d.job = null; d.t = 0; d.dir = 1; d.wait = 1.5; d.box.visible = false; } }
+        function assignDockJobs() { if (typeof WRAP === 'undefined') return; WRAP.st.forEach(S => { if (!S.ready || S.taker) return; const free = DOCKW.filter(d => d.jack && !d.job && d.t < .05 && d.wait > 0); if (!free.length) return;
+              const d = free.sort((a, b) => Math.abs(a.x - S.x) - Math.abs(b.x - S.x))[0]; S.taker = d; d.px = d.x; d.pz = d.za; const az = S.z - 1.9;
+              d.job = { hold: 0, pts: [[d.x, az], [S.x, az], [S.x, az - .01], [d.x, az], [d.x, d.za], [d.x, d.zb], [d.x, d.za]], ev: [null, null,
+                () => { d.job.hold = 1.5; S.ld.visible = false; S.wr.visible = false; if (S.pl) S.pl.visible = false; d.box.visible = true; S.ready = false; S.gone = true; S.taker = null; },   // levanta la tarima emplayada
+                null, null, () => { d.job.hold = 1.5; d.box.visible = false; }, null] };   // la deja al fondo del tráiler
+              if (typeof npcReply === 'function' && Math.hypot(forkPosition.x - S.x, forkPosition.z - S.z) < 25) npcReply('🛒 Patinero lleva tarima emplayada al andén'); }); }
+        function updateDockWorkers(dtS) { const now = performance.now(); try { assignDockJobs(); } catch (e) { } DOCKW.forEach(d => { if (d.job) { dockJob(d, dtS, now); return; } let walking = false; const L = d.zb - d.za;
                 const zNow = d.za + L * d.t, dP = Math.hypot(forkPosition.x - d.x, forkPosition.z - zNow);
                 if (d.wait > 0) d.wait -= dtS; else if (dP > 4.5) { d.t += d.dir * 1.1 * dtS / L; d.walk += 1.1 * dtS * 4.6; walking = true; if (d.t >= 1) { d.t = 1; d.dir = -1; d.wait = 1.6; } if (d.t <= 0) { d.t = 0; d.dir = 1; d.wait = 1.6; } }   // se detiene si el montacargas del jugador está cerca
                 d.box.visible = d.dir > 0 ? d.wait <= 0 || d.t < 0.5 : d.wait > 0 && d.t > 0.5;   // lleva caja hacia el tráiler y regresa sin ella
@@ -9248,7 +9271,7 @@
                     const nt = Math.max(0, Math.min(1, f.t + f.dir * v * dtS / L)); const np = segmentPos(f.path, nt);
                     const probe = { x: np.x, z: np.z, g: { rotation: { y: f.g.rotation.y } } };
                     { const want = Math.atan2(np.x - f.x, np.z - f.z); let dAng = want - f.g.rotation.y; while (dAng > Math.PI) dAng -= 2 * Math.PI; while (dAng < -Math.PI) dAng += 2 * Math.PI; if (Math.abs(dAng) > 0.6 && NPC.peds.some(pd => Math.hypot(pd.x - f.x, pd.z - f.z) < 4.2)) { f.beacon.material.emissiveIntensity = Math.sin(now / 120) > 0 ? 2.2 : .4; f.blockT = (f.blockT || 0) + dtS; if (f.blockT > 8) { assignNewRoute(f); f.blockT = 0; } return; } }   // giro con peatón cerca: barre con las horquillas → espera
-                    const pedAhead = NPC.peds.some(pd => { if (inForkBox(probe, pd.x, pd.z, 0.9)) return true; const dx = pd.x - f.x, dz = pd.z - f.z; const fwdD = dx * Math.sin(f.g.rotation.y) + dz * Math.cos(f.g.rotation.y); return fwdD > -1 && Math.hypot(dx, dz) < (pd.crossing ? 5 : 3); });
+                    const pedAhead = (typeof PICKERS !== 'undefined' && PICKERS.some(pk => inForkBox(probe, pk.x, pk.z, 1.2))) || NPC.peds.some(pd => { if (inForkBox(probe, pd.x, pd.z, 0.9)) return true; const dx = pd.x - f.x, dz = pd.z - f.z; const fwdD = dx * Math.sin(f.g.rotation.y) + dz * Math.cos(f.g.rotation.y); return fwdD > -1 && Math.hypot(dx, dz) < (pd.crossing ? 5 : 3); });
                     if (pedAhead && !f.pedHonk) { f.pedHonk = true; if (dP < 25) hornSound([400], 0.16, 0.12); } else if (!pedAhead) f.pedHonk = false;   // alto total + claxon corto al detenerse por el peatón   // frena si el peatón quedaría dentro de la huella del equipo (horquillas incluidas)
                     // Prioridad entre NPC: el de menor índice tiene preferencia (frena sólo a 0.4 m); el otro cede con margen amplio. Tras ceder > limit s, el que cede toma otra ruta y tiene 2.5 s de 'escape' para alejarse.
                     const otherFork = NPC.forks.some(o => o !== f && (inForkBox(o, np.x, np.z, 1.8) || inForkBox(probeAt(np, f), o.x, o.z, 1.8)));
