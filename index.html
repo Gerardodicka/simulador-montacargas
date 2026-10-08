@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulador de Operaciones · Dojo Virtual · DICKA Logistics</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#1D2586"><link rel="icon" href="/icons/icon-192.png"><link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
 <style>
   :root { --azul:#1D2586; --brillante:#2138D3; --marino:#011131; --gris:#838383; --blanco:#FFFFFF; --amarillo:#f5c400; }
@@ -650,6 +651,15 @@ function exportCSV(){
 // Los juegos embebidos pueden reportar: parent.postMessage({type:'dicka-result', juego, nombre, score, aprobado}, '*')
 window.addEventListener('message',e=>{ const d=e.data; if(d&&d.type==='dicka-result'){ const l=JSON.parse(localStorage.getItem('dicka_console_results')||'[]'); l.push({juego:d.juego,nombre:d.nombre,num:d.num||'',puesto:d.puesto||'',area:d.area||'',almacen:d.almacen||'',score:d.score,aprobado:!!d.aprobado,fecha:new Date().toISOString(),reg:d.reg||'',tipo_sesion:'oficial'}); localStorage.setItem('dicka_console_results',JSON.stringify(l)); render(); cloudSync(true); }});
 render();
+</script>
+<!-- App instalable (PWA / Android): registra el service worker y muestra "Instalar app" cuando el navegador lo permite -->
+<button id="installApp" style="display:none;position:fixed;right:16px;bottom:16px;z-index:9999;background:#f5c400;color:#011131;border:0;border-radius:24px;padding:12px 18px;font:800 14px Poppins,Arial;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer">📲 Instalar app</button>
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+(() => { let ev = null; const b = document.getElementById('installApp');
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); ev = e; b.style.display = 'block'; });
+  b.onclick = async () => { if (!ev) return; ev.prompt(); await ev.userChoice; ev = null; b.style.display = 'none'; };
+  addEventListener('appinstalled', () => { b.style.display = 'none'; }); })();
 </script>
 </body>
 </html>
