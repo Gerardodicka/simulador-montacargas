@@ -6695,7 +6695,7 @@
             lines.forEach((l, i) => {
                 g.fillStyle = l.color || '#FFFFFF';
                 g.font = `${l.weight || 'bold'} ${l.size || 120}px Arial`;
-                g.fillText(l.text, c.width / 2, l.y || c.height / 2);
+                const autoY = lines.length > 1 && lines.every(x => !x.y) ? c.height * (i + 1) / (lines.length + 1) : c.height / 2; g.fillText(l.text, c.width / 2, l.y || autoY);   // varias líneas sin posición: se reparten en el alto
             });
             const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t;
         }
@@ -6981,7 +6981,48 @@
         // ====== Cuarto de carga de baterías (anexo trasero derecho) ======
         // Separado con malla ciclónica y portón corredizo, señalización NOM-026-STPS / Protección Civil, ventilación, regadera-lavaojos,
         // kit antiderrames y extintor; montacargas Raymond conectados a sus cargadores y personal con careta haciendo la conexión.
-        const CHARGE_ANNEX = { x0: 14.5, x1: 29, depth: 11, gate: [16.2, 19.6] };
+        // ====== Emplayado manual en el staging: 3 auxiliares rodean la tarima con el rollo de película y la envuelven de abajo hacia arriba ======
+        const WRAP = { st: [] };
+        function buildWrapStations() { const hd = WAREHOUSE.d / 2, z = hd - 7.9; const film = new THREE.MeshStandardMaterial({ color: 0xdcecff, transparent: true, opacity: .5, roughness: .15, metalness: .1, depthWrite: false });
+            [-25, 5, 15].forEach((x, k) => { const pl = new THREE.Mesh(palletGeometry(), new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 })); pl.position.set(x, .072, z); scene.add(pl);
+                const ld = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.2, .95), unitLoadMat(k % 3)); ld.position.set(x, .78, z); scene.add(ld);
+                const wr = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1, 1.0), film); wr.position.set(x, .2, z); wr.scale.y = .01; scene.add(wr);
+                const roll = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .5, 12), new THREE.MeshStandardMaterial({ color: 0xe8f1f8, roughness: .3, transparent: true, opacity: .85 })); scene.add(roll);
+                paintLabel('EMPLAYADO MANUAL', x, z + 1.5, .38, '#f5c400', Math.PI, 2.6); obstacles.push({ minX: x - 1.4, maxX: x + 1.4, minZ: z - 1.3, maxZ: z + 1.3 });
+                WRAP.st.push({ x, z, wr, roll, ld, a: k * 2, h: 0, dir: 1, pass: 0, pause: 0, op: null }); });
+            const crew = () => { if (typeof makeStandingOperator !== 'function' || !GLTF_AVATAR.ok) return false; WRAP.st.forEach(S => { try { S.op = makeStandingOperator(false); S.av = S.op.userData.gltf; scene.add(S.op); } catch (e) { } }); return true; };
+            if (!crew()) { let n = 0; const t = setInterval(() => { if (crew() || ++n > 40) clearInterval(t); }, 1500); } }
+        function wrapUpdate(dt, now) { WRAP.st.forEach(S => { if (!S.op || !S.av) return; const R = .98;
+              if (S.pause > 0) { S.pause -= dt; gltfWalkPose(S.av, false, S.a * 3, now, false, 0); if (S.pause <= 0) { S.h = 0; S.dir = 1; S.pass = 0; S.wr.scale.y = .01; S.ld.material = unitLoadMat(Math.floor(Math.random() * 3)); } S.roll.visible = S.pause > 2; return; }   // corta la película y cambia de tarima
+              S.a += dt * .55; S.h += S.dir * dt * .045; if (S.h > 1.2) { S.dir = -1; S.pass++; } if (S.h < .02 && S.dir < 0) { S.dir = 1; S.pass++; } if (S.pass >= 2) { S.pause = 5; }
+              const px = S.x + Math.sin(S.a) * R, pz = S.z + Math.cos(S.a) * R; S.op.position.set(px, 0, pz); S.op.rotation.y = Math.atan2(S.x - px, S.z - pz) - Math.PI / 2;   // camina de lado alrededor de la tarima
+              gltfWalkPose(S.av, true, S.a * 6, now, false, 0); const ry = .25 + Math.min(1.2, S.h); const rp = new THREE.Vector3(S.x + Math.sin(S.a) * .64, ry, S.z + Math.cos(S.a) * .64); S.roll.position.copy(rp); S.roll.visible = true;
+              S.wr.scale.y = Math.max(S.wr.scale.y, Math.min(1.25, S.h + .15)); S.wr.position.y = .17 + S.wr.scale.y / 2;   // la película sube con el rollo
+              S.op.updateMatrixWorld(true); ikReach(S.av, 'Right', rp.clone().add(new THREE.Vector3(0, .22, 0)), 6); ikReach(S.av, 'Left', rp.clone().add(new THREE.Vector3(0, -.2, 0)), 6); }); }
+        const CHARGE_ANNEX = { x0: 14.5, x1: 29, depth: 11, gate: [16.2, 19.6] }, CHARGE = { scr: [], cable: [], hang: [], pct: [], st: ['on', 'on', 'off'], crew: [], lastScr: [] };
+        function chargeScreen(k) { const sc = CHARGE.scr[k]; if (!sc) return; const st = CHARGE.st[k], p = Math.round(CHARGE.pct[k] ?? 100), key = st + p; if (CHARGE.lastScr[k] === key) return; CHARGE.lastScr[k] = key;
+            const lines = st === 'on' ? [{ text: p >= 100 ? 'LISTO' : 'CARGANDO', size: 40, color: p >= 100 ? '#33ff77' : '#ffb020' }, { text: p + '%', size: 40, color: '#fff' }] : [{ text: 'APAGADO', size: 40, color: '#ff6b6b' }, { text: p + '%', size: 34, color: '#9fb0ff' }];
+            if (sc.material.map) sc.material.map.dispose(); sc.material.map = makeTextTexture(lines, { w: 256, h: 120, bg: '#04121f' }); sc.material.needsUpdate = true; }
+        // rutina del personal de carga de baterías (protocolo): sale de laborar → EPP → verifica cargador APAGADO → conecta → ENCIENDE → retira EPP y regresa a laborar;
+        // al volver: EPP → APAGA el cargador → desconecta → retira EPP → regresa a laborar
+        function chargeUpdate(dt, now) { const R = CHARGE.room; if (!R) return; [0, 1].forEach(k => { if (CHARGE.st[k] === 'on' && CHARGE.cable[k] && CHARGE.cable[k].visible) CHARGE.pct[k] = Math.min(100, (CHARGE.pct[k] || 0) + dt * .9); chargeScreen(k); });
+            CHARGE.crew.forEach(c => { const op = c.op, av = c.av; if (!av) return; c.t += dt;
+                if (c.path.length) { const tg = c.path[0], dx = tg[0] - op.position.x, dz = tg[1] - op.position.z, d = Math.hypot(dx, dz), sp = 1.15 * dt; c.w += dt * 6;
+                    if (d <= sp) { op.position.x = tg[0]; op.position.z = tg[1]; c.path.shift(); if (!c.path.length) c.t = 0; } else { op.position.x += dx / d * sp; op.position.z += dz / d * sp; let dr = Math.atan2(dx, dz) - op.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); op.rotation.y += dr * Math.min(1, dt * 8); }
+                    gltfWalkPose(av, true, c.w, now, false, 0); return; }
+                gltfWalkPose(av, false, c.w, now, false, 0); const x = R.chX[c.k], z1 = R.z1, inG = [R.gate[0] + 1.6, R.z0 - 1.6], outG = [R.gate[0] + 1.6, R.z0 + 1.4], ppe = [R.ppe.x, R.ppe.z], side = [x + .95, z1 + 1.75], work = [16 + c.k * 4.5, R.z0 + 5.5];
+                const scr = new THREE.Vector3(x, 1.6, z1 + .75), plug = new THREE.Vector3(x + .62, .8, z1 + 1.75), face = (tx, tz) => { let dr = Math.atan2(tx - op.position.x, tz - op.position.z) - op.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); op.rotation.y += dr * Math.min(1, dt * 6); };
+                const reach = v => { op.updateMatrixWorld(true); ikReach(av, 'Right', v, 6); };
+                const go = (task, pts) => { c.task = task; c.path = pts; c.t = 0; };
+                switch (c.task) {
+                  case 'work': if (c.t > 18 + c.k * 6) go('toPPE', [outG, inG, ppe]); break;   // labora en el almacén y regresa
+                  case 'toPPE': face(R.ppe.x, R.ppe.z + 1); reach(new THREE.Vector3(R.ppe.x, 1.3, R.z0 - .45)); if (c.t > 2) { if (c.visor) c.visor.visible = true; go(CHARGE.st[c.k] === 'on' ? 'toOff' : 'toCheck', [side]); } break;   // se pone careta y guantes
+                  case 'toCheck': case 'toOff': face(x, z1); reach(scr); if (c.t > 2) { if (c.task === 'toOff') { CHARGE.st[c.k] = 'off'; c.task = 'unplug'; } else c.task = 'plug'; c.t = 0; } break;   // verifica / apaga el cargador
+                  case 'plug': face(plug.x, plug.z); reach(plug); if (c.t > 2.5) { if (CHARGE.cable[c.k]) CHARGE.cable[c.k].visible = true; if (CHARGE.hang[c.k]) CHARGE.hang[c.k].visible = false; c.task = 'switchOn'; c.t = 0; } break;   // conecta el cable a la batería
+                  case 'switchOn': face(x, z1); reach(scr); if (c.t > 1.5) { CHARGE.st[c.k] = 'on'; go('toPPEout', [ppe]); } break;   // enciende el cargador
+                  case 'unplug': face(plug.x, plug.z); reach(plug); if (c.t > 2.5) { if (CHARGE.cable[c.k]) CHARGE.cable[c.k].visible = false; if (CHARGE.hang[c.k]) CHARGE.hang[c.k].visible = true; if ((CHARGE.pct[c.k] || 0) >= 100) CHARGE.pct[c.k] = 20 + Math.random() * 30; go('toPPEout', [ppe]); } break;   // desconecta (la batería se lleva a operar)
+                  case 'toPPEout': face(R.ppe.x, R.ppe.z + 1); reach(new THREE.Vector3(R.ppe.x, 1.3, R.z0 - .45)); if (c.t > 1.5) { if (c.visor) c.visor.visible = false; go('work', [inG, outG, work]); } break;   // guarda EPP y regresa a laborar
+                } }); }
         function ikReach(av, sd, target, iters = 12) { const arm = av.obj.getObjectByName(sd + 'Arm'), fore = av.obj.getObjectByName(sd + 'ForeArm'), hand = av.obj.getObjectByName(sd + 'Hand'); if (!arm || !fore || !hand) return;
             for (let it = 0; it < iters; it++) [fore, arm].forEach(b => { av.obj.updateMatrixWorld(true); const bp = b.getWorldPosition(new THREE.Vector3()), hp = hand.getWorldPosition(new THREE.Vector3()); const v1 = hp.sub(bp), v2 = target.clone().sub(bp); if (v1.lengthSq() < 1e-8 || v2.lengthSq() < 1e-8) return;
                 const q = new THREE.Quaternion().setFromUnitVectors(v1.normalize(), v2.normalize()); const bw = b.getWorldQuaternion(new THREE.Quaternion()), pw = b.parent.getWorldQuaternion(new THREE.Quaternion()); b.quaternion.copy(pw.invert().multiply(q.multiply(bw))); }); av.obj.updateMatrixWorld(true); }
@@ -7005,11 +7046,11 @@
             paintLine(A.gate[0], z0 + .3, A.gate[1], z0 + .3, 0xf5c400, .1); paintLabel('ALTO · CARGA DE BATERÍAS', (A.gate[0] + A.gate[1]) / 2, z0 + 1.2, .5, '#f5c400', 0, 3.2);
             // señalización NOM-026-STPS / Protección Civil en la malla (hacia el pasillo)
             const signs = [[['PRECAUCIÓN', 'ZONA DE CARGA', 'DE BATERÍAS'], '#f5c400', '#111'], [['PROHIBIDO FUMAR', 'Y GENERAR FLAMA'], '#c62828', '#fff'], [['RIESGO ELÉCTRICO'], '#f5c400', '#111'], [['PRECAUCIÓN', 'MATERIAL CORROSIVO', '(ÁCIDO SULFÚRICO)'], '#f5c400', '#111'], [['USO OBLIGATORIO', 'CARETA · GUANTES', 'MANDIL'], '#1e5aa8', '#fff'], [['GAS HIDRÓGENO', 'VENTILACIÓN', 'OBLIGATORIA'], '#f5c400', '#111'], [['SOLO PERSONAL', 'AUTORIZADO'], '#c62828', '#fff']];
-            const sx = [A.x0 + .85, 23.55, 24.55, 25.55, 26.55, 27.55, 28.5]; signs.forEach(([lines, bg, col], i) => { const sg = new THREE.Mesh(new THREE.PlaneGeometry(.92, .64), T(lines.map(t => ({ text: t, size: 46, color: col })), 360, 252, bg)); sg.position.set(sx[i], 1.85, fz + .03); g.add(sg); const b = sg.clone(); b.rotation.y = Math.PI; b.position.z = fz - .03; g.add(b); });
+            const sx = [A.x0 + .85, 23.55, 24.55, 25.55, 26.55, 27.55, 28.5]; signs.forEach(([lines, bg, col], i) => { const sg = new THREE.Mesh(new THREE.PlaneGeometry(.92, .64), T(lines.map(t => ({ text: t, size: 40, color: col })), 512, 400, bg)); sg.position.set(sx[i], 1.85, fz + .06); g.add(sg); });   // solo hacia el pasillo (desde dentro se ve el reverso liso)
             const big = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), T([{ text: '⚡ ZONA DE CARGA DE BATERÍAS', size: 70, color: '#111' }], 1024, 170, '#f5c400')); big.position.set(xc, 4.6, z0 + .3); g.add(big);
             // cargadores en el muro, regadera-lavaojos, extractor, kit antiderrames y extintor
             const cab = M(0x30343b, { metalness: .4 }), orange = M(0xff7a00), red = M(0xc8102e);
-            const chX = [A.x0 + 3.2, A.x0 + 7.4, A.x0 + 11.6]; chX.forEach((x, k) => { box(.8, 1.3, .5, cab, x, 1.3, z1 + .45); const sc = new THREE.Mesh(new THREE.PlaneGeometry(.42, .2), T([{ text: k < 2 ? 'CARGANDO' : 'LISTO', size: 40, color: k < 2 ? '#ffb020' : '#33ff77' }, { text: k === 0 ? '45%' : k === 1 ? '78%' : '100%', size: 40, color: '#fff' }], 256, 120, '#04121f')); sc.position.set(x, 1.6, z1 + .71); g.add(sc); box(.06, .06, .3, M(0x111111), x, .65, z1 + .7); });
+            const chX = [A.x0 + 3.2, A.x0 + 7.4, A.x0 + 11.6]; chX.forEach((x, k) => { box(.8, 1.3, .5, cab, x, 1.3, z1 + .45); const sc = new THREE.Mesh(new THREE.PlaneGeometry(.42, .2), T([{ text: k < 2 ? 'CARGANDO' : 'LISTO', size: 40, color: k < 2 ? '#ffb020' : '#33ff77' }, { text: k === 0 ? '45%' : k === 1 ? '78%' : '100%', size: 40, color: '#fff' }], 256, 120, '#04121f')); sc.position.set(x, 1.6, z1 + .71); g.add(sc); CHARGE.scr[k] = sc; box(.06, .06, .3, M(0x111111), x, .65, z1 + .7); });
             box(.9, .02, .9, M(0x2e9e5b), A.x1 - 1.2, 2.6, z1 + .8); box(.06, 2.6, .06, M(0x2e9e5b), A.x1 - 1.2, 1.3, z1 + .4); box(.4, .25, .3, M(0x2e9e5b), A.x1 - 1.2, 1.1, z1 + .65); const ew = new THREE.Mesh(new THREE.PlaneGeometry(.9, .45), T([{ text: 'REGADERA Y', size: 40, color: '#fff' }, { text: 'LAVAOJOS', size: 40, color: '#fff' }], 256, 128, '#007A33')); ew.position.set(A.x1 - 1.2, 3.0, z1 + .25); g.add(ew);
             { const fan = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, .2, 24), M(0x9aa0a8, { metalness: .6 })); fan.rotation.x = Math.PI / 2; fan.position.set(A.x0 + 5.3, 4.6, z1 + .3); g.add(fan); const fl = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .3), T([{ text: 'EXTRACTOR H2', size: 40, color: '#fff' }], 256, 70, '#1e5aa8')); fl.position.set(A.x0 + 5.3, 3.95, z1 + .25); g.add(fl); }
             box(.6, .8, .6, M(0xf5c400), A.x0 + .9, .4, z1 + 1.0); const sk = new THREE.Mesh(new THREE.PlaneGeometry(.55, .3), T([{ text: 'KIT ANTI-', size: 34, color: '#111' }, { text: 'DERRAMES', size: 34, color: '#111' }], 200, 110, '#f5c400')); sk.position.set(A.x0 + .9, .6, z1 + 1.31); g.add(sk);
@@ -7019,15 +7060,17 @@
             const parked = [];
             const parkForks = () => { if (typeof npcForklift !== 'function' || typeof NPC === 'undefined') return false; [chX[0], chX[1]].forEach((x, k) => { const n0 = NPC.forks.length; npcForklift('C' + (k + 1), [[x, z1 + 2.7], [x, z1 + 2.71]], 0); const f = NPC.forks.splice(n0, 1)[0]; if (!f) return; f.g.position.set(x, 0, z1 + 2.75); f.g.rotation.y = 0;
                     const rm = []; f.g.traverse(c => { if (c !== f.g && c.userData && (c.userData.gltf || c.userData.standing || c.userData.human || c.name === 'operator' || c.name === 'npcOp' || (c.parent === f.g && c.getObjectByName('armL')))) rm.push(c); }); rm.forEach(c => c.parent && c.parent.remove(c)); f.g.traverse(c => { if (c.isSkinnedMesh) c.visible = false; });   // sin operador: está cargando if (f.beacon) f.beacon.material = M(0x553300);
-                    const cable = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(x + .25, .65, z1 + .85), new THREE.Vector3(x + .5, .08, z1 + 1.15), new THREE.Vector3(x + .62, .08, z1 + 1.6), new THREE.Vector3(x + .6, .75, z1 + 1.75)]), 24, .022, 6), orange); scene.add(cable);
+                    const cable = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(x + .25, .65, z1 + .85), new THREE.Vector3(x + .5, .08, z1 + 1.15), new THREE.Vector3(x + .62, .08, z1 + 1.6), new THREE.Vector3(x + .6, .75, z1 + 1.75)]), 24, .022, 6), orange); scene.add(cable); CHARGE.cable[k] = cable; const hang = new THREE.Mesh(new THREE.TorusGeometry(.16, .022, 6, 20), orange); hang.position.set(x + .25, .9, z1 + .74); hang.visible = false; scene.add(hang); CHARGE.hang[k] = hang; CHARGE.pct[k] = k ? 78 : 45;
                     obstacles.push({ minX: x - .7, maxX: x + .7, minZ: z1 + .4, maxZ: z1 + 5.2 }); parked.push({ x }); }); return true; };
-            // personal con careta conectando el cable de la batería (y otro revisando el cargador)
-            const crew = () => { if (typeof makeStandingOperator !== 'function' || !GLTF_AVATAR.ok) return false; [[chX[0] + .95, z1 + 1.75, -Math.PI / 2, new THREE.Vector3(chX[0] + .62, .78, z1 + 1.75)], [chX[1] + .3, z1 + 1.35, Math.PI, new THREE.Vector3(chX[1], 1.6, z1 + .75)]].forEach(([x, z, ry, tgt]) => { try { const op = makeStandingOperator(false); op.position.set(x, 0, z); op.rotation.y = ry; scene.add(op); op.updateMatrixWorld(true); const av = op.userData.gltf; if (av) { ikReach(av, 'Right', tgt); ikReach(av, 'Left', tgt.clone().add(new THREE.Vector3(0, -.08, .12))); }
-                    const head = av && av.obj.getObjectByName('Head'); if (head) { const v = new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 8, -Math.PI / 2, Math.PI, 0, Math.PI * .6), new THREE.MeshStandardMaterial({ color: 0xbfe6ff, transparent: true, opacity: .35, roughness: .05, side: THREE.DoubleSide })); const ws = head.getWorldScale(new THREE.Vector3()); v.scale.setScalar(1 / ws.x); v.position.set(0, .06 / ws.x, .06 / ws.x); head.add(v); }   // careta facial
-                  } catch (e) { console.warn('[SIM] carga:', e.message); } }); return true; };
+            // personal de carga con rutina de protocolo (se mueve: EPP → verifica → conecta → enciende → regresa a laborar → apaga → desconecta)
+            CHARGE.room = { x0: A.x0, z0, z1, chX, gate: A.gate, ppe: new THREE.Vector3(A.x0 + 1.6, 0, z0 - 1.3) };
+            { const ppeCab = new THREE.Group(); const cb = new THREE.Mesh(new THREE.BoxGeometry(.8, 1.7, .45), M(0x1e5aa8)); cb.position.y = .85; ppeCab.add(cb); const lb = new THREE.Mesh(new THREE.PlaneGeometry(.7, .35), T([{ text: 'EPP', size: 50, color: '#fff' }, { text: 'careta · guantes · mandil', size: 22, color: '#fff' }], 256, 128, '#1e5aa8')); lb.position.set(0, 1.35, .231); ppeCab.add(lb); ppeCab.position.set(A.x0 + 1.6, 0, z0 - .65); ppeCab.rotation.y = Math.PI; scene.add(ppeCab); obstacles.push({ minX: A.x0 + 1.15, maxX: A.x0 + 2.05, minZ: z0 - .95, maxZ: z0 - .35 }); }
+            const crew = () => { if (typeof makeStandingOperator !== 'function' || !GLTF_AVATAR.ok) return false; [0, 1].forEach(k => { try { const op = makeStandingOperator(false); scene.add(op); const av = op.userData.gltf; let visor = null; const head = av && av.obj.getObjectByName('Head');
+                    if (head) { visor = new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 8, -Math.PI / 2, Math.PI, 0, Math.PI * .6), new THREE.MeshStandardMaterial({ color: 0xbfe6ff, transparent: true, opacity: .35, roughness: .05, side: THREE.DoubleSide })); av.obj.updateMatrixWorld(true); const ws = head.getWorldScale(new THREE.Vector3()); visor.scale.setScalar(1 / ws.x); visor.position.set(0, .06 / ws.x, .06 / ws.x); visor.visible = false; head.add(visor); }
+                    const c = { k, op, av, visor, w: 0, path: [], step: 0, t: k * 9, task: k ? 'work' : 'work' }; op.position.set(18 + k * 2.5, 0, z0 + 4 + k); CHARGE.crew.push(c); } catch (e) { console.warn('[SIM] carga:', e.message); } }); return true; };
             const tryAll = () => { const a = parked.length || parkForks(), b = crew(); return a && b; }; if (!tryAll()) { let tries = 0; const t = setInterval(() => { tries++; if ((parked.length || parkForks()) && (crew() || tries > 40)) clearInterval(t); }, 1500); } }
         // rutina del personal de oficina: captura en la computadora (tecleo) → se levanta, va al archivero por documentos → regresa y los captura
-        function officeUpdate(dt, now) { try { dojoUpdate(dt, now); } catch (e) { } if (!OFFICE_WORKERS.length) return; const hd = WAREHOUSE.d / 2;
+        function officeUpdate(dt, now) { try { dojoUpdate(dt, now); } catch (e) { } try { chargeUpdate(dt, now); } catch (e) { } try { wrapUpdate(dt, now); } catch (e) { } if (!OFFICE_WORKERS.length) return; const hd = WAREHOUSE.d / 2;
             OFFICE_WORKERS.forEach(wk => { wk.t += dt;
                 if (wk.state === 'type') { const k = wk.fast > 0 ? 1.6 : 1; wk.fast = Math.max(0, (wk.fast || 0) - dt); wk.typing.forEach((o, i) => { o.b.quaternion.copy(o.q); o.b.rotateX(Math.sin(now * .022 * k + wk.ph + i * 1.7) * (i < 2 ? .16 : .035) * (Math.sin(now * .0011 + wk.ph) > -.3 ? 1 : 0)); });
                   if (wk.walker && wk.t > wk.dur) { const sd = wk.sd, st = wk.st; wk.path = [[st.x - sd * .3, st.z + .5], [sd * 8.0, st.z + .5], [sd * 8.0, -hd - .9], [sd * 9.3, -hd - 1.0]]; wk.pi = 0; wk.state = 'out'; wk.seat.visible = false; const W = wk.walker; W.g.visible = true; W.folder.visible = false; W.g.position.set(wk.path[0][0], 0, wk.path[0][1]); } return; }
@@ -7043,7 +7086,7 @@
             const fl = new THREE.Mesh(new THREE.PlaneGeometry(4, .9), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'DOJO DICKA', size: 90, color: '#f5c400' }], { w: 1024, h: 200, bg: '#1D2586' }) })); fl.rotation.x = -Math.PI / 2; fl.position.set(0, .012, zf - .6); g.add(fl);
             box(3.4, 1.4, .06, M(0xf7f7f4, { roughness: .3 }), 0, 1.75, zb + .05); box(3.55, .06, .12, M(0x9aa0a8), 0, 1.02, zb + .1);   // pizarrón blanco con charola
             const wb = new THREE.Mesh(new THREE.PlaneGeometry(3.3, 1.3), T([{ text: 'DOJO DICKA', size: 64, color: '#1D2586' }, { text: '1. Inspección pre-operativa', size: 40, color: '#c8102e' }, { text: '2. Capacidad de carga y centro de gravedad', size: 40, color: '#111' }, { text: '3. Tránsito seguro: 10 km/h · peatón primero', size: 40, color: '#111' }], 1024, 400, '#f7f7f4')); wb.position.set(0, 1.75, zb + .085); g.add(wb);
-            const head = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 1.0), T([{ text: '🥋 DOJO DICKA · CENTRO DE CAPACITACIÓN', size: 62, color: '#fff' }], 1200, 220, '#1D2586')); head.position.set(0, 3.4, zb + .02); g.add(head);
+            const head = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 1.0), T([{ text: 'DOJO DICKA · CENTRO DE CAPACITACIÓN', size: 54, color: '#fff' }], 1200, 220, '#1D2586')); head.position.set(0, 3.4, zb + .02); g.add(head);
             [[-3.1, ['INSPECCIÓN', 'PRE-OPERATIVA', '✔ llantas ✔ horquillas', '✔ claxon ✔ frenos']], [3.1, ['REGLA DE ORO', 'Nunca transportes', 'personas en', 'las horquillas']]].forEach(([x, lines]) => { box(1.55, .92, .08, M(0x111111), x, 1.95, zb + .25); const sc = new THREE.Mesh(new THREE.PlaneGeometry(1.45, .82), T(lines.map((t, i) => ({ text: t, size: i ? 34 : 46, color: i ? '#fff' : '#f5c400' })), 512, 290, '#10233f')); sc.position.set(x, 1.95, zb + .3); g.add(sc); box(.08, 1.5, .08, M(0x333333), x, .75, zb + .3); box(.6, .04, .4, M(0x333333), x, .02, zb + .3); });   // pantallas en pedestal
             const chairs = []; [3.2, 4.4, 5.6].forEach(dz => [-2.7, -.9, .9, 2.7].forEach(x => { const z = z1 + dz; const cm = M(0x2b2e34); box(.46, .06, .46, cm, x, .46, z); box(.46, .5, .05, cm, x, .75, z + .23); [[-.2, -.2], [.2, -.2], [-.2, .2], [.2, .2]].forEach(([a, b]) => box(.03, .44, .03, M(0x9aa0a8), x + a, .22, z + b)); box(.32, .02, .24, M(0xb9a27c), x + .25, .66, z - .1); chairs.push({ x, z }); }));   // sillas con paleta
             // barrera para que el montacargas no entre al dojo (el frente del anexo queda libre para maniobrar)
@@ -7876,6 +7919,7 @@
 
         // ================= SISTEMA DE ERRORES / SCORE =================
         const FAULTS = {
+            protocoloCarga: { label: 'CARGA FUERA DE PROTOCOLO',    tip: 'Orden: apaga equipo → EPP → cargador apagado → conecta → enciende', pts: 8 },
             colision:      { label: 'COLISIÓN',                      tip: 'Chocaste con rack, pared o equipo',            pts: 15 },
             velocidad:     { label: 'EXCESO DE VELOCIDAD',            tip: 'Respeta el límite configurado al avanzar',       pts: 5 },
             cargaAlta:     { label: 'CIRCULAR CON CARGA ELEVADA',     tip: 'Baja la carga a 15–20 cm antes de moverte',   pts: 10 },
@@ -8000,7 +8044,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.08 · v10.8 dojo en movimiento';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v10.9 carga de baterías';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -9092,6 +9136,11 @@
             if (GLTF_FEM.gltf) { npcPed('Operaria de surtido', [[28.6, 41.8], [28.6, -41]], 0.25, { fem: true, prop: 'scanner' }); npcPed('Supervisora de turno', [[-28.6, -41], [-28.6, 41.8]], 0.6, { fem: true, prop: 'clipboard' });
                 npcPed('Auxiliar de inventario', [[28.6, 41.8], [-28.6, 41.8]], 0.55, { fem: true, prop: 'radio' }); npcPed('Inspectora de calidad', [[28.6, -41], [28.6, 41.8]], 0.8, { fem: true, prop: 'clipboard' }); }   // 4 operarias
             npcPed('Verificador', [[-28.6, 41.8], [-28.6, -41]], 0.3, { skin: 0xcf9a72, hair: 0x3a2618, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1e4fd8, helmet: 0xffffff, height: 1.0, prop: 'clipboard' });
+            // más personal en piso: recorren los pasos peatonales (frente de andenes y perimetrales)
+            npcPed('Auxiliar de embarque', [[28.6, 41.8], [-28.6, 41.8]], 0.72, { skin: 0xc68a5e, hair: 0x1a1a1a, shirt: 0x2a5a9c, pants: 0x223f6e, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'scanner' });
+            npcPed('Montacarguista en relevo', [[-28.6, -41], [-28.6, 41.8]], 0.62, { skin: 0xb9804f, hair: 0x2a1a10, shirt: 0xf2f2f2, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'radio' });
+            if (GLTF_FEM.gltf) npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { fem: true, prop: 'clipboard' }); else npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { skin: 0xd8a27a, hair: 0x2a1a10, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'clipboard' });
+            try { buildWrapStations(); } catch (e) { console.warn('[SIM] emplayado:', e.message); }
         }
         function segmentPos(path, t) { // t en [0,1] ida y vuelta
             const segs = path.length - 1; const u = t * segs; const i = Math.min(segs - 1, Math.floor(u)); const f = u - i;
@@ -9317,7 +9366,9 @@
             { id: 'trailer', name: 'Carga en caja de tráiler', icon: '🚚', text: 'Toma la tarima del STAGING, toca el CLAXON antes de entrar por el ANDÉN 3 y colócala al FONDO de la caja del tráiler', type: 'move',
               spawn: { x: -20, y: 0, z: 26 }, drop: { x: 0, z: 56.5, r: 1.2, yMin: 0, yMax: 0.5, label: 'FONDO DEL TRÁILER', trailer: true } },
             { id: 'estacionar', name: 'Estacionamiento en zona de baterías', icon: '🔋', text: 'Estaciona en la zona azul: horquillas abajo, reach retraído y detenido 2 s', type: 'park',
-              goal: { x: 22.5, z: 40.5, r: 2.2 } }
+              goal: { x: 22.5, z: 40.5, r: 2.2 } },
+            { id: 'carga', name: 'Carga de batería', icon: '⚡', text: 'Entra al cuarto de carga por el portón, estaciona en el cajón libre y sigue el protocolo de carga', type: 'charge',
+              goal: { x: CHARGE_ANNEX.x0 + 11.6, z: -WAREHOUSE.d / 2 - CHARGE_ANNEX.depth + 3.6, r: 1.8 } }
         ];
         // ====== Fichas de misión: qué hacer, paso a paso, con los controles exactos (teclado · pantalla · joystick) ======
         const K = (kb, scr, joy) => `<kbd>${kb}</kbd> · pantalla <kbd>${scr}</kbd>${joy ? ' · joystick <kbd>' + joy + '</kbd>' : ''}`;
@@ -9370,7 +9421,13 @@
                 'Ve a la zona azul ESTACIONAR (columna amarilla).',
                 'Dentro de la zona baja las horquillas al piso con ' + '__down__' + '.',
                 'Retrae el reach con ' + '__reach__' + ' (si está extendido).',
-                'Detente por completo y espera 2 segundos sin moverte.'], fail: 'No cuenta si las horquillas quedan arriba, el reach extendido o el equipo en movimiento.' }
+                'Detente por completo y espera 2 segundos sin moverte.'], fail: 'No cuenta si las horquillas quedan arriba, el reach extendido o el equipo en movimiento.' },
+            carga: { goal: 'Cargar la batería del montacargas siguiendo el protocolo de seguridad (NOM-026 / NOM-017-STPS).', steps: [
+                'Ve al fondo derecho: CUARTO DE CARGA. Entra despacio por el portón abierto de la malla ciclónica.',
+                'Estaciona en el cajón libre (el 3º, junto a la regadera), horquillas al piso y detenido.',
+                'Sigue el protocolo EN ORDEN en el panel: 1) Apaga el equipo · 2) Ponte careta y guantes · 3) Verifica cargador APAGADO · 4) Conecta el cable · 5) Enciende el cargador.',
+                'Espera a que la batería llegue a 100 %.',
+                'Termina: 6) Apaga el cargador · 7) Desconecta el cable · 8) Retira el EPP.'], fail: 'Cada paso fuera de orden es falta (CARGA FUERA DE PROTOCOLO). Nunca conectes ni desconectes con el cargador encendido.' }
         };
         function showBrief(i, onGo) { const a = ACTS[i], b = BRIEF[a.id]; if (!b) { onGo && onGo(); return; }
             const lvl = a.drop && a.drop.level !== undefined ? '≈ ' + (a.drop.level + 0.15).toFixed(1) + ' m' : 'unos cm arriba de la viga'; const fill = t => t.replace(/__(\w+)__/g, (m, k) => k === 'lvl' ? lvl : (CTL[k] || m));
@@ -9508,6 +9565,23 @@
             if (XR.active && XR.rig) { const p = xrPanel('nudgePanel', .8, .26, 1000, 320); const g = p.userData.c.getContext('2d'); g.clearRect(0, 0, 1000, 320); g.fillStyle = 'rgba(120,20,20,.92)'; g.beginPath(); g.roundRect ? g.roundRect(0, 0, 1000, 320, 30) : g.rect(0, 0, 1000, 320); g.fill(); g.strokeStyle = '#f5c400'; g.lineWidth = 6; g.stroke();
                 g.fillStyle = '#f5c400'; g.font = '900 44px Arial'; g.textAlign = 'left'; g.fillText('⏰ RECORDATORIO · MISIÓN ' + (actIdx + 1), 36, 64); g.fillStyle = '#fff'; g.font = '700 34px Arial'; wrapLines(g, txt, 36, 120, 930, 42, 3); g.fillStyle = '#ffd7d7'; g.font = '700 26px Arial'; g.fillText((dist !== null ? 'Faltan ' + dist.toFixed(0) + ' m · ' : '') + 'X = menú → 📋 Misiones', 36, 295);
                 p.userData.t.needsUpdate = true; xrFacePanel(p, 1.1, 1.3); p.visible = true; clearTimeout(XR.nudgeT); XR.nudgeT = setTimeout(() => { p.visible = false; }, 6000); } }
+        // panel del protocolo de carga: los pasos aparecen revueltos y deben tocarse en orden
+        const CHARGE_STEPS = ['🔑 Apagar el montacargas (llave OFF)', '🥽 Ponerse careta y guantes', '🔌 Verificar cargador APAGADO', '➰ Conectar el cable a la batería', '⚡ Encender el cargador', '⏹ Apagar el cargador', '↩️ Desconectar el cable', '🧤 Retirar el EPP'];
+        const chargeMission = { panel: null, step: 0, pct: 20, charging: false, order: [], cable: null };
+        function openChargePanel(a) { const P = chargeMission; P.step = 0; P.pct = 18 + Math.random() * 10; P.charging = false; P.order = CHARGE_STEPS.map((t, i) => i).sort(() => Math.random() - .5);
+            const d = document.createElement('div'); d.id = 'chargePanel'; d.style.cssText = 'position:absolute;right:12px;top:150px;width:min(330px,46%);background:rgba(1,17,49,.92);border:2px solid #f5c400;border-radius:12px;color:#fff;padding:10px 12px;z-index:30;font:600 13px Poppins,Arial'; document.getElementById('canvasWrap').appendChild(d); P.panel = d; renderChargePanel(); }
+        function closeChargePanel() { const P = chargeMission; if (P.panel) P.panel.remove(); P.panel = null; }
+        function renderChargePanel() { const P = chargeMission, d = P.panel; if (!d) return; const bar = `<div style="height:10px;background:#20304f;border-radius:6px;margin:6px 0"><div style="height:100%;width:${P.pct}%;background:${P.pct >= 100 ? '#2e9e5b' : '#ffb020'};border-radius:6px"></div></div>`;
+            d.innerHTML = `<div style="color:#f5c400;font-weight:900;margin-bottom:4px">⚡ PROTOCOLO DE CARGA · paso ${Math.min(8, P.step + 1)}/8</div><div style="font-size:11px;opacity:.8">Batería ${Math.round(P.pct)} %</div>${bar}` + P.order.map(i => `<button data-i="${i}" style="display:block;width:100%;margin:4px 0;padding:7px 8px;border-radius:8px;border:1px solid #2138D3;text-align:left;font:700 12px Poppins,Arial;cursor:pointer;${i < P.step ? 'background:#2e9e5b;color:#fff;opacity:.6' : 'background:#1D2586;color:#fff'}" ${i < P.step ? 'disabled' : ''}>${i < P.step ? '✔ ' : ''}${CHARGE_STEPS[i]}</button>`).join('');
+            d.querySelectorAll('button[data-i]').forEach(b => b.onclick = () => chargeStep(+b.dataset.i)); }
+        function chargeStep(i) { const P = chargeMission; if (P.charging) { toast('Espera a que la batería llegue a 100 %'); return; }
+            if (i !== P.step) { registerFault('protocoloCarga'); toast('⚠️ Fuera de protocolo: el paso que sigue es «' + CHARGE_STEPS[P.step] + '»'); return; }
+            P.step++; const R = CHARGE.room;
+            if (P.step === 4 && R) { const x = R.chX[2]; P.cable = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(x, 1.0, R.z1 + .7), new THREE.Vector3(x + .2, .08, R.z1 + 1.2), new THREE.Vector3(forkPosition.x, .08, forkPosition.z - .3), new THREE.Vector3(forkPosition.x, .9, forkPosition.z)]), 24, .022, 6), new THREE.MeshStandardMaterial({ color: 0xff7a00 })); scene.add(P.cable); }
+            if (P.step === 5) { P.charging = true; CHARGE.st[2] = 'on'; CHARGE.pct[2] = P.pct; toast('⚡ Cargador encendido: espera a que la batería llegue a 100 %'); }
+            if (P.step === 6) { CHARGE.st[2] = 'off'; }
+            if (P.step === 7 && P.cable) { scene.remove(P.cable); P.cable = null; }
+            if (P.step >= 8) { closeChargePanel(); toast('✅ Batería cargada siguiendo el protocolo'); completeAct(); return; } renderChargePanel(); }
         function updateMission() {
             const a = ACTS[actIdx]; if (!a || actBusy) return;
             let target = null, dist = 0, txt = a.text;
@@ -9516,7 +9590,7 @@
                     txt = dd > 6 ? `PASO 1 · Ve a la columna amarilla (tarima ${hi ? 'en rack, nivel alto' : 'en piso'})` : hi ? (mastM() < a.spawn.y - 0.35 ? 'PASO 2 · De frente y DETENIDO: sube horquillas (Q / ▲) hasta debajo de la tarima' : 'PASO 3 · Extiende (X) y AGARRA (Espacio)') : 'PASO 2 · De frente, horquillas al piso: entra despacio y AGARRA (Espacio)'; }
                 else { target = a.drop; const dd = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z);
                     txt = dd > 5 ? `PASO 4 · Carga baja: lleva la tarima a ${a.drop.label}` : a.drop.slot ? (mastM() < a.drop.yMin ? `PASO 5 · Detenido y de frente: sube (Q / ▲) a ≈ ${(a.drop.yMin + 0.13).toFixed(1)} m` : 'PASO 6 · Extiende (X), baja suave (E / ▼) y SUELTA (Espacio)') : `PASO 5 · Detente en ${a.drop.label}, baja al piso (E / ▼) y SUELTA (Espacio)`; }
-            } else if (a.type === 'cross' || a.type === 'park') target = a.goal;
+            } else if (a.type === 'cross' || a.type === 'park' || a.type === 'charge') target = a.goal;
             if (target) dist = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z);
             // ---- cruce peatonal ----
             if (a.type === 'cross') {
@@ -9535,6 +9609,11 @@
                 if (inZone) txt = (mh >= 5 ? '⬇ Baja las horquillas' : rc >= 5 ? '⇤ Retrae el reach' : simSpeed >= 0.3 ? 'Detente' : `Mantente detenido… ${Math.max(0, Math.ceil(2 - held))} s`);
                 if (held >= 2) completeAct();
             }
+            // ---- carga de batería (protocolo) ----
+            if (a.type === 'charge') { const mh = parseFloat(document.getElementById('mastHeight').value); const inZone = dist < a.goal.r, ready = inZone && mh < 5 && simSpeed < 0.3; const P = chargeMission;
+                if (!P.panel && ready) openChargePanel(a); if (P.panel && !inZone && P.step < 3) closeChargePanel();
+                txt = !inZone ? (forkPosition.z > -WAREHOUSE.d / 2 ? 'Ve al CUARTO DE CARGA (fondo derecho) y entra por el portón' : 'Estaciona en el cajón libre junto a la regadera') : !ready ? (mh >= 5 ? '⬇ Baja las horquillas' : 'Detente por completo') : P.charging ? `Cargando batería… ${Math.round(P.pct)} %` : 'Sigue el protocolo en el panel: paso ' + (P.step + 1) + ' de 8';
+                if (P.charging) { P.pct = Math.min(100, P.pct + 0.6); CHARGE.pct[2] = P.pct; chargeScreen(2); if (P.pct >= 100) { P.charging = false; toast('🔋 Batería al 100 %: apaga el cargador, desconecta y retira el EPP'); renderChargePanel(); } } }
             if (beacon && target) { beacon.position.x = target.x; beacon.position.z = target.z; beacon.visible = true; beacon.material.opacity = 0.15 + 0.1 * Math.sin(Date.now() / 250); }
             missionNudge(a, txt, target ? dist : null);
             document.getElementById('missionStep').textContent = `ACTIVIDAD ${actIdx + 1} / ${ACTS.length} · ${a.icon} ${a.name}`;
