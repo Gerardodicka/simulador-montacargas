@@ -7013,9 +7013,17 @@
                 av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); av.obj.traverse(o => { if (o.isMesh) o.castShadow = false; });
                 const g = new THREE.Group(), body = new THREE.Group(); body.add(av.obj); g.add(body); const jack = makeWalkieJack(i); g.add(jack.g); scene.add(g);
                 const ld = jack.load; ld.visible = true; ld.userData.y0 = ld.position.y; ld.userData.sy = ld.scale.y; const hand = new THREE.Mesh(new THREE.BoxGeometry(.4, .28, .3), unitLoadMat(i % 3)); hand.visible = false; scene.add(hand);
-                PICKERS.push({ g, body, av, ld, hand, x, side, z: 1 + i * .5, tz: -6 - i * 7, state: 'go', t: 0, w: i, picks: 0, dir: -1 }); setPickLoad(PICKERS[PICKERS.length - 1]); }); }
+                PICKERS.push({ g, body, av, ld, hand, x, lane: x, cx: A.x, ai: i + 1, side, z: 1 + i * .5, tz: -6 - i * 7, state: 'go', t: 0, w: i, picks: 0, dir: -1 }); setPickLoad(PICKERS[PICKERS.length - 1]); }); }
         function setPickLoad(P) { const k = Math.min(1, P.picks / 6); P.ld.visible = k > 0; P.ld.scale.y = P.ld.userData.sy * Math.max(.05, k); P.ld.position.y = P.ld.userData.y0 - (1 - k) * .45; }
-        function pickUpdate(dt, now) { PICKERS.forEach(P => { const blocked = NPC.forks.some(f => Math.hypot(f.x - P.x, f.z - P.z) < 4.5) || (typeof forkPosition !== 'undefined' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 4);
+        // convivencia dinámica patinero ↔ montacargas: cuando un montacargas toma el pasillo, el patinero sale y espera a un lado de la entrada;
+        // al terminar el montacargas (sale del pasillo) el patinero vuelve a entrar y sigue surtiendo donde se quedó
+        function pickAisleFlow(P, dt, now) { const { near } = aisleZRange(), claimed = NPC.forks.some(f => f.aisle === P.ai && Math.abs(f.x - P.cx) < 3.5 && f.z < near + 6);   // el montacargas ya llega o está dentro del pasillo
+            const waitX = P.cx + P.side * 2.7, waitZ = near + 2.4;
+            if (claimed && P.state !== 'evac' && P.state !== 'wait') { P.resume = { state: P.state === 'out' || P.state === 'drop' ? P.state : 'go', tz: P.tz }; P.state = 'evac'; P.hand.visible = false; P.body.rotation.y = 0; if (typeof npcReply === 'function' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 25) npcReply('🛒 Patinero sale del pasillo ' + P.ai + ': entra montacargas'); }
+            if (P.state === 'evac') { const d = waitZ - P.z; P.z += Math.sign(d) * Math.min(Math.abs(d), 1.1 * dt); P.dir = 1; P.w += dt * 5.5; gltfWalkPose(P.av, true, P.w, now, false, 0); if (Math.abs(d) < .05) { P.x += (waitX - P.x) * Math.min(1, dt * 1.5); if (Math.abs(waitX - P.x) < .05) P.state = 'wait'; } return true; }
+            if (P.state === 'wait') { gltfWalkPose(P.av, false, P.w, now, false, 0); if (!claimed) { P.x += (P.lane - P.x) * Math.min(1, dt * 1.5); if (Math.abs(P.lane - P.x) < .05) { P.x = P.lane; P.state = P.resume ? P.resume.state : 'go'; P.tz = P.resume ? P.resume.tz : -6; P.resume = null; } } return true; }
+            return false; }
+        function pickUpdate(dt, now) { PICKERS.forEach(P => { if (pickAisleFlow(P, dt, now)) { P.g.position.set(P.x, 0, P.z); P.g.rotation.y = P.dir < 0 ? Math.PI : 0; return; } const blocked = NPC.forks.some(f => Math.hypot(f.x - P.x, f.z - P.z) < 4.5) || (typeof forkPosition !== 'undefined' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 4);
               const walkTo = tz => { const d = tz - P.z; if (blocked) { gltfWalkPose(P.av, false, P.w, now, false, 0); return false; } const st = Math.sign(d) * Math.min(Math.abs(d), .95 * dt); P.z += st; P.w += dt * 5.5; P.dir = Math.sign(d) || P.dir; gltfWalkPose(P.av, true, P.w, now, false, 0); return Math.abs(d) < .02; };
               if (P.state === 'go') { if (walkTo(P.tz)) { P.state = 'pick'; P.t = 0; } }
               else if (P.state === 'pick') { P.t += dt; gltfWalkPose(P.av, false, P.w, now, false, 0); P.body.rotation.y = P.side * (P.dir < 0 ? -1 : 1) * Math.PI / 2 * Math.min(1, P.t * 2);   // gira hacia el rack
@@ -8072,7 +8080,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v11.4 picking';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v11.5 pasillo compartido';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -9248,7 +9256,7 @@
                     const nt = Math.max(0, Math.min(1, f.t + f.dir * v * dtS / L)); const np = segmentPos(f.path, nt);
                     const probe = { x: np.x, z: np.z, g: { rotation: { y: f.g.rotation.y } } };
                     { const want = Math.atan2(np.x - f.x, np.z - f.z); let dAng = want - f.g.rotation.y; while (dAng > Math.PI) dAng -= 2 * Math.PI; while (dAng < -Math.PI) dAng += 2 * Math.PI; if (Math.abs(dAng) > 0.6 && NPC.peds.some(pd => Math.hypot(pd.x - f.x, pd.z - f.z) < 4.2)) { f.beacon.material.emissiveIntensity = Math.sin(now / 120) > 0 ? 2.2 : .4; f.blockT = (f.blockT || 0) + dtS; if (f.blockT > 8) { assignNewRoute(f); f.blockT = 0; } return; } }   // giro con peatón cerca: barre con las horquillas → espera
-                    const pedAhead = NPC.peds.some(pd => { if (inForkBox(probe, pd.x, pd.z, 0.9)) return true; const dx = pd.x - f.x, dz = pd.z - f.z; const fwdD = dx * Math.sin(f.g.rotation.y) + dz * Math.cos(f.g.rotation.y); return fwdD > -1 && Math.hypot(dx, dz) < (pd.crossing ? 5 : 3); });
+                    const pedAhead = (typeof PICKERS !== 'undefined' && PICKERS.some(pk => inForkBox(probe, pk.x, pk.z, 1.2))) || NPC.peds.some(pd => { if (inForkBox(probe, pd.x, pd.z, 0.9)) return true; const dx = pd.x - f.x, dz = pd.z - f.z; const fwdD = dx * Math.sin(f.g.rotation.y) + dz * Math.cos(f.g.rotation.y); return fwdD > -1 && Math.hypot(dx, dz) < (pd.crossing ? 5 : 3); });
                     if (pedAhead && !f.pedHonk) { f.pedHonk = true; if (dP < 25) hornSound([400], 0.16, 0.12); } else if (!pedAhead) f.pedHonk = false;   // alto total + claxon corto al detenerse por el peatón   // frena si el peatón quedaría dentro de la huella del equipo (horquillas incluidas)
                     // Prioridad entre NPC: el de menor índice tiene preferencia (frena sólo a 0.4 m); el otro cede con margen amplio. Tras ceder > limit s, el que cede toma otra ruta y tiene 2.5 s de 'escape' para alejarse.
                     const otherFork = NPC.forks.some(o => o !== f && (inForkBox(o, np.x, np.z, 1.8) || inForkBox(probeAt(np, f), o.x, o.z, 1.8)));
