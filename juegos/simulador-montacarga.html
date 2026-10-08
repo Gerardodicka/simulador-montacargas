@@ -7027,7 +7027,7 @@
                   } catch (e) { console.warn('[SIM] carga:', e.message); } }); return true; };
             const tryAll = () => { const a = parked.length || parkForks(), b = crew(); return a && b; }; if (!tryAll()) { let tries = 0; const t = setInterval(() => { tries++; if ((parked.length || parkForks()) && (crew() || tries > 40)) clearInterval(t); }, 1500); } }
         // rutina del personal de oficina: captura en la computadora (tecleo) → se levanta, va al archivero por documentos → regresa y los captura
-        function officeUpdate(dt, now) { if (!OFFICE_WORKERS.length) return; const hd = WAREHOUSE.d / 2;
+        function officeUpdate(dt, now) { try { dojoUpdate(dt, now); } catch (e) { } if (!OFFICE_WORKERS.length) return; const hd = WAREHOUSE.d / 2;
             OFFICE_WORKERS.forEach(wk => { wk.t += dt;
                 if (wk.state === 'type') { const k = wk.fast > 0 ? 1.6 : 1; wk.fast = Math.max(0, (wk.fast || 0) - dt); wk.typing.forEach((o, i) => { o.b.quaternion.copy(o.q); o.b.rotateX(Math.sin(now * .022 * k + wk.ph + i * 1.7) * (i < 2 ? .16 : .035) * (Math.sin(now * .0011 + wk.ph) > -.3 ? 1 : 0)); });
                   if (wk.walker && wk.t > wk.dur) { const sd = wk.sd, st = wk.st; wk.path = [[st.x - sd * .3, st.z + .5], [sd * 8.0, st.z + .5], [sd * 8.0, -hd - .9], [sd * 9.3, -hd - 1.0]]; wk.pi = 0; wk.state = 'out'; wk.seat.visible = false; const W = wk.walker; W.g.visible = true; W.folder.visible = false; W.g.position.set(wk.path[0][0], 0, wk.path[0][1]); } return; }
@@ -7052,11 +7052,24 @@
             obstacles.push({ minX: -4.5, maxX: 4.5, minZ: z1, maxZ: zf + .2 });
             const people = () => { if (!GLTF_AVATAR.ok || !GLTF_AVATAR.clips.sit || typeof makeStandingOperator !== 'function') return false;
                 chairs.forEach((c, i) => { if (i % 6 === 5) return; try { const av = makeGLTFAvatar(false); gltfPlay(av, 'sit', 0); av.mixer.update(.05); Object.values(av.acts || {}).forEach(a => { a.paused = true; }); const p = new THREE.Group(); p.add(av.obj); p.position.set(c.x, 0, c.z - .05); p.rotation.y = Math.PI; g.add(p); p.updateMatrixWorld(true);
-                    ikReach(av, 'Right', new THREE.Vector3(c.x + .22, .72, c.z - .12)); ikReach(av, 'Left', new THREE.Vector3(c.x - .05, .66, c.z - .32)); } catch (e) { } });   // alumnos sentados, mano sobre la paleta
-                try { const op = makeStandingOperator(false); op.position.set(1.9, 0, zb + 1.5); op.rotation.y = Math.PI * .9; g.add(op); op.updateMatrixWorld(true); const av = op.userData.gltf; if (av) { ikReach(av, 'Right', new THREE.Vector3(2.7, 1.9, zb + .35)); } DOJO.inst = op; } catch (e) { }   // instructor señalando la pantalla
+                    ikReach(av, 'Right', new THREE.Vector3(c.x + .22, .72, c.z - .12)); ikReach(av, 'Left', new THREE.Vector3(c.x - .05, .66, c.z - .32));
+                    const bones = ['Head', 'Neck', 'RightHand', 'RightForeArm', 'LeftArm', 'LeftForeArm', 'LeftHand'].map(n => av.obj.getObjectByName(n)).map(b => b ? { b, q: b.quaternion.clone() } : null); DOJO.students = DOJO.students || []; DOJO.students.push({ av, c, bones, ph: Math.random() * 6, look: 0 }); } catch (e) { } });   // alumnos sentados, mano sobre la paleta
+                try { const op = makeStandingOperator(false); op.position.set(1.9, 0, zb + 1.5); op.rotation.y = 0; g.add(op); op.updateMatrixWorld(true); DOJO.inst = { op, av: op.userData.gltf, i: 2, t: 0, w: 0, state: 'talk',
+                    stops: [[-1.9, zb + 1.5, new THREE.Vector3(-2.7, 1.95, zb + .32)], [0, zb + 1.7, new THREE.Vector3(.4, 1.9, zb + .1)], [1.9, zb + 1.5, new THREE.Vector3(2.7, 1.95, zb + .32)]] }; } catch (e) { }   // instructor: camina entre pantallas y pizarrón y las señala
                 return true; };
             if (!people()) { let n = 0; const t = setInterval(() => { if (people() || ++n > 40) clearInterval(t); }, 1500); } }
         const DOJO = {};
+        // movimiento del dojo: el instructor recorre pizarrón y pantallas señalando y gesticulando; los alumnos lo siguen con la mirada, toman notas y a veces levantan la mano
+        function dojoUpdate(dt, now) { const I = DOJO.inst; if (I && I.av) { I.t += dt; const op = I.op, st = I.stops[I.i];
+              if (I.state === 'talk') { gltfWalkPose(I.av, false, I.w, now, false, 0); const tgt = (Math.sin(now * .0015) > -.2) ? st[2] : new THREE.Vector3(op.position.x + .3, 1.35 + Math.sin(now * .004) * .12, op.position.z + .6); op.updateMatrixWorld(true); ikReach(I.av, 'Right', tgt, 6);   // señala o gesticula hacia el grupo
+                const face = Math.atan2(0, 1) + (st[0] - st[2].x) * -.25; op.rotation.y += (face - op.rotation.y) * Math.min(1, dt * 3); if (I.t > 7 + Math.random() * .02) { I.state = 'walk'; I.t = 0; I.i = (I.i + 1 + (Math.random() < .5 ? 1 : 0)) % I.stops.length; } }
+              else { const nx = I.stops[I.i]; const dx = nx[0] - op.position.x, dz = nx[1] - op.position.z, d = Math.hypot(dx, dz), sp = .9 * dt; I.w += dt * 6; if (d <= sp) { op.position.x = nx[0]; op.position.z = nx[1]; I.state = 'talk'; I.t = 0; } else { op.position.x += dx / d * sp; op.position.z += dz / d * sp; op.rotation.y += (Math.atan2(dx, dz) - op.rotation.y) * Math.min(1, dt * 8); } gltfWalkPose(I.av, true, I.w, now, false, 0); } }
+            if (!DOJO.students) return; const ix = I ? I.op.position.x : 0; DOJO.raise = DOJO.raise || { k: -1, t: 6 }; const R = DOJO.raise; R.t -= dt; if (R.t <= 0) { R.k = R.k < 0 ? Math.floor(Math.random() * DOJO.students.length) : -1; R.t = R.k < 0 ? 8 + Math.random() * 8 : 3.5; }
+            DOJO.students.forEach((S, i) => { const [head, neck, rh, rf, la, lf, lh] = S.bones; const want = Math.max(-.5, Math.min(.5, -(ix - S.c.x) * .18)); S.look += (want - S.look) * Math.min(1, dt * 2);   // miran al instructor
+              if (head) { head.b.quaternion.copy(head.q); head.b.rotateY(S.look); head.b.rotateX(Math.sin(now * .0009 + S.ph) * .06 + (Math.sin(now * .0004 + S.ph) > .7 ? .25 : 0)); }   // asienten / bajan la vista a sus notas
+              const writing = Math.sin(now * .0005 + S.ph * 2) > .3; if (rh) { rh.b.quaternion.copy(rh.q); if (writing) rh.b.rotateZ(Math.sin(now * .03 + S.ph) * .18); } if (rf) { rf.b.quaternion.copy(rf.q); if (writing) rf.b.rotateX(Math.sin(now * .015 + S.ph) * .04); }   // escriben en la paleta
+              if (R.k === i && la) { if (!S.up) { S.up = true; S.av.obj.updateMatrixWorld(true); const hp = S.av.obj.getObjectByName('Head').getWorldPosition(new THREE.Vector3()); ikReach(S.av, 'Left', hp.add(new THREE.Vector3(-.12, .45, 0)), 10); } }   // levanta la mano para preguntar
+              else if (S.up) { S.up = false; [la, lf, lh].forEach(o => o && o.b.quaternion.copy(o.q)); } }); }
         function buildOfficeAnnex() { const hd = WAREHOUSE.d / 2, A = OFFICE_ANNEX, z0 = -hd, z1 = -hd - A.depth, zc = (z0 + z1) / 2, H = 6.2; const g = new THREE.Group(); g.name = 'officeAnnex';
             const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .7 }, o || {})); const box = (w, hh, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), m); b.position.set(x, y, z); g.add(b); return b; };
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(A.hw * 2, A.depth), M(0x9aa0a8, { roughness: .85 })); floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0.004, zc); floor.receiveShadow = true; g.add(floor);
@@ -7987,7 +8000,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.08 · v10.7 dojo y carga';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.08 · v10.8 dojo en movimiento';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
