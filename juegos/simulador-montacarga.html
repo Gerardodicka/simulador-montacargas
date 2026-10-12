@@ -8082,7 +8082,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v11.7 cabeceras libres';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v11.8 cámara sin obstrucción';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8468,6 +8468,13 @@
         function checkAisleRule() { const a = playerAisle(); if (a !== lastAisle) { if (a !== null) { const busy = NPC.forks.some(f => f.aisle === a && Math.abs(f.z) < 40 && Math.abs(f.x - forkPosition.x) < 3); if (busy) registerFault('pasilloOcupado'); } lastAisle = a; } }
         function inAisle() { const z = forkPosition.z; if (z < -39 || z > 2) return false; return AISLES.some(a => Math.abs(forkPosition.x - a.x) < a.half + 0.6); }
         function pointBlocked(x, y, z) { if (y > 11) return false; return obstacles.some(o => !o.disabled && x > o.minX - 0.3 && x < o.maxX + 0.3 && z > o.minZ - 0.3 && z < o.maxZ + 0.3); }
+        /* Brazo de cámara: si entre el punto observado y la cámara hay un rack o la carga, la cámara se acerca para no quedar tapada */
+        const RACK_XS = [-18.15, -12.35, -6.9, -1.1, 4.35, 10.15, 15.35, 21.15];
+        function camOccluded(x, y, z, noCargo) { if (y < 11.5 && z > -38.4 && z < 1.6 && RACK_XS.some(rx => Math.abs(x - rx) < 1.3)) return true;
+            if (!noCargo && cargo && cargo.visible) { const c = cargo.position; if (Math.abs(x - c.x) < 0.75 && Math.abs(z - c.z) < 0.75 && y > c.y - 0.05 && y < c.y + 1.25) return true; } return false; }
+        function camUnblock(look, target, noCargo) { const N = 28; let free = false, lastFree = null;
+            for (let i = 1; i <= N; i++) { const t = i / N, x = look.x + (target.x - look.x) * t, y = look.y + (target.y - look.y) * t, z = look.z + (target.z - look.z) * t, occ = camOccluded(x, y, z, noCargo);
+                if (!occ) { free = true; lastFree = t; } else if (free) { const k = Math.max(0.15, lastFree - 0.02); target.set(look.x + (target.x - look.x) * k, look.y + (target.y - look.y) * k, look.z + (target.z - look.z) * k); return; } } }
         function updateCamera(mastHeight, reach) {
             const a = forkRotation.y, sx = Math.sin(a), cz = Math.cos(a), px = forkPosition.x, pz = forkPosition.z, sp = spec();
             let mode = CAMS[camMode].id, lerp = 0.08;
@@ -8498,6 +8505,8 @@
             else if (mode === 'side') { target = new THREE.Vector3(px + cz * 6.5, 2.2 + mastHeight * 0.6, pz - sx * 6.5); look = new THREE.Vector3(px + sx * 1.5, 0.8 + mastHeight * 0.7, pz + cz * 1.5);
                 if (pointBlocked(target.x, target.y, target.z)) target.set(px - cz * 6.5, 2.2 + mastHeight * 0.6, pz + sx * 6.5); }
             else if (!target) { target = new THREE.Vector3(px, 28, pz + 0.01); look = new THREE.Vector3(px, 0, pz); }   // mapa / modo desconocido
+            if (mode === 'forks' && cargo && cargo.visible && Math.hypot(cargo.position.x - px, cargo.position.z - pz) < 4) { const top = cargo.position.y + 1.25; if (target.y < top + 0.6) target.y = top + 0.6; }
+            if (mode !== 'first') camUnblock(look, target, mode === 'forks');
             if (XR.active && renderer.xr.isPresenting) { xrUpdateRig(); return; }
             if (MVR.on) { xrUpdateRig(); return; }
             { const opG = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); if (opG && !(XR.active)) opG.visible = mode !== 'first'; }
