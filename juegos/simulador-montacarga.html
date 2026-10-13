@@ -7248,7 +7248,7 @@
             // Colisión con paredes
             obstacles.push({ minX: -hw - 5, maxX: -OFF.hw, minZ: -hd - 5, maxZ: -hd + 0.5 }); obstacles.push({ minX: OFF.hw, maxX: CHARGE_ANNEX.x0, minZ: -hd - 5, maxZ: -hd + 0.5 }); obstacles.push({ minX: CHARGE_ANNEX.x1, maxX: hw + 5, minZ: -hd - 5, maxZ: -hd + 0.5 });
             buildOfficeAnnex(); buildChargeRoom();
-            obstacles.push({ minX: -hw - 5, maxX: -1.7, minZ: hd - 0.5, maxZ: hd + 5 }); obstacles.push({ minX: 1.7, maxX: hw + 5, minZ: hd - 0.5, maxZ: hd + 5 }); [-20, -10, 10].forEach(ox => obstacles.push({ minX: ox - 1.7, maxX: ox + 1.7, minZ: hd - 0.5, maxZ: hd + 5 }));   /* andenes con tráiler en carga: sólo los cargadores entran */   // vano libre en el Andén 3 (x=0) para el tráiler
+            obstacles.push({ minX: -hw - 5, maxX: -2.0, minZ: hd - 0.5, maxZ: hd + 5 }); obstacles.push({ minX: 2.0, maxX: hw + 5, minZ: hd - 0.5, maxZ: hd + 5 }); [-20, -10, 10].forEach(ox => obstacles.push({ minX: ox - 2.0, maxX: ox + 2.0, minZ: hd - 0.5, maxZ: hd + 5 }));   /* andenes con tráiler en carga: sólo los cargadores entran */   // vano libre en el Andén 3 (x=0) para el tráiler
             obstacles.push({ minX: -hw - 5, maxX: -hw + 0.5, minZ: -hd, maxZ: hd });
             obstacles.push({ minX: hw - 0.5, maxX: hw + 5, minZ: -hd, maxZ: hd });
         }
@@ -7426,11 +7426,11 @@
                 const zw = WAREHOUSE.d / 2 - 0.25;   // cara interior del muro
                 const loading = DOCK_LOADING.includes(x);   // andenes en operación de carga/descarga: cortina arriba y caja del tráiler visible
                 if (loading || x === 0) { const up = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 0.35), DOCK.door); up.position.set(x, 3.02, zw - 0.3); up.rotation.y = Math.PI; scene.add(up); if (loading) { buildDockTrailer(x); DOCK_STAGE.push(x); } }   // cortina enrollada arriba
-                else { const door = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 3.4), DOCK.door); door.position.set(x, 1.7, zw - 0.045); door.rotation.y = Math.PI; scene.add(door); }
-                [[-1.62, 1.85, 0.24, 3.7], [1.62, 1.85, 0.24, 3.7], [0, 3.62, 3.48, 0.3]].forEach(([dx, y, w, hh]) => { const sm = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 0.16), DOCK.seal); sm.position.set(x + dx, y, zw - 0.08); scene.add(sm); });   // marco/sello del andén
+                else { const door = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 3.4), DOCK.door); door.position.set(x, 1.7, zw - 0.045); door.rotation.y = Math.PI; scene.add(door); }
+                [[-1.92, 1.85, 0.24, 3.7], [1.92, 1.85, 0.24, 3.7], [0, 3.62, 4.08, 0.3]].forEach(([dx, y, w, hh]) => { const sm = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 0.16), DOCK.seal); sm.position.set(x + dx, y, zw - 0.08); scene.add(sm); });   // marco/sello del andén
                 const lev = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.2), DOCK.plate); lev.rotation.x = -Math.PI / 2; lev.position.set(x, 0.016, zw - 1.1); scene.add(lev);   // rampa niveladora
                 [-1, 1].forEach(sd => { const e = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 2.2), DOCK.stripe); e.rotation.x = -Math.PI / 2; e.rotation.z = Math.PI / 2 * 0; e.position.set(x + sd * 1.27, 0.017, zw - 1.1); scene.add(e); });
-                [-1, 1].forEach(sd => { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.1, 12), DOCK.bollard); b.position.set(x + sd * 1.95, 0.55, zw - 0.35); scene.add(b); });   // postes de protección
+                [-1, 1].forEach(sd => { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.1, 12), DOCK.bollard); b.position.set(x + sd * 2.3, 0.55, zw - 0.35); scene.add(b); });   // postes de protección
                 const sem = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.6, 0.12), DOCK.seal); sem.position.set(x - 2.3, 2.3, zw - 0.06); scene.add(sem);
                 [[2.45, DOCK.red], [2.15, DOCK.green]].forEach(([y, mat]) => { const l = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), mat); l.position.set(x - 2.3, y, zw - 0.13); l.rotation.y = Math.PI; scene.add(l); });   // semáforo de andén
                 const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.8), DOCK.bollardDark); arm.position.set(x + 2.1, 3.1, zw - 0.4); scene.add(arm); const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 0.18, 12), DOCK.lamp); lamp.position.set(x + 2.1, 3.0, zw - 0.8); scene.add(lamp);   // lámpara de andén
@@ -7765,7 +7765,7 @@
 
         // ================== TRÁILER ACOPLADO AL ANDÉN 3 ==================
         let TRAILER = null;
-        function buildTrailer() { const hd = WAREHOUSE.d / 2; const L = 13.6, W = 2.5, H = 2.7; const z0 = hd - 0.2, zc = z0 + L / 2;
+        function buildTrailer() { const hd = WAREHOUSE.d / 2; const L = 13.6, W = 3.0, H = 2.7; const z0 = hd - 0.2, zc = z0 + L / 2;
             const g = new THREE.Group(); const alu = new THREE.MeshStandardMaterial({ color: 0xd8d8d8, metalness: .6, roughness: .35 }), inner = new THREE.MeshStandardMaterial({ color: 0xbfc4cc, roughness: .8 }), wood = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 });
             const floor = new THREE.Mesh(new THREE.BoxGeometry(W, 0.12, L), wood); floor.position.set(0, -0.06, zc); floor.receiveShadow = true; g.add(floor);
             [-1, 1].forEach(sd => { const wall = new THREE.Mesh(new THREE.BoxGeometry(0.08, H, L), inner); wall.position.set(sd * (W / 2 + 0.04), H / 2, zc); g.add(wall); for (let i = 0; i < 12; i++) { const rib = new THREE.Mesh(new THREE.BoxGeometry(0.04, H, 0.06), alu); rib.position.set(sd * (W / 2 + 0.1), H / 2, z0 + 0.6 + i * 1.1); g.add(rib); } });
@@ -8082,7 +8082,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v11.9 distancia a la ubicación';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v12.0 andén más amplio';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
