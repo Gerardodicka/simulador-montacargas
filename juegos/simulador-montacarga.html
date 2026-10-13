@@ -8082,7 +8082,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v11.8 cámara sin obstrucción';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v11.9 distancia a la ubicación';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -9683,6 +9683,7 @@
                     txt = dd > 5 ? `PASO 4 · Carga baja: lleva la tarima a ${a.drop.label}` : a.drop.slot ? (mastM() < a.drop.yMin ? `PASO 5 · Detenido y de frente: sube (Q / ▲) a ≈ ${(a.drop.yMin + 0.13).toFixed(1)} m` : 'PASO 6 · Extiende (X), baja suave (E / ▼) y SUELTA (Espacio)') : `PASO 5 · Detente en ${a.drop.label}, baja al piso (E / ▼) y SUELTA (Espacio)`; }
             } else if (a.type === 'cross' || a.type === 'park' || a.type === 'charge') target = a.goal;
             if (target) dist = Math.hypot(forkPosition.x - target.x, forkPosition.z - target.z);
+            if (target && a.type === 'move' && typeof tipPos === 'function') { const tp = tipPos(); dist = Math.hypot(tp.x - target.x, tp.z - target.z); }   /* en estiba la distancia se mide desde la punta de las horquillas, no desde el chasis */
             // ---- cruce peatonal ----
             if (a.type === 'cross') {
                 const still = simSpeed < 0.3;
@@ -9709,7 +9710,7 @@
             missionNudge(a, txt, target ? dist : null);
             document.getElementById('missionStep').textContent = `ACTIVIDAD ${actIdx + 1} / ${ACTS.length} · ${a.icon} ${a.name}`;
             document.getElementById('missionText').textContent = txt;
-            document.getElementById('missionDist').textContent = target ? `${dist.toFixed(0)} m` : '';
+            document.getElementById('missionDist').textContent = target ? (dist < (target.r && hasLoad ? target.r : 0.3) ? '✔ en posición' : dist < 5 ? `${dist.toFixed(1)} m` : `${dist.toFixed(0)} m`) : '';
             const grab = document.getElementById('btnGrab');
             document.getElementById('grabLbl').textContent = hasLoad ? 'SOLTAR' : 'AGARRAR';
             grab.classList.toggle('ready', a.type === 'move' && ((!hasLoad && dist < 6) || (hasLoad && dist < 5)));
