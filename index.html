@@ -346,7 +346,11 @@ if(sessionStorage.getItem('dojo_catalogo')){ document.getElementById('catalogo')
 // ====== Administración ======
 let admin=false;
 function toggleAdmin(){
-  if(!admin){ const p=prompt('PIN de administrador:'); if(p!=='2026'){ if(p!==null) alert('PIN incorrecto'); return; } }
+  if(!admin){ const p=prompt('Clave de administrador:'); if(p===null) return;
+    if(location.protocol!=='file:'){ fetch(CLOUD.url,{cache:'no-store',headers:{'x-admin-key':p}}).then(r=>{ if(r.status===401){ alert('Clave incorrecta'); return; } try{ localStorage.setItem('dicka_admin_key',p); }catch(e){} toggleAdminOn(); cloudSync(false); }).catch(()=>alert('Sin conexión con la base compartida')); return; }
+    if(p!=='2026'){ alert('Clave incorrecta'); return; } }
+  toggleAdminOn(); }
+function toggleAdminOn(){
   admin=!admin; document.body.classList.toggle('admin',admin); if(admin && document.getElementById('catalogo').classList.contains('hidden')) showSimuladores();
   document.getElementById('adminBtn').textContent=admin?'➕ Agregar simulador':'⚙️ Administrar';
   if(admin){ document.getElementById('adminBtn').onclick=()=>document.getElementById('addModal').classList.add('open'); 
@@ -422,8 +426,9 @@ const _eb=exportBackup; exportBackup=function(){ _eb(); localStorage.setItem('di
 // La consola funciona con la base local (localStorage) y, cuando está publicada en Netlify con la función
 // /.netlify/functions/results, sincroniza automáticamente con la base compartida por todos los almacenes.
 const CLOUD = { url: '/.netlify/functions/results', on: false, last: null, busy: false, error: '' };
-async function cloudGet(){ const r=await fetch(CLOUD.url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); const j=await r.json(); if(!j.ok) throw new Error(j.error||'respuesta inválida'); return j; }
-async function cloudPost(body){ const r=await fetch(CLOUD.url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+const adminKey=()=>{ try{ return localStorage.getItem('dicka_admin_key')||''; }catch(e){ return ''; } };
+async function cloudGet(){ const r=await fetch(CLOUD.url,{cache:'no-store',headers:{'x-admin-key':adminKey()}}); if(r.status===401) return { ok:true, count:0, results:[], locked:true }; if(!r.ok) throw new Error('HTTP '+r.status); const j=await r.json(); if(!j.ok) throw new Error(j.error||'respuesta inválida'); return j; }
+async function cloudPost(body){ const r=await fetch(CLOUD.url,{method:'POST',headers:{'content-type':'application/json','x-admin-key':adminKey()},body:JSON.stringify(body)}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
 async function cloudSync(silent){ if(CLOUD.busy||location.protocol==='file:') return; CLOUD.busy=true;
   try{ const mine=collectResults(); const up=await cloudPost({results:mine}); const down=await cloudGet();
     const added=mergeResults(down.results); CLOUD.on=true; CLOUD.error=''; CLOUD.last=new Date(); localStorage.setItem('dicka_last_cloud_sync',CLOUD.last.toISOString());
@@ -442,7 +447,7 @@ window.addEventListener('focus',()=>cloudSync(true)); setInterval(()=>cloudSync(
 // ====== RESTAURACIÓN VERSIONADA DE LA BASE (migración de datos) ======
 // Registros recuperados del CSV "resultados-dicka-2026-09-07 (1).csv". Se aplican una sola vez por lote (idempotente)
 // mediante import_key = sha1(Fecha|No. empleado|Curso|Score). Campos de auditoría: source_file, import_batch_id, imported_at.
-const RESTORE_BATCHES = [ { id: 'restore-2026-09-07-b1', file: 'resultados-dicka-2026-09-07 (1).csv', rows: [{"fecha": "2026-09-07T22:38:00.649Z", "juego": "Montacarga · Práctica 3D", "nombre": "Jesus Muñoz", "num": "6821", "puesto": "Verificador", "area": "Operaciones", "almacen": "Agave 1", "score": "64/100", "puntos": 64, "maximo": 100, "porcentaje": 64, "aprobado": false, "estado": "NO APROBADO", "reg": "", "import_key": "ec8ae9e84c1c", "source_file": "resultados-dicka-2026-09-07 (1).csv", "import_batch_id": "restore-2026-09-07-b1", "tipo_sesion": "oficial"}, {"fecha": "2026-09-07T22:23:10.951Z", "juego": "Montacarga · Práctica 3D", "nombre": "Jesus Muñoz", "num": "6821", "puesto": "Verificador", "area": "Operaciones", "almacen": "Agave 1", "score": "77/100", "puntos": 77, "maximo": 100, "porcentaje": 77, "aprobado": false, "estado": "NO APROBADO", "reg": "", "import_key": "cdc6046c8140", "source_file": "resultados-dicka-2026-09-07 (1).csv", "import_batch_id": "restore-2026-09-07-b1", "tipo_sesion": "oficial"}, {"fecha": "2026-09-07T22:08:10.173Z", "juego": "Montacarga · Práctica 3D", "nombre": "Jesus Muñoz", "num": "6821", "puesto": "Verificador", "area": "Operaciones", "almacen": "Agave 1", "score": "67/100", "puntos": 67, "maximo": 100, "porcentaje": 67, "aprobado": false, "estado": "NO APROBADO", "reg": "", "import_key": "6e5b17e6bf7a", "source_file": "resultados-dicka-2026-09-07 (1).csv", "import_batch_id": "restore-2026-09-07-b1", "tipo_sesion": "oficial"}, {"fecha": "2026-09-07T21:24:56.544Z", "juego": "Montacarga · Práctica 3D", "nombre": "MICHEL BRAVO", "num": "6896", "puesto": "Verificador", "area": "Operaciones", "almacen": "Agave 1", "score": "90/100", "puntos": 90, "maximo": 100, "porcentaje": 90, "aprobado": true, "estado": "APROBADO", "reg": "", "import_key": "01b05fd2838a", "source_file": "resultados-dicka-2026-09-07 (1).csv", "import_batch_id": "restore-2026-09-07-b1", "tipo_sesion": "oficial"}, {"fecha": "2026-09-07T21:19:53.349Z", "juego": "Montacarga · Práctica 3D", "nombre": "ERNESTO RODRIGUEZ", "num": "4046", "puesto": "Surtidor", "area": "Operaciones", "almacen": "Agave 1", "score": "81/100", "puntos": 81, "maximo": 100, "porcentaje": 81, "aprobado": true, "estado": "APROBADO", "reg": "", "import_key": "bd0581603477", "source_file": "resultados-dicka-2026-09-07 (1).csv", "import_batch_id": "restore-2026-09-07-b1", "tipo_sesion": "oficial"}, {"fecha": "2026-09-07T20:46:54.456Z", "juego": "Montacarga · Práctica 3D", "nombre": "ojlsdf djfvkfdj", "num": "23424", "puesto": "Aux de Almacén", "area": "Operaciones", "almacen": "Agave 1", "score": "67/100", "puntos": 67, "maximo": 100, "porcentaje": 67, "aprobado": false, "estado": "NO APROBADO", "reg": "", "import_key": "33929c87f578", "source_file": "resultados-dicka-2026-09-07 (1).csv", "import_batch_id": "restore-2026-09-07-b1", "tipo_sesion": "prueba"}] } ];
+const RESTORE_BATCHES = [];   /* los registros restaurados ya viven en la base compartida; no se publican datos de colaboradores en la página */
 const IMPORT_RULES = { estados: ['APROBADO','NO APROBADO'], umbralAprobacion: 80 };   // umbral configurable: sólo ADVIERTE, nunca recalcula el Estado histórico
 function validateRow(r, i){ const errs=[], warns=[];
   if(!r.fecha || isNaN(new Date(r.fecha).getTime())) errs.push('fecha inválida');
@@ -471,7 +476,7 @@ function runRestoreMigrations(){ const done=JSON.parse(localStorage.getItem('dic
   return reports; }
 function reconcile(batch){ let cur=[]; try{ cur=JSON.parse(localStorage.getItem('dicka_console_results')||'[]'); }catch(e){} const inDb=cur.filter(r=>r.import_batch_id===batch.id); const uniq=new Set(inDb.map(r=>r.import_key)).size;
   return { esperados: batch.rows.length, enBase: inDb.length, aprobados: inDb.filter(r=>r.aprobado).length, noAprobados: inDb.filter(r=>!r.aprobado).length, duplicados: inDb.length-uniq, ok: inDb.length===batch.rows.length && uniq===batch.rows.length }; }
-function restoreReport(){ const b=RESTORE_BATCHES[0]; const rep=restoreDryRun(b), rec=reconcile(b);
+function restoreReport(){ const b=RESTORE_BATCHES[0]; if(!b){ alert('No hay lotes de restauración pendientes.'); return null; } const rep=restoreDryRun(b), rec=reconcile(b);
   const txt=`REPORTE DE RESTAURACIÓN · ${b.file}\nLote: ${b.id}\nFilas en archivo: ${rep.total} · válidas: ${rep.validas} · rechazadas: ${rep.rechazadas.length} · ya en base: ${rep.yaExistentes} · pendientes: ${rep.aInsertar.length}\nAdvertencias: ${rep.advertencias.length?rep.advertencias.map(a=>'fila '+a.fila+': '+a.avisos.join('; ')).join(' | '):'ninguna'}\nConciliación: esperados ${rec.esperados} · en base ${rec.enBase} · aprobados ${rec.aprobados} · no aprobados ${rec.noAprobados} · duplicados ${rec.duplicados} → ${rec.ok?'✅ COINCIDE':'✗ NO COINCIDE'}`;
   alert(txt); return {rep,rec}; }
 runRestoreMigrations();
