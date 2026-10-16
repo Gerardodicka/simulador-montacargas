@@ -12,7 +12,7 @@ const resultKey = r => { const f = String(r.fecha || "").trim(); const d = new D
   return [isNaN(d.getTime()) ? f : d.toISOString(), String(r.num || r.nombre || "").trim().toLowerCase(), String(r.juego || "").trim().toLowerCase(), String(r.score || "").replace(/\s+/g, "")].join("|"); };
 const blobKey = k => "r/" + createHash("sha1").update(k).digest("hex");
 const valid = r => r && r.juego && r.fecha && !isNaN(new Date(r.fecha).getTime()) && /\d+\s*\/\s*\d+/.test(String(r.score || ""));
-const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-headers": "content-type", "access-control-allow-methods": "GET,POST,OPTIONS" } });
+const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": "*", "access-control-allow-headers": "content-type", "access-control-allow-methods": "GET,POST,OPTIONS" } });
 
 async function migrate(store) { if (await store.get(MIGRATED)) return;
   const old = (await store.get(LEGACY, { type: "json" })) || { results: [] };
@@ -22,19 +22,13 @@ async function readAll(store) { const { blobs } = await store.list({ prefix: "r/
   for (let i = 0; i < blobs.length; i += 50) { const part = await Promise.all(blobs.slice(i, i + 50).map(b => store.get(b.key, { type: "json" }).catch(() => null))); part.forEach(r => r && out.push(r)); }
   return out; }
 
-// Seguridad: consultar y marcar registros exige la clave ADMIN_KEY (variable de entorno en Netlify; si no existe, nadie puede consultar).
-//            subir resultados sólo se acepta desde el propio sitio (Origin / Referer del mismo dominio).
-const isAdmin = req => { const k = process.env.ADMIN_KEY || ""; return k.length >= 6 && req.headers.get("x-admin-key") === k; };
-const sameSite = req => { const host = new URL(req.url).host; const src = req.headers.get("origin") || req.headers.get("referer") || ""; try { return new URL(src).host === host; } catch { return false; } };
-
 export default async (req) => {
   if (req.method === "OPTIONS") return json(204, {});
-  if (!sameSite(req)) return json(403, { ok: false, error: "origen no permitido" });
   const store = getStore(STORE); await migrate(store);
-  if (req.method === "GET") { if (!isAdmin(req)) return json(401, { ok: false, error: "clave de administrador requerida" }); const results = await readAll(store); return json(200, { ok: true, count: results.length, updated_at: new Date().toISOString(), results }); }
+  if (req.method === "GET") { const results = await readAll(store); return json(200, { ok: true, count: results.length, updated_at: new Date().toISOString(), results }); }
   if (req.method === "POST") {
     let body; try { body = await req.json(); } catch { return json(400, { ok: false, error: "JSON inválido" }); }
-    if (body.op === "setTipo") { if (!isAdmin(req)) return json(401, { ok: false, error: "clave de administrador requerida" }); const k = blobKey(String(body.key || "")); const r = await store.get(k, { type: "json" }); if (!r) return json(404, { ok: false, error: "no encontrado" }); r.tipo_sesion = body.tipo === "prueba" ? "prueba" : "oficial"; await store.setJSON(k, r); return json(200, { ok: true }); }
+    if (body.op === "setTipo") { const k = blobKey(String(body.key || "")); const r = await store.get(k, { type: "json" }); if (!r) return json(404, { ok: false, error: "no encontrado" }); r.tipo_sesion = body.tipo === "prueba" ? "prueba" : "oficial"; await store.setJSON(k, r); return json(200, { ok: true }); }
     const incoming = (Array.isArray(body.results) ? body.results : []).slice(0, 500);
     const rejected = incoming.filter(r => !valid(r)).length; let added = 0;
     for (const r of incoming.filter(valid)) { const k = blobKey(resultKey(r)); const meta = await store.getMetadata(k).catch(() => null); if (meta) continue;   // ya existe: no se duplica ni se pisa
