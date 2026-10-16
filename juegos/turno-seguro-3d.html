@@ -1088,7 +1088,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=12.2"></script>
+    <script src="comun/almacen-comun.js?v=12.3"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -2652,7 +2652,7 @@
             // más personal en piso: recorren los pasos peatonales (frente de andenes y perimetrales)
             npcPed('Auxiliar de embarque', [[28.6, 41.8], [-28.6, 41.8]], 0.72, { skin: 0xc68a5e, hair: 0x1a1a1a, shirt: 0x2a5a9c, pants: 0x223f6e, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'scanner' });
             npcPed('Montacarguista en relevo', [[-28.6, -41], [-28.6, 41.8]], 0.62, { skin: 0xb9804f, hair: 0x2a1a10, shirt: 0xf2f2f2, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'radio' });
-            if (GLTF_FEM.gltf) npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { fem: true, prop: 'clipboard' }); else npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { skin: 0xd8a27a, hair: 0x2a1a10, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'clipboard' });
+            if (typeof GLTF_FEM !== 'undefined' && GLTF_FEM.gltf) npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { fem: true, prop: 'clipboard' }); else npcPed('Auxiliar de recibo', [[28.6, -41], [28.6, 41.8]], 0.12, { skin: 0xd8a27a, hair: 0x2a1a10, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'clipboard' });
             npcPed('Auditor de inventario', [[RACK_WALKS[0].x, WALK_Z[1] - .2], [RACK_WALKS[0].x, WALK_BACK]], 0.3, { skin: 0xcf9a72, hair: 0x2a1a10, shirt: 0xffffff, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xffffff, height: 1.0, prop: 'scanner' });
             npcPed('Auxiliar de reabasto', [[RACK_WALKS[2].x, WALK_BACK], [RACK_WALKS[2].x, WALK_Z[1] - .2]], 0.6, { fem: true, skin: 0xd8a27a, hair: 0x2a1a10, shirt: 0xf2f2f2, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf5c400, height: 1.0, prop: 'clipboard' });
             try { buildPickers(); } catch (e) { console.warn('[SIM] picking:', e.message); }
