@@ -8082,7 +8082,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v12.0 andén más amplio';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v12.1 colisión con contorno real';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         function initEngineSound() { try { const ctx = audioCtx(); if (SND.on) return; SND.on = true;
             const out = ctx.createGain(); out.gain.value = 0.9; out.connect(ctx.destination);
@@ -8467,6 +8467,14 @@
             if (gap < minGap) { registerFault('proximidadRack'); rackWarnCd = 90; } else if (gap < minGap + 0.2 && rackWarnCd === 0) { toast('⚠️ Muy cerca del rack: ' + Math.max(0, gap).toFixed(2) + ' m'); rackWarnCd = 60; } }
         function checkAisleRule() { const a = playerAisle(); if (a !== lastAisle) { if (a !== null) { const busy = NPC.forks.some(f => f.aisle === a && Math.abs(f.z) < 40 && Math.abs(f.x - forkPosition.x) < 3); if (busy) registerFault('pasilloOcupado'); } lastAisle = a; } }
         function inAisle() { const z = forkPosition.z; if (z < -39 || z > 2) return false; return AISLES.some(a => Math.abs(forkPosition.x - a.x) < a.half + 0.6); }
+        /* Contorno de colisión por equipo (chasis y contrapeso; horquillas, brazos de apoyo y placas quedan fuera porque entran al rack / bajo la tarima). hw = medio ancho, zr = trasera, zf = frente del mástil */
+        const BODY_FOOT = { reach: { hw: 0.6, zr: -2.0, zf: 0.5 }, doublereach: { hw: 0.62, zr: -2.0, zf: 0.5 }, counter: { hw: 0.64, zr: -2.1, zf: 0.5 }, orderpicker: { hw: 0.5, zr: -1.85, zf: 0.5 }, clamp: { hw: 0.66, zr: -2.1, zf: 0.5 }, pallet: { hw: 0.42, zr: -1.6, zf: 0.05 } };
+        function bodyPoints(x, z, a) { const F = BODY_FOOT[currentModel] || BODY_FOOT.doublereach, s = Math.sin(a), c = Math.cos(a), pts = [];
+            const nz = Math.max(2, Math.ceil((F.zf - F.zr) / 0.45)), nx = 2;
+            for (let i = 0; i <= nz; i++) { const lz = F.zr + (F.zf - F.zr) * i / nz; [-F.hw, F.hw].forEach(lx => pts.push([x + c * lx + s * lz, z - s * lx + c * lz])); }
+            for (let j = 1; j < nx; j++) { const lx = -F.hw + 2 * F.hw * j / nx; [F.zr, F.zf].forEach(lz => pts.push([x + c * lx + s * lz, z - s * lx + c * lz])); }
+            return pts; }
+        function bodyHits(x, z, a) { const pts = bodyPoints(x, z, a); return obstacles.some(o => !o.disabled && pts.some(([px, pz]) => px > o.minX - 0.05 && px < o.maxX + 0.05 && pz > o.minZ - 0.05 && pz < o.maxZ + 0.05)); }
         function pointBlocked(x, y, z) { if (y > 11) return false; return obstacles.some(o => !o.disabled && x > o.minX - 0.3 && x < o.maxX + 0.3 && z > o.minZ - 0.3 && z < o.maxZ + 0.3); }
         /* Brazo de cámara: si entre el punto observado y la cámara hay un rack o la carga, la cámara se acerca para no quedar tapada */
         const RACK_XS = [-18.15, -12.35, -6.9, -1.1, 4.35, 10.15, 15.35, 21.15];
@@ -9798,7 +9806,7 @@
                 const step = velKmh / 3.6 * dtS;               // metros en este frame
                 const nx = forkPosition.x + Math.sin(angleForward) * step;
                 const nz = forkPosition.z + Math.cos(angleForward) * step;
-                const hit = obstacles.some(o => !o.disabled && nx > o.minX - 0.7 && nx < o.maxX + 0.7 && nz > o.minZ - 0.7 && nz < o.maxZ + 0.7);
+                const hit = bodyHits(nx, nz, angleForward) && !bodyHits(forkPosition.x, forkPosition.z, angleForward);   /* contorno real del chasis; si ya estaba tocando, deja salir */
                 const pal = palletCollision(nx, nz, angleForward);
                 if (!hit && !pal) { forkPosition.x = nx; forkPosition.z = nz; collideCooldown = 0; }
                 else if (hit && collideCooldown <= 0) { registerFault('colision'); collideCooldown = 40; }
@@ -9811,7 +9819,9 @@
                 // Giro proporcional a la velocidad y al tipo de equipo (contrabalanceo gira más lento; reach gira sobre su eje)
                 const agility = spd.type === 'Contrabalanceo' ? 0.6 : spd.tiller ? 0.9 : 1.0;
                 const rate = (0.006 + Math.min(1, simSpeed / 6) * 0.016) * agility * (velKmh < 0 ? -1 : 1) * k;
-                forkRotation.y -= (steering / 100) * rate;
+                const newRot = forkRotation.y - (steering / 100) * rate;
+                if (bodyHits(forkPosition.x, forkPosition.z, newRot) && !bodyHits(forkPosition.x, forkPosition.z, forkRotation.y)) { if (collideCooldown <= 0) { registerFault('colision'); collideCooldown = 40; toast('⚠️ Coleo: la parte trasera del equipo golpea al girar'); } }
+                else forkRotation.y = newRot;
             }
 
             forklift.position.copy(forkPosition);
