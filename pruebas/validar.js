@@ -12,6 +12,7 @@ const pages = ['index.html', ...fs.readdirSync(path.join(ROOT, 'juegos')).filter
 for (const f of pages) { const s = fs.readFileSync(path.join(ROOT, f), 'utf8'); let err = '';
   [...s.matchAll(/<script>([\s\S]*?)<\/script>/g)].forEach(m => { try { new Function(m[1]); } catch (e) { err = e.message; } });
   ok('Sintaxis', f, !err, err); }
+for (const f of fs.readdirSync(path.join(ROOT, 'juegos/comun')).filter(f => f.endsWith('.js'))) { let err = ''; try { new Function(fs.readFileSync(path.join(ROOT, 'juegos/comun', f), 'utf8')); } catch (e) { err = e.message; } ok('Sintaxis', 'juegos/comun/' + f, !err, err); }
 for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err = ''; try { execSync('node --check ' + JSON.stringify(path.join(ROOT, 'netlify/functions', f)), { stdio: 'pipe' }); } catch (e) { err = String(e.stderr).split('\n')[0]; } ok('Sintaxis', 'netlify/functions/' + f, !err, err); }
 
 (async () => {
@@ -59,6 +60,12 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     const L = new THREE.Vector3(-4, 6, -20), T = new THREE.Vector3(-9, 7, -20); camUnblock(L, T, true); add('Cámara', 'no queda detrás de un rack', T.x > -5.6, 'x=' + T.x.toFixed(2));
     return R; });
   sim.forEach(r => res.push(r));
+  // turno-seguro-3d comparte el almacén: debe arrancar sin errores
+  { const q = await b.newPage({ viewport: { width: 1280, height: 720 } }); const e2 = []; q.on('pageerror', e => e2.push(e.message));
+    await q.goto(url('juegos/turno-seguro-3d.html')); await q.waitForTimeout(1500);
+    const st = await q.evaluate(() => { try { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); const sc = document.getElementById('simulatorScreen'); if (sc) sc.classList.add('active'); initSimulator(); return 'ok'; } catch (e) { return e.message; } });
+    await q.waitForTimeout(6000); const ms = await q.evaluate(() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; });
+    ok('Turno seguro 3D', 'arranca el almacén compartido', st === 'ok' && !e2.length && ms > 500, st !== 'ok' ? st : e2[0] || ms + ' objetos'); await q.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
