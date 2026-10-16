@@ -1099,7 +1099,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=12.4"></script>
+    <script src="comun/almacen-comun.js?v=12.5"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1580,16 +1580,33 @@
                 const ld = jack.load; ld.visible = true; ld.userData.y0 = ld.position.y; ld.userData.sy = ld.scale.y; const hand = new THREE.Mesh(new THREE.BoxGeometry(.4, .28, .3), unitLoadMat(i % 3)); hand.visible = false; scene.add(hand);
                 PICKERS.push({ g, body, av, ld, hand, x, lane: x, cx: A.x, ai: i + 1, side, z: 1 + i * .5, tz: -6 - i * 7, state: 'go', t: 0, w: i, picks: 0, dir: -1 }); setPickLoad(PICKERS[PICKERS.length - 1]); }); }
         
-        // convivencia dinámica patinero ↔ montacargas: cuando un montacargas toma el pasillo, el patinero sale y espera a un lado de la entrada;
-        // al terminar el montacargas (sale del pasillo) el patinero vuelve a entrar y sigue surtiendo donde se quedó
-        function pickAisleFlow(P, dt, now) { const { near } = aisleZRange(), claimed = NPC.forks.some(f => (f.aisle === P.ai && Math.abs(f.x - P.cx) < 3.5 && f.z < near + 6) || (Math.abs(f.x - P.cx) < 1.8 && f.z < near + 1));   // el montacargas ya llega o está dentro del pasillo
-            const waitX = P.cx + P.side * 2.9, waitZ = 2.5;   // espera frente a la cabecera del rack, fuera del carril de montacargas y de la zona de tránsito
-            if (P.state === 'out') { P.unload = true; P.t = 0; P.resume = { state: 'go', tz: -4 - Math.random() * 30 }; P.state = 'evac'; }
-            if (claimed && P.state !== 'evac' && P.state !== 'wait') { P.resume = { state: P.state === 'out' || P.state === 'drop' ? P.state : 'go', tz: P.tz }; P.state = 'evac'; P.hand.visible = false; P.body.rotation.y = 0; if (typeof npcReply === 'function' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 25) npcReply('🛒 Patinero sale del pasillo ' + P.ai + ': entra montacargas'); }
-            if (P.state === 'evac') { const d = waitZ - P.z; P.z += Math.sign(d) * Math.min(Math.abs(d), 1.1 * dt); P.dir = 1; P.w += dt * 5.5; gltfWalkPose(P.av, true, P.w, now, false, 0); if (Math.abs(d) < .05) { P.x += (waitX - P.x) * Math.min(1, dt * 1.5); if (Math.abs(waitX - P.x) < .05) P.state = 'wait'; } return true; }
-            if (P.state === 'wait') { gltfWalkPose(P.av, false, P.w, now, false, 0); if (P.unload) { P.t = (P.t || 0) + dt; if (P.t > 2.5) { P.unload = false; P.picks = 0; setPickLoad(P); P.t = 0; } return true; }   /* deja la tarima completa en la cabecera */ if (!claimed) { P.x += (P.lane - P.x) * Math.min(1, dt * 1.5); if (Math.abs(P.lane - P.x) < .05) { P.x = P.lane; P.state = P.resume ? P.resume.state : 'go'; P.tz = P.resume ? P.resume.tz : -6; P.resume = null; } } return true; }
+        // flujo continuo del patinero: surte en un pasillo; si entra un montacargas o completa la tarima, sale por el pasillo transversal
+        // y la lleva al staging de andenes; después toma el pasillo libre más cercano. Nunca se queda esperando parado.
+        const PICK_DOCKS = [[-16.5, 33], [-10.6, 33], [10.6, 33]], PICK_CROSS = 8;
+        function pickClaimed(ai) { const A = AISLES[ai - 1], { near } = aisleZRange(); return NPC.forks.some(f => (f.aisle === ai && Math.abs(f.x - A.x) < 3.5 && f.z < near + 6) || (Math.abs(f.x - A.x) < 1.8 && f.z < near + 1)); }
+        function pickSetAisle(P, ai) { const A = AISLES[ai - 1]; P.ai = ai; P.cx = A.x; P.side = (ai - 1) % 2 ? 1 : -1; P.lane = A.x + P.side * .95; }
+        function pickDeliver(P) { const d = PICK_DOCKS.slice().sort((a, b) => Math.abs(a[0] - P.x) - Math.abs(b[0] - P.x))[0]; P.dock = d;
+            P.path = [[P.x, 3.2], [P.x, PICK_CROSS], [d[0], PICK_CROSS], [d[0], d[1]]]; P.next = 'drop'; P.state = 'route'; P.hand.visible = false; P.body.rotation.y = 0; }
+        function pickReroute(P) { const busy = ai => PICKERS.filter(Q => Q !== P && Q.ai === ai).length;
+            const opts = AISLES.map((A, k) => k + 1).filter(ai => !pickClaimed(ai)).sort((a, b) => (busy(a) - busy(b)) || Math.abs(AISLES[a - 1].x - P.x) - Math.abs(AISLES[b - 1].x - P.x));
+            const ai = opts.length ? opts[0] : (P.ai % AISLES.length) + 1; pickSetAisle(P, ai);
+            const start = P.z < PICK_CROSS - .1 ? [[P.x, Math.max(P.z, 3.2)], [P.x, PICK_CROSS]] : [[P.x, PICK_CROSS]];
+            P.path = start.concat([[P.lane, PICK_CROSS], [P.lane, 3.2]]); P.next = 'enter'; P.state = 'route'; P.hand.visible = false; P.body.rotation.y = 0; }
+        function pickAisleFlow(P, dt, now) {
+            if ((P.state === 'go' || P.state === 'pick') && pickClaimed(P.ai)) { if (P.picks > 0) pickDeliver(P); else pickReroute(P); if (typeof npcReply === 'function' && Math.hypot(forkPosition.x - P.x, forkPosition.z - P.z) < 25) npcReply('🛒 Patinero sale del pasillo ' + P.ai + ': entra montacargas'); }
+            if (P.state === 'out') pickDeliver(P);
+            if (P.state === 'route') { const tg = P.path[0]; if (!tg) { if (P.next === 'enter') { if (pickClaimed(P.ai)) { pickReroute(P); return true; } P.state = 'go'; P.tz = -4 - Math.random() * 30; } else { P.state = P.next; P.t = 0; } return true; }
+                if (Math.hypot(tg[0] - P.x, tg[1] - P.z) < .03) { P.x = tg[0]; P.z = tg[1]; P.path.shift(); return true; }
+                const dx = tg[0] - P.x, dz = tg[1] - P.z, d = Math.hypot(dx, dz), ux = d ? dx / d : 0, uz = d ? dz / d : 0;
+                const ahead = (x, z) => { const rx = x - P.x, rz = z - P.z, fw = rx * ux + rz * uz, lat = Math.abs(rx * uz - rz * ux); return fw > -.3 && fw < 3.2 && lat < 1.5; };
+                const npcAhead = NPC.forks.some(f => ahead(f.x, f.z)); P.yieldT = npcAhead ? (P.yieldT || 0) + dt : 0;   /* cede el paso; si el montacargas también lo espera (> 2 s), el patinero avanza: los montacargas NPC frenan por patineros */
+                const stop = (npcAhead && P.yieldT < 2) || (typeof forkPosition !== 'undefined' && ahead(forkPosition.x, forkPosition.z));
+                if (!stop) { const st = Math.min(d, 1.15 * dt); P.x += ux * st; P.z += uz * st; P.w += dt * 5.5; }
+                gltfWalkPose(P.av, !stop, P.w, now, false, 0); if (d > .01) P.g.rotation.y = Math.atan2(ux, uz); P.g.position.set(P.x, 0, P.z); P.dir = uz < 0 ? -1 : 1;
+                const C = P.av.calib; if (C && !stop) { setBoneWorld(P.av, 'lArm', C.swing * .75, -.18, C.armL * 1.35); setBoneWorld(P.av, 'rArm', C.swing * .75, .18, C.armR * 1.35); }
+                return true; }
             return false; }
-        function pickUpdate(dt, now) { PICKERS.forEach(P => { if (pickAisleFlow(P, dt, now)) { P.g.position.set(P.x, 0, P.z); P.g.rotation.y = P.dir < 0 ? Math.PI : 0; return; } const goDir = Math.sign((P.state === 'go' ? P.tz : 3.2) - P.z) || P.dir; const ahead = (x, z, r) => Math.abs(x - P.x) < 1.8 && (z - P.z) * goDir > -0.5 && Math.abs(z - P.z) < r; const blocked = NPC.forks.some(f => ahead(f.x, f.z, 4.5)) || (typeof forkPosition !== 'undefined' && ahead(forkPosition.x, forkPosition.z, 4));   // solo frena por equipos frente a él en su carril
+        function pickUpdate(dt, now) { PICKERS.forEach(P => { if (pickAisleFlow(P, dt, now)) return; const goDir = Math.sign((P.state === 'go' ? P.tz : 3.2) - P.z) || P.dir; const ahead = (x, z, r) => Math.abs(x - P.x) < 1.8 && (z - P.z) * goDir > -0.5 && Math.abs(z - P.z) < r; const blocked = NPC.forks.some(f => ahead(f.x, f.z, 4.5)) || (typeof forkPosition !== 'undefined' && ahead(forkPosition.x, forkPosition.z, 4));   // solo frena por equipos frente a él en su carril
               const walkTo = tz => { const d = tz - P.z; if (blocked) { gltfWalkPose(P.av, false, P.w, now, false, 0); return false; } const st = Math.sign(d) * Math.min(Math.abs(d), .95 * dt); P.z += st; P.w += dt * 5.5; P.dir = Math.sign(d) || P.dir; gltfWalkPose(P.av, true, P.w, now, false, 0); return Math.abs(d) < .02; };
               if (P.state === 'go') { if (walkTo(P.tz)) { P.state = 'pick'; P.t = 0; } }
               else if (P.state === 'pick') { P.t += dt; gltfWalkPose(P.av, false, P.w, now, false, 0); P.body.rotation.y = P.side * (P.dir < 0 ? -1 : 1) * Math.PI / 2 * Math.min(1, P.t * 2);   // gira hacia el rack
@@ -1598,7 +1615,7 @@
                 else { const pz = P.z + P.dir * -.0 + (P.dir < 0 ? -.95 : .95); ikReach(P.av, 'Right', new THREE.Vector3(P.x, .95, pz), 6); ikReach(P.av, 'Left', new THREE.Vector3(P.x, .9, pz + .2), 6); P.hand.visible = cyc < 2.4; P.hand.position.set(P.x, .95, pz); }   // la deja en la tarima
                 if (P.t > 3.2 * 2) { P.picks += 2; setPickLoad(P); P.hand.visible = false; P.body.rotation.y = 0; if (P.picks >= 6) { P.state = 'out'; } else { P.tz = Math.max(-36, P.z - 4 - Math.random() * 6); P.state = 'go'; } } }
               else if (P.state === 'out') { if (walkTo(3.2)) { P.state = 'drop'; P.t = 0; } }
-              else if (P.state === 'drop') { P.t += dt; gltfWalkPose(P.av, false, P.w, now, false, 0); if (P.t > 2.5) { P.picks = 0; setPickLoad(P); P.tz = -4 - Math.random() * 30; P.state = 'go'; } }   // deja la tarima en el staging
+              else if (P.state === 'drop') { P.t += dt; gltfWalkPose(P.av, false, P.w, now, false, 0); if (P.t > 2.5) { P.picks = 0; setPickLoad(P); pickReroute(P); } }   // deja la tarima en el staging de andenes y regresa a otro pasillo libre
               P.g.position.set(P.x, 0, P.z); P.g.rotation.y = P.dir < 0 ? Math.PI : 0; if (P.state === 'go' || P.state === 'out') { const C = P.av.calib; if (C) { setBoneWorld(P.av, 'lArm', C.swing * .75, -.18, C.armL * 1.35); setBoneWorld(P.av, 'rArm', C.swing * .75, .18, C.armR * 1.35); } } }); }   // manos en el timón al caminar
         const CHARGE_ANNEX = { x0: 14.5, x1: 29, depth: 11, gate: [16.2, 19.6] }, CHARGE = { scr: [], cable: [], hang: [], pct: [], st: ['on', 'on', 'off'], crew: [], lastScr: [] };
         
@@ -2203,7 +2220,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v12.4 pantalla Dojo';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v12.5 patineros en flujo continuo · pantallas 200';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
