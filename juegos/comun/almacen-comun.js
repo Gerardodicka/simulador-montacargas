@@ -450,7 +450,7 @@ function buildDojo(g, A, z0, z1, M, box) { const zb = z1 + .3, zf = z1 + 6.6, T 
                 try { const op = makeStandingOperator(false); op.position.set(1.9, 0, zb + 1.5); op.rotation.y = 0; g.add(op); op.updateMatrixWorld(true); DOJO.inst = { op, av: op.userData.gltf, i: 2, t: 0, w: 0, state: 'talk',
                     stops: [[-1.9, zb + 1.5, new THREE.Vector3(-2.7, 1.95, zb + .32)], [0, zb + 1.7, new THREE.Vector3(.4, 1.9, zb + .1)], [1.9, zb + 1.5, new THREE.Vector3(2.7, 1.95, zb + .32)]] }; } catch (e) { }   // instructor: camina entre pantallas y pizarrón y las señala
                 return true; };
-            if (!people()) { let n = 0; const t = setInterval(() => { if (people() || ++n > 40) clearInterval(t); }, 1500); } }
+            if (!people()) { let n = 0; const t = setInterval(() => { if (people() || ++n > 400) clearInterval(t); }, 1500); } }
 
 function dojoUpdate(dt, now) { dojoScreens(dt); const I = DOJO.inst; if (I && I.av) { I.t += dt; const op = I.op, st = I.stops[I.i];
               if (I.state === 'talk') { gltfWalkPose(I.av, false, I.w, now, false, 0); const tgt = (Math.sin(now * .0015) > -.2) ? st[2] : new THREE.Vector3(op.position.x + .3, 1.35 + Math.sin(now * .004) * .12, op.position.z + .6); op.updateMatrixWorld(true); ikReach(I.av, 'Right', tgt, 6);   // señala o gesticula hacia el grupo
