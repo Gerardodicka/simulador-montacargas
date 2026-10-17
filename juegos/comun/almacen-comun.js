@@ -425,9 +425,13 @@ function buildDojo(g, A, z0, z1, M, box) { const zb = z1 + .3, zf = z1 + 6.6, T 
             const mat = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 6.1), M(0x1D2586, { roughness: .9 })); mat.rotation.x = -Math.PI / 2; mat.position.set(0, .008, (zb + zf) / 2); g.add(mat);   // tapete azul del dojo
             const fl = new THREE.Mesh(new THREE.PlaneGeometry(4, .9), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'DOJO DICKA', size: 90, color: '#f5c400' }], { w: 1024, h: 200, bg: '#1D2586' }) })); fl.rotation.x = -Math.PI / 2; fl.position.set(0, .012, zf - .6); g.add(fl);
             [-2.35, 2.35].forEach(x => { box(4.53, 2.59, .09, M(0x0b0b0d, { roughness: .35, metalness: .3 }), x, 2.15, zb + .06); box(.8, .5, .04, M(0x2b2e34), x, 2.15, zb + .02); });   // dos pantallas widescreen de 200" (16:9 · 4.43 × 2.49 m) con soporte de pared
-            const scr = (x, lines) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(4.43, 2.49), T(lines, 1600, 900, '#10233f')); m.position.set(x, 2.15, zb + .11); g.add(m); };
-            scr(-2.35, [{ text: 'INSPECCIÓN PRE-OPERATIVA', size: 96, color: '#f5c400' }, { text: '✔ Llantas y horquillas', size: 72, color: '#ffffff' }, { text: '✔ Claxon, luces y alarma', size: 72, color: '#ffffff' }, { text: '✔ Frenos y nivel de batería', size: 72, color: '#ffffff' }]);
-            scr(2.35, [{ text: 'DOJO DICKA', size: 110, color: '#f5c400' }, { text: 'Capacidad de carga y centro de gravedad', size: 64, color: '#ffffff' }, { text: 'Peatón primero · 10 km/h', size: 64, color: '#ffffff' }, { text: 'REGLA DE ORO: nadie en las horquillas', size: 64, color: '#ffb020' }]);
+            /* pantallas «encendidas»: lienzos animados (video de maniobra a la izquierda, presentación con transiciones a la derecha) + brillo de vidrio */
+            DOJO.screens = []; [[-2.35, 'video'], [2.35, 'slides']].forEach(([x, kind]) => { const c = document.createElement('canvas'); c.width = 1280; c.height = 720; const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+                const m = new THREE.Mesh(new THREE.PlaneGeometry(4.43, 2.49), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.position.set(x, 2.15, zb + .11); g.add(m);
+                const gl = document.createElement('canvas'); gl.width = 256; gl.height = 144; const q = gl.getContext('2d'), gr = q.createLinearGradient(0, 0, 256, 144); gr.addColorStop(0, 'rgba(255,255,255,.16)'); gr.addColorStop(.38, 'rgba(255,255,255,.03)'); gr.addColorStop(.4, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); q.fillStyle = gr; q.fillRect(0, 0, 256, 144);
+                const glare = new THREE.Mesh(new THREE.PlaneGeometry(4.43, 2.49), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gl), transparent: true, depthWrite: false })); glare.position.set(x, 2.15, zb + .115); g.add(glare);
+                const led = new THREE.Mesh(new THREE.CircleGeometry(.025, 10), new THREE.MeshBasicMaterial({ color: 0x33ff66 })); led.position.set(x + 2.15, .9, zb + .11); g.add(led);
+                const S = { c, ctx: c.getContext('2d'), tex, kind, t: kind === 'video' ? 0 : 3, acc: 1 }; DOJO.screens.push(S); dojoScreenDraw(S); });
             const head = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 1.0), T([{ text: 'DOJO DICKA · CENTRO DE CAPACITACIÓN', size: 54, color: '#fff' }], 1200, 220, '#1D2586')); head.position.set(0, 4.55, zb + .02); g.add(head);
             /* logo oficial «Escuela Operativa · DOJO DICKA»: sustituye al letrero de texto en cuanto carga la imagen */
             new THREE.TextureLoader().load('assets/textures/dojo-dicka-logo.webp', tx => { tx.encoding = THREE.sRGBEncoding; tx.anisotropy = 8; const lw = 5.0, lh = lw * 529 / 1676;
@@ -448,7 +452,7 @@ function buildDojo(g, A, z0, z1, M, box) { const zb = z1 + .3, zf = z1 + 6.6, T 
                 return true; };
             if (!people()) { let n = 0; const t = setInterval(() => { if (people() || ++n > 40) clearInterval(t); }, 1500); } }
 
-function dojoUpdate(dt, now) { const I = DOJO.inst; if (I && I.av) { I.t += dt; const op = I.op, st = I.stops[I.i];
+function dojoUpdate(dt, now) { dojoScreens(dt); const I = DOJO.inst; if (I && I.av) { I.t += dt; const op = I.op, st = I.stops[I.i];
               if (I.state === 'talk') { gltfWalkPose(I.av, false, I.w, now, false, 0); const tgt = (Math.sin(now * .0015) > -.2) ? st[2] : new THREE.Vector3(op.position.x + .3, 1.35 + Math.sin(now * .004) * .12, op.position.z + .6); op.updateMatrixWorld(true); ikReach(I.av, 'Right', tgt, 6);   // señala o gesticula hacia el grupo
                 const face = Math.atan2(0, 1) + (st[0] - st[2].x) * -.25; op.rotation.y += (face - op.rotation.y) * Math.min(1, dt * 3); if (I.t > 7 + Math.random() * .02) { I.state = 'walk'; I.t = 0; I.i = (I.i + 1 + (Math.random() < .5 ? 1 : 0)) % I.stops.length; } }
               else { const nx = I.stops[I.i]; const dx = nx[0] - op.position.x, dz = nx[1] - op.position.z, d = Math.hypot(dx, dz), sp = .9 * dt; I.w += dt * 6; if (d <= sp) { op.position.x = nx[0]; op.position.z = nx[1]; I.state = 'talk'; I.t = 0; } else { op.position.x += dx / d * sp; op.position.z += dz / d * sp; op.rotation.y += (Math.atan2(dx, dz) - op.rotation.y) * Math.min(1, dt * 8); } gltfWalkPose(I.av, true, I.w, now, false, 0); } }
@@ -487,7 +491,7 @@ function buildOfficeAnnex() { const hd = WAREHOUSE.d / 2, A = OFFICE_ANNEX, z0 =
             const seats = []; let k = 0;
             [-1, 1].forEach(sd => { for (let z = z0 - 2.2; z > z1 + 1.5; z -= 3.0) { const xd = sd * (A.hw - 1.0), face = sd < 0 ? -Math.PI / 2 : Math.PI / 2;   // escritorio pegado al muro, el personal mira hacia el muro
                     box(0.8, 0.05, 1.8, wood, xd, 0.75, z); [-0.8, 0.8].forEach(dz => box(0.7, 0.72, 0.05, dark, xd, 0.37, z + dz));   // cubierta y patas de panel
-                    [-0.38, 0.38].forEach((dz, i) => { const mon = box(0.04, 0.34, 0.56, dark, xd + sd * 0.25, 1.05, z + dz); const sc = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.3), scr(screens[(k + i) % 4])); sc.position.set(xd + sd * 0.225, 1.05, z + dz); sc.rotation.y = -face; g.add(sc); box(0.12, 0.12, 0.05, dark, xd + sd * 0.28, 0.83, z + dz); });
+                    [-0.38, 0.38].forEach((dz, i) => { const mon = box(0.04, 0.34, 0.56, dark, xd + sd * 0.25, 1.05, z + dz); const sc = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.3), deskMat((k + i) % 4)); sc.position.set(xd + sd * 0.225, 1.05, z + dz); sc.rotation.y = -face; g.add(sc); box(0.12, 0.12, 0.05, dark, xd + sd * 0.28, 0.83, z + dz); });
                     box(0.18, 0.02, 0.45, dark, xd - sd * 0.22, 0.785, z); box(0.45, 0.42, 0.2, dark, xd, 0.21, z + 0.6);   // teclado y CPU
                     const paper = M(0xf4f4f0, { roughness: .9 }); box(0.22, 0.04, 0.3, paper, xd - sd * 0.15, 0.795, z + 0.62); box(0.24, 0.015, 0.32, M(0x1e6fd8), xd - sd * 0.12, 0.783, z - 0.6); box(0.21, 0.004, 0.29, paper, xd - sd * 0.12, 0.792, z - 0.6);   // documentos sobre el escritorio
                     const cx = xd - sd * 0.75; box(0.5, 0.08, 0.5, chairM, cx, 0.48, z); box(0.08, 0.6, 0.48, chairM, cx - sd * 0.24, 0.85, z); box(0.06, 0.44, 0.06, dark, cx, 0.24, z);   // silla
@@ -496,7 +500,8 @@ function buildOfficeAnnex() { const hd = WAREHOUSE.d / 2, A = OFFICE_ANNEX, z0 =
               box(.6, .75, .5, M(0xd9dde4), sd * 8.6, .375, z0 - .5); box(.48, .25, .4, M(0x3a3f47), sd * 8.6, .87, z0 - .5);   // mueble con impresora
               const nm = sd < 0 ? 'ÁREA ADMINISTRATIVA' : 'MESA DE CONTROL'; const hs = new THREE.Mesh(new THREE.PlaneGeometry(4.2, .8), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: nm, size: 70, color: '#fff' }], { w: 1024, h: 196, bg: sd < 0 ? '#1D2586' : '#c8102e' }) })); hs.position.set(sd * 9.4, 3.4, zc); hs.rotation.y = -sd * Math.PI / 2; g.add(hs); const hs2 = hs.clone(); hs2.rotation.y += Math.PI; hs2.position.x += sd * .01; g.add(hs2);   // legible desde el pasillo y desde los escritorios   // letrero colgante de la zona
               [-1.4, 1.4].forEach(dz => { const c = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, H - 3.8, 4), M(0x333333)); c.position.set(sd * 9.4, 3.8 + (H - 3.8) / 2, zc + dz); g.add(c); }); });
-            { const vw = new THREE.Group(); const feeds = ['ANDÉN 1', 'ANDÉN 3', 'PASILLO A', 'RACK P2', 'CARGA BAT.', 'STAGING', 'ACCESO', 'PATIO']; feeds.forEach((t, i) => { const sc = new THREE.Mesh(new THREE.PlaneGeometry(1.15, .66), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'CAM ' + (i + 1), size: 34, color: '#8ff0b0' }, { text: t, size: 40, color: '#fff' }, { text: '● REC', size: 28, color: '#ff4d4d' }], { w: 256, h: 150, bg: i % 2 ? '#0b2a1d' : '#10233f' }) })); sc.position.set((i % 4 - 1.5) * 1.22, 2.05 + Math.floor(i / 4) * .72, .01); vw.add(sc); });
+            { const vw = new THREE.Group(); const feeds = ['ANDÉN 1', 'ANDÉN 3', 'PASILLO A', 'RACK P2', 'CARGA BAT.', 'STAGING', 'ACCESO', 'PATIO']; feeds.forEach((t, i) => { const c = document.createElement('canvas'); c.width = 320; c.height = 180; const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; const F = { c, ctx: c.getContext('2d'), tex, name: t, cam: i + 1, t: Math.random() * 20, seed: i }; CCTV.push(F); cctvDraw(F);   /* cámara en vivo: imagen con movimiento, reloj y REC parpadeando */
+                const sc = new THREE.Mesh(new THREE.PlaneGeometry(1.15, .66), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); sc.position.set((i % 4 - 1.5) * 1.22, 2.05 + Math.floor(i / 4) * .72, .01); vw.add(sc); });
               const fr = new THREE.Mesh(new THREE.BoxGeometry(5.05, 1.6, .06), M(0x15181d)); fr.position.set(0, 2.41, -.04); vw.add(fr); vw.position.set(A.hw - .3, 0, zc); vw.rotation.y = -Math.PI / 2; g.add(vw); }   // video-wall de cámaras de la mesa de control
             buildDojo(g, A, z0, z1, M, box);
             g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } }); scene.add(g);
@@ -1667,3 +1672,70 @@ function clampSlider(id, delta) {
             const el = document.getElementById(id);
             el.value = Math.max(el.min, Math.min(el.max, parseFloat(el.value) + delta));
         }
+
+// ===== Pantallas del Dojo: contenido animado =====
+const DOJO_SLIDES = [
+  { h: 'INSPECCIÓN PRE-OPERATIVA', c: '#f5c400', l: ['✔ Llantas y horquillas', '✔ Claxon, luces y alarma', '✔ Frenos y batería'] },
+  { h: 'CENTRO DE GRAVEDAD', c: '#4fc3ff', l: ['Carga baja al transitar', 'Nunca gires con la carga elevada', 'Respeta la capacidad nominal'] },
+  { h: 'PEATÓN PRIMERO', c: '#2ee07a', l: ['Velocidad máxima 10 km/h', 'Claxon en cruces y esquinas', 'Contacto visual antes de avanzar'] },
+  { h: 'REGLA DE ORO', c: '#ff8a3d', l: ['Nadie en las horquillas', 'Nadie bajo carga elevada', 'Cinturón y casco siempre'] }];
+function dojoScreenDraw(S) { const g = S.ctx, W = 1280, H = 720, t = S.t;
+  g.fillStyle = '#0b1a33'; g.fillRect(0, 0, W, H);
+  if (S.kind === 'video') {   // «video» de maniobra: montacargas que llega, eleva la tarima y la coloca en el rack
+    const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#1d3a6b'); sky.addColorStop(1, '#0b1a33'); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#3a4252'; g.fillRect(0, 560, W, 160);   // piso
+    for (let k = 0; k < 3; k++) { const rx = 820 + k * 140; g.fillStyle = '#2148a8'; g.fillRect(rx, 160, 14, 400); g.fillRect(rx + 120, 160, 14, 400); g.fillStyle = '#ff7a1a'; [300, 440].forEach(y => g.fillRect(rx, y, 134, 12)); }   // rack
+    const T = t % 12, drive = Math.min(1, T / 4), lift = T < 4 ? 0 : Math.min(1, (T - 4) / 3), back = T > 9 ? Math.min(1, (T - 9) / 2) : 0;
+    const fx = 120 + drive * 520 - back * 300, fy = 560 - lift * 150 * (1 - back);
+    g.fillStyle = '#c8102e'; g.fillRect(fx - 170, 470, 170, 90); g.fillStyle = '#222'; g.fillRect(fx - 150, 400, 12, 70); g.fillRect(fx - 40, 400, 12, 70); g.fillRect(fx - 160, 396, 140, 10);   // chasis y techo
+    g.fillStyle = '#111'; [fx - 140, fx - 40].forEach(wx => { g.beginPath(); g.arc(wx, 565, 24, 0, 7); g.fill(); });
+    g.fillStyle = '#9aa0a8'; g.fillRect(fx, 300, 12, 262); g.fillStyle = '#d0d4da'; g.fillRect(fx + 12, fy - 6, 120, 8);   // mástil y horquillas
+    if (back < .5) { g.fillStyle = '#b08850'; g.fillRect(fx + 14, fy - 20, 110, 14); g.fillStyle = '#d9b77a'; g.fillRect(fx + 20, fy - 90, 98, 70); g.strokeStyle = '#8a6a3a'; g.lineWidth = 3; g.strokeRect(fx + 20, fy - 90, 98, 70); }
+    else { g.fillStyle = '#d9b77a'; g.fillRect(842, 340, 98, 70); }
+    const cap = T < 4 ? '1 · Acércate de frente y despacio' : T < 7 ? '2 · Detenido: eleva la carga' : T < 9 ? '3 · Coloca y baja suave' : '4 · Retrae y retrocede con claxon';
+    g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 0, W, 86); g.fillStyle = '#f5c400'; g.font = '900 44px Arial'; g.textAlign = 'left'; g.fillText('DOJO DICKA · MANIOBRA EN RACK', 34, 58);
+    g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 630, W, 90); g.fillStyle = '#fff'; g.font = '700 38px Arial'; g.fillText(cap, 34, 668);
+    g.fillStyle = '#444'; g.fillRect(34, 690, W - 260, 8); g.fillStyle = '#e53935'; g.fillRect(34, 690, (W - 260) * (T / 12), 8); g.beginPath(); g.arc(34 + (W - 260) * (T / 12), 694, 10, 0, 7); g.fill();
+    const sec = Math.floor(T); g.fillStyle = '#ddd'; g.font = '600 26px Arial'; g.fillText(`00:${String(sec).padStart(2, '0')} / 00:12`, W - 210, 702);
+    g.fillStyle = '#fff'; g.beginPath(); g.moveTo(W - 70, 22); g.lineTo(W - 40, 42); g.lineTo(W - 70, 62); g.fill();
+  } else {   // presentación: diapositivas con transición deslizante y viñetas que aparecen
+    const per = 6, n = DOJO_SLIDES.length, k = Math.floor(t / per) % n, ph = t % per, sl = DOJO_SLIDES[k], nx = DOJO_SLIDES[(k + 1) % n];
+    const slide = (d, off) => { g.save(); g.translate(off, 0); g.fillStyle = '#10233f'; g.fillRect(0, 0, W, H); g.fillStyle = d.c; g.fillRect(0, 0, 18, H); g.fillRect(60, 170, 220, 8);
+      g.fillStyle = d.c; g.font = '900 78px Arial'; g.textAlign = 'left'; g.fillText(d.h, 60, 140);
+      d.l.forEach((ln, i) => { const a = off ? 1 : Math.max(0, Math.min(1, (ph - .4 - i * .6) / .4)); g.globalAlpha = a; g.fillStyle = '#fff'; g.font = '700 58px Arial'; g.fillText(ln, 60 + (1 - a) * 60, 290 + i * 110); }); g.globalAlpha = 1; g.restore(); };
+    const tr = ph > per - .6 ? (ph - (per - .6)) / .6 : 0; slide(sl, -tr * W); if (tr) slide(nx, W - tr * W);
+    g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '700 30px Arial'; g.textAlign = 'right'; g.fillText(`${k + 1} / ${n}`, W - 40, H - 36); g.textAlign = 'left'; g.fillStyle = '#f5c400'; g.fillText('ESCUELA OPERATIVA · DOJO DICKA', 60, H - 36);
+  }
+  const sc = g.createLinearGradient(0, 0, 0, 4); g.fillStyle = 'rgba(0,0,0,.06)'; for (let y = 0; y < H; y += 4) g.fillRect(0, y, W, 1);   // textura de panel
+  S.tex.needsUpdate = true; }
+function dojoScreens(dt) { cctvUpdate(dt); deskUpdate(dt); if (!DOJO.screens) return; DOJO.screens.forEach(S => { S.t += dt; S.acc += dt; if (S.acc >= 1 / 15) { S.acc = 0; dojoScreenDraw(S); } }); }
+
+// ===== Video-wall de la mesa de control: cámaras CCTV «en vivo» =====
+const CCTV = []; let _cctvI = 0, _cctvAcc = 0;
+function cctvDraw(F) { const g = F.ctx, W = 320, H = 180, t = F.t, k = F.seed;
+  g.fillStyle = '#1b2620'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#26332b'; g.beginPath(); g.moveTo(0, H); g.lineTo(W * .35, 70); g.lineTo(W * .65, 70); g.lineTo(W, H); g.fill();   // piso en perspectiva
+  g.strokeStyle = '#3d5246'; g.lineWidth = 2; for (let r = 0; r < 4; r++) { g.beginPath(); g.moveTo(20 + r * 8, 40 + r * 10); g.lineTo(20 + r * 8, 150); g.moveTo(W - 20 - r * 8, 40 + r * 10); g.lineTo(W - 20 - r * 8, 150); g.stroke(); }   // racks laterales
+  const u = ((t * (0.12 + (k % 3) * .04)) + k * .37) % 1, mx = 40 + u * 240, my = 120 + Math.sin(u * 6 + k) * 10, sz = .6 + u * .5;
+  if (k % 4 !== 3) { g.fillStyle = '#9bb5a4'; g.fillRect(mx - 18 * sz, my - 14 * sz, 30 * sz, 14 * sz); g.fillRect(mx + 10 * sz, my - 30 * sz, 3 * sz, 30 * sz); }   // montacargas cruzando
+  const v = ((t * .08) + k * .21) % 1; g.fillStyle = '#c9dccf'; g.beginPath(); g.arc(W - 40 - v * 200, 135 - v * 30, 3.5, 0, 7); g.fill(); g.fillRect(W - 42 - v * 200, 138 - v * 30, 4, 10);   // persona caminando
+  const img = g.getImageData(0, 0, W, H), d = img.data; for (let i = 0; i < d.length; i += 16) { const n = (Math.random() - .5) * 26; d[i] += n; d[i + 1] += n; d[i + 2] += n; } g.putImageData(img, 0, 0);   // grano de cámara
+  const now = new Date(Date.now() + k * 0), hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0'), ss = String(now.getSeconds()).padStart(2, '0');
+  g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(0, 0, W, 26); g.fillStyle = '#8ff0b0'; g.font = '700 16px monospace'; g.textAlign = 'left'; g.fillText('CAM ' + F.cam + ' · ' + F.name, 8, 18);
+  g.textAlign = 'right'; g.fillStyle = '#fff'; g.fillText(`${hh}:${mm}:${ss}`, W - 8, 18);
+  if (Math.floor(t * 1.4) % 2 === 0) { g.fillStyle = '#ff3b3b'; g.beginPath(); g.arc(14, H - 14, 6, 0, 7); g.fill(); g.font = '700 14px monospace'; g.textAlign = 'left'; g.fillText('REC', 24, H - 9); }
+  F.tex.needsUpdate = true; }
+function cctvUpdate(dt) { if (!CCTV.length) return; CCTV.forEach(F => F.t += dt); _cctvAcc += dt; if (_cctvAcc < 1 / 20) return; _cctvAcc = 0; cctvDraw(CCTV[_cctvI++ % CCTV.length]); cctvDraw(CCTV[_cctvI++ % CCTV.length]); }   // dos cámaras por ciclo: ~5 fps por cámara
+
+// ===== Monitores de escritorio (WMS, inventario, andenes, CCTV) con datos que cambian =====
+const DESK = []; let _deskAcc = 0;
+function deskMat(i) { if (!DESK[i]) { const c = document.createElement('canvas'); c.width = 256; c.height = 150; const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; DESK[i] = { c, g: c.getContext('2d'), tex, mat: new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), hist: [] }; deskDraw(i, 0); } return DESK[i].mat; }
+function deskDraw(i, t) { const D = DESK[i], g = D.g, W = 256, H = 150; g.fillStyle = '#10233f'; g.fillRect(0, 0, W, H); g.textAlign = 'center';
+  const title = (txt, col) => { g.fillStyle = col; g.font = '900 28px Arial'; g.fillText(txt, W / 2, 34); };
+  if (i === 0) { const ola = 14 + Math.floor(t / 40), pct = Math.floor((t % 40) / 40 * 100); title('WMS · OLAS', '#8ff0b0'); g.fillStyle = '#9fb0ff'; g.font = '700 24px Arial'; g.fillText(`Ola ${ola} · ${pct}%`, W / 2, 72); g.fillStyle = '#26365a'; g.fillRect(24, 92, W - 48, 16); g.fillStyle = '#2ee07a'; g.fillRect(24, 92, (W - 48) * pct / 100, 16); g.fillStyle = '#cfd8ff'; g.font = '600 16px Arial'; g.fillText(`${120 + Math.floor(t * 1.7) % 400} líneas surtidas`, W / 2, 134); }
+  else if (i === 1) { const ex = 99 + .2 + Math.sin(t * .3) * .25 + Math.sin(t * 1.3) * .08; D.hist.push(ex); if (D.hist.length > 30) D.hist.shift(); title('INVENTARIO', '#f5c400'); g.fillStyle = '#fff'; g.font = '700 24px Arial'; g.fillText(`Exactitud ${ex.toFixed(1)}%`, W / 2, 70);
+    g.strokeStyle = '#2ee07a'; g.lineWidth = 2.5; g.beginPath(); D.hist.forEach((v, k) => { const x = 24 + k * (W - 48) / 29, y = 136 - (v - 98.8) / .8 * 50; k ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); }
+  else if (i === 2) { title('ANDENES', '#8ff0b0'); const st = ['cargando', 'en espera', 'descargando', 'liberado']; for (let a = 0; a < 4; a++) { const k = (Math.floor(t / 7) + a) % 4, col = ['#ffb020', '#9fb0ff', '#4fc3ff', '#2ee07a'][k]; g.fillStyle = col; g.font = '700 17px Arial'; g.textAlign = 'left'; g.fillText(`A${a + 1}`, 30, 62 + a * 22); g.fillText(st[k], 80, 62 + a * 22); if (k === 0 || k === 2) { g.fillRect(190, 52 + a * 22, 36 * ((t * .2 + a * .3) % 1), 10); } } }
+  else { title('CCTV', '#ff6b6b'); g.fillStyle = '#fff'; g.font = '700 22px Arial'; g.fillText('8 cámaras OK', W / 2, 72); const d = new Date(); g.font = '700 26px monospace'; g.fillStyle = '#8ff0b0'; g.fillText(d.toTimeString().slice(0, 8), W / 2, 112); if (Math.floor(t * 2) % 2 === 0) { g.fillStyle = '#ff3b3b'; g.beginPath(); g.arc(30, 130, 6, 0, 7); g.fill(); } }
+  D.tex.needsUpdate = true; }
+function deskUpdate(dt) { if (!DESK.length) return; _deskAcc += dt; DESK.t = (DESK.t || 0) + dt; if (_deskAcc < .5) return; _deskAcc = 0; DESK.forEach((D, i) => D && deskDraw(i, DESK.t)); }
