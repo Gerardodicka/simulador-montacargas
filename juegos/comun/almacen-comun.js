@@ -491,7 +491,7 @@ function buildOfficeAnnex() { const hd = WAREHOUSE.d / 2, A = OFFICE_ANNEX, z0 =
             const seats = []; let k = 0;
             [-1, 1].forEach(sd => { for (let z = z0 - 2.2; z > z1 + 1.5; z -= 3.0) { const xd = sd * (A.hw - 1.0), face = sd < 0 ? -Math.PI / 2 : Math.PI / 2;   // escritorio pegado al muro, el personal mira hacia el muro
                     box(0.8, 0.05, 1.8, wood, xd, 0.75, z); [-0.8, 0.8].forEach(dz => box(0.7, 0.72, 0.05, dark, xd, 0.37, z + dz));   // cubierta y patas de panel
-                    [-0.38, 0.38].forEach((dz, i) => { const mon = box(0.04, 0.34, 0.56, dark, xd + sd * 0.25, 1.05, z + dz); const sc = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.3), scr(screens[(k + i) % 4])); sc.position.set(xd + sd * 0.225, 1.05, z + dz); sc.rotation.y = -face; g.add(sc); box(0.12, 0.12, 0.05, dark, xd + sd * 0.28, 0.83, z + dz); });
+                    [-0.38, 0.38].forEach((dz, i) => { const mon = box(0.04, 0.34, 0.56, dark, xd + sd * 0.25, 1.05, z + dz); const sc = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.3), deskMat((k + i) % 4)); sc.position.set(xd + sd * 0.225, 1.05, z + dz); sc.rotation.y = -face; g.add(sc); box(0.12, 0.12, 0.05, dark, xd + sd * 0.28, 0.83, z + dz); });
                     box(0.18, 0.02, 0.45, dark, xd - sd * 0.22, 0.785, z); box(0.45, 0.42, 0.2, dark, xd, 0.21, z + 0.6);   // teclado y CPU
                     const paper = M(0xf4f4f0, { roughness: .9 }); box(0.22, 0.04, 0.3, paper, xd - sd * 0.15, 0.795, z + 0.62); box(0.24, 0.015, 0.32, M(0x1e6fd8), xd - sd * 0.12, 0.783, z - 0.6); box(0.21, 0.004, 0.29, paper, xd - sd * 0.12, 0.792, z - 0.6);   // documentos sobre el escritorio
                     const cx = xd - sd * 0.75; box(0.5, 0.08, 0.5, chairM, cx, 0.48, z); box(0.08, 0.6, 0.48, chairM, cx - sd * 0.24, 0.85, z); box(0.06, 0.44, 0.06, dark, cx, 0.24, z);   // silla
@@ -500,7 +500,8 @@ function buildOfficeAnnex() { const hd = WAREHOUSE.d / 2, A = OFFICE_ANNEX, z0 =
               box(.6, .75, .5, M(0xd9dde4), sd * 8.6, .375, z0 - .5); box(.48, .25, .4, M(0x3a3f47), sd * 8.6, .87, z0 - .5);   // mueble con impresora
               const nm = sd < 0 ? 'ÁREA ADMINISTRATIVA' : 'MESA DE CONTROL'; const hs = new THREE.Mesh(new THREE.PlaneGeometry(4.2, .8), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: nm, size: 70, color: '#fff' }], { w: 1024, h: 196, bg: sd < 0 ? '#1D2586' : '#c8102e' }) })); hs.position.set(sd * 9.4, 3.4, zc); hs.rotation.y = -sd * Math.PI / 2; g.add(hs); const hs2 = hs.clone(); hs2.rotation.y += Math.PI; hs2.position.x += sd * .01; g.add(hs2);   // legible desde el pasillo y desde los escritorios   // letrero colgante de la zona
               [-1.4, 1.4].forEach(dz => { const c = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, H - 3.8, 4), M(0x333333)); c.position.set(sd * 9.4, 3.8 + (H - 3.8) / 2, zc + dz); g.add(c); }); });
-            { const vw = new THREE.Group(); const feeds = ['ANDÉN 1', 'ANDÉN 3', 'PASILLO A', 'RACK P2', 'CARGA BAT.', 'STAGING', 'ACCESO', 'PATIO']; feeds.forEach((t, i) => { const sc = new THREE.Mesh(new THREE.PlaneGeometry(1.15, .66), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'CAM ' + (i + 1), size: 34, color: '#8ff0b0' }, { text: t, size: 40, color: '#fff' }, { text: '● REC', size: 28, color: '#ff4d4d' }], { w: 256, h: 150, bg: i % 2 ? '#0b2a1d' : '#10233f' }) })); sc.position.set((i % 4 - 1.5) * 1.22, 2.05 + Math.floor(i / 4) * .72, .01); vw.add(sc); });
+            { const vw = new THREE.Group(); const feeds = ['ANDÉN 1', 'ANDÉN 3', 'PASILLO A', 'RACK P2', 'CARGA BAT.', 'STAGING', 'ACCESO', 'PATIO']; feeds.forEach((t, i) => { const c = document.createElement('canvas'); c.width = 320; c.height = 180; const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; const F = { c, ctx: c.getContext('2d'), tex, name: t, cam: i + 1, t: Math.random() * 20, seed: i }; CCTV.push(F); cctvDraw(F);   /* cámara en vivo: imagen con movimiento, reloj y REC parpadeando */
+                const sc = new THREE.Mesh(new THREE.PlaneGeometry(1.15, .66), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); sc.position.set((i % 4 - 1.5) * 1.22, 2.05 + Math.floor(i / 4) * .72, .01); vw.add(sc); });
               const fr = new THREE.Mesh(new THREE.BoxGeometry(5.05, 1.6, .06), M(0x15181d)); fr.position.set(0, 2.41, -.04); vw.add(fr); vw.position.set(A.hw - .3, 0, zc); vw.rotation.y = -Math.PI / 2; g.add(vw); }   // video-wall de cámaras de la mesa de control
             buildDojo(g, A, z0, z1, M, box);
             g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } }); scene.add(g);
@@ -1707,4 +1708,34 @@ function dojoScreenDraw(S) { const g = S.ctx, W = 1280, H = 720, t = S.t;
   }
   const sc = g.createLinearGradient(0, 0, 0, 4); g.fillStyle = 'rgba(0,0,0,.06)'; for (let y = 0; y < H; y += 4) g.fillRect(0, y, W, 1);   // textura de panel
   S.tex.needsUpdate = true; }
-function dojoScreens(dt) { if (!DOJO.screens) return; DOJO.screens.forEach(S => { S.t += dt; S.acc += dt; if (S.acc >= 1 / 15) { S.acc = 0; dojoScreenDraw(S); } }); }
+function dojoScreens(dt) { cctvUpdate(dt); deskUpdate(dt); if (!DOJO.screens) return; DOJO.screens.forEach(S => { S.t += dt; S.acc += dt; if (S.acc >= 1 / 15) { S.acc = 0; dojoScreenDraw(S); } }); }
+
+// ===== Video-wall de la mesa de control: cámaras CCTV «en vivo» =====
+const CCTV = []; let _cctvI = 0, _cctvAcc = 0;
+function cctvDraw(F) { const g = F.ctx, W = 320, H = 180, t = F.t, k = F.seed;
+  g.fillStyle = '#1b2620'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#26332b'; g.beginPath(); g.moveTo(0, H); g.lineTo(W * .35, 70); g.lineTo(W * .65, 70); g.lineTo(W, H); g.fill();   // piso en perspectiva
+  g.strokeStyle = '#3d5246'; g.lineWidth = 2; for (let r = 0; r < 4; r++) { g.beginPath(); g.moveTo(20 + r * 8, 40 + r * 10); g.lineTo(20 + r * 8, 150); g.moveTo(W - 20 - r * 8, 40 + r * 10); g.lineTo(W - 20 - r * 8, 150); g.stroke(); }   // racks laterales
+  const u = ((t * (0.12 + (k % 3) * .04)) + k * .37) % 1, mx = 40 + u * 240, my = 120 + Math.sin(u * 6 + k) * 10, sz = .6 + u * .5;
+  if (k % 4 !== 3) { g.fillStyle = '#9bb5a4'; g.fillRect(mx - 18 * sz, my - 14 * sz, 30 * sz, 14 * sz); g.fillRect(mx + 10 * sz, my - 30 * sz, 3 * sz, 30 * sz); }   // montacargas cruzando
+  const v = ((t * .08) + k * .21) % 1; g.fillStyle = '#c9dccf'; g.beginPath(); g.arc(W - 40 - v * 200, 135 - v * 30, 3.5, 0, 7); g.fill(); g.fillRect(W - 42 - v * 200, 138 - v * 30, 4, 10);   // persona caminando
+  const img = g.getImageData(0, 0, W, H), d = img.data; for (let i = 0; i < d.length; i += 16) { const n = (Math.random() - .5) * 26; d[i] += n; d[i + 1] += n; d[i + 2] += n; } g.putImageData(img, 0, 0);   // grano de cámara
+  const now = new Date(Date.now() + k * 0), hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0'), ss = String(now.getSeconds()).padStart(2, '0');
+  g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(0, 0, W, 26); g.fillStyle = '#8ff0b0'; g.font = '700 16px monospace'; g.textAlign = 'left'; g.fillText('CAM ' + F.cam + ' · ' + F.name, 8, 18);
+  g.textAlign = 'right'; g.fillStyle = '#fff'; g.fillText(`${hh}:${mm}:${ss}`, W - 8, 18);
+  if (Math.floor(t * 1.4) % 2 === 0) { g.fillStyle = '#ff3b3b'; g.beginPath(); g.arc(14, H - 14, 6, 0, 7); g.fill(); g.font = '700 14px monospace'; g.textAlign = 'left'; g.fillText('REC', 24, H - 9); }
+  F.tex.needsUpdate = true; }
+function cctvUpdate(dt) { if (!CCTV.length) return; CCTV.forEach(F => F.t += dt); _cctvAcc += dt; if (_cctvAcc < 1 / 20) return; _cctvAcc = 0; cctvDraw(CCTV[_cctvI++ % CCTV.length]); cctvDraw(CCTV[_cctvI++ % CCTV.length]); }   // dos cámaras por ciclo: ~5 fps por cámara
+
+// ===== Monitores de escritorio (WMS, inventario, andenes, CCTV) con datos que cambian =====
+const DESK = []; let _deskAcc = 0;
+function deskMat(i) { if (!DESK[i]) { const c = document.createElement('canvas'); c.width = 256; c.height = 150; const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; DESK[i] = { c, g: c.getContext('2d'), tex, mat: new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), hist: [] }; deskDraw(i, 0); } return DESK[i].mat; }
+function deskDraw(i, t) { const D = DESK[i], g = D.g, W = 256, H = 150; g.fillStyle = '#10233f'; g.fillRect(0, 0, W, H); g.textAlign = 'center';
+  const title = (txt, col) => { g.fillStyle = col; g.font = '900 28px Arial'; g.fillText(txt, W / 2, 34); };
+  if (i === 0) { const ola = 14 + Math.floor(t / 40), pct = Math.floor((t % 40) / 40 * 100); title('WMS · OLAS', '#8ff0b0'); g.fillStyle = '#9fb0ff'; g.font = '700 24px Arial'; g.fillText(`Ola ${ola} · ${pct}%`, W / 2, 72); g.fillStyle = '#26365a'; g.fillRect(24, 92, W - 48, 16); g.fillStyle = '#2ee07a'; g.fillRect(24, 92, (W - 48) * pct / 100, 16); g.fillStyle = '#cfd8ff'; g.font = '600 16px Arial'; g.fillText(`${120 + Math.floor(t * 1.7) % 400} líneas surtidas`, W / 2, 134); }
+  else if (i === 1) { const ex = 99 + .2 + Math.sin(t * .3) * .25 + Math.sin(t * 1.3) * .08; D.hist.push(ex); if (D.hist.length > 30) D.hist.shift(); title('INVENTARIO', '#f5c400'); g.fillStyle = '#fff'; g.font = '700 24px Arial'; g.fillText(`Exactitud ${ex.toFixed(1)}%`, W / 2, 70);
+    g.strokeStyle = '#2ee07a'; g.lineWidth = 2.5; g.beginPath(); D.hist.forEach((v, k) => { const x = 24 + k * (W - 48) / 29, y = 136 - (v - 98.8) / .8 * 50; k ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); }
+  else if (i === 2) { title('ANDENES', '#8ff0b0'); const st = ['cargando', 'en espera', 'descargando', 'liberado']; for (let a = 0; a < 4; a++) { const k = (Math.floor(t / 7) + a) % 4, col = ['#ffb020', '#9fb0ff', '#4fc3ff', '#2ee07a'][k]; g.fillStyle = col; g.font = '700 17px Arial'; g.textAlign = 'left'; g.fillText(`A${a + 1}`, 30, 62 + a * 22); g.fillText(st[k], 80, 62 + a * 22); if (k === 0 || k === 2) { g.fillRect(190, 52 + a * 22, 36 * ((t * .2 + a * .3) % 1), 10); } } }
+  else { title('CCTV', '#ff6b6b'); g.fillStyle = '#fff'; g.font = '700 22px Arial'; g.fillText('8 cámaras OK', W / 2, 72); const d = new Date(); g.font = '700 26px monospace'; g.fillStyle = '#8ff0b0'; g.fillText(d.toTimeString().slice(0, 8), W / 2, 112); if (Math.floor(t * 2) % 2 === 0) { g.fillStyle = '#ff3b3b'; g.beginPath(); g.arc(30, 130, 6, 0, 7); g.fill(); } }
+  D.tex.needsUpdate = true; }
+function deskUpdate(dt) { if (!DESK.length) return; _deskAcc += dt; DESK.t = (DESK.t || 0) + dt; if (_deskAcc < .5) return; _deskAcc = 0; DESK.forEach((D, i) => D && deskDraw(i, DESK.t)); }
