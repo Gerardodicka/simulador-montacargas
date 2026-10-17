@@ -1088,7 +1088,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=12.7"></script>
+    <script src="comun/almacen-comun.js?v=12.8"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1523,7 +1523,7 @@
                 paintLabel('EMPLAYADO MANUAL', x, z + 1.5, .38, '#f5c400', Math.PI, 2.6); obstacles.push({ minX: x - 1.4, maxX: x + 1.4, minZ: z - 1.3, maxZ: z + 1.3 });
                 WRAP.st.push({ x, z, wr, roll, ld, a: k * 2, h: 0, dir: 1, pass: 0, pause: 0, op: null }); });
             const crew = () => { if (typeof makeStandingOperator !== 'function' || !GLTF_AVATAR.ok) return false; WRAP.st.forEach(S => { try { S.op = makeStandingOperator(false); S.av = S.op.userData.gltf; scene.add(S.op); } catch (e) { } }); return true; };
-            if (!crew()) { let n = 0; const t = setInterval(() => { if (crew() || ++n > 40) clearInterval(t); }, 1500); } }
+            if (!crew()) { let n = 0; const t = setInterval(() => { if (crew() || ++n > 400) clearInterval(t); }, 1500); } }
         function wrapUpdate(dt, now) { WRAP.st.forEach(S => { if (!S.op || !S.av) return; const R = .98;
               if (S.pause > 0) { S.pause -= dt; gltfWalkPose(S.av, false, S.a * 3, now, false, 0); if (S.pause <= 0) { S.h = 0; S.dir = 1; S.pass = 0; S.wr.scale.y = .01; S.ld.material = unitLoadMat(Math.floor(Math.random() * 3)); } S.roll.visible = S.pause > 2; return; }   // corta la película y cambia de tarima
               S.a += dt * .55; S.h += S.dir * dt * .045; if (S.h > 1.2) { S.dir = -1; S.pass++; } if (S.h < .02 && S.dir < 0) { S.dir = 1; S.pass++; } if (S.pass >= 2) { S.pause = 5; }

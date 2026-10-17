@@ -1099,7 +1099,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=12.7"></script>
+    <script src="comun/almacen-comun.js?v=12.8"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1560,7 +1560,7 @@
                 paintLabel('EMPLAYADO MANUAL', x, z + 1.5, .38, '#f5c400', Math.PI, 2.6); obstacles.push({ minX: x - 1.4, maxX: x + 1.4, minZ: z - 1.3, maxZ: z + 1.3 });
                 WRAP.st.push({ x, z, wr, roll, ld, pl, a: k * 2, h: 0, dir: 1, pass: 0, pause: 0, op: null }); });
             const crew = () => { if (typeof makeStandingOperator !== 'function' || !GLTF_AVATAR.ok) return false; WRAP.st.forEach(S => { try { S.op = makeStandingOperator(false); S.av = S.op.userData.gltf; scene.add(S.op); } catch (e) { } }); return true; };
-            if (!crew()) { let n = 0; const t = setInterval(() => { if (crew() || ++n > 40) clearInterval(t); }, 1500); } }
+            if (!crew()) { let n = 0; const t = setInterval(() => { if (crew() || ++n > 400) clearInterval(t); }, 1500); } }
         function wrapUpdate(dt, now) { WRAP.st.forEach(S => { if (!S.op || !S.av) return; const R = .98;
               if (S.ready || S.gone) { gltfWalkPose(S.av, false, S.a * 3, now, false, 0); S.roll.visible = false; if (S.gone && (S.wait = (S.wait || 0) + dt) > 4) { S.gone = false; S.wait = 0; S.h = 0; S.dir = 1; S.pass = 0; S.wr.scale.y = .01; S.ld.material = unitLoadMat(Math.floor(Math.random() * 3)); S.ld.visible = true; S.wr.visible = true; S.pl && (S.pl.visible = true); } return; }   // tarima lista: espera a que el patinero la recoja
               if (S.pause > 0) { S.pause -= dt; gltfWalkPose(S.av, false, S.a * 3, now, false, 0); if (S.pause <= 0) { S.h = 0; S.dir = 1; S.pass = 0; S.wr.scale.y = .01; S.ld.material = unitLoadMat(Math.floor(Math.random() * 3)); } S.roll.visible = S.pause > 2; return; }   // corta la película y cambia de tarima
@@ -2220,7 +2220,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v12.7 pantallas y cámaras en vivo';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v12.8 pantallas en vivo · personas con carga lenta';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
