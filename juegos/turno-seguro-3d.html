@@ -1088,7 +1088,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=13.2"></script>
+    <script src="comun/almacen-comun.js?v=13.3"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1746,7 +1746,7 @@
             const dicka = (w, x, y, z, ry) => { const t = new THREE.TextureLoader().load(LOGO_DATA_W); t.anisotropy = 4; const l = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 70 / 242), new THREE.MeshBasicMaterial({ map: t, transparent: true })); l.position.set(x, y, z); l.rotation.y = ry; forklift.add(l); };
             const mastRails = (h, z, gap) => { [-gap, gap].forEach(dx => { add(new THREE.BoxGeometry(0.09, h, 0.16), steel, dx, h / 2, z, 'mastRail'); add(new THREE.BoxGeometry(0.06, h - 0.2, 0.06), dark, dx * 0.6, h / 2, z - 0.1, 'mastRail'); }); add(new THREE.BoxGeometry(gap * 2 + 0.09, 0.08, 0.16), steel, 0, h - 0.04, z); add(new THREE.BoxGeometry(gap * 2 + 0.09, 0.08, 0.16), steel, 0, 0.3, z); };
             const forks = (z, len) => { [-0.3, 0.3].forEach(dx => { add(new THREE.BoxGeometry(0.1, 0.045, len), black, dx, 0.12, z + len / 2 - 0.2, 'fork'); add(new THREE.BoxGeometry(0.1, 0.5, 0.05), black, dx, 0.35, z - 0.2, 'fork'); }); };
-            const beacon = (x, y, z) => { add(new THREE.CylinderGeometry(0.07, 0.09, 0.14, 12), new THREE.MeshStandardMaterial({ color: 0xff9900, emissive: 0xff6600, emissiveIntensity: 1.3 }), x, y, z); };
+            const beacon = (x, y, z) => { add(new THREE.CylinderGeometry(0.07, 0.09, 0.14, 12), new THREE.MeshStandardMaterial({ color: 0x3d8bff, emissive: 0x1a5cff, emissiveIntensity: 1.3 }), x, y, z); };
             const blue = new THREE.SpotLight(0x3366ff, 1.2, 8, 0.4, 0.6); blue.position.set(0, 2.2, -sp.len / 2); blue.target.position.set(0, 0, -5); forklift.add(blue); forklift.add(blue.target);
 
             if (sp.type === 'Reach' || sp.type === 'Double Reach') {
@@ -2409,7 +2409,7 @@
             const t = raymondTex(512, 112); [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.PlaneGeometry(.8, .18), new THREE.MeshBasicMaterial({ map: t })); l.position.set(sd * .62, .6, -1.3); l.rotation.y = sd > 0 ? Math.PI / 2 : -Math.PI / 2; g.add(l); });
             // operador
             const op = buildHuman({ seatbelt: false, glasses: true }, { seated: false, hipY: 0.94 }); op.getObjectByName('armL').rotation.x = -0.9; op.getObjectByName('armR').rotation.x = -0.9; op.getObjectByName('elbowL').rotation.x = -0.5; op.getObjectByName('elbowR').rotation.x = -0.5; op.scale.setScalar(0.96); op.position.set(0, .2, -.3); g.add(op);
-            const beacon = add(new THREE.CylinderGeometry(.07, .09, .14, 12), new THREE.MeshStandardMaterial({ color: 0xff9900, emissive: 0xff6600, emissiveIntensity: 1.2 }), 0, 2.45, -.6);
+            const beacon = add(new THREE.CylinderGeometry(.07, .09, .14, 12), new THREE.MeshStandardMaterial({ color: 0x3d8bff, emissive: 0x1a5cff, emissiveIntensity: 1.2 }), 0, 2.45, -.6);
             const plateT = makeTextTexture([{ text: 'MC-' + id, size: 80, color: '#fff' }], { w: 256, h: 96, bg: '#011131' }); const plate = new THREE.Mesh(new THREE.PlaneGeometry(.6, .22), new THREE.MeshBasicMaterial({ map: plateT })); plate.position.set(0, 1.5, -2.09); plate.rotation.y = Math.PI; g.add(plate);
             g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
             mergeStaticMeshes(g); g.traverse(o => { if (o.isMesh) o.castShadow = o.geometry.attributes.position.count > 200; });

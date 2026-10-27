@@ -806,6 +806,7 @@
             <div class="reg-grid">
                 <div><label>PUESTO</label><select id="rPuesto"><option>Aux de Almacén</option><option>Surtidor</option><option>Verificador</option><option>Auxiliar de Inventarios</option><option>Mesa de Control</option><option>Operador de Montacargas</option><option>Supervisor de Operaciones</option><option>Jefe de Operaciones</option><option>Gerente de Operaciones</option><option>Distribución</option><option>Área Staff</option></select></div>
                 <div><label>ALMACÉN</label><select id="rWh"><option>Agave 1</option><option>Agave 3</option><option>Mezquite 1</option><option>Mezquite 2</option><option>BIC</option><option>Celaya</option><option>Toluca</option><option>Escobedo</option><option>Apodaca</option><option>Guadalajara</option><option>Villahermosa</option><option>Mérida</option></select></div>
+                <div style="grid-column:1/-1"><label>NIVEL DE PRÁCTICA</label><select id="rNivel" onchange="try{localStorage.setItem('dicka_nivel',this.value)}catch(e){}"><option value="principiante">🟢 Principiante · sin tráfico de montacargas ni eventos</option><option value="intermedio" selected>🟡 Intermedio · tráfico y eventos ocasionales</option><option value="certificacion">🔴 Certificación · tráfico, eventos seguros, 4 min por misión y sin pistas</option></select></div>
             </div>
             <div class="reg-err" id="regErr"></div>
                 <div id="joinBox" style="display:none;margin-top:.8rem;text-align:center;border-top:1px solid #e5e8f2;padding-top:.7rem"><div style="font-size:12px;color:#555;margin-bottom:.3rem">📱 ¿Vas a usar este celular como visor de la cabina? Escribe el código de la laptop</div><div style="display:flex;gap:6px;justify-content:center"><input id="joinCode" maxlength="4" inputmode="numeric" placeholder="0000" style="width:110px;text-align:center;font-size:22px;letter-spacing:6px;padding:.3rem;border:2px solid #2138D3;border-radius:8px"><button class="btn" style="background:#7a2bd9;color:#fff;border:none;border-radius:8px;padding:.4rem .9rem;font-weight:800;cursor:pointer" onclick="const c=document.getElementById('joinCode').value.trim(); if(c.length===4){ const u=new URL(location.href); u.search=''; u.searchParams.set('screen','vr'); u.searchParams.set('room',c); location.href=u.toString(); }">Conectar</button></div></div>
@@ -1108,7 +1109,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=13.2"></script>
+    <script src="comun/almacen-comun.js?v=13.3"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1872,7 +1873,7 @@
             const dicka = (w, x, y, z, ry) => { const t = new THREE.TextureLoader().load(LOGO_DATA_W); t.anisotropy = 4; const l = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 70 / 242), new THREE.MeshBasicMaterial({ map: t, transparent: true })); l.position.set(x, y, z); l.rotation.y = ry; forklift.add(l); };
             const mastRails = (h, z, gap) => { [-gap, gap].forEach(dx => { add(new THREE.BoxGeometry(0.09, h, 0.16), steel, dx, h / 2, z, 'mastRail'); add(new THREE.BoxGeometry(0.06, h - 0.2, 0.06), dark, dx * 0.6, h / 2, z - 0.1, 'mastRail'); }); add(new THREE.BoxGeometry(gap * 2 + 0.09, 0.08, 0.16), steel, 0, h - 0.04, z); add(new THREE.BoxGeometry(gap * 2 + 0.09, 0.08, 0.16), steel, 0, 0.3, z); };
             const forks = (z, len) => { [-0.3, 0.3].forEach(dx => { add(new THREE.BoxGeometry(0.1, 0.045, len), black, dx, 0.12, z + len / 2 - 0.2, 'fork'); add(new THREE.BoxGeometry(0.1, 0.5, 0.05), black, dx, 0.35, z - 0.2, 'fork'); }); };
-            const beacon = (x, y, z) => { add(new THREE.CylinderGeometry(0.07, 0.09, 0.14, 12), new THREE.MeshStandardMaterial({ color: 0xff9900, emissive: 0xff6600, emissiveIntensity: 1.3 }), x, y, z); };
+            const beacon = (x, y, z) => { add(new THREE.CylinderGeometry(0.07, 0.09, 0.14, 12), new THREE.MeshStandardMaterial({ color: 0x3d8bff, emissive: 0x1a5cff, emissiveIntensity: 1.3 }), x, y, z); };
             const blue = new THREE.SpotLight(0x3366ff, 1.2, 8, 0.4, 0.6); blue.position.set(0, 2.2, -sp.len / 2); blue.target.position.set(0, 0, -5); forklift.add(blue); forklift.add(blue.target);
 
             if (sp.type === 'Reach' || sp.type === 'Double Reach') {
@@ -2199,6 +2200,7 @@
             apoyoMal:      { label: 'CARGA MAL APOYADA',              tip: 'Centra la tarima sobre las vigas y baja hasta apoyar antes de soltar', pts: 8 },
             retiroMal:     { label: 'RETIRO INCORRECTO',              tip: 'Eleva 5-10 cm para despegar la tarima de la viga antes de retroceder', pts: 8 },
             velocidadTrailer: { label: 'EXCESO DE VELOCIDAD EN CAJA',   tip: 'Dentro del tráiler máx 5 km/h: piso irregular y espacio reducido', pts: 8 },
+            tiempoExcedido: { label: 'TIEMPO EXCEDIDO (CERTIFICACIÓN)', tip: 'En certificación cada misión tiene 4 minutos', pts: 10 },
             cruceSinPrecaucion: { label: 'CRUCE SIN PRECAUCIÓN', tip: 'Al salir de un pasillo: alto, claxon y revisa el espejo convexo (máx. 4 km/h)', pts: 5 },
             capacidadNoVerificada: { label: 'CAPACIDAD NO VERIFICADA', tip: 'Antes de estibar en altura consulta la placa de capacidad del equipo', pts: 10 },
             emergenciaNoAtendida: { label: 'EMERGENCIA NO ATENDIDA', tip: 'Ante un derrame o incidente: detente, acordona y avisa de inmediato', pts: 15 },
@@ -2241,7 +2243,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v13.2 seguridad media y evidencia de capacitación';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v13.3 recorrido, peso variable, niveles y luz azul';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -2553,7 +2555,7 @@
             const t = raymondTex(512, 112); [-1, 1].forEach(sd => { const l = new THREE.Mesh(new THREE.PlaneGeometry(.8, .18), new THREE.MeshBasicMaterial({ map: t })); l.position.set(sd * .62, .6, -1.3); l.rotation.y = sd > 0 ? Math.PI / 2 : -Math.PI / 2; g.add(l); });
             // operador
             let op; if (GLTF_AVATAR.ok) { op = makeStandingOperator(true); op.rotation.y = -Math.PI / 2 + 0.55; op.traverse(o => { if (o.isMesh) o.castShadow = false; }); } else { op = buildHuman({ seatbelt: false, glasses: true }, { seated: false, hipY: 0.94 }); op.getObjectByName('armL').rotation.x = -0.9; op.getObjectByName('armR').rotation.x = -0.9; op.getObjectByName('elbowL').rotation.x = -0.5; op.getObjectByName('elbowR').rotation.x = -0.5; } op.scale.setScalar(0.96); op.position.set(0, .2, -.3); g.add(op); buildCabinJoystick(g, FORK_SPECS.reach); if (op.userData && op.userData.gltf) { op.name = 'operator'; g.updateMatrixWorld(true); snapControlsToHands(g, op); }
-            const beacon = add(new THREE.CylinderGeometry(.07, .09, .14, 12), new THREE.MeshStandardMaterial({ color: 0xff9900, emissive: 0xff6600, emissiveIntensity: 1.2 }), 0, 2.45, -.6);
+            const beacon = add(new THREE.CylinderGeometry(.07, .09, .14, 12), new THREE.MeshStandardMaterial({ color: 0x3d8bff, emissive: 0x1a5cff, emissiveIntensity: 1.2 }), 0, 2.45, -.6);
             const plateT = makeTextTexture([{ text: 'MC-' + id, size: 80, color: '#fff' }], { w: 256, h: 96, bg: '#011131' }); const plate = new THREE.Mesh(new THREE.PlaneGeometry(.6, .22), new THREE.MeshBasicMaterial({ map: plateT })); plate.position.set(0, 1.5, -2.09); plate.rotation.y = Math.PI; g.add(plate);
             g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
             mergeStaticMeshes(g); g.traverse(o => { if (o.isMesh) o.castShadow = o.geometry.attributes.position.count > 200; });
@@ -3279,7 +3281,7 @@
         
         // ---- Recordatorio de misión (como en consola): si no hay avance en 25 s, se recuerda el paso actual ----
         const NUDGE = { last: 0, best: Infinity, load: null, mast: 0, idx: -1, shown: 0, every: 25000 };
-        function missionNudge(a, txt, dist) { const now = Date.now(); const mh = mastM();
+        function missionNudge(a, txt, dist) { if (nivel() === 'certificacion') return; const now = Date.now(); const mh = mastM();
             if (NUDGE.idx !== actIdx) { NUDGE.idx = actIdx; NUDGE.last = now; NUDGE.best = dist ?? Infinity; NUDGE.load = hasLoad; NUDGE.mast = mh; NUDGE.shown = 0; return; }
             const briefOpen = document.getElementById('brief') && document.getElementById('brief').classList.contains('open');
             if ((dist !== null && dist < NUDGE.best - 0.7) || hasLoad !== NUDGE.load || Math.abs(mh - NUDGE.mast) > 0.25 || briefOpen || CC.open) { NUDGE.last = now; NUDGE.best = Math.min(NUDGE.best, dist ?? Infinity); NUDGE.load = hasLoad; NUDGE.mast = mh; return; }
@@ -3366,7 +3368,14 @@
             AISLES.forEach(A => [-1, 1].forEach(sd => { const x = A.x + sd * (A.half + .55), z = near + 1.4; const p = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 2.6, 8), pole); p.position.set(x, 1.3, z); MIR.add(p);
                 const dome = new THREE.Mesh(new THREE.SphereGeometry(.32, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2.6), glass); dome.rotation.x = Math.PI / 2; const ring = new THREE.Mesh(new THREE.TorusGeometry(.3, .03, 8, 24), rim); const h = new THREE.Group(); h.add(dome, ring); h.position.set(x, 2.65, z); h.rotation.y = sd > 0 ? -Math.PI / 4 : Math.PI / 4; h.rotation.y += Math.PI; MIR.add(h); }));
             scene.add(MIR); }
-        function mediaRules(dtS) { if (!forklift) return; const now = performance.now(), a = ACTS[actIdx];
+        function nivel() { const el = document.getElementById('rNivel'); let v = el && el.value; if (!v) { try { v = localStorage.getItem('dicka_nivel'); } catch (e) { } } return v || 'intermedio'; }
+        const TRACK = { act: -1, pts: [], marks: [], nf: 0, acc: 0, t0: 0, late: false };
+        function mediaRules(dtS) { if (!forklift) return; const now = performance.now(), a = ACTS[actIdx]; const lv = nivel();
+            if (lv === 'principiante' && NPC.forks.length) { NPC.forks.forEach(f => f.g && scene.remove(f.g)); NPC.forks.length = 0; }
+            if (TRACK.act !== actIdx) { TRACK.act = actIdx; TRACK.pts = []; TRACK.marks = []; TRACK.nf = faultLog.length; TRACK.t0 = Date.now(); TRACK.late = false; }
+            TRACK.acc += dtS; if (TRACK.acc > .3) { TRACK.acc = 0; const L = TRACK.pts[TRACK.pts.length - 1]; if (!L || Math.hypot(L[0] - forkPosition.x, L[1] - forkPosition.z) > .4) TRACK.pts.push([forkPosition.x, forkPosition.z]); if (TRACK.pts.length > 3000) TRACK.pts.shift(); }
+            while (TRACK.nf < faultLog.length) { TRACK.marks.push({ x: forkPosition.x, z: forkPosition.z, label: faultLog[TRACK.nf].label }); TRACK.nf++; }
+            if (lv === 'certificacion' && a && a.type !== 'checklist' && !TRACK.late && Date.now() - TRACK.t0 > 240000) { TRACK.late = true; registerFault('tiempoExcedido'); }
             NPC.forks.forEach(f => { if (!f.g) return; if (!f.spot) { f.spot = blueSpot(); f.g.add(f.spot); } f.spot.material.opacity = .65 + .35 * Math.sin(now / 140); });
             if (!forklift.getObjectByName('blueSpot')) forklift.add(blueSpot()); { const bs = forklift.getObjectByName('blueSpot'); bs.material.opacity = SAFE.keyOn || safeAuto() ? .7 + .3 * Math.sin(now / 140) : 0; }
             if (!MIR && typeof AISLES !== 'undefined' && AISLES.length) buildMirrors();
@@ -3378,15 +3387,17 @@
             // 10 · placa de capacidad antes de estibar en altura
             if (a && a.type === 'move' && a.drop && a.drop.yMin > 2 && hasLoad && mastM() > 1.2 && !CAP.asked[a.id] && !CAP.pending) { CAP.asked[a.id] = true; capAsk(a); }
             // 11 · emergencia: derrame adelante (una vez por práctica)
-            if (!EMG.done && !EMG.on && a && a.type === 'move' && actIdx >= 2 && simSpeed > 2 && (Date.now() - actStartTime) > 20000 && Math.random() < dtS / 25) emgStart();
+            if (lv !== 'principiante' && !EMG.done && !EMG.on && a && a.type === 'move' && actIdx >= 2 && simSpeed > 2 && (Date.now() - actStartTime) > (lv === 'certificacion' ? 8000 : 20000) && Math.random() < dtS / (lv === 'certificacion' ? 4 : 25)) emgStart();
             if (EMG.on) { EMG.t += dtS; const d = Math.hypot(forkPosition.x - EMG.mesh.position.x, forkPosition.z - EMG.mesh.position.z); if (d < 1.4 || EMG.t > 10) { emgEnd(false); } }
             // 12 · notificación de celular mientras opera (una vez por práctica)
-            if (!PHONE.done && !PHONE.on && a && a.type === 'move' && actIdx >= 1 && simSpeed > 2 && (Date.now() - actStartTime) > 12000 && Math.random() < dtS / 30) phoneStart();
+            if (lv !== 'principiante' && !PHONE.done && !PHONE.on && a && a.type === 'move' && actIdx >= 1 && simSpeed > 2 && (Date.now() - actStartTime) > (lv === 'certificacion' ? 6000 : 12000) && Math.random() < dtS / (lv === 'certificacion' ? 4 : 30)) phoneStart();
             if (PHONE.on) { PHONE.t += dtS; if (PHONE.t > 9) phoneEnd('ignore'); } }
         function capNum(str) { return parseFloat(String(str || '0').replace(/[^\d.]/g, '')) || 0; }
-        function capAsk(a) { CAP.pending = true; const sp = spec(), cap = capNum(sp.cap), h = a.drop.yMin + .13, f = h > 7 ? .6 : h > 5 ? .7 : h > 3 ? .8 : .9, der = Math.round(cap * f / 10) * 10, w = (cargo && cargo.userData.weight) || 640, ok = w <= der; CAP.ok = ok;
+        function capAsk(a) { CAP.pending = true; const sp = spec(), cap = capNum(sp.cap), h = a.drop.yMin + .13, f = h > 7 ? .6 : h > 5 ? .7 : h > 3 ? .8 : .9, der = Math.round(cap * f / 10) * 10, w = capWeight(der), ok = w <= der; CAP.ok = ok; CAP.w = w; CAP.der = der;
             mediaPanel('capPanel', `<div style="color:#f5c400;font-weight:900;font-size:16px">📋 PLACA DE CAPACIDAD · Raymond ${sp.code}</div><div style="background:#e8e8e8;color:#111;border-radius:8px;padding:10px;margin:10px 0;font:700 13px monospace;text-align:left">Capacidad nominal: ${sp.cap} @ 600 mm<br>Capacidad a ${h.toFixed(1)} m: <b>${der.toLocaleString('es-MX')} kg</b><br>Peso de la carga: <b>${w} kg</b></div>¿Puedes elevar esta carga a ${h.toFixed(1)} m?<div style="display:flex;gap:8px;margin-top:10px"><button class="btn-next" style="flex:1;background:#2e9e5b" onclick="capAnswer(true)">✔ Sí, dentro de capacidad</button><button class="btn-next" style="flex:1;background:#c8102e" onclick="capAnswer(false)">✗ No, excede</button></div>`, '#f5c400'); }
-        function capAnswer(v) { const e = document.getElementById('capPanel'); if (e) e.remove(); CAP.pending = false; if (v !== CAP.ok) { registerFault('capacidadNoVerificada'); toast('⚠️ Lectura incorrecta de la placa de capacidad'); } else toast('✅ Capacidad verificada: continúa la estiba'); }
+        function capWeight(der) { const r = Math.random(); return r < .55 ? 640 : r < .75 ? Math.round(der * .85 / 10) * 10 : Math.round(der * 1.18 / 10) * 10; }   // a veces la carga excede la capacidad a esa altura
+        function capAnswer(v) { const e = document.getElementById('capPanel'); if (e) e.remove(); CAP.pending = false; if (v !== CAP.ok) { registerFault('capacidadNoVerificada'); toast(CAP.ok ? '⚠️ La carga sí estaba dentro de capacidad: lee bien la placa' : `⚠️ ¡Excedía! ${CAP.w} kg > ${CAP.der} kg a esa altura: riesgo de volcadura`); }
+            else toast(CAP.ok ? '✅ Capacidad verificada: continúa la estiba' : '✅ Correcto: la carga excede. Se separan cajas y queda en 640 kg; continúa'); if (cargo) cargo.userData.weight = 640; }
         function emgStart() { EMG.on = true; EMG.t = 0; const ang = forklift.rotation.y, d = 9, x = forkPosition.x + Math.sin(ang) * d, z = forkPosition.z + Math.cos(ang) * d;
             const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = 'rgba(70,90,40,.85)'; g.beginPath(); for (let i = 0; i < 14; i++) { const r = 40 + Math.random() * 20, t = i / 14 * Math.PI * 2; g.lineTo(64 + Math.cos(t) * r, 64 + Math.sin(t) * r); } g.fill();
             EMG.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); EMG.mesh.rotation.x = -Math.PI / 2; EMG.mesh.position.set(x, .02, z); scene.add(EMG.mesh);
@@ -3400,6 +3411,18 @@
             mediaPanel('phonePanel', `<div style="font-size:30px">📱</div><div style="font-weight:900">Mensaje nuevo · Supervisor</div><div style="opacity:.8;margin:4px 0 10px">"¿Ya quedó la tarima del rack?"</div><div style="display:flex;gap:8px"><button class="btn-next" style="flex:1;background:#2e9e5b" onclick="phoneEnd('ignore')">Ignorar, sigo operando</button><button class="btn-next" style="flex:1;background:#1D2586" onclick="phoneEnd('read')">Leer ahora</button></div>`, '#9fb0ff'); }
         function phoneEnd(how) { if (!PHONE.on) return; PHONE.on = false; PHONE.done = true; const e = document.getElementById('phonePanel'); if (e) e.remove();
             if (how === 'read') { if (simSpeed > .3) { registerFault('distraccionCelular'); toast('⚠️ Nunca leas el celular con el equipo en movimiento'); } else toast('✅ Bien: te detuviste antes de usar el celular'); } else toast('👍 Correcto: atiende el celular solo con el equipo detenido y asegurado'); }
+
+        // ===== Recorrido de la misión: vista superior con la ruta y dónde ocurrió cada falta =====
+        function showReplay(a) { if (!a || a.type === 'checklist' || TRACK.pts.length < 3) return; const W = 420, H = 300, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+            const xs = TRACK.pts.map(p => p[0]).concat(TRACK.marks.map(m => m.x)), zs = TRACK.pts.map(p => p[1]).concat(TRACK.marks.map(m => m.z)); let x0 = Math.min(...xs) - 6, x1 = Math.max(...xs) + 6, z0 = Math.min(...zs) - 6, z1 = Math.max(...zs) + 6;
+            const sc = Math.min((W - 20) / (x1 - x0), (H - 20) / (z1 - z0)), ox = (W - (x1 - x0) * sc) / 2, oz = (H - (z1 - z0) * sc) / 2, P = (x, z) => [ox + (x - x0) * sc, oz + (z - z0) * sc];
+            g.fillStyle = '#e9ecf2'; g.fillRect(0, 0, W, H); g.fillStyle = '#9aa6c4'; RACK_XS.forEach(rx => { const [a1, b1] = P(rx - 1.2, -38), [a2, b2] = P(rx + 1.2, 1.2); g.fillRect(a1, b1, a2 - a1, b2 - b1); });
+            g.strokeStyle = '#2148a8'; g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath(); TRACK.pts.forEach((p, i) => { const [u, v] = P(p[0], p[1]); i ? g.lineTo(u, v) : g.moveTo(u, v); }); g.stroke();
+            const [sx, sz] = P(TRACK.pts[0][0], TRACK.pts[0][1]), [ex, ez] = P(TRACK.pts[TRACK.pts.length - 1][0], TRACK.pts[TRACK.pts.length - 1][1]); g.fillStyle = '#2e9e5b'; g.beginPath(); g.arc(sx, sz, 7, 0, 7); g.fill(); g.fillStyle = '#111'; g.beginPath(); g.arc(ex, ez, 7, 0, 7); g.fill();
+            TRACK.marks.forEach((m, i) => { const [u, v] = P(m.x, m.z); g.fillStyle = '#c8102e'; g.beginPath(); g.arc(u, v, 10, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '900 12px Arial'; g.textAlign = 'center'; g.fillText(i + 1, u, v + 4); });
+            const list = TRACK.marks.length ? '<ol style="text-align:left;margin:6px 0 0 18px;padding:0;font-size:12px">' + TRACK.marks.map(m => `<li>${m.label}</li>`).join('') + '</ol>' : '<div style="margin-top:6px;color:#7dffb0">Sin faltas en esta misión</div>';
+            const d = mediaPanel('replayPanel', `<div style="color:#f5c400;font-weight:900">🗺️ TU RECORRIDO · ${a.name}</div><div style="font-size:11px;opacity:.8">🟢 inicio · ⚫ fin · 🔴 falta</div><div id="replayImg" style="margin-top:6px"></div>${list}<button class="btn-next" style="width:100%;margin-top:8px" onclick="this.parentElement.remove()">Continuar</button>`, '#f5c400'); d.style.top = '8%'; c.style.cssText = 'width:100%;border-radius:8px'; d.querySelector('#replayImg').appendChild(c); setTimeout(() => d.remove(), 9000); }
+
         // ===== Prioridad baja: evidencia de capacitación =====
         const QUIZ = {
             sinCinturon: { q: '¿Cuándo debe abrocharse el cinturón el operador?', o: ['Solo en rampas', 'Siempre, antes de mover el equipo', 'Solo con carga'], a: 1 },
@@ -3468,6 +3491,7 @@
             if (hasLoad && !sp.stand && velKmh > 1.5) { const n = performance.now(); if (n - SAFE.hBox > 1000) { SAFE.hBox = n; SAFE.hTop = new THREE.Box3().setFromObject(cargo).max.y; }
                 if (SAFE.hTop > 1.55) { safeFault('visibilidadObstruida', 12); safeHint('👀 La carga tapa tu vista: conduce en reversa mirando hacia atrás'); } } }
 
+        window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('button').forEach(b => { if (!b.getAttribute('aria-label')) { const t = b.textContent.replace(/[^\p{L}\p{N} .·/-]/gu, ' ').replace(/\s+/g, ' ').trim(); if (t) b.setAttribute('aria-label', t); } }), 1500));
         window.addEventListener('keydown', e => {
             keys[e.key.toLowerCase()] = true;
             if (e.key.toLowerCase() === 'h') honk();
