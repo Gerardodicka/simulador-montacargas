@@ -248,7 +248,7 @@
 <div class="dash" id="dash">
   <div class="dbar">
     <b style="font-family:'Poppins',sans-serif;font-weight:600">📊 Dojo Virtual · Dashboard de Capacitación DICKA</b>
-    <div class="dtabs"><button class="dtab on" id="tabRes" onclick="dashTab('res')">Resumen</button><button class="dtab" id="tabRank" onclick="dashTab('rank')">Ranking</button><button class="dtab" id="tabPer" onclick="dashTab('per')">Por colaborador</button></div>
+    <div class="dtabs"><button class="dtab on" id="tabRes" onclick="dashTab('res')">Resumen</button><button class="dtab" id="tabRank" onclick="dashTab('rank')">Ranking</button><button class="dtab" id="tabPer" onclick="dashTab('per')">Por colaborador</button><button class="dtab" id="tabSeg" onclick="dashTab('seg')">Seguridad</button></div>
     <div><button class="hbtn" onclick="toggleKiosk()" title="Pantalla completa para TV, se actualiza sola">📺 Modo TV</button> <button class="hbtn" onclick="cloudSync(false)" title="Sincronizar con la base compartida">☁️ Sincronizar</button> <button class="hbtn" onclick="restoreReport()" title="Dry run + conciliación del CSV restaurado">🗄️ Restauración</button> <button class="hbtn" onclick="exportBackup()">💾 Respaldar base</button> <button class="hbtn" onclick="document.getElementById('impFile').click()">⬆ Importar / restaurar</button> <button class="hbtn" onclick="exportCSV()">⬇ CSV</button> <button class="hbtn" onclick="window.print()">🖨 PDF</button> <button class="hbtn" onclick="closeDash()">✕ Cerrar</button></div>
     <input type="file" id="impFile" accept=".json,.csv,.txt" multiple style="display:none" onchange="importFiles(this.files)">
   </div>
@@ -486,7 +486,18 @@ function esPrueba(r){ return r.tipo_sesion==='prueba'; }
 function filtered(){ let r=collectResults(); if(!dashFilter.pruebas) r=r.filter(x=>!esPrueba(x)); if(dashFilter.desde) r=r.filter(x=>x.fecha>=dashFilter.desde); if(dashFilter.hasta) r=r.filter(x=>x.fecha<=dashFilter.hasta+'T23:59:59'); if(dashFilter.wh) r=r.filter(x=>x.almacen===dashFilter.wh); if(dashFilter.curso) r=r.filter(x=>x.juego===dashFilter.curso); if(dashFilter.q){ const q=dashFilter.q.toLowerCase(); r=r.filter(x=>(x.nombre||'').toLowerCase().includes(q)||String(x.num||'').includes(q)); } return r; }
 function openDash(){ dashPerson=null; dashView='res'; document.getElementById('dash').classList.add('open'); renderDash(); }
 function closeDash(){ document.getElementById('dash').classList.remove('open'); }
-function dashTab(v){ dashView=v; if(v!=='per') dashPerson=null; ['res','rank','per'].forEach(k=>document.getElementById(k==='res'?'tabRes':k==='rank'?'tabRank':'tabPer').classList.toggle('on',k===v)); renderDash(); }
+
+// ====== SEGURIDAD: faltas más frecuentes y vigencia de autorizaciones de operador ======
+function renderSeg(body,rows){ const esc=t=>String(t==null?'':t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const cnt={}, who={}; rows.forEach(r=>(r.errores||[]).forEach(e=>{ const k=e.label||e.code||String(e); cnt[k]=(cnt[k]||0)+1; (who[k]=who[k]||new Set()).add(r.nombre||r.num); }));
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,12), mx=top.length?top[0][1]:1;
+  const lastOk={}; rows.filter(r=>r.aprobado && /montacarga/i.test(r.juego||'')).forEach(r=>{ const k=String(r.num||r.nombre||'').toLowerCase(); if(!k) return; if(!lastOk[k]||new Date(r.fecha)>new Date(lastOk[k].fecha)) lastOk[k]=r; });
+  const now=new Date(), auth=Object.values(lastOk).map(r=>{ const v=new Date(r.fecha); v.setFullYear(v.getFullYear()+1); const d=Math.round((v-now)/864e5); return {r,v,d,st:d<0?'VENCIDA':d<=30?'POR VENCER':'VIGENTE'}; }).sort((a,b)=>a.d-b.d);
+  const col={VENCIDA:'#c62828','POR VENCER':'#f5a000',VIGENTE:'#2e9e5b'};
+  body.innerHTML=tools()+`<div class="dcard" style="margin-top:12px"><h3 style="margin:0 0 8px">⚠️ Faltas más frecuentes</h3>${top.length?top.map(([k,n])=>`<div style="display:flex;align-items:center;gap:8px;margin:5px 0"><div style="flex:0 0 38%;font-size:13px">${esc(k)}</div><div style="flex:1;background:#eef0f6;border-radius:6px;height:16px"><div style="width:${n/mx*100}%;height:100%;background:#c8102e;border-radius:6px"></div></div><b style="width:44px;text-align:right">${n}</b><small style="width:110px;color:#666">${who[k].size} colaborador(es)</small></div>`).join(''):'<p>Sin faltas registradas con los filtros actuales.</p>'}</div>
+  <div class="dcard" style="margin-top:12px"><h3 style="margin:0 0 8px">🪪 Autorizaciones de operador de montacargas <small style="font-weight:400;color:#666">(vigencia 1 año desde la última práctica aprobada)</small></h3>${auth.length?`<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="text-align:left;background:#f2f4fa"><th style="padding:6px">Colaborador</th><th>No.</th><th>Almacén</th><th>Equipo</th><th>Aprobó</th><th>Vence</th><th>Estado</th></tr>${auth.map(a=>`<tr style="border-top:1px solid #e3e6ef"><td style="padding:6px">${esc(a.r.nombre)}</td><td>${esc(a.r.num)}</td><td>${esc(a.r.almacen)}</td><td>${esc(a.r.equipo||'')}</td><td>${new Date(a.r.fecha).toLocaleDateString('es-MX')}</td><td>${a.v.toLocaleDateString('es-MX')}</td><td><b style="color:${col[a.st]}">${a.st}${a.st!=='VIGENTE'?' · '+(a.d<0?-a.d+' días':a.d+' días'):''}</b></td></tr>`).join('')}</table>`:'<p>Aún no hay prácticas de montacargas aprobadas.</p>'}</div>`; }
+
+function dashTab(v){ dashView=v; if(v!=='per') dashPerson=null; ['res','rank','per','seg'].forEach(k=>document.getElementById({res:'tabRes',rank:'tabRank',per:'tabPer',seg:'tabSeg'}[k]).classList.toggle('on',k===v)); renderDash(); }
 function tools(){ const all=collectResults(); const whs=[...new Set(all.map(r=>r.almacen).filter(Boolean))].sort(); const cs=[...new Set(all.map(r=>r.juego))].sort();
   return `<div class="dtools"><input placeholder="🔍 Nombre o No. empleado" value="${dashFilter.q}" oninput="dashFilter.q=this.value;renderDash()">
    <select onchange="dashFilter.wh=this.value;renderDash()"><option value="">Todos los almacenes</option>${whs.map(w=>`<option ${w===dashFilter.wh?'selected':''}>${w}</option>`).join('')}</select>
@@ -498,6 +509,7 @@ function medal(i){ return i===0?'🥇':i===1?'🥈':i===2?'🥉':`<b style="colo
 function renderDash(){ const body=document.getElementById('dbody'); const rows=filtered();
   if(!collectResults().length){ body.innerHTML='<div class="empty">Aún no hay resultados registrados en este dispositivo.<br><br>Los puntajes se guardan cuando los colaboradores terminan un simulador desde este mismo Dojo Virtual (mismo navegador / misma liga).<br><br><button class="dbtn p" onclick="document.getElementById(\'impFile\').click()">⬆ Importar un respaldo o CSV anterior</button></div>'; return; }
   if(dashView==='per' && dashPerson) return renderPerson(body,dashPerson);
+  if(dashView==='seg') return renderSeg(body,rows);
   const people=buildPeople(rows);
   if(dashView==='res'){
     const apr=rows.filter(r=>r.aprobado).length, avg=rows.length?Math.round(rows.map(pct).reduce((a,b)=>a+b,0)/rows.length):0;
@@ -651,6 +663,31 @@ function exportCSV(){
 // Los juegos embebidos pueden reportar: parent.postMessage({type:'dicka-result', juego, nombre, score, aprobado}, '*')
 window.addEventListener('message',e=>{ const d=e.data; if(d&&d.type==='dicka-result'){ const l=JSON.parse(localStorage.getItem('dicka_console_results')||'[]'); l.push({juego:d.juego,nombre:d.nombre,num:d.num||'',puesto:d.puesto||'',area:d.area||'',almacen:d.almacen||'',score:d.score,aprobado:!!d.aprobado,fecha:new Date().toISOString(),reg:d.reg||'',tipo_sesion:'oficial'}); localStorage.setItem('dicka_console_results',JSON.stringify(l)); render(); cloudSync(true); }});
 render();
+</script>
+<!-- Herramientas de accesibilidad y uso sin conexión -->
+<style>.player.open ~ #a11yBar, .dash.open ~ #a11yBar{display:none!important}</style>
+<div id="a11yBar" style="position:fixed;left:16px;bottom:16px;z-index:9998;display:flex;gap:8px">
+  <button id="bigTextBtn" aria-label="Texto grande" onclick="toggleBigText()" style="background:#1D2586;color:#fff;border:0;border-radius:22px;padding:10px 14px;font:800 13px Poppins,Arial;box-shadow:0 6px 18px rgba(0,0,0,.25)">🔠 Texto grande</button>
+  <button id="offlineBtn" aria-label="Descargar para usar sin conexión" onclick="downloadOffline()" style="background:#1D2586;color:#fff;border:0;border-radius:22px;padding:10px 14px;font:800 13px Poppins,Arial;box-shadow:0 6px 18px rgba(0,0,0,.25)">📥 Usar sin conexión</button>
+</div>
+<script>
+function toggleBigText(on){ const r=document.documentElement; const v=on!==undefined?on:!r.classList.contains('big-text'); r.classList.toggle('big-text',v); r.style.fontSize=v?'118%':''; document.body.style.zoom=v?'1.12':''; try{localStorage.setItem('dicka_bigtext',v?'1':'')}catch(e){} document.getElementById('bigTextBtn').textContent=v?'🔠 Texto normal':'🔠 Texto grande'; }
+try{ if(localStorage.getItem('dicka_bigtext')) addEventListener('load',()=>toggleBigText(true)); }catch(e){}
+addEventListener('load',()=>setTimeout(()=>document.querySelectorAll('button').forEach(b=>{ if(!b.getAttribute('aria-label')){ const t=b.textContent.replace(/[^\p{L}\p{N} .·/-]/gu,' ').replace(/\s+/g,' ').trim(); if(t) b.setAttribute('aria-label',t); } }),1200));
+// Descarga todos los juegos, librerías, modelos y texturas al almacenamiento del dispositivo para usarlos con mala señal en piso
+async function downloadOffline(){ const btn=document.getElementById('offlineBtn'); if(!('caches' in window)){ alert('Este navegador no permite guardar la app sin conexión.'); return; }
+  if(location.protocol==='file:'){ alert('Disponible al abrir la app desde su liga (Netlify).'); return; }
+  btn.disabled=true; const set=new Set(['/','/index.html','/manifest.webmanifest','/icons/icon-192.png']);
+  try{ const pages=[...new Set([...document.querySelectorAll('a[href],[data-url]')].map(e=>e.getAttribute('href')||e.dataset.url).filter(u=>u&&/juegos\/[\w-]+\.html/.test(u)).map(u=>'/'+u.replace(/^\.?\//,'').replace(/[?#].*$/,'')))];
+    ['simulador-montacarga','turno-seguro-3d','extintores-3d','carga-unidades','conteo-ciclico','diagnostico-usb','examen-seguridad','surtido-express','turno-seguro'].forEach(n=>pages.push('/juegos/'+n+'.html'));
+    for(const pg of [...new Set(pages)]){ set.add(pg); try{ const html=await (await fetch(pg,{cache:'no-store'})).text(); (html.match(/(?:src|href)="([^"]+\.(?:js|css)(?:\?[^"]*)?)"/g)||[]).forEach(m=>{ const u=m.replace(/^(?:src|href)="|"$/g,''); if(!/^https?:/.test(u)) set.add(new URL(u,location.origin+pg).pathname+(u.includes('?')?'?'+u.split('?')[1]:'')); });
+        (html.match(/[\w-]+\.glb/g)||[]).forEach(m=>set.add('/juegos/assets/models/'+m)); } catch(e){} }
+    try{ const js=await (await fetch('/juegos/comun/almacen-comun.js',{cache:'no-store'})).text(); (js.match(/assets\/textures\/[\w.-]+/g)||[]).forEach(t=>set.add('/juegos/'+t)); }catch(e){}
+    ['carton.jpg','madera.jpg','piel.jpg','piso.jpg','piso_rough.jpg','lamina.jpg','dojo-dicka-logo.webp'].forEach(t=>set.add('/juegos/assets/textures/'+t));
+    const list=[...set], cache=await caches.open('dicka-v1'); let ok=0, fail=0;
+    for(const u of list){ btn.textContent=`📥 Descargando ${ok+fail+1}/${list.length}…`; try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ await cache.put(u,r); ok++; } else fail++; }catch(e){ fail++; } }
+    btn.textContent=`✅ Lista sin conexión (${ok} archivos)`; toastMsg&&toastMsg(`📥 App guardada en el dispositivo: ${ok} archivos${fail?' · '+fail+' no disponibles':''}. Podrás practicar con mala señal.`);
+  }catch(e){ btn.textContent='📥 Usar sin conexión'; alert('No se pudo completar la descarga: '+e.message); } finally { btn.disabled=false; } }
 </script>
 <!-- App instalable (PWA / Android): registra el service worker y muestra "Instalar app" cuando el navegador lo permite -->
 <button id="installApp" style="display:none;position:fixed;right:16px;bottom:16px;z-index:9999;background:#f5c400;color:#011131;border:0;border-radius:24px;padding:12px 18px;font:800 14px Poppins,Arial;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer">📲 Instalar app</button>

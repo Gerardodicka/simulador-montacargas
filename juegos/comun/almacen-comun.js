@@ -1636,6 +1636,7 @@ function completeAct(extraScore) {
             const critical = fl.filter(f => CRITICAL_FAULTS.includes(f.code));
             results[actIdx] = { name: a.name, icon: a.icon, score: Math.round(score), ok: score >= PASS_SCORE && critical.length === 0, faults: fl.length, critical: critical.map(f => f.label), secs };
             showBanner(results[actIdx].ok ? `✅ ${a.name}: ${Math.round(score)}%` : `❌ ${a.name}: ${Math.round(score)}% · NO APROBADA${critical.length ? ' · error crítico: ' + critical[0].label : ''}`);
+            try { if (typeof showReplay === 'function') showReplay(a); } catch (e) { }
             if (actIdx + 1 < ACTS.length) setTimeout(() => beginAct(actIdx + 1), 1200); else { slotMarker.visible = false; setTimeout(finishPractice, 900); }
         }
 
