@@ -56,6 +56,11 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       add('Andén', `${FORK_SPECS[m].code} cruza el andén 3`, !bodyHits(0, hd, 0)); add('Andén', `${FORK_SPECS[m].code} dentro de la caja`, !bodyHits(0, TRAILER.z0 + 4, 0)); currentModel = prev; });
     // coleo: girar pegado a una pared debe detectarse
     add('Colisión', 'detecta la parte trasera contra la pared', bodyHits(-WAREHOUSE.w / 2 + 3, -hd + 1.2, 0));
+    // seguridad del operador: sin llave, cinturón o con freno no avanza; con todo listo sí
+    safeReset(); const g0 = safeGate(1); SAFE.keyOn = true; const g1 = safeGate(1); SAFE.belt = true; const g2 = safeGate(1); SAFE.brake = false; const g3 = safeGate(1);
+    add('Seguridad', 'no avanza sin llave / sin cinturón / con freno', g0 === 0 && g1 === 0 && g2 === 0, `${g0},${g1},${g2}`); add('Seguridad', 'avanza con llave, cinturón y freno libre', g3 === 1);
+    { document.getElementById('mastHeight').value = 40; const n = faultLog.length; SAFE.cd = {}; safeToggle('key'); add('Seguridad', 'apagar con horquillas arriba marca falta', faultLog.slice(n).some(f => f.code === 'estacionamientoInseguro')); document.getElementById('mastHeight').value = 0; }
+    { showChecklist(); const bs = [...document.querySelectorAll('#lotoSteps button')]; const r0 = document.getElementById('lotoRelease').disabled; bs.forEach((b, i) => lotoStep(i + 1, b)); add('Seguridad', 'bloqueo y etiquetado habilita la liberación', r0 && !document.getElementById('lotoRelease').disabled && !!LOTO.tag); document.getElementById('checklist').classList.remove('show'); lotoTag(false); safeReset(); }
     // cámara: un rack entre el equipo y la cámara la acerca
     const L = new THREE.Vector3(-4, 6, -20), T = new THREE.Vector3(-9, 7, -20); camUnblock(L, T, true); add('Cámara', 'no queda detrás de un rack', T.x > -5.6, 'x=' + T.x.toFixed(2));
     return R; });
