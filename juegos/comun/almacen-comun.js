@@ -847,6 +847,7 @@ function finishPractice() {
                 localStorage.setItem('dicka_practicas', JSON.stringify(hist));
             } catch (e) {}
             window._lastPractice = { final, t, ok, byType, results: results.slice() };
+            try { if (typeof authOnFinish === 'function') authOnFinish(ok); if (typeof buildQuiz === 'function') buildQuiz(); } catch (e) { }
         }
 
 function copyPractice() {
@@ -1662,6 +1663,7 @@ function finishChecklist() {
             if (ckBlocked) return;
             document.getElementById('checklist').classList.remove('show');
             let correct = 0; ckAns.forEach((a, i) => { if (i === ckDefect ? a === 'bad' : a === 'ok') correct++; });
+            try { const L = JSON.parse(localStorage.getItem('dicka_inspecciones') || '[]'); const u = (typeof currentUser !== 'undefined' && currentUser) || {}; L.push({ fecha: new Date().toLocaleString('es-MX'), operador: u.name, num: u.num, equipo: 'Raymond ' + spec().code, puntos: CK.length, falla: CK[ckDefect] && CK[ckDefect].t, detectada: ckAns[ckDefect] === 'bad' ? 'sí' : 'no', bloqueo: (typeof LOTO !== 'undefined' && LOTO.step >= 4) ? 'completo' : 'no', liberado: ckReleased ? 'instructor' : 'no', resultado: Math.round(correct / CK.length * 100) + '%' }); localStorage.setItem('dicka_inspecciones', JSON.stringify(L.slice(-500))); } catch (e) { }   // bitácora diaria de inspección
             const score = Math.round(correct / CK.length * 100);
             if (ckAns[ckDefect] !== 'bad') { registerFault('inspeccion'); completeAct(Math.min(score, PASS_SCORE - 1)); return; }   // no detectar la falla (Cumple o N/A) = crítico: nunca aprueba
             const falseNa = ckAns.filter((a, i) => a === 'na' && i !== ckDefect).length; if (falseNa) toast('⚠️ ' + falseNa + ' punto(s) marcados N/A que sí aplican a este equipo');

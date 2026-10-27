@@ -1,6 +1,11 @@
 [build]
   publish = "."
   functions = "netlify/functions"
+  # Prueba interna de la base de datos antes de publicar: si falla, Netlify NO despliega el cambio
+  command = "node pruebas/db.test.mjs"
+
+[build.environment]
+  NODE_VERSION = "20"
 
 [functions]
   node_bundler = "esbuild"

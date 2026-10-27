@@ -5,6 +5,9 @@
 // POST /.netlify/functions/results  body: { results:[...] } → inserta sin duplicar (clave Fecha+No.empleado+Curso+Score)
 // POST /.netlify/functions/results  body: { op:'setTipo', key, tipo }  → marca un registro como oficial/prueba
 import { getStore } from "@netlify/blobs";
+
+// Punto de inyección para las pruebas internas (pruebas/db.test.mjs usan un almacén en memoria)
+export const deps = { getStore };
 import { createHash } from "node:crypto";
 
 const STORE = "dicka-play", LEGACY = "results-v1", MIGRATED = "meta/migrated-v2";
@@ -24,7 +27,7 @@ async function readAll(store) { const { blobs } = await store.list({ prefix: "r/
 
 export default async (req) => {
   if (req.method === "OPTIONS") return json(204, {});
-  const store = getStore(STORE); await migrate(store);
+  const store = deps.getStore(STORE); await migrate(store);
   if (req.method === "GET") { const results = await readAll(store); return json(200, { ok: true, count: results.length, updated_at: new Date().toISOString(), results }); }
   if (req.method === "POST") {
     let body; try { body = await req.json(); } catch { return json(400, { ok: false, error: "JSON inválido" }); }
