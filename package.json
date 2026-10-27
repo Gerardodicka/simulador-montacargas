@@ -7,6 +7,8 @@
     "@netlify/blobs": "^8.1.0"
   },
   "scripts": {
-    "validar": "node pruebas/validar.js"
+    "test:db": "node pruebas/db.test.mjs",
+    "validar": "node pruebas/validar.js",
+    "test": "node pruebas/db.test.mjs && node pruebas/validar.js"
   }
 }

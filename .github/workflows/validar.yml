@@ -12,6 +12,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Instalar dependencias
+        run: npm i --no-audit --no-fund
+      - name: Pruebas internas de la base de datos
+        run: node pruebas/db.test.mjs
       - name: Instalar navegador de pruebas
         run: npm i --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
       - name: Correr validación

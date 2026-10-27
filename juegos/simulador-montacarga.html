@@ -1049,9 +1049,11 @@
                         <div class="summary-sub">% de cumplimiento (6 actividades)</div>
                         <div class="summary-grade" id="sumGrade">APROBADO</div>
                         <div class="summary-stats" id="sumStats"></div>
-                        <div class="summary-acts" id="sumActs"></div><div class="summary-errors" id="sumErrors"></div>
+                        <div class="summary-acts" id="sumActs"></div><div class="summary-errors" id="sumErrors"></div><div class="summary-errors" id="sumAuth"></div><div class="summary-errors" id="sumQuiz"></div>
                         <div style="display:flex; gap:8px; margin-top:12px;">
                             <button class="btn-next" onclick="copyPractice()">📋 COPIAR</button>
+                            <button class="btn-next" style="background:#1D2586" onclick="openDC3()">📄 DC-3</button>
+                            <button class="btn-next" style="background:#1D2586" onclick="downloadBitacora()">📒 BITÁCORA</button>
                             <button class="btn-next" onclick="resetPractice()">🔄 REPETIR</button>
                             <button class="btn-next" style="background:#838383" onclick="backToMenu()">MENÚ</button>
                         </div>
@@ -1106,7 +1108,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=13.1"></script>
+    <script src="comun/almacen-comun.js?v=13.2"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1404,7 +1406,7 @@
 
         
 
-        function initSimulator() { try { safeReset(); } catch (e) { }
+        function initSimulator() { try { safeReset(); mediaReset(); authCheck(); } catch (e) { }
             const canvas = document.getElementById('gameCanvas');
             const width = canvas.parentElement.clientWidth;
             const height = canvas.parentElement.clientHeight;
@@ -2197,6 +2199,10 @@
             apoyoMal:      { label: 'CARGA MAL APOYADA',              tip: 'Centra la tarima sobre las vigas y baja hasta apoyar antes de soltar', pts: 8 },
             retiroMal:     { label: 'RETIRO INCORRECTO',              tip: 'Eleva 5-10 cm para despegar la tarima de la viga antes de retroceder', pts: 8 },
             velocidadTrailer: { label: 'EXCESO DE VELOCIDAD EN CAJA',   tip: 'Dentro del tráiler máx 5 km/h: piso irregular y espacio reducido', pts: 8 },
+            cruceSinPrecaucion: { label: 'CRUCE SIN PRECAUCIÓN', tip: 'Al salir de un pasillo: alto, claxon y revisa el espejo convexo (máx. 4 km/h)', pts: 5 },
+            capacidadNoVerificada: { label: 'CAPACIDAD NO VERIFICADA', tip: 'Antes de estibar en altura consulta la placa de capacidad del equipo', pts: 10 },
+            emergenciaNoAtendida: { label: 'EMERGENCIA NO ATENDIDA', tip: 'Ante un derrame o incidente: detente, acordona y avisa de inmediato', pts: 15 },
+            distraccionCelular: { label: 'USO DE CELULAR OPERANDO', tip: 'Nunca uses el celular con el equipo en movimiento: detente primero', pts: 10 },
             sinCinturon: { label: 'OPERAR SIN CINTURÓN', tip: 'Abróchate el cinturón (B) antes de mover el equipo y no lo sueltes en movimiento', pts: 15 },
             estacionamientoInseguro: { label: 'APAGADO CON HORQUILLAS ELEVADAS', tip: 'Baja las horquillas al piso antes de apagar y dejar el equipo', pts: 10 },
             inclinacionTraslado: { label: 'TRASLADO SIN INCLINAR EL MÁSTIL', tip: 'Con carga, inclina el mástil hacia atrás (R) para trasladar', pts: 5 },
@@ -2235,7 +2241,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v13.1 seguridad del operador (NOM-006)';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v13.2 seguridad media y evidencia de capacitación';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3346,6 +3352,95 @@
         }
 
 
+
+        // ===== Mejoras de seguridad (prioridad media) =====
+        const CAP = { pending: false, asked: {} }, EMG = { done: false, on: false, t: 0, mesh: null, cones: null }, PHONE = { done: false, on: false, t: 0 };
+        let MIR = null, crossState = { inAisle: false };
+        function mediaReset() { CAP.pending = false; CAP.asked = {}; EMG.done = false; EMG.on = false; PHONE.done = false; PHONE.on = false; ['capPanel', 'emgPanel', 'phonePanel'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); if (EMG.mesh) { scene.remove(EMG.mesh); EMG.mesh = null; } if (EMG.cones) { scene.remove(EMG.cones); EMG.cones = null; } }
+        function mediaPanel(id, html, border) { let d = document.getElementById(id); if (d) d.remove(); d = document.createElement('div'); d.id = id; d.style.cssText = `position:absolute;left:50%;top:18%;transform:translateX(-50%);width:min(420px,86%);background:rgba(1,17,49,.95);border:3px solid ${border};border-radius:14px;color:#fff;padding:14px 16px;z-index:40;font:600 14px Poppins,Arial;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5)`; d.innerHTML = html; document.getElementById('canvasWrap').appendChild(d); return d; }
+        // 7 · punto azul de advertencia proyectado al frente de cada montacargas
+        function blueSpot() { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 4, 64, 64, 62); gr.addColorStop(0, 'rgba(80,160,255,1)'); gr.addColorStop(.55, 'rgba(40,110,255,.8)'); gr.addColorStop(1, 'rgba(40,110,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+            const m = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); m.rotation.x = -Math.PI / 2; m.position.set(0, .03, 3.6); m.name = 'blueSpot'; return m; }
+        // 8 · espejos convexos en la salida de cada pasillo
+        function buildMirrors() { MIR = new THREE.Group(); const { near } = aisleZRange(); const pole = new THREE.MeshStandardMaterial({ color: 0xf5c400, roughness: .5 }), rim = new THREE.MeshStandardMaterial({ color: 0xe0761a, roughness: .5 }), glass = new THREE.MeshStandardMaterial({ color: 0xcfd8e6, metalness: 1, roughness: .05 });
+            AISLES.forEach(A => [-1, 1].forEach(sd => { const x = A.x + sd * (A.half + .55), z = near + 1.4; const p = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 2.6, 8), pole); p.position.set(x, 1.3, z); MIR.add(p);
+                const dome = new THREE.Mesh(new THREE.SphereGeometry(.32, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2.6), glass); dome.rotation.x = Math.PI / 2; const ring = new THREE.Mesh(new THREE.TorusGeometry(.3, .03, 8, 24), rim); const h = new THREE.Group(); h.add(dome, ring); h.position.set(x, 2.65, z); h.rotation.y = sd > 0 ? -Math.PI / 4 : Math.PI / 4; h.rotation.y += Math.PI; MIR.add(h); }));
+            scene.add(MIR); }
+        function mediaRules(dtS) { if (!forklift) return; const now = performance.now(), a = ACTS[actIdx];
+            NPC.forks.forEach(f => { if (!f.g) return; if (!f.spot) { f.spot = blueSpot(); f.g.add(f.spot); } f.spot.material.opacity = .65 + .35 * Math.sin(now / 140); });
+            if (!forklift.getObjectByName('blueSpot')) forklift.add(blueSpot()); { const bs = forklift.getObjectByName('blueSpot'); bs.material.opacity = SAFE.keyOn || safeAuto() ? .7 + .3 * Math.sin(now / 140) : 0; }
+            if (!MIR && typeof AISLES !== 'undefined' && AISLES.length) buildMirrors();
+            if (safeAuto()) return;
+            // 8 · cruce al salir de pasillo: alto, claxon y máximo 4 km/h
+            { const { near } = aisleZRange(), inA = AISLES.some(A => Math.abs(forkPosition.x - A.x) < A.half + .3) && forkPosition.z < near + .3 && forkPosition.z > -39;
+              if (crossState.inAisle && !inA && forkPosition.z >= near + .3 && (simSpeed > 4 || now - lastHonk > 6000)) { safeFault('cruceSinPrecaucion', 10); safeHint('🪞 Al salir del pasillo: alto, claxon y revisa el espejo convexo'); }
+              crossState.inAisle = inA; }
+            // 10 · placa de capacidad antes de estibar en altura
+            if (a && a.type === 'move' && a.drop && a.drop.yMin > 2 && hasLoad && mastM() > 1.2 && !CAP.asked[a.id] && !CAP.pending) { CAP.asked[a.id] = true; capAsk(a); }
+            // 11 · emergencia: derrame adelante (una vez por práctica)
+            if (!EMG.done && !EMG.on && a && a.type === 'move' && actIdx >= 2 && simSpeed > 2 && (Date.now() - actStartTime) > 20000 && Math.random() < dtS / 25) emgStart();
+            if (EMG.on) { EMG.t += dtS; const d = Math.hypot(forkPosition.x - EMG.mesh.position.x, forkPosition.z - EMG.mesh.position.z); if (d < 1.4 || EMG.t > 10) { emgEnd(false); } }
+            // 12 · notificación de celular mientras opera (una vez por práctica)
+            if (!PHONE.done && !PHONE.on && a && a.type === 'move' && actIdx >= 1 && simSpeed > 2 && (Date.now() - actStartTime) > 12000 && Math.random() < dtS / 30) phoneStart();
+            if (PHONE.on) { PHONE.t += dtS; if (PHONE.t > 9) phoneEnd('ignore'); } }
+        function capNum(str) { return parseFloat(String(str || '0').replace(/[^\d.]/g, '')) || 0; }
+        function capAsk(a) { CAP.pending = true; const sp = spec(), cap = capNum(sp.cap), h = a.drop.yMin + .13, f = h > 7 ? .6 : h > 5 ? .7 : h > 3 ? .8 : .9, der = Math.round(cap * f / 10) * 10, w = (cargo && cargo.userData.weight) || 640, ok = w <= der; CAP.ok = ok;
+            mediaPanel('capPanel', `<div style="color:#f5c400;font-weight:900;font-size:16px">📋 PLACA DE CAPACIDAD · Raymond ${sp.code}</div><div style="background:#e8e8e8;color:#111;border-radius:8px;padding:10px;margin:10px 0;font:700 13px monospace;text-align:left">Capacidad nominal: ${sp.cap} @ 600 mm<br>Capacidad a ${h.toFixed(1)} m: <b>${der.toLocaleString('es-MX')} kg</b><br>Peso de la carga: <b>${w} kg</b></div>¿Puedes elevar esta carga a ${h.toFixed(1)} m?<div style="display:flex;gap:8px;margin-top:10px"><button class="btn-next" style="flex:1;background:#2e9e5b" onclick="capAnswer(true)">✔ Sí, dentro de capacidad</button><button class="btn-next" style="flex:1;background:#c8102e" onclick="capAnswer(false)">✗ No, excede</button></div>`, '#f5c400'); }
+        function capAnswer(v) { const e = document.getElementById('capPanel'); if (e) e.remove(); CAP.pending = false; if (v !== CAP.ok) { registerFault('capacidadNoVerificada'); toast('⚠️ Lectura incorrecta de la placa de capacidad'); } else toast('✅ Capacidad verificada: continúa la estiba'); }
+        function emgStart() { EMG.on = true; EMG.t = 0; const ang = forklift.rotation.y, d = 9, x = forkPosition.x + Math.sin(ang) * d, z = forkPosition.z + Math.cos(ang) * d;
+            const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = 'rgba(70,90,40,.85)'; g.beginPath(); for (let i = 0; i < 14; i++) { const r = 40 + Math.random() * 20, t = i / 14 * Math.PI * 2; g.lineTo(64 + Math.cos(t) * r, 64 + Math.sin(t) * r); } g.fill();
+            EMG.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); EMG.mesh.rotation.x = -Math.PI / 2; EMG.mesh.position.set(x, .02, z); scene.add(EMG.mesh);
+            mediaPanel('emgPanel', `<div style="color:#ff6b6b;font-weight:900;font-size:17px">⚠️ DERRAME DE LÍQUIDO ADELANTE</div><div style="margin:8px 0">Detén el equipo y asegura el área antes de continuar.</div><button class="btn-next" style="width:100%;background:#c8102e" onclick="emgAct()">🚧 Detener · acordonar · avisar</button>`, '#ff6b6b'); if (typeof hornSound === 'function') try { hornSound([880, 660], .15, .25); } catch (e) { } }
+        function emgAct() { if (simSpeed > .3) { toast('Primero detén el equipo por completo'); return; } emgEnd(true); }
+        function emgEnd(ok) { EMG.on = false; EMG.done = true; const e = document.getElementById('emgPanel'); if (e) e.remove();
+            if (!ok) { registerFault('emergenciaNoAtendida'); toast('⚠️ Emergencia no atendida a tiempo'); }
+            else { toast('✅ Área acordonada y reportada · personal de limpieza en camino'); EMG.cones = new THREE.Group(); const m = new THREE.MeshStandardMaterial({ color: 0xff6a00 }); for (let i = 0; i < 6; i++) { const t = i / 6 * Math.PI * 2, cn = new THREE.Mesh(new THREE.ConeGeometry(.14, .45, 10), m); cn.position.set(EMG.mesh.position.x + Math.cos(t) * 1.6, .22, EMG.mesh.position.z + Math.sin(t) * 1.6); EMG.cones.add(cn); } scene.add(EMG.cones); }
+            setTimeout(() => { if (EMG.mesh) { scene.remove(EMG.mesh); EMG.mesh = null; } if (EMG.cones) { scene.remove(EMG.cones); EMG.cones = null; } }, ok ? 12000 : 2000); }
+        function phoneStart() { PHONE.on = true; PHONE.t = 0; if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+            mediaPanel('phonePanel', `<div style="font-size:30px">📱</div><div style="font-weight:900">Mensaje nuevo · Supervisor</div><div style="opacity:.8;margin:4px 0 10px">"¿Ya quedó la tarima del rack?"</div><div style="display:flex;gap:8px"><button class="btn-next" style="flex:1;background:#2e9e5b" onclick="phoneEnd('ignore')">Ignorar, sigo operando</button><button class="btn-next" style="flex:1;background:#1D2586" onclick="phoneEnd('read')">Leer ahora</button></div>`, '#9fb0ff'); }
+        function phoneEnd(how) { if (!PHONE.on) return; PHONE.on = false; PHONE.done = true; const e = document.getElementById('phonePanel'); if (e) e.remove();
+            if (how === 'read') { if (simSpeed > .3) { registerFault('distraccionCelular'); toast('⚠️ Nunca leas el celular con el equipo en movimiento'); } else toast('✅ Bien: te detuviste antes de usar el celular'); } else toast('👍 Correcto: atiende el celular solo con el equipo detenido y asegurado'); }
+        // ===== Prioridad baja: evidencia de capacitación =====
+        const QUIZ = {
+            sinCinturon: { q: '¿Cuándo debe abrocharse el cinturón el operador?', o: ['Solo en rampas', 'Siempre, antes de mover el equipo', 'Solo con carga'], a: 1 },
+            inclinacionTraslado: { q: 'Al trasladar carga, el mástil debe ir…', o: ['Inclinado hacia atrás', 'Inclinado al frente', 'Nivelado'], a: 0 },
+            inclinacionAltura: { q: 'Con la carga elevada, inclinar al frente…', o: ['Ayuda a estibar más rápido', 'Está prohibido: riesgo de volcadura y caída', 'Es obligatorio'], a: 1 },
+            visibilidadObstruida: { q: 'Si la carga tapa tu vista debes…', o: ['Avanzar despacio de frente', 'Pedir a alguien que te guíe desde las horquillas', 'Conducir en reversa mirando hacia atrás'], a: 2 },
+            estacionamientoInseguro: { q: 'Al estacionar el montacargas…', o: ['Horquillas al piso, freno y llave fuera', 'Horquillas a media altura', 'Dejar encendido si regresas pronto'], a: 0 },
+            colision: { q: 'La distancia mínima segura a racks y obstáculos al maniobrar es…', o: ['Rozar está permitido', 'Mantener holgura y velocidad baja', 'Solo importa con carga'], a: 1 },
+            atropello: { q: 'Ante un peatón en tu ruta…', o: ['Toca el claxon y sigue', 'Detente y cede el paso', 'Rodéalo rápido'], a: 1 },
+            velocidad: { q: 'La velocidad máxima en el almacén es…', o: ['10 km/h (5 km/h en oficinas)', '20 km/h', 'La que permita el equipo'], a: 0 },
+            sinClaxon: { q: '¿Cuándo usar el claxon?', o: ['Nunca', 'En cruces, esquinas y al entrar a la caja', 'Solo en emergencias'], a: 1 },
+            cruceSinPrecaucion: { q: 'Al salir de un pasillo a un cruce…', o: ['Alto, claxon y revisar el espejo convexo', 'Acelerar para cruzar rápido', 'Solo mirar al frente'], a: 0 },
+            capacidadNoVerificada: { q: 'La capacidad del montacargas en altura…', o: ['Es igual a la nominal', 'Disminuye: consulta la placa', 'Aumenta'], a: 1 },
+            emergenciaNoAtendida: { q: 'Ante un derrame en tu ruta…', o: ['Pasar con cuidado', 'Detenerte, acordonar y avisar', 'Esperar a que alguien lo limpie'], a: 1 },
+            distraccionCelular: { q: 'El celular se puede usar…', o: ['Con el equipo detenido y asegurado', 'Mientras conduces despacio', 'Con manos libres al estibar'], a: 0 },
+            inspeccion: { q: 'Si la inspección detecta una falla…', o: ['Operar con cuidado', 'Bloqueo, etiqueta y reporte; no operar', 'Avisar al final del turno'], a: 1 } };
+        function buildQuiz() { const codes = [...new Set(faultLog.map(f => f.code))].filter(c => QUIZ[c]); const pick = (codes.length ? codes : ['estacionamientoInseguro', 'cruceSinPrecaucion', 'capacidadNoVerificada']).slice(0, 3);
+            window._quiz = { items: pick, ans: {} }; const el = document.getElementById('sumQuiz'); if (!el) return;
+            el.innerHTML = '<b>📝 Evaluación de refuerzo (según tus errores):</b>' + pick.map((c, i) => `<div style="margin-top:6px"><div>${i + 1}. ${QUIZ[c].q}</div>${QUIZ[c].o.map((o, j) => `<button class="btn-next" style="display:block;width:100%;margin-top:4px;background:#1D2586;font-size:12px" onclick="quizAns('${c}',${j},this)">${o}</button>`).join('')}</div>`).join('') + '<div id="quizRes" style="margin-top:6px;font-weight:800"></div>'; }
+        function quizAns(c, j, btn) { const Q = window._quiz; if (Q.ans[c] !== undefined) return; Q.ans[c] = j; btn.style.background = j === QUIZ[c].a ? '#2e9e5b' : '#c8102e'; if (j !== QUIZ[c].a) [...btn.parentElement.querySelectorAll('button')][QUIZ[c].a].style.background = '#2e9e5b';
+            const n = Object.keys(Q.ans).length; if (n === Q.items.length) { const ok = Q.items.filter(k => Q.ans[k] === QUIZ[k].a).length; document.getElementById('quizRes').textContent = `Resultado: ${ok}/${n} correctas`; if (window._lastPractice) window._lastPractice.quiz = `${ok}/${n}`; } }
+        function authKey() { return String((currentUser && (currentUser.num || currentUser.name)) || 'operario').toLowerCase(); }
+        function authGet() { try { return JSON.parse(localStorage.getItem('dicka_autorizaciones') || '{}'); } catch (e) { return {}; } }
+        function authCheck() { const A = authGet()[authKey()]; if (!A) return; const v = new Date(A.vence); if (v < new Date()) setTimeout(() => toast(`⚠️ Tu autorización como operador venció el ${v.toLocaleDateString('es-MX')}: recertificación requerida`), 2500); else if (v - new Date() < 30 * 864e5) setTimeout(() => toast(`ℹ️ Tu autorización vence el ${v.toLocaleDateString('es-MX')}`), 2500); }
+        function authOnFinish(ok) { const el = document.getElementById('sumAuth'); const all = authGet(), k = authKey();
+            if (ok) { const v = new Date(); v.setFullYear(v.getFullYear() + 1); all[k] = { nombre: currentUser.name, equipo: 'Raymond ' + spec().code, fecha: new Date().toISOString(), vence: v.toISOString() }; try { localStorage.setItem('dicka_autorizaciones', JSON.stringify(all)); } catch (e) { } }
+            const A = all[k]; if (el) el.innerHTML = A ? `<b>🪪 Autorización de operador:</b> ${A.equipo} · vigente hasta <b>${new Date(A.vence).toLocaleDateString('es-MX')}</b>${new Date(A.vence) < new Date() ? ' <span style="color:#c8102e">(VENCIDA)</span>' : ''}` : '<b>🪪 Autorización:</b> pendiente (requiere práctica aprobada)'; }
+        function openDC3() { const r = window._lastPractice; if (!r) return; if (!r.ok) { alert('La constancia DC-3 solo se genera con la práctica APROBADA.'); return; } const u = currentUser || {}, hoy = new Date().toLocaleDateString('es-MX'), esc = t => String(t || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+            const row = (k, v) => `<tr><th>${k}</th><td>${v === undefined ? '<span class=f></span>' : esc(v)}</td></tr>`;
+            const w = window.open('', '_blank'); if (!w) { alert('Permite ventanas emergentes para generar la DC-3'); return; }
+            w.document.write(`<!doctype html><meta charset=utf-8><title>Datos DC-3</title><style>body{font:14px Arial;margin:30px;color:#111}h1{font-size:18px;color:#1D2586}h2{font-size:14px;background:#1D2586;color:#fff;padding:5px 8px;margin-top:18px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:6px 8px;text-align:left}th{width:38%;background:#f2f2f2}.f{display:inline-block;width:100%;border-bottom:1px solid #999;height:14px}.firma{display:flex;gap:40px;margin-top:50px}.firma div{flex:1;border-top:1px solid #111;text-align:center;padding-top:4px}.nota{font-size:11px;color:#555;margin-top:20px}@media print{button{display:none}}</style>
+              <h1>DATOS PARA CONSTANCIA DE COMPETENCIAS O HABILIDADES LABORALES (DC-3)</h1><button onclick="print()">🖨️ Imprimir / guardar PDF</button>
+              <h2>Datos del trabajador</h2><table>${row('Nombre', u.name)}${row('CURP')}${row('Número de empleado', u.num)}${row('Ocupación / puesto', u.puesto)}${row('Almacén', u.wh)}</table>
+              <h2>Datos de la empresa</h2><table>${row('Razón social', 'DICKA Logistics')}${row('RFC')}</table>
+              <h2>Datos del programa de capacitación</h2><table>${row('Nombre del curso', 'Operación segura de montacargas · Raymond ' + spec().code)}${row('Duración (horas)')}${row('Periodo de ejecución', hoy)}${row('Área temática', 'Seguridad')}${row('Nombre del agente capacitador / instructor')}${row('Resultado de la práctica en simulador', r.final + '% · APROBADO · tiempo ' + fmtT(r.t))}${row('Evaluación de refuerzo', r.quiz || 'no contestada')}</table>
+              <div class=firma><div>Instructor o tutor</div><div>Patrón o representante legal</div><div>Representante de los trabajadores</div></div>
+              <p class=nota>Documento auxiliar con los datos para llenar el formato oficial DC-3 de la STPS. Los campos en blanco los completa el área de Capacitación.</p>`); w.document.close(); }
+        function downloadBitacora() { let L = []; try { L = JSON.parse(localStorage.getItem('dicka_inspecciones') || '[]'); } catch (e) { } if (!L.length) { alert('Aún no hay inspecciones registradas en este equipo.'); return; }
+            const cols = ['fecha', 'operador', 'num', 'equipo', 'puntos', 'falla', 'detectada', 'bloqueo', 'liberado', 'resultado']; const q = v => '"' + String(v === undefined ? '' : v).replace(/"/g, '""') + '"';
+            const csv = '﻿' + cols.join(',') + '\n' + L.map(r => cols.map(c => q(r[c])).join(',')).join('\n'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'bitacora-inspeccion-' + new Date().toISOString().slice(0, 10) + '.csv'; a.click(); }
+
         // ===== Seguridad del operador (NOM-006-STPS-2014): llave, cinturón, freno de estacionamiento e inclinación del mástil =====
         let SAFE = { keyOn: false, belt: false, brake: true, tilt: 0, hintAt: 0, cd: {}, beltFault: false, hBox: 0, hTop: 0 };
         function safeReset() { SAFE = { keyOn: false, belt: false, brake: true, tilt: 0, hintAt: 0, cd: {}, beltFault: false, hBox: 0, hTop: 0 }; safeUi(); }
@@ -3428,6 +3523,7 @@
             if (held.up || keys['q']) armY = 1;
             if (held.down || keys['e']) armY = -1;
             if (armY && !safeAuto() && !SAFE.keyOn) { safeHint('🔑 Enciende el equipo (K / botón LLAVE) para usar el hidráulico'); armY = 0; }
+            if (armY > 0 && CAP.pending) { safeHint('📋 Primero verifica la placa de capacidad'); armY = 0; }
             if (armY) clampSlider('mastHeight', armY * 1.2);
             if (xrIn) { const mh = document.getElementById('mastHeight'); mh.value = Math.max(0, Math.min(100, parseFloat(mh.value) + xrIn.mast * 1.2)); if (spec().reachStages) { if (xrIn.reach > 0.5) reachOut = true; if (xrIn.reach < -0.5) reachOut = false; } }
             const rTarget = reachOut ? 100 : 0;
@@ -3443,7 +3539,7 @@
             const nowT = performance.now(); const dtS = Math.min(0.05, (nowT - (lastT || nowT)) / 1000) || 1/60; lastT = nowT; const k = dtS * 60;
             velKmh += (targetV - velKmh) * Math.min(1, (Math.abs(targetV) > Math.abs(velKmh) ? 0.035 : 0.07) * k);   // acelera despacio, frena más rápido
             if (Math.abs(velKmh) < 0.05 && fwd === 0) velKmh = 0;
-            safeRules(dtS);
+            safeRules(dtS); try { mediaRules(dtS); } catch (e) { }
             simSpeed = Math.abs(velKmh);
             const throttle = Math.sign(velKmh) * Math.min(100, simSpeed / maxV * 100 + (simSpeed > 0.1 ? 6 : 0));
             const steering = turn * 100;
