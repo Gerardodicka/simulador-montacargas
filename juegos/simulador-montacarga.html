@@ -631,6 +631,7 @@
         .mission-dist { font-size: 22px; font-weight: 800; color: #f5c400; }
         .big-btns { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 6; }
         .big-row { display: flex; gap: 10px; }
+        .safety-row .sbtn { flex: 1; height: 46px; font-size: 16px; background: rgba(120,20,20,.85); border-color: #ff5252; } .safety-row .sbtn.on { background: rgba(46,158,91,.9); border-color: #7dffb0; } .safety-row .sbtn.mid { background: rgba(29,37,134,.85); border-color: #9fb0ff; }
         .big {
             width: 86px; height: 86px; border-radius: 16px; border: 2px solid #2138D3; background: rgba(29,37,134,0.85);
             color: #fff; font-size: 26px; font-weight: 800; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1023,7 +1024,7 @@
                         <div class="ck-prog"><div class="ck-bar"><i id="ckBar"></i></div><span id="ckCount">0 / 0</span></div></div>
                         <div id="ckItems"></div>
                         <div class="ck-foot">
-                        <div id="ckBlock" class="hidden" style="background:#fff3cd;border-left:4px solid #c8102e;padding:.7rem .9rem;border-radius:8px;font-size:12.5px;margin-top:10px;color:#333"><b>⛔ Equipo fuera de operación.</b> Reporta la falla a mantenimiento. Solo el instructor / supervisor puede liberar el equipo.<br><button class="btn-next" style="margin-top:8px;background:#c8102e" onclick="instructorRelease()">🔓 Liberación del instructor (PIN)</button></div>
+                        <div id="ckBlock" class="hidden" style="background:#fff3cd;border-left:4px solid #c8102e;padding:.7rem .9rem;border-radius:8px;font-size:12.5px;margin-top:10px;color:#333"><b>⛔ Equipo fuera de operación.</b> Aplica bloqueo y etiquetado (NOM-004-STPS) en orden antes de reportar:<div id="lotoSteps" style="display:grid;gap:6px;margin-top:8px"><button class="btn-next" style="background:#1D2586" onclick="lotoStep(1,this)">1 · 🔑 Apagar y retirar la llave</button><button class="btn-next" style="background:#1D2586" onclick="lotoStep(2,this)">2 · 🔒 Colocar candado personal</button><button class="btn-next" style="background:#1D2586" onclick="lotoStep(3,this)">3 · 🏷️ Colocar etiqueta «FUERA DE SERVICIO»</button><button class="btn-next" style="background:#1D2586" onclick="lotoStep(4,this)">4 · 📞 Reportar a mantenimiento</button></div>Solo el instructor / supervisor puede liberar el equipo.<br><button class="btn-next" id="lotoRelease" style="margin-top:8px;background:#c8102e" onclick="instructorRelease()" disabled>🔓 Liberación del instructor (PIN)</button></div>
                         <button class="btn-next" style="width:100%;margin-top:10px" id="ckDone" onclick="finishChecklist()" disabled>CONTINUAR</button></div>
                     </div>
                 </div>
@@ -1073,6 +1074,12 @@
                         <button class="big" id="btnReach">⇤⇥<small id="reachLbl">EXTENDER</small></button>
                         <button class="big action" id="btnGrab" onclick="toggleLoad()">✋<small id="grabLbl">AGARRAR</small></button>
                     </div>
+                    <div class="big-row safety-row">
+                        <button class="big sbtn" id="btnBelt" onclick="safeToggle('belt')">🔒<small id="beltLbl">CINTURÓN</small></button>
+                        <button class="big sbtn" id="btnBrake" onclick="safeToggle('brake')">🅿️<small id="brakeLbl">FRENO</small></button>
+                        <button class="big sbtn" id="btnKey" onclick="safeToggle('key')">🔑<small id="keyLbl">LLAVE</small></button>
+                        <button class="big sbtn" id="btnTilt" onclick="safeTilt()">⦦<small id="tiltLbl">NIVEL</small></button>
+                    </div>
                     <div class="big-row">
                         <button class="big horn" id="btnHorn" onclick="honk()" style="flex:1;height:56px;font-size:20px;background:#c8102e;border-color:#ff5252">📣<small>CLAXON</small></button>
                         <button class="big" id="btnCam" onclick="cycleCam()" style="flex:1;height:56px;font-size:18px">📷<small id="camLbl">HORQ.</small></button>
@@ -1082,7 +1089,7 @@
                 </div>
                 <div class="npc-reply" id="npcReply"></div>
 
-                <div class="keys-help">⌨️ WASD mover · Q/E subir-bajar · X extender · Espacio agarrar · H claxon · C cámara · J joystick USB · G volante G920 · [ ] presión clamp</div>
+                <div class="keys-help">⌨️ K llave · B cinturón · P freno · R/F inclinar mástil · WASD mover · Q/E subir-bajar · X extender · Espacio agarrar · H claxon · C cámara · J joystick USB · G volante G920 · [ ] presión clamp</div>
 
                 <!-- inputs internos (sin UI) -->
                 <div style="display:none">
@@ -1099,7 +1106,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=13.0"></script>
+    <script src="comun/almacen-comun.js?v=13.1"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1397,7 +1404,7 @@
 
         
 
-        function initSimulator() {
+        function initSimulator() { try { safeReset(); } catch (e) { }
             const canvas = document.getElementById('gameCanvas');
             const width = canvas.parentElement.clientWidth;
             const height = canvas.parentElement.clientHeight;
@@ -2131,6 +2138,7 @@
         
         function releaseLoad() {
             if (!hasLoad) return;
+            if (!spec().tiller && !safeAuto() && mastM() > 1 && SAFE.tilt !== 0) registerFault('estibaSinNivelar');
             if (spec().clamp && CLAMP.closed) { toast('Abre las placas (botón ABRIR) para liberar la carga'); return; }
             const act = ACTS[actIdx]; const tip = tipPos();
             if (act && act.drop) {
@@ -2189,6 +2197,13 @@
             apoyoMal:      { label: 'CARGA MAL APOYADA',              tip: 'Centra la tarima sobre las vigas y baja hasta apoyar antes de soltar', pts: 8 },
             retiroMal:     { label: 'RETIRO INCORRECTO',              tip: 'Eleva 5-10 cm para despegar la tarima de la viga antes de retroceder', pts: 8 },
             velocidadTrailer: { label: 'EXCESO DE VELOCIDAD EN CAJA',   tip: 'Dentro del tráiler máx 5 km/h: piso irregular y espacio reducido', pts: 8 },
+            sinCinturon: { label: 'OPERAR SIN CINTURÓN', tip: 'Abróchate el cinturón (B) antes de mover el equipo y no lo sueltes en movimiento', pts: 15 },
+            estacionamientoInseguro: { label: 'APAGADO CON HORQUILLAS ELEVADAS', tip: 'Baja las horquillas al piso antes de apagar y dejar el equipo', pts: 10 },
+            inclinacionTraslado: { label: 'TRASLADO SIN INCLINAR EL MÁSTIL', tip: 'Con carga, inclina el mástil hacia atrás (R) para trasladar', pts: 5 },
+            inclinacionAltura: { label: 'CARGA ELEVADA INCLINADA AL FRENTE', tip: 'Nunca inclines al frente con la carga elevada: solo nivela para estibar', pts: 10 },
+            estibaSinNivelar: { label: 'ESTIBA SIN NIVELAR', tip: 'Nivela las horquillas antes de depositar la carga en el rack', pts: 5 },
+            visibilidadObstruida: { label: 'CARGA OBSTRUYE LA VISIÓN', tip: 'Si la carga tapa tu vista, conduce en reversa mirando hacia atrás', pts: 10 },
+            lotoFueraOrden: { label: 'BLOQUEO FUERA DE ORDEN', tip: 'Bloqueo y etiquetado: llave fuera → candado → etiqueta → reporte', pts: 5 },
             proximidadRack: { label: 'DISTANCIA MÍNIMA AL RACK',       tip: 'Mantén el costado del equipo a más de 35 cm del rack', pts: 5 },
             pasilloOcupado: { label: 'ENTRÓ A PASILLO OCUPADO',        tip: 'No está permitido que dos montacargas compartan pasillo: espera a que salga', pts: 15 },
             noCedioPaso:   { label: 'NO CEDIÓ EL PASO AL PEATÓN',      tip: 'En el cruce el peatón tiene prioridad: alto total y espera 5 s', pts: 12 },
@@ -2220,7 +2235,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v13.0 Dojo variado · embarques en mesa de control';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v13.1 seguridad del operador (NOM-006)';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3115,7 +3130,7 @@
               goal: { x: 0, z: 43, r: 2 } },
             { id: 'trailer', name: 'Carga en caja de tráiler', icon: '🚚', text: 'Toma la tarima del STAGING, toca el CLAXON antes de entrar por el ANDÉN 3 y colócala al FONDO de la caja del tráiler', type: 'move',
               spawn: { x: -20, y: 0, z: 26 }, drop: { x: 0, z: 56.5, r: 1.2, yMin: 0, yMax: 0.5, label: 'FONDO DEL TRÁILER', trailer: true } },
-            { id: 'estacionar', name: 'Estacionamiento en zona de baterías', icon: '🔋', text: 'Estaciona en la zona azul: horquillas abajo, reach retraído y detenido 2 s', type: 'park',
+            { id: 'estacionar', name: 'Estacionamiento en zona de baterías', icon: '🔋', text: 'Estaciona en la zona azul: horquillas al piso, mástil al frente, freno aplicado y llave fuera', type: 'park',
               goal: { x: 22.5, z: 40.5, r: 2.2 } },
             { id: 'carga', name: 'Carga de batería', icon: '⚡', text: 'Entra al cuarto de carga por el portón, estaciona en el cajón libre y sigue el protocolo de carga', type: 'charge',
               goal: { x: CHARGE_ANNEX.x0 + 11.6, z: -WAREHOUSE.d / 2 - CHARGE_ANNEX.depth + 3.6, r: 1.8 } }
@@ -3189,7 +3204,7 @@
             const el = document.getElementById('brief'); el.classList.add('open'); const go = document.getElementById('briefGo'); const bq = document.getElementById('briefQuest'); if (bq) bq.onclick = () => { el.classList.remove('open'); QUEST.mode = true; if (a.type === 'checklist') { if (!CC.shownOnce) CC.shownOnce = true; questChoose(); } else { xrEnter(); onGo && onGo(); } }; if (QUEST.mode && !XR.active && a.type !== 'checklist') go.textContent = '🥽 ENTRAR A VR Y COMENZAR MISIÓN ' + (i + 1); go.onclick = () => { el.classList.remove('open'); if (QUEST.mode && !XR.active && a.type !== 'checklist') xrEnter(); onGo && onGo(); }; }
         const results = [];   // {name, score, ok, faults, secs}
         // Catálogo de errores críticos (editable): cualquiera de ellos impide aprobar la actividad y la práctica
-        const CRITICAL_FAULTS = ['colision', 'atropello', 'volcadura', 'inspeccion', 'caidaCarga'];
+        const CRITICAL_FAULTS = ['colision', 'atropello', 'volcadura', 'inspeccion', 'caidaCarga', 'sinCinturon'];
         // Límites de velocidad (km/h) por sentido de marcha. Valores vigentes del simulador (no norma): 10 adelante y 10 en reversa.
         // Editables por el instructor sin tocar código: localStorage 'dicka_sim_config' → { limitFwd, limitRev }
         const SIM_CFG = Object.assign({ limitFwd: 10, limitRev: 10, safetyDistance: 1.0,
@@ -3225,6 +3240,7 @@
             const b = document.getElementById('faultToast'); showBanner(`ACTIVIDAD ${i + 1}/${ACTS.length} · ${a.icon} ${a.name}`);
             showMissionCard(6500); if (a.locCode) missionFloat('📍 Ubicación: ' + a.locCode, 5000);
             renderActs(); showBrief(i); xrNewMission();
+            if (a.type !== 'checklist' && !safeAuto() && (!SAFE.keyOn || !SAFE.belt || SAFE.brake)) setTimeout(() => missionFloat('🔑 Arranque seguro: K llave → B cinturón → P liberar freno', 6000), 1800);
         }
         
         
@@ -3307,10 +3323,10 @@
             // ---- estacionar ----
             if (a.type === 'park') {
                 const mh = parseFloat(document.getElementById('mastHeight').value), rc = parseFloat(document.getElementById('reach1').value) + parseFloat(document.getElementById('reach2').value);
-                const inZone = dist < a.goal.r; const ready = inZone && mh < 5 && rc < 5 && simSpeed < 0.3;
+                const inZone = dist < a.goal.r; const parkOk = safeAuto() || (SAFE.tilt === 1 && SAFE.brake && !SAFE.keyOn); const ready = inZone && mh < 5 && rc < 5 && simSpeed < 0.3 && parkOk;
                 if (ready) { if (!stillFrames) stillFrames = Date.now(); } else stillFrames = 0;
                 const held = stillFrames ? (Date.now() - stillFrames) / 1000 : 0;
-                if (inZone) txt = (mh >= 5 ? '⬇ Baja las horquillas' : rc >= 5 ? '⇤ Retrae el reach' : simSpeed >= 0.3 ? 'Detente' : `Mantente detenido… ${Math.max(0, Math.ceil(2 - held))} s`);
+                if (inZone) txt = (mh >= 5 ? '⬇ Baja las horquillas al piso' : rc >= 5 ? '⇤ Retrae el reach' : simSpeed >= 0.3 ? 'Detente por completo' : !parkOk ? (SAFE.tilt !== 1 ? '⦦ Inclina el mástil al frente (F) para apoyar las horquillas' : !SAFE.brake ? '🅿️ Aplica el freno de estacionamiento (P)' : '🔑 Apaga y retira la llave (K)') : `Equipo asegurado… ${Math.max(0, Math.ceil(2 - held))} s`);
                 if (held >= 2) completeAct();
             }
             // ---- carga de batería (protocolo) ----
@@ -3329,9 +3345,38 @@
             document.getElementById('hud').textContent = `⭐ ${simScore} pts · 🛡️ ${simSafety.toFixed(0)}% · ⚠️ ${faultLog.length}`;
         }
 
+
+        // ===== Seguridad del operador (NOM-006-STPS-2014): llave, cinturón, freno de estacionamiento e inclinación del mástil =====
+        let SAFE = { keyOn: false, belt: false, brake: true, tilt: 0, hintAt: 0, cd: {}, beltFault: false, hBox: 0, hTop: 0 };
+        function safeReset() { SAFE = { keyOn: false, belt: false, brake: true, tilt: 0, hintAt: 0, cd: {}, beltFault: false, hBox: 0, hTop: 0 }; safeUi(); }
+        function safeAuto() { return (typeof XR !== 'undefined' && XR.active) || (typeof MVR !== 'undefined' && MVR.on); }   // en VR los pasos se dan por hechos (no hay botones)
+        function safeHint(msg) { const n = performance.now(); if (n - SAFE.hintAt > 2500) { SAFE.hintAt = n; toast(msg); } }
+        function safeFault(code, secs) { const n = performance.now(); if ((SAFE.cd[code] || 0) > n) return; SAFE.cd[code] = n + secs * 1000; registerFault(code); }
+        function safeUi() { const set = (id, lbl, on, txt) => { const b = document.getElementById(id); if (!b) return; b.classList.toggle('on', on); document.getElementById(lbl).textContent = txt; };
+            set('btnKey', 'keyLbl', SAFE.keyOn, SAFE.keyOn ? 'ENCENDIDO' : 'APAGADO'); set('btnBelt', 'beltLbl', SAFE.belt, SAFE.belt ? 'ABROCHADO' : 'SIN CINTURÓN'); set('btnBrake', 'brakeLbl', !SAFE.brake, SAFE.brake ? 'FRENO PUESTO' : 'FRENO LIBRE');
+            const t = document.getElementById('btnTilt'); if (t) { t.classList.remove('on', 'mid'); t.classList.add(SAFE.tilt === -1 ? 'on' : 'mid'); document.getElementById('tiltLbl').textContent = SAFE.tilt === -1 ? 'MÁSTIL ATRÁS' : SAFE.tilt === 1 ? 'MÁSTIL FRENTE' : 'NIVEL'; } }
+        function safeToggle(k) { if (k === 'key') { if (SAFE.keyOn) { if (mastM() > 0.3) safeFault('estacionamientoInseguro', 6); SAFE.keyOn = false; velKmh = 0; toast('🔑 Equipo apagado'); } else { SAFE.keyOn = true; toast(SAFE.belt ? '🔑 Equipo encendido' : '🔑 Equipo encendido · abróchate el cinturón (B)'); } }
+            else if (k === 'belt') { if (SAFE.belt && simSpeed > 0.5) safeFault('sinCinturon', 10); SAFE.belt = !SAFE.belt; }
+            else if (k === 'brake') { if (!SAFE.brake && simSpeed > 2) toast('Detén el equipo antes de aplicar el freno de estacionamiento'); SAFE.brake = !SAFE.brake; if (SAFE.brake) velKmh *= .3; }
+            safeUi(); }
+        function safeTilt(d) { if (spec().tiller) { toast('El patín eléctrico no inclina el mástil'); return; } SAFE.tilt = d === undefined ? (SAFE.tilt === 0 ? -1 : SAFE.tilt === -1 ? 1 : 0) : Math.max(-1, Math.min(1, SAFE.tilt + d)); safeUi(); }   // botón: NIVEL → ATRÁS → FRENTE → NIVEL
+        function safeGate(fwd) { if (safeAuto() || !fwd) return fwd;
+            if (!SAFE.keyOn) { safeHint('🔑 Enciende el equipo (K / botón LLAVE)'); return 0; }
+            if (!SAFE.belt) { if (!SAFE.beltFault) { SAFE.beltFault = true; registerFault('sinCinturon'); } safeHint('🔒 Abróchate el cinturón (B) antes de mover el equipo'); return 0; }
+            if (SAFE.brake) { safeHint('🅿️ Libera el freno de estacionamiento (P)'); return 0; }
+            return fwd; }
+        function safeRules(dtS) { const sp = spec(); if (!forklift) return;
+            const tiltParts = ['mastRail', 'carriage', 'fork', 'reach1', 'reach2', 'clampArmL', 'clampArmR', 'clampPadL', 'clampPadR']; forklift.children.forEach(c => { if (tiltParts.includes(c.name)) c.rotation.x += ((sp.tiller ? 0 : -SAFE.tilt * .06) - c.rotation.x) * .2; });   // inclinación visible del mástil
+            if (safeAuto() || sp.tiller) return;
+            if (hasLoad && simSpeed > 1.5 && SAFE.tilt !== -1) { safeFault('inclinacionTraslado', 12); safeHint('⦦ Inclina el mástil hacia atrás (R) para trasladar la carga'); }
+            if (hasLoad && mastM() > 1 && SAFE.tilt === 1) { safeFault('inclinacionAltura', 10); safeHint('⚠️ No inclines al frente con la carga elevada'); }
+            if (hasLoad && !sp.stand && velKmh > 1.5) { const n = performance.now(); if (n - SAFE.hBox > 1000) { SAFE.hBox = n; SAFE.hTop = new THREE.Box3().setFromObject(cargo).max.y; }
+                if (SAFE.hTop > 1.55) { safeFault('visibilidadObstruida', 12); safeHint('👀 La carga tapa tu vista: conduce en reversa mirando hacia atrás'); } } }
+
         window.addEventListener('keydown', e => {
             keys[e.key.toLowerCase()] = true;
             if (e.key.toLowerCase() === 'h') honk();
+            if (e.key.toLowerCase() === 'b') safeToggle('belt'); if (e.key.toLowerCase() === 'p') safeToggle('brake'); if (e.key.toLowerCase() === 'k') safeToggle('key'); if (e.key.toLowerCase() === 'r') safeTilt(-1); if (e.key.toLowerCase() === 'f') safeTilt(1);
             if (e.key.toLowerCase() === 'c') cycleCam();
             if (e.key.toLowerCase() === 'j') toggleGamepad();
             if (e.key.toLowerCase() === 'g') toggleWheel();
@@ -3382,6 +3427,7 @@
             let armY = 0;
             if (held.up || keys['q']) armY = 1;
             if (held.down || keys['e']) armY = -1;
+            if (armY && !safeAuto() && !SAFE.keyOn) { safeHint('🔑 Enciende el equipo (K / botón LLAVE) para usar el hidráulico'); armY = 0; }
             if (armY) clampSlider('mastHeight', armY * 1.2);
             if (xrIn) { const mh = document.getElementById('mastHeight'); mh.value = Math.max(0, Math.min(100, parseFloat(mh.value) + xrIn.mast * 1.2)); if (spec().reachStages) { if (xrIn.reach > 0.5) reachOut = true; if (xrIn.reach < -0.5) reachOut = false; } }
             const rTarget = reachOut ? 100 : 0;
@@ -3390,13 +3436,14 @@
 
             // Curva suave del joystick (zona muerta + respuesta cuadrática) e inercia real
             const dz = 0.15; const shape = v => Math.abs(v) < dz ? 0 : Math.sign(v) * Math.pow((Math.abs(v) - dz) / (1 - dz), 1.6);
-            fwd = shape(fwd); turn = shape(turn);
+            fwd = shape(fwd); turn = shape(turn); fwd = safeGate(fwd);
             const spd = spec(); const maxV = Math.min(spd.maxSpeed, fwd >= 0 ? SIM_CFG.limitFwd : SIM_CFG.limitRev) * (hasLoad ? 0.85 : 1) * (mastM() > 1.5 ? 0.35 : 1);   // gobernador: nunca supera el límite configurado
             const targetV = fwd * maxV;                       // km/h con signo
             if (velKmh === undefined) velKmh = 0;
             const nowT = performance.now(); const dtS = Math.min(0.05, (nowT - (lastT || nowT)) / 1000) || 1/60; lastT = nowT; const k = dtS * 60;
             velKmh += (targetV - velKmh) * Math.min(1, (Math.abs(targetV) > Math.abs(velKmh) ? 0.035 : 0.07) * k);   // acelera despacio, frena más rápido
             if (Math.abs(velKmh) < 0.05 && fwd === 0) velKmh = 0;
+            safeRules(dtS);
             simSpeed = Math.abs(velKmh);
             const throttle = Math.sign(velKmh) * Math.min(100, simSpeed / maxV * 100 + (simSpeed > 0.1 ? 6 : 0));
             const steering = turn * 100;

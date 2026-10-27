@@ -1012,7 +1012,7 @@
                         <div class="ck-prog"><div class="ck-bar"><i id="ckBar"></i></div><span id="ckCount">0 / 0</span></div></div>
                         <div id="ckItems"></div>
                         <div class="ck-foot">
-                        <div id="ckBlock" class="hidden" style="background:#fff3cd;border-left:4px solid #c8102e;padding:.7rem .9rem;border-radius:8px;font-size:12.5px;margin-top:10px;color:#333"><b>⛔ Equipo fuera de operación.</b> Reporta la falla a mantenimiento. Solo el instructor / supervisor puede liberar el equipo.<br><button class="btn-next" style="margin-top:8px;background:#c8102e" onclick="instructorRelease()">🔓 Liberación del instructor (PIN)</button></div>
+                        <div id="ckBlock" class="hidden" style="background:#fff3cd;border-left:4px solid #c8102e;padding:.7rem .9rem;border-radius:8px;font-size:12.5px;margin-top:10px;color:#333"><b>⛔ Equipo fuera de operación.</b> Aplica bloqueo y etiquetado (NOM-004-STPS) en orden antes de reportar:<div id="lotoSteps" style="display:grid;gap:6px;margin-top:8px"><button class="btn-next" style="background:#1D2586" onclick="lotoStep(1,this)">1 · 🔑 Apagar y retirar la llave</button><button class="btn-next" style="background:#1D2586" onclick="lotoStep(2,this)">2 · 🔒 Colocar candado personal</button><button class="btn-next" style="background:#1D2586" onclick="lotoStep(3,this)">3 · 🏷️ Colocar etiqueta «FUERA DE SERVICIO»</button><button class="btn-next" style="background:#1D2586" onclick="lotoStep(4,this)">4 · 📞 Reportar a mantenimiento</button></div>Solo el instructor / supervisor puede liberar el equipo.<br><button class="btn-next" id="lotoRelease" style="margin-top:8px;background:#c8102e" onclick="instructorRelease()" disabled>🔓 Liberación del instructor (PIN)</button></div>
                         <button class="btn-next" style="width:100%;margin-top:10px" id="ckDone" onclick="finishChecklist()" disabled>CONTINUAR</button></div>
                     </div>
                 </div>
@@ -1088,7 +1088,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=13.0"></script>
+    <script src="comun/almacen-comun.js?v=13.1"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -2041,6 +2041,7 @@
             apoyoMal:      { label: 'CARGA MAL APOYADA',              tip: 'Centra la tarima sobre las vigas y baja hasta apoyar antes de soltar', pts: 8 },
             retiroMal:     { label: 'RETIRO INCORRECTO',              tip: 'Eleva 5-10 cm para despegar la tarima de la viga antes de retroceder', pts: 8 },
             velocidadTrailer: { label: 'EXCESO DE VELOCIDAD EN CAJA',   tip: 'Dentro del tráiler máx 5 km/h: piso irregular y espacio reducido', pts: 8 },
+            lotoFueraOrden: { label: 'BLOQUEO FUERA DE ORDEN', tip: 'Bloqueo y etiquetado: llave fuera → candado → etiqueta → reporte', pts: 5 },
             proximidadRack: { label: 'DISTANCIA MÍNIMA AL RACK',       tip: 'Mantén el costado del equipo a más de 35 cm del rack', pts: 5 },
             pasilloOcupado: { label: 'ENTRÓ A PASILLO OCUPADO',        tip: 'No está permitido que dos montacargas compartan pasillo: espera a que salga', pts: 15 },
             noCedioPaso:   { label: 'NO CEDIÓ EL PASO AL PEATÓN',      tip: 'En el cruce el peatón tiene prioridad: alto total y espera 5 s', pts: 12 },

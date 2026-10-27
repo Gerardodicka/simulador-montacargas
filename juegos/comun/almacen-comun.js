@@ -1642,14 +1642,14 @@ function actEvent(ev) { const a = ACTS[actIdx]; if (!a) return; if (a.type === '
 
 function showChecklist() {
             const sp = spec(); CK = CK_COMMON.concat(CK_BY_TYPE[sp.type] || []);
-            ckDefect = Math.floor(Math.random() * CK.length); ckAns = Array(CK.length).fill(null); ckBlocked = false; ckReleased = false;
+            ckDefect = Math.floor(Math.random() * CK.length); ckAns = Array(CK.length).fill(null); ckBlocked = false; ckReleased = false; lotoReset();
             document.getElementById('ckEquipo').textContent = 'Raymond ' + sp.code + ' · ' + sp.name;
             document.getElementById('ckItems').innerHTML = CK.map((it, i) => `<div class="ck-item"><div class="ck-num">${i + 1}</div><div class="txt"><b>${it.t}</b>${i === ckDefect ? `<small>⚠ Observación: ${it.d}</small>` : ''}</div><div class="bt"><button onclick="ckMark(${i},'ok',this)">✓ Cumple</button><button onclick="ckMark(${i},'bad',this)">✗ No cumple</button><button onclick="ckMark(${i},'na',this)" title="Solo si el punto no aplica a este equipo">N/A</button></div></div>`).join(''); ckProgress();
             document.getElementById('ckDone').disabled = true; document.getElementById('ckDone').textContent = 'CONTINUAR'; document.getElementById('ckBlock').classList.add('hidden'); document.getElementById('checklist').classList.add('show');
         }
 
-function instructorRelease() { const pin = prompt('PIN del instructor / supervisor para liberar el equipo tras el reporte a mantenimiento:'); if (pin !== '2026') { if (pin !== null) toast('PIN incorrecto: el equipo sigue fuera de operación'); return; }
-            ckReleased = true; ckBlocked = false; document.getElementById('ckBlock').classList.add('hidden'); document.getElementById('ckDone').disabled = false; document.getElementById('ckDone').textContent = 'CONTINUAR (equipo liberado por instructor)'; toast('🔓 Equipo liberado por el instructor · falla reportada'); }
+function instructorRelease() { if (LOTO.step < 4) { toast('Primero completa el bloqueo y etiquetado (4 pasos)'); return; } const pin = prompt('PIN del instructor / supervisor para liberar el equipo tras el reporte a mantenimiento:'); if (pin !== '2026') { if (pin !== null) toast('PIN incorrecto: el equipo sigue fuera de operación'); return; }
+            ckReleased = true; ckBlocked = false; lotoTag(false); document.getElementById('ckBlock').classList.add('hidden'); document.getElementById('ckDone').disabled = false; document.getElementById('ckDone').textContent = 'CONTINUAR (equipo liberado por instructor)'; toast('🔓 Equipo liberado por el instructor · falla reportada'); }
 
 function ckProgress() { const n = ckAns.filter(a => a !== null).length; document.getElementById('ckBar').style.width = (CK.length ? n / CK.length * 100 : 0) + '%'; document.getElementById('ckCount').textContent = n + ' / ' + CK.length + ' revisados'; }
 
@@ -1758,3 +1758,14 @@ function retargetSitClip(root) { const base = n => n.replace(/^mixamorig\d*:?/, 
     if (prop === 'quaternion') { const nt = t.clone(); nt.name = b.name + '.quaternion'; tracks.push(nt); }
  });   /* solo rotaciones: la altura de la cadera se ajusta al colocar al alumno */
   const clip = new THREE.AnimationClip('sit_rt', src.duration, tracks); _sitCache.set(key, clip); return clip; }
+// ===== Bloqueo y etiquetado del equipo con falla (NOM-004-STPS-1999) =====
+const LOTO = { step: 0, tag: null };
+function lotoReset() { LOTO.step = 0; lotoTag(false); document.querySelectorAll('#lotoSteps button').forEach(b => { b.disabled = false; b.style.background = '#1D2586'; }); const r = document.getElementById('lotoRelease'); if (r) r.disabled = true; }
+function lotoStep(n, btn) { if (n !== LOTO.step + 1) { if (typeof FAULTS !== 'undefined' && FAULTS.lotoFueraOrden) registerFault('lotoFueraOrden'); toast('⚠️ Orden correcto: llave fuera → candado → etiqueta → reporte'); return; }
+  LOTO.step = n; btn.disabled = true; btn.style.background = '#2e9e5b'; btn.textContent = '✔ ' + btn.textContent.replace(/^\d · /, '');
+  if (n === 1 && typeof SAFE !== 'undefined') { SAFE.keyOn = false; if (typeof safeUi === 'function') safeUi(); }
+  if (n === 3) lotoTag(true);
+  if (n === 4) { toast('📞 Falla reportada a mantenimiento · equipo bloqueado'); const r = document.getElementById('lotoRelease'); if (r) r.disabled = false; } }
+function lotoTag(on) { if (!on) { if (LOTO.tag && LOTO.tag.parent) LOTO.tag.parent.remove(LOTO.tag); LOTO.tag = null; return; } if (LOTO.tag || typeof forklift === 'undefined' || !forklift) return;
+  const g = new THREE.Group(); const tag = new THREE.Mesh(new THREE.PlaneGeometry(.32, .5), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'PELIGRO', size: 46, color: '#fff' }, { text: 'FUERA DE', size: 34, color: '#fff' }, { text: 'SERVICIO', size: 34, color: '#fff' }], { w: 256, h: 400, bg: '#c8102e' }), side: THREE.DoubleSide }));
+  const lock = new THREE.Mesh(new THREE.BoxGeometry(.08, .1, .04), new THREE.MeshStandardMaterial({ color: 0xf5c400, metalness: .4, roughness: .4 })); lock.position.set(0, .32, 0); g.add(tag, lock); g.position.set(-.45, 1.25, -.2); g.rotation.y = -Math.PI / 2; forklift.add(g); LOTO.tag = g; }
