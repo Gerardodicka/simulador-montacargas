@@ -1016,7 +1016,7 @@ function showCtrlCheck() { CC.done = {}; ['cc1','cc2','cc3','cc4','cc5','cc6'].f
 
 function ctrlCheckDone() { document.getElementById('ctrlCheck').classList.remove('open'); CC.open = false; if (typeof showChecklist === 'function' && ACTS[actIdx] && ACTS[actIdx].type === 'checklist') showChecklist(); }
 
-function ccMark(id, txt) { if (CC.done[id]) return; CC.done[id] = true; const el = document.getElementById(id); el.textContent = '✅ ' + el.textContent.slice(2); toast('✔ ' + txt); }
+function ccMark(id, txt) { if (CC.done[id]) return; CC.done[id] = true; const el = document.getElementById(id); el.textContent = '✅ ' + el.textContent.slice(2); el.classList.add('done'); toast('✔ ' + txt); }
 
 function ctrlCheckTick() { if (!CC.open) return; const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : []; let stick = null, wheel = null; pads.forEach(g => { if (isWheelId(g.id)) wheel = wheel || g; else if (isStickId(g.id)) stick = stick || g; });
             const rs = document.getElementById('ccStick'), rw = document.getElementById('ccWheel'); rs.classList.toggle('ok', !!stick); rw.classList.toggle('ok', !!wheel);
