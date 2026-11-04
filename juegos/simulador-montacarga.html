@@ -630,6 +630,60 @@
         .mission-text { font-size: 16px; font-weight: 700; margin: 0.2rem 0; }
         .mission-dist { font-size: 22px; font-weight: 800; color: #f5c400; }
         .big-btns { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 6; }
+        /* ===== Pantallas previas al simulador: pasos, tarjetas uniformes y llamadas a la acción ===== */
+        .menu-screen, .fork-screen { max-width: 1080px; margin: 0 auto; box-sizing: border-box; }
+        .menu-screen { padding: 2rem 2rem 2.4rem; text-align: left; }
+        .fork-screen { padding: 1.6rem 1.8rem 2rem; }
+        .steps { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 0 0 1.2rem; padding: 0; list-style: none; counter-reset: st; }
+        .steps li { counter-increment: st; display: flex; align-items: center; gap: 8px; font: 600 12.5px Poppins, Arial; color: #8a93ad; padding: 6px 12px 6px 6px; border-radius: 99px; background: #f2f4fb; }
+        .steps li::before { content: counter(st); width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: #dfe3f2; color: #5b6480; font-weight: 800; font-size: 11.5px; }
+        .steps li.done { color: #1f8a4c; } .steps li.done::before { content: '✓'; background: #d7f0e1; color: #1f8a4c; }
+        .steps li.now { background: #1D2586; color: #fff; } .steps li.now::before { background: #f5c400; color: #011131; }
+        .scr-head { text-align: center; margin-bottom: 1.4rem; display: grid; gap: 6px; justify-items: center; }
+        .scr-head .eyebrow { font: 700 11px Poppins, Arial; letter-spacing: .14em; color: #c8102e; text-transform: uppercase; }
+        .scr-head h2, .fork-screen .scr-head h2 { margin: 0; font: 800 26px Poppins, Arial; color: #011131; }
+        .scr-head p, .fork-screen .scr-head p { margin: 0; font-size: 14px; color: #5b6480; }
+        .menu-icon { display: none; } .menu-title { text-align: center; font: 800 26px Poppins, Arial; color: #011131; margin: 0 0 .3rem; }
+        .menu-grid { gap: 18px; margin-top: 1.2rem; }
+        .menu-card { background: #fff; border: 2px solid #e3e6f0; border-radius: 16px; padding: 0; overflow: hidden; display: flex; flex-direction: column; text-align: left; }
+        .menu-card:hover { border-color: #2138D3; }
+        .menu-card .mc-top { background: linear-gradient(135deg, #1D2586, #2138D3); color: #fff; padding: 20px 22px; display: flex; align-items: center; gap: 14px; }
+        .menu-card.alt .mc-top { background: linear-gradient(135deg, #8a0b20, #c8102e); }
+        .menu-card .mc-top svg { width: 46px; height: 46px; flex: none; }
+        .menu-card .mc-top b { font: 800 21px Poppins, Arial; letter-spacing: .02em; display: block; } .menu-card .mc-top small { opacity: .85; font-size: 12.5px; }
+        .menu-card .mc-body { padding: 16px 22px 20px; display: grid; gap: 12px; flex: 1; align-content: start; }
+        .menu-card .mc-body p { margin: 0; font-size: 13.5px; color: #4a536b; line-height: 1.55; }
+        .mc-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .mc-facts div { background: #f2f4fb; border-radius: 10px; padding: 8px 6px; text-align: center; } .mc-facts b { display: block; font: 800 17px Poppins, Arial; color: #1D2586; } .mc-facts small { font-size: 11px; color: #6b7390; }
+        .mc-go { margin-top: auto; justify-self: start; border: 0; border-radius: 10px; padding: 11px 18px; font: 800 14px Poppins, Arial; color: #fff; background: #1D2586; cursor: pointer; } .menu-card.alt .mc-go { background: #c8102e; }
+        .fork-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .fork-card { display: flex; flex-direction: column; background: #fff; padding: 14px 14px 16px; }
+        .fork-card .pic { height: 160px; }
+        .fork-card h3 { font: 800 16px Poppins, Arial; margin: .5rem 0 .1rem; }
+        .fork-card ul { flex: 1; margin: .5rem 0 .2rem; padding: 0; }
+        .fork-specs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: .5rem 0; }
+        .fork-specs div { background: #f2f4fb; border-radius: 8px; padding: 6px 4px; text-align: center; } .fork-specs small { white-space: nowrap; } .fork-specs b { display: block; font: 800 14px Poppins, Arial; color: #1D2586; } .fork-specs small { font-size: 10px; color: #6b7390; }
+        .fork-card .fc-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: .4rem; }
+        .fork-card .fc-go { border: 0; border-radius: 9px; padding: 8px 14px; font: 800 13px Poppins, Arial; color: #fff; background: #c8102e; cursor: pointer; white-space: nowrap; }
+        .fork-card .tag { margin-top: 0; }
+        @media (max-width: 700px) { .menu-screen { padding: 1.2rem; } .menu-grid { grid-template-columns: 1fr; } .scr-head h2, .menu-title { font-size: 22px; } }
+        .fork-grid.esc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; max-width: 900px; margin: 0 auto; }
+        .esc-card { display: grid; grid-template-columns: 120px 1fr; gap: 18px; text-align: left; border: 2px solid #e3e6f0; border-radius: 16px; padding: 18px; background: #fff; transition: .2s; }
+        .esc-card:hover { border-color: #2138D3; box-shadow: 0 12px 28px rgba(29,37,134,.18); transform: translateY(-3px); }
+        .esc-card.off { opacity: .55; } .esc-card.off:hover { transform: none; box-shadow: none; border-color: #e3e6f0; }
+        .esc-map { width: 120px; height: 160px; background: #0b1a3a; border-radius: 10px; padding: 6px; box-sizing: border-box; }
+        .esc-map .m-w { fill: #18284f; stroke: #8fa0d8; stroke-width: 1.2; } .esc-map .m-r { fill: #ff7a1a; } .esc-map .m-z { fill: rgba(245,196,0,.55); } .esc-map .m-o { fill: #6f7fb8; } .esc-map .m-d { fill: #f5c400; } .esc-map .m-x { fill: rgba(255,255,255,.25); }
+        .esc-body { display: grid; gap: 8px; align-content: start; min-width: 0; }
+        .esc-tag { font: 700 10.5px Poppins, Arial; letter-spacing: .1em; color: #c8102e; }
+        .esc-body h3 { margin: 0; font: 800 22px Poppins, Arial; color: #011131; }
+        .esc-body p, .fork-screen .esc-body p { text-align: left; margin: 0; font-size: 13px; color: #555e75; line-height: 1.45; }
+        .esc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .esc-stats div { background: #f2f4fb; border-radius: 8px; padding: 6px 4px; text-align: center; } .esc-stats b { display: block; font: 800 15px Poppins, Arial; color: #1D2586; } .esc-stats small { font-size: 10.5px; color: #666f88; }
+        .esc-body ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 5px; } .esc-body li { font-size: 11px; background: #eef0fb; color: #1D2586; border-radius: 99px; padding: 3px 9px; font-weight: 600; }
+        .esc-go { margin-top: 4px; border: 0; border-radius: 10px; padding: 11px 14px; font: 800 14px Poppins, Arial; color: #fff; background: #c8102e; cursor: pointer; } .esc-go:hover:not(:disabled) { background: #a50d26; } .esc-go:disabled { background: #9aa0ad; cursor: not-allowed; }
+        .esc-chip { display: inline-block; background: #eef0fb; color: #1D2586; border-radius: 99px; padding: 4px 12px; font-size: 13px; } .esc-chip b { color: #c8102e; }
+        .esc-back { margin-left: 8px; border: 1.5px solid #1D2586; background: transparent; color: #1D2586; border-radius: 99px; padding: 4px 12px; font: 700 12px Poppins, Arial; cursor: pointer; } .esc-back:hover { background: #1D2586; color: #fff; }
+        @media (max-width: 520px) { .esc-card { grid-template-columns: 1fr; } .esc-map { width: 100%; height: 150px; } }
         .big-row { display: flex; gap: 10px; }
         .safety-row .sbtn { flex: 1; height: 46px; font-size: 16px; background: rgba(120,20,20,.85); border-color: #ff5252; } .safety-row .sbtn.on { background: rgba(46,158,91,.9); border-color: #7dffb0; } .safety-row .sbtn.mid { background: rgba(29,37,134,.85); border-color: #9fb0ff; }
         .big {
@@ -816,28 +870,30 @@
         <!-- SELECCIÓN DE MONTACARGAS -->
         <div class="fork-screen hidden" id="forkScreen">
             <button class="back-btn" onclick="backToMenu()" style="background:#1D2586">← MENÚ</button>
-            <h2>🚛 Elige tu montacargas</h2>
-            <p>Flota <b style="color:#c8102e">RAYMOND</b> · cada equipo se comporta distinto: velocidad, altura, alcance y maniobra</p>
+            <ol class="steps" id="forkSteps"><li class="done">Registro</li><li class="done">Modalidad</li><li class="now">Montacargas</li><li>Escenario</li></ol>
+            <div class="scr-head"><span class="eyebrow" id="forkEyebrow">Flota RAYMOND</span><h2>Elige tu montacargas</h2><p>Cada equipo se comporta distinto: velocidad, altura, alcance y maniobra.</p></div>
             <div class="fork-grid" id="forkGrid"></div>
         </div>
 
         <!-- MENU PRINCIPAL -->
         <div class="menu-screen hidden" id="menuScreen">
             <div class="user-bar" id="userBar" style="display:flex;justify-content:space-between;align-items:center;background:#f0f4f8;border-radius:8px;padding:.5rem .9rem;margin-bottom:1rem;font-size:13px;font-weight:700;color:#1D2586"><span id="userBadge">👤</span><button onclick="editUser()" style="background:none;border:1px solid #838383;color:#838383;padding:.3rem .7rem;border-radius:6px;cursor:pointer;font-size:11px">Cambiar</button></div>
-            <div class="menu-icon">🏭</div>
-            <div class="menu-title">¿Qué deseas hacer?</div>
+            <ol class="steps"><li class="done">Registro</li><li class="now">Modalidad</li><li>Montacargas</li><li>Escenario</li></ol>
+            <div class="scr-head"><span class="eyebrow">Dojo Virtual · Montacargas</span><h2>¿Qué deseas hacer?</h2><p>Primero la evaluación teórica; después practica en 3D con el equipo que operas.</p></div>
 
             <div class="menu-grid">
                 <div class="menu-card" onclick="startQuestions()">
-                    <div class="menu-card-icon">📋</div>
-                    <div class="menu-card-title">EVALUACIÓN</div>
-                    <div class="menu-card-desc">20 situaciones sobre operación segura. Aprueba con 160+ puntos.</div>
+                    <div class="mc-top"><svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="7" width="28" height="36" rx="3"/><path d="M18 7v-2h12v2M16 18h16M16 26h16M16 34h10"/></svg><div><b>EVALUACIÓN</b><small>Conocimiento teórico</small></div></div>
+                    <div class="mc-body"><p>20 situaciones reales de operación segura: inspección, carga, tránsito y peatones.</p>
+                        <div class="mc-facts"><div><b>20</b><small>situaciones</small></div><div><b>160</b><small>puntos para aprobar</small></div><div><b>≈10</b><small>minutos</small></div></div>
+                        <button class="mc-go" type="button">Comenzar evaluación →</button></div>
                 </div>
 
-                <div class="menu-card" onclick="startSimulator()">
-                    <div class="menu-card-icon">🎮</div>
-                    <div class="menu-card-title">PRÁCTICA 3D</div>
-                    <div class="menu-card-desc">Elige un montacargas RAYMOND (reach, double reach, contrabalanceo, orderpicker o patín) y opera en el almacén DICKA.</div>
+                <div class="menu-card alt" onclick="startSimulator()">
+                    <div class="mc-top"><svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 34V20h14l6 8v6M28 34h6M36 10v24M36 30h8"/><circle cx="14" cy="36" r="4"/><circle cx="26" cy="36" r="4"/></svg><div><b>PRÁCTICA 3D</b><small>Operación con montacargas RAYMOND</small></div></div>
+                    <div class="mc-body"><p>Elige tu equipo y el almacén, y completa las misiones con reglas de seguridad NOM-006.</p>
+                        <div class="mc-facts"><div><b>6</b><small>equipos</small></div><div><b>2</b><small>escenarios</small></div><div><b>8</b><small>misiones</small></div></div>
+                        <button class="mc-go" type="button">Ir a la práctica →</button></div>
                 </div>
             </div>
         </div>
@@ -1109,7 +1165,7 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=13.4"></script>
+    <script src="comun/almacen-comun.js?v=13.5"></script>
     <script src="escenarios/agave1.js?v=13.4"></script>
     
     <script>
@@ -1354,12 +1410,21 @@
         
         
         // Paso 2: después de elegir el montacargas se elige el escenario de práctica
-        const SCENARIOS = { generico: { name: 'Almacén Genérico', icon: '🏭', desc: '4 pasillos de doble profundidad, Dojo DICKA, oficinas, cuarto de carga de baterías y andenes con tráiler.' }, agave1: { name: 'Agave 1 · Proyecto NAOS', icon: '🗺️', desc: 'Layout real: 13 filas dobles con 2 pasillos transversales, zona poniente de preparación, STAGE IN / STAGE OUT, oficinas y andenes P1–P41 con su simbología de seguridad.' } };
-        function chooseFork(k) { const grid = document.getElementById('forkGrid'), h = document.querySelector('#forkScreen h2'), p = document.querySelector('#forkScreen p');
-            if (!grid.dataset.forks) grid.dataset.forks = grid.innerHTML; const clamp = !!(FORK_SPECS[k] && FORK_SPECS[k].clamp);
-            h.textContent = '🏭 Elige el escenario'; p.innerHTML = `Raymond <b style="color:#c8102e">${FORK_SPECS[k].code}</b> · ¿dónde quieres practicar?`;
-            grid.innerHTML = Object.entries(SCENARIOS).map(([id, S]) => { const off = clamp && id !== 'generico'; return `<button class="fork-card" ${off ? 'disabled style="opacity:.45"' : ''} onclick="pickScenario('${k}','${id}')"><div style="font-size:42px">${S.icon}</div><b>${S.name}</b><small>${off ? 'Disponible para reach, contrabalanceo, orderpicker y patín (las bahías de línea blanca del clamp están en el Almacén Genérico).' : S.desc}</small></button>`; }).join('') + `<button class="fork-card" onclick="backToForks()" style="background:#20242c;color:#fff"><div style="font-size:30px">←</div><b>Cambiar montacargas</b></button>`; }
-        function backToForks() { const grid = document.getElementById('forkGrid'); if (grid.dataset.forks) grid.innerHTML = grid.dataset.forks; document.querySelector('#forkScreen h2').textContent = '🚛 Elige tu montacargas'; }
+        const SCENARIOS = {
+            generico: { name: 'Almacén Genérico', tag: 'ENTRENAMIENTO BASE', desc: 'Nave de práctica con todas las áreas: ideal para aprender cada maniobra.', stats: [['4', 'pasillos'], ['8', 'misiones'], ['60×90', 'm de nave']], feats: ['Dojo DICKA', 'Cuarto de carga', 'Oficinas', 'Andén con tráiler'],
+              map: '<rect x="4" y="4" width="112" height="152" rx="3" class="m-w"/>' + [14, 34, 54, 74].map(x => `<rect x="${x}" y="22" width="8" height="70" class="m-r"/><rect x="${x + 12}" y="22" width="8" height="70" class="m-r"/>`).join('') + '<rect x="10" y="110" width="30" height="16" class="m-z"/><rect x="40" y="4" width="40" height="12" class="m-o"/>' + [24, 44, 64, 84].map(x => `<rect x="${x}" y="150" width="8" height="6" class="m-d"/>`).join('') },
+            agave1: { name: 'Agave 1', tag: 'LAYOUT REAL · PROYECTO NAOS', desc: 'Réplica del almacén Agave 1: misma distribución de racks, zonas y andenes.', stats: [['16', 'pasillos'], ['7', 'misiones'], ['174×140', 'm de nave']], feats: ['41 andenes P1–P41', 'STAGE IN / OUT', 'Preparación y etiquetado', 'Simbología NOM'],
+              map: '<path d="M4 6H116V138H70V150H44V118H4Z" class="m-w"/>' + Array.from({ length: 13 }, (_, k) => `<rect x="${46 + k * 5.2}" y="16" width="3.4" height="${k < 7 ? 88 : 104}" class="m-r"/>`).join('') + '<rect x="45" y="44" width="70" height="3" class="m-x"/><rect x="45" y="76" width="70" height="3" class="m-x"/>' + [8, 13, 18].map(x => `<rect x="${x}" y="22" width="3" height="76" class="m-r"/>`).join('') + '<rect x="24" y="12" width="16" height="22" class="m-z"/><rect x="24" y="80" width="16" height="22" class="m-z"/><rect x="45" y="118" width="25" height="30" class="m-o"/>' + Array.from({ length: 22 }, (_, k) => `<rect x="${(k < 12 ? 22 : 34) + k * 3.6}" y="2" width="2.4" height="4" class="m-d"/>`).join('') }
+        };
+        function chooseFork(k) { const grid = document.getElementById('forkGrid'), h = document.querySelector('#forkScreen .scr-head h2'), p = document.querySelector('#forkScreen .scr-head p'); forkStep(4);
+            if (!grid.dataset.forks) grid.dataset.forks = grid.innerHTML; const sp = FORK_SPECS[k], clamp = !!sp.clamp;
+            h.textContent = 'Elige dónde practicar'; document.getElementById('forkEyebrow').textContent = 'Escenario de práctica'; p.innerHTML = `<span class="esc-chip">Raymond <b>${sp.code}</b> · ${sp.name}</span> <button class="esc-back" onclick="backToForks()">Cambiar montacargas</button>`;
+            grid.classList.add('esc-grid'); grid.innerHTML = Object.entries(SCENARIOS).map(([id, S]) => { const off = clamp && id !== 'generico';
+              return `<div class="esc-card${off ? ' off' : ''}"><svg class="esc-map" viewBox="0 0 120 160" aria-hidden="true">${S.map}</svg><div class="esc-body"><span class="esc-tag">${S.tag}</span><h3>${S.name}</h3><p>${off ? 'Las bahías de línea blanca del clamp solo están en el Almacén Genérico.' : S.desc}</p>
+                <div class="esc-stats">${S.stats.map(([n, l]) => `<div><b>${n}</b><small>${l}</small></div>`).join('')}</div><ul>${S.feats.map(f => `<li>${f}</li>`).join('')}</ul>
+                <button class="esc-go" ${off ? 'disabled' : ''} onclick="pickScenario('${k}','${id}')">${off ? 'No disponible para clamp' : 'Practicar aquí →'}</button></div></div>`; }).join(''); }
+        function backToForks() { const grid = document.getElementById('forkGrid'); grid.classList.remove('esc-grid'); if (grid.dataset.forks) grid.innerHTML = grid.dataset.forks; document.querySelector('#forkScreen .scr-head h2').textContent = 'Elige tu montacargas'; document.querySelector('#forkScreen .scr-head p').innerHTML = 'Cada equipo se comporta distinto: velocidad, altura, alcance y maniobra.'; document.getElementById('forkEyebrow').textContent = 'Flota RAYMOND'; forkStep(3); }
+        function forkStep(n) { document.querySelectorAll('#forkSteps li').forEach((li, i) => { li.className = i + 1 < n ? 'done' : i + 1 === n ? 'now' : ''; }); }
         function pickScenario(k, id) { backToForks();
             if (renderer && SCENARIO !== id) { try { sessionStorage.setItem('dicka_resume', JSON.stringify({ k, id, user: currentUser })); } catch (e) { } location.reload(); return; }
             SCENARIO = id; startFork(k); }
@@ -2260,7 +2325,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v13.4 escenarios: Genérico y Agave 1';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v13.5 pantallas de inicio renovadas';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
