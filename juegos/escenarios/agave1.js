@@ -15,12 +15,13 @@ const AGV = (() => { const s = 0.308, X = px => (px - 413.75) * s, Z = py => (py
 
 function agvSegments(z0, z1) { const [c1, c2] = AGV.cuts, h = AGV.cutW / 2; return [[z0, c1 - h], [c1 + h, c2 - h], [c2 + h, z1]].filter(([a, b]) => b - a > 2.8); }
 
+const AGV_YEL = { mat: new THREE.MeshStandardMaterial({ color: 0xf2c200, roughness: .6 }), post: new THREE.BoxGeometry(0.22, 0.6, 0.2), foot: new THREE.BoxGeometry(0.3, 0.12, 0.45) };
 // Rack ligero (estructura fusionada + tarimas instanciadas): mismo comportamiento que buildRack, sin las franjas de texto por nivel
 function agvRack(x, zStart, bays, levels, facing, letter, sign) { const bayW = 2.8, depth = 2.4, levelH = 1.8, totalH = levelH * levels + 0.5, RM = rackMats(), g = new THREE.Group();
   const add = (geo, mat, px, py, pz) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); g.add(m); return m; };
   const post = new THREE.BoxGeometry(0.1, totalH, 0.11), beamG = new THREE.BoxGeometry(0.1, 0.14, bays * bayW), tie = new THREE.BoxGeometry(depth, 0.05, 0.05);
   for (let b = 0; b <= bays; b++) { const z = zStart + b * bayW; [-depth / 2, depth / 2].forEach(dx => add(post, RM.up, x + dx, totalH / 2, z)); for (let l = 0; l <= levels; l += 2) add(tie, RM.brace, x, 0.5 + l * levelH + .9, z);
-    if (b === 0 || b === bays) add(new THREE.BoxGeometry(depth + 0.3, 0.16, 0.12), RM.guard, x, 0.4, z + (b === 0 ? -0.35 : 0.35)); }
+    if (b === 0 || b === bays) { const e = b === 0 ? -1 : 1; add(new THREE.BoxGeometry(depth + 0.3, 0.16, 0.12), RM.guard, x, 0.4, z + e * 0.35); [-depth / 2, depth / 2].forEach(dx => { add(AGV_YEL.post, AGV_YEL.mat, x + dx, 0.3, z + e * 0.08); add(AGV_YEL.foot, AGV_YEL.mat, x + dx, 0.06, z + e * 0.2); }); } }   // protector amarillo de pata en cabecera (como en nave real)
   for (let l = 0; l <= levels; l++) { const y = 0.5 + l * levelH; [-depth / 2, depth / 2].forEach(dx => add(beamG, RM.beam, x + dx, y, zStart + bays * bayW / 2));
     if (l < levels) { const dk = add(new THREE.PlaneGeometry(depth + 0.1, bays * bayW), RM.wire, x, y + 0.075, zStart + bays * bayW / 2); dk.rotation.x = -Math.PI / 2;
       for (let b = 0; b < bays; b++) { const zc = zStart + b * bayW + bayW / 2; for (const pos of ['A', 'B']) { if (Math.random() < 0.3) continue; RACK_INST.push({ x: x + (pos === 'A' ? 0.6 : -0.6) * facing, y, z: zc, bh: 0.6 + Math.random() * 0.8, v: b % 3, facing, pos }); } } } }
@@ -28,6 +29,48 @@ function agvRack(x, zStart, bays, levels, facing, letter, sign) { const bayW = 2
   if (sign) { const sm = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.9), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: `RACK ${letter}`, size: 120 }], { w: 512, h: 200, bg: '#011131' }) })); sm.position.set(x, totalH + 0.6, zStart + bays * bayW / 2); sm.rotation.y = facing > 0 ? Math.PI / 2 : -Math.PI / 2; scene.add(sm); }
   obstacles.push({ minX: x - depth / 2 - 0.05, maxX: x + depth / 2 + 0.05, minZ: zStart - 0.2, maxZ: zStart + bays * bayW + 0.2 }); }   // margen lateral 5 cm: pasillo útil igual al del almacén genérico (3.0 m)
 
+// ---------- Apariencia según fotos de la nave real (Agave 1) ----------
+const AGV_TEX = {};
+function agvTex(kind) { if (AGV_TEX[kind]) return AGV_TEX[kind]; const c = document.createElement('canvas'), g = c.getContext('2d');
+  if (kind === 'block') { c.width = 256; c.height = 128; g.fillStyle = '#a9adb2'; g.fillRect(0, 0, 256, 128); g.strokeStyle = '#8e9297'; g.lineWidth = 3; for (let r = 0; r < 4; r++) { g.beginPath(); g.moveTo(0, r * 32); g.lineTo(256, r * 32); g.stroke(); for (let k = 0; k < 4; k++) { const x = k * 64 + (r % 2) * 32; g.beginPath(); g.moveTo(x, r * 32); g.lineTo(x, r * 32 + 32); g.stroke(); } } for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? 0 : 255},${Math.random() < .5 ? 0 : 255},${Math.random() < .5 ? 0 : 255},.05)`; g.fillRect(Math.random() * 256, Math.random() * 128, 2, 2); } }
+  else if (kind === 'lamina') { c.width = 128; c.height = 64; const gr = g.createLinearGradient(0, 0, 128, 0); for (let k = 0; k <= 8; k++) gr.addColorStop(k / 8, k % 2 ? '#c4c8cd' : '#9aa0a7'); g.fillStyle = gr; g.fillRect(0, 0, 128, 64); }
+  else if (kind === 'door') { c.width = 128; c.height = 160; g.fillStyle = '#eef0f2'; g.fillRect(0, 0, 128, 160); g.strokeStyle = '#b8bdc4'; g.lineWidth = 3; for (let y = 20; y < 160; y += 20) { g.beginPath(); g.moveTo(0, y); g.lineTo(128, y); g.stroke(); } g.fillStyle = '#5c6670'; g.fillRect(14, 64, 100, 9); g.fillStyle = '#c9ced4'; g.fillRect(0, 0, 6, 160); g.fillRect(122, 0, 6, 160); }
+  else if (kind === 'malla') { c.width = 64; c.height = 64; g.strokeStyle = 'rgba(190,196,204,.95)'; g.lineWidth = 2; for (let k = -64; k < 128; k += 16) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k + 64, 64); g.stroke(); g.beginPath(); g.moveTo(k + 64, 0); g.lineTo(k, 64); g.stroke(); } }
+  else if (kind === 'stripe') { c.width = 64; c.height = 64; g.fillStyle = '#f2c200'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#111'; for (let k = -64; k < 128; k += 24) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k + 12, 0); g.lineTo(k + 76, 64); g.lineTo(k + 64, 64); g.fill(); } }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return (AGV_TEX[kind] = t); }
+// Pasillo peatonal perimetral: franja azul con orillas amarillas (igual que en piso real)
+function agvWalkways(A) { const blue = new THREE.MeshStandardMaterial({ color: 0x1f56b8, roughness: .55 }), strip = (x0, z0, x1, z1) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(Math.abs(x1 - x0) || 1.3, Math.abs(z1 - z0) || 1.3), blue); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, .014, (z0 + z1) / 2); m.receiveShadow = true; scene.add(m); };
+  const run = (x0, z0, x1, z1) => { const hz = x0 === x1; if (hz) { strip(x0 - .65, z0, x0 + .65, z1); paintLine(x0 - .7, z0, x0 - .7, z1, 0xf2c200, .12); paintLine(x0 + .7, z0, x0 + .7, z1, 0xf2c200, .12); } else { strip(x0, z0 - .65, x1, z0 + .65); paintLine(x0, z0 - .7, x1, z0 - .7, 0xf2c200, .12); paintLine(x0, z0 + .7, x1, z0 + .7, 0xf2c200, .12); } };
+  run(A.west + 1, A.north + 1.6, A.east - 1, A.north + 1.6); run(A.west + 1, A.southL - 1.6, -7.5, A.southL - 1.6); run(7.5, A.southL - 1.6, A.offX0 - .5, A.southL - 1.6); run(A.west + 1.4, A.north + 2.3, A.west + 1.4, A.southL - 2.3); }
+function agvRealismo(A, H, dm) { const BH = 3.6;
+  // Muros: block de concreto abajo, lámina acanalada arriba, columnas blancas cada 8 m
+  const face = (x0, z0, x1, z1, nx, nz) => { const L = Math.hypot(x1 - x0, z1 - z0), rot = Math.atan2(nx, nz), cx = (x0 + x1) / 2 + nx * .27, cz = (z0 + z1) / 2 + nz * .27;
+    const tb = agvTex('block').clone(); tb.needsUpdate = true; tb.repeat.set(L / 1.6, BH / .8); const b = new THREE.Mesh(new THREE.PlaneGeometry(L, BH), new THREE.MeshStandardMaterial({ map: tb, roughness: .95 })); b.position.set(cx, BH / 2, cz); b.rotation.y = rot; scene.add(b);
+    const tl = agvTex('lamina').clone(); tl.needsUpdate = true; tl.repeat.set(L / 1.2, 1); const l = new THREE.Mesh(new THREE.PlaneGeometry(L, H - BH), new THREE.MeshStandardMaterial({ map: tl, roughness: .55, metalness: .35 })); l.position.set(cx, BH + (H - BH) / 2, cz); l.rotation.y = rot; scene.add(l);
+    const n = Math.floor(L / 8); const cols = new THREE.InstancedMesh(new THREE.BoxGeometry(.45, H, .45), new THREE.MeshStandardMaterial({ color: 0xf2f3f5, roughness: .6 }), n + 1); for (let k = 0; k <= n; k++) { const t = k / Math.max(n, 1); dm.position.set(x0 + (x1 - x0) * t + nx * .45, H / 2, z0 + (z1 - z0) * t + nz * .45); dm.rotation.set(0, 0, 0); dm.updateMatrix(); cols.setMatrixAt(k, dm.matrix); } scene.add(cols); };
+  face(A.west, A.north, A.east, A.north, 0, 1); face(A.west, A.north, A.west, A.southL, 1, 0); face(A.east, A.north, A.east, A.southR, -1, 0); face(A.west, A.southL, -2, A.southL, 0, -1); face(2, A.southL, A.offX0, A.southL, 0, -1); face(A.offX1, A.southR, A.east, A.southR, 0, -1);
+  // Postes de protección amarillos con franjas negras a los lados de cada andén
+  const docks = [...A.docksN.map(d => ({ ...d, z: A.north, dir: -1 })), ...A.docksS.map(d => ({ ...d, z: d.x > A.offX1 ? A.southR : A.southL, dir: 1 }))];
+  const bol = new THREE.InstancedMesh(new THREE.CylinderGeometry(.11, .11, 1.1, 12), new THREE.MeshStandardMaterial({ color: 0xf2c200, roughness: .5 }), docks.length * 2), jamb = new THREE.InstancedMesh(new THREE.BoxGeometry(.18, 1.6, .06), new THREE.MeshStandardMaterial({ map: agvTex('stripe') }), docks.length * 2); let bi = 0;
+  docks.forEach(d => [-1.75, 1.75].forEach(o => { dm.rotation.set(0, 0, 0); dm.position.set(d.x + o, .55, d.z - d.dir * .75); dm.updateMatrix(); bol.setMatrixAt(bi, dm.matrix); dm.position.set(d.x + o * .9, .8, d.z - d.dir * .3); dm.updateMatrix(); jamb.setMatrixAt(bi, dm.matrix); bi++; obstacles.push({ minX: d.x + o - .15, maxX: d.x + o + .15, minZ: d.z - d.dir * .75 - .15, maxZ: d.z - d.dir * .75 + .15 }); }));
+  scene.add(bol, jamb);
+  // Área de RECIBO: piso azul con orilla amarilla, barandal naranja y mesas de verificación
+  { const x0 = -26, x1 = -17, z0 = A.north + 3.2, z1 = A.north + 8; const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ color: 0x1f56b8, roughness: .55 })); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, .015, (z0 + z1) / 2); scene.add(m);
+    paintLine(x0, z1, x1, z1, 0xf2c200, .12); paintLine(x0, z0, x0, z1, 0xf2c200, .12); paintLine(x1, z0, x1, z1, 0xf2c200, .12);
+    const rail = new THREE.MeshStandardMaterial({ color: 0xff8a00, roughness: .5, metalness: .3 }), r = (w, d, x, y, z) => agvBox(w, .08, d, 0xff8a00, x, y, z).material = rail;
+    r(x1 - x0, .08, (x0 + x1) / 2, 1.05, z1 - .2); r(x1 - x0, .08, (x0 + x1) / 2, .55, z1 - .2); for (let x = x0; x <= x1 + .01; x += 1.5) agvBox(.08, 1.1, .08, 0xff8a00, x, .55, z1 - .2).material = rail;
+    obstacles.push({ minX: x0 - .2, maxX: x1 + .2, minZ: z0, maxZ: z1 });
+    for (let x = x0 + 1.5; x < x1 - 1; x += 2.6) { agvBox(1.6, .08, .7, 0x6b4a2b, x, .95, z0 + 2.2); agvBox(.06, .9, .6, 0x333333, x - .7, .45, z0 + 2.2); agvBox(.06, .9, .6, 0x333333, x + .7, .45, z0 + 2.2); agvBox(.45, .32, .04, 0x111111, x, 1.25, z0 + 2); }
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, .9), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'RECIBO', size: 110, color: '#1D2586' }], { w: 512, h: 180, bg: '#ffffff' }) })); sg.position.set((x0 + x1) / 2, 3.2, A.north + .3); scene.add(sg); }
+  // Letreros de cliente colgados en las cabeceras de pasillo (EPSON · LASER · TOCONSA …)
+  const CL = ['EPSON', 'LASER', 'TOCONSA', 'LIVERPOOL', 'EPSON', 'LASER', 'TOCONSA', 'LIVERPOOL', 'EPSON', 'LASER', 'TOCONSA', 'LIVERPOOL', 'EPSON', 'LASER'];
+  AISLES.slice(0, 14).forEach((a, k) => { const z = (k < 8 ? A.Z(585) : A.Z(635)) + .2, name = CL[k]; const sm = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: name, size: 90, color: '#1D2586' }], { w: 512, h: 240, bg: '#ffffff' }), side: THREE.DoubleSide })); sm.position.set(a.x - 2.2, 7.6, z); scene.add(sm); });
+  // Pendones morados colgados del techo (cultura DICKA) en el pasillo central
+  ['SEGURIDAD PRIMERO', 'GIVE ME FIVE · 5S', 'CALIDAD', 'TRABAJO EN EQUIPO', 'RESPETO AL PEATÓN'].forEach((t, k) => { const b = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 3.6), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: t, size: 54, color: '#ffffff' }], { w: 256, h: 660, bg: '#4b2a8c' }), side: THREE.DoubleSide })); b.position.set(-8 + k * 6, 9, A.north + 5); scene.add(b); });
+  // Tarimas emplayadas en STAGE IN y STAGE OUT (orilla poniente de cada zona, fuera de las rutas)
+  const n = 24, wrap = new THREE.InstancedMesh(new THREE.BoxGeometry(1.15, 1.3, 1.15), new THREE.MeshStandardMaterial({ color: 0xa88a5c, roughness: .3, metalness: .1 }), n), pal = new THREE.InstancedMesh(new THREE.BoxGeometry(1.2, .14, 1.2), new THREE.MeshStandardMaterial({ color: 0x2f6fd6, roughness: .7 }), n); let pi = 0;
+  [[-14, -57, -41], [-14, 14, 20]].forEach(([x, za, zb]) => { for (let z = za; z <= zb && pi < n; z += 1.6) for (const dx of [0, 1.4]) { if (pi >= n) break; dm.rotation.set(0, (Math.random() - .5) * .1, 0); dm.position.set(x + dx, .07, z); dm.updateMatrix(); pal.setMatrixAt(pi, dm.matrix); dm.position.set(x + dx, .14 + .65 * (.7 + Math.random() * .3), z); dm.scale.set(1, .7 + Math.random() * .3, 1); dm.updateMatrix(); wrap.setMatrixAt(pi, dm.matrix); dm.scale.set(1, 1, 1); pi++; } obstacles.push({ minX: x - .7, maxX: x + 2.1, minZ: za - .7, maxZ: zb + .7 }); });
+  wrap.count = pal.count = pi; scene.add(wrap, pal); }
 // ---------- Simbología de seguridad e higiene (según el plano) ----------
 const AGV_SIGN = {};
 function agvSignTex(type) { if (AGV_SIGN[type]) return AGV_SIGN[type]; const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
@@ -76,13 +119,13 @@ function buildAgaveWorld() { const A = AGV, H = 12;
     agvSign('sanMujeres', ox1 - 7, 2.2, oz0 - .13, Math.PI, .8); agvSign('sanHombres', ox1 - 5.8, 2.2, oz0 - .13, Math.PI, .8); agvSign('botiquin', ox0 + 4, 2.2, oz0 - .13, Math.PI); agvSign('extintor', ox0 + 6, 2.2, oz0 - .13, Math.PI); makeExtinguisher(ox0 + 6, oz0 - .35, Math.PI);
     const roof = new THREE.Mesh(new THREE.BoxGeometry(ox1 - ox0, .2, oz1 - oz0), new THREE.MeshStandardMaterial({ color: 0xb8bec8 })); roof.position.set((ox0 + ox1) / 2, oh, (oz0 + oz1) / 2); scene.add(roof); }
   // Andenes: cortinas, numeración P1–P41, topes y tráileres estacionados
-  const doorMat = new THREE.MeshStandardMaterial({ color: 0xc9ced6, metalness: .35, roughness: .45 }), bump = new THREE.MeshStandardMaterial({ color: 0x16181c, roughness: .9 }), trailerMat = new THREE.MeshStandardMaterial({ color: 0xe8eaee, roughness: .7 }), cabMat = new THREE.MeshStandardMaterial({ color: 0x1D2586, roughness: .5 });
+  const doorMat = new THREE.MeshStandardMaterial({ map: agvTex('door'), metalness: .2, roughness: .5 }), bump = new THREE.MeshStandardMaterial({ color: 0x16181c, roughness: .9 }), trailerMat = new THREE.MeshStandardMaterial({ color: 0xe8eaee, roughness: .7 }), cabMat = new THREE.MeshStandardMaterial({ color: 0x1D2586, roughness: .5 });
   const docks = [...A.docksN.map(d => ({ ...d, z: A.north, dir: -1 })), ...A.docksS.map(d => ({ ...d, z: d.x > A.offX1 ? A.southR : A.southL, dir: 1 }))];
   const tb = new THREE.InstancedMesh(new THREE.BoxGeometry(2.6, 3.9, 13.6), trailerMat, docks.length), tc = new THREE.InstancedMesh(new THREE.BoxGeometry(2.5, 3.2, 3.0), cabMat, docks.length), dm = new THREE.Object3D(); let nT = 0;
   docks.forEach((d, i) => { const zi = d.z - d.dir * .28, open = d.id === 'P6';
     if (!open) { const door = new THREE.Mesh(new THREE.PlaneGeometry(3, 3.4), doorMat); door.position.set(d.x, 1.7, zi); door.rotation.y = d.dir > 0 ? Math.PI : 0; scene.add(door); }
     [-1.45, 1.45].forEach(o => { const b = new THREE.Mesh(new THREE.BoxGeometry(.25, .45, .25), bump); b.position.set(d.x + o, 1.0, zi - d.dir * .12); scene.add(b); });
-    const num = new THREE.Mesh(new THREE.PlaneGeometry(1.4, .6), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: d.id, size: 110, color: '#ffffff' }], { w: 256, h: 110, bg: open ? '#c8102e' : '#011131' }) })); num.position.set(d.x, 3.9, zi - d.dir * .02); num.rotation.y = d.dir > 0 ? Math.PI : 0; scene.add(num);
+    const num = new THREE.Mesh(new THREE.PlaneGeometry(1.4, .6), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: d.id, size: 110, color: open ? '#ffffff' : '#111111' }], { w: 256, h: 110, bg: open ? '#c8102e' : '#f2c200' }) })); num.position.set(d.x, 3.9, zi - d.dir * .02); num.rotation.y = d.dir > 0 ? Math.PI : 0; scene.add(num);
     if (!open && i % 3 !== 1) { dm.position.set(d.x, 2.25, d.z + d.dir * 7.3); dm.rotation.set(0, 0, 0); dm.updateMatrix(); tb.setMatrixAt(nT, dm.matrix); dm.position.set(d.x, 1.9, d.z + d.dir * 15.8); dm.updateMatrix(); tc.setMatrixAt(nT, dm.matrix); nT++; } });
   tb.count = tc.count = nT; scene.add(tb, tc);
   // Racks zona oriente: 13 filas dobles (espalda con espalda) con 2 pasillos transversales
@@ -114,7 +157,7 @@ function buildAgaveWorld() { const A = AGV, H = 12;
   { const g = new THREE.Mesh(new THREE.PlaneGeometry(14, 4), new THREE.MeshBasicMaterial({ color: 0x2e9e5b, transparent: true, opacity: .55, depthWrite: false })); g.rotation.x = -Math.PI / 2; g.position.set(0, .013, 38.5); scene.add(g);
     for (let x = -6.5; x <= 6.5; x += 1.3) paintLine(x, 37, x, 40, 0xffffff, .5); paintLine(-7, 36.4, 7, 36.4, 0xffffff, .3); agvFloorLabel('ALTO', 0, 35.2, 3, 1, '#ffffff'); }
   // Pasillo peatonal perimetral (franja verde) frente a andenes norte y sur
-  [[A.west + 1, A.north + 1.6, A.east - 1, A.north + 1.6], [A.west + 1, A.southL - 1.6, -7.5, A.southL - 1.6], [7.5, A.southL - 1.6, A.offX0 - .5, A.southL - 1.6]].forEach(([x0, z0, x1, z1]) => { paintLine(x0, z0 - .6, x1, z1 - .6, 0x2e9e5b, .15); paintLine(x0, z0 + .6, x1, z1 + .6, 0x2e9e5b, .15); });
+  agvWalkways(A);
   // ===== Seguridad e higiene: extintores, hidrantes, tableros eléctricos, alarmas, botiquines, salidas y puntos de reunión =====
   const wN = A.north + .3, wW = A.west + .3, wE = A.east - .3, y = 2.4;
   for (let x = A.west + 8; x < A.east - 4; x += 15) if (!A.docksN.some(d => Math.abs(d.x - x) < 2.2)) { agvSign('extintor', x, y, wN, 0); makeExtinguisher(x, wN + .05, 0); }
@@ -133,13 +176,14 @@ function buildAgaveWorld() { const A = AGV, H = 12;
   { const x = A.X(540), z = A.offZ1 + 4; const sp = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 5.5), new THREE.MeshBasicMaterial({ color: 0x1d4fd8, transparent: true, opacity: .7 })); sp.rotation.x = -Math.PI / 2; sp.position.set(x, .02, z); scene.add(sp); agvBox(.08, 2.2, .08, 0x777777, x + 2, 1.1, z); agvSign('discapacitados', x + 2, 2.4, z, Math.PI, .8); }
   // Iluminación de la nave
   [[0, -30], [0, 20], [45, -30], [45, 20], [95, -30], [95, 20]].forEach(([x, z]) => { const pl = new THREE.PointLight(0xfff4d6, .8, 95); pl.position.set(x, H - 1, z); scene.add(pl); });
-  const lampG = new THREE.CylinderGeometry(.6, .9, .4, 12), lampM = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff1c0, emissiveIntensity: 1.2 }); const nL = Math.ceil((A.east - A.west) / 20) * Math.ceil((A.offZ1 - A.north) / 18); const lamps = new THREE.InstancedMesh(lampG, lampM, nL); let li = 0;
+  const lampG = new THREE.BoxGeometry(.3, .1, 2.6), lampM = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff1c0, emissiveIntensity: 1.2 }); const nL = Math.ceil((A.east - A.west) / 20) * Math.ceil((A.offZ1 - A.north) / 18); const lamps = new THREE.InstancedMesh(lampG, lampM, nL); let li = 0;
   for (let x = A.west + 10; x < A.east; x += 20) for (let z = A.north + 9; z < A.southL; z += 18) { if (li >= nL) break; dm.position.set(x, H - .4, z); dm.updateMatrix(); lamps.setMatrixAt(li++, dm.matrix); } lamps.count = li; scene.add(lamps);
   // Logo DICKA en el muro norte
   { const m = new THREE.Mesh(new THREE.PlaneGeometry(14, 3), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'DICKA LOGISTICS · AGAVE 1 · PROYECTO NAOS', size: 70, color: '#ffffff' }], { w: 1400, h: 300, bg: '#1D2586' }) })); m.position.set(50, 8.5, A.north + .3); scene.add(m); }
   // Techo de lámina a 12 m (se oculta al ver desde arriba)
   { const roof = new THREE.Mesh(new THREE.PlaneGeometry(A.east - A.west, A.offZ1 - A.north), new THREE.MeshStandardMaterial({ color: 0x9aa3b2, side: THREE.DoubleSide, roughness: .7, metalness: .3 })); roof.rotation.x = Math.PI / 2; roof.position.set((A.west + A.east) / 2, H, (A.north + A.offZ1) / 2); roof.name = 'roof'; window.roofMesh = roof; scene.add(roof);
     const sky = new THREE.MeshStandardMaterial({ color: 0xe9f3ff, emissive: 0xdcecff, emissiveIntensity: .7, side: THREE.DoubleSide }); for (let z = A.north + 12; z < A.southL - 6; z += 22) { const sk = new THREE.Mesh(new THREE.PlaneGeometry(A.east - A.west - 8, 1.6), sky); sk.rotation.x = Math.PI / 2; sk.position.set((A.west + A.east) / 2, H - .02, z); scene.add(sk); } }
+  agvRealismo(A, H, dm);
   window.RECEP_POS = { x: -1.5, z: -43 };
   agvMissions(); }
 
