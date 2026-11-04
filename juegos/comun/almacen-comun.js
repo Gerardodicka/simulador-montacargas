@@ -14,8 +14,9 @@ function renderForkGrid() {
             document.getElementById('forkGrid').innerHTML = Object.entries(FORK_SPECS).map(([k, f]) => `
               <div class="fork-card" onclick="chooseFork('${k}')"><span class="brand">RAYMOND</span>
                 <div class="pic"><img src="assets/equipos/${k}.png" alt="Raymond ${f.code}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ico',textContent:'${f.ico}'}))"></div><h3>${f.name}</h3><div class="model">Modelo ${f.code} · ${f.type}</div>
-                <ul>${f.desc.map(d => '<li>' + d + '</li>').join('')}<li>Capacidad ${f.cap} · Vel. máx ${f.maxSpeed} km/h · Mástil ${f.maxMast} m</li></ul>
-                <span class="tag">${f.tag}</span></div>`).join('');
+                <div class="fork-specs"><div><b>${f.cap.replace(' kg', '')}</b><small>kg carga</small></div><div><b>${f.maxSpeed}</b><small>km/h máx.</small></div><div><b>${f.maxMast}</b><small>m de mástil</small></div></div>
+                <ul>${f.desc.map(d => '<li>' + d + '</li>').join('')}</ul>
+                <div class="fc-foot"><span class="tag">${f.tag}</span><button class="fc-go" type="button">Elegir →</button></div></div>`).join('');
         }
 
 function startQuestions() {
