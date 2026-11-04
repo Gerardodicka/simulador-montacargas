@@ -1109,7 +1109,8 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=13.3"></script>
+    <script src="comun/almacen-comun.js?v=13.4"></script>
+    <script src="escenarios/agave1.js?v=13.4"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1352,7 +1353,20 @@
         
         
         
-        function chooseFork(k) {
+        // Paso 2: después de elegir el montacargas se elige el escenario de práctica
+        const SCENARIOS = { generico: { name: 'Almacén Genérico', icon: '🏭', desc: '4 pasillos de doble profundidad, Dojo DICKA, oficinas, cuarto de carga de baterías y andenes con tráiler.' }, agave1: { name: 'Agave 1 · Proyecto NAOS', icon: '🗺️', desc: 'Layout real: 13 filas dobles con 2 pasillos transversales, zona poniente de preparación, STAGE IN / STAGE OUT, oficinas y andenes P1–P41 con su simbología de seguridad.' } };
+        function chooseFork(k) { const grid = document.getElementById('forkGrid'), h = document.querySelector('#forkScreen h2'), p = document.querySelector('#forkScreen p');
+            if (!grid.dataset.forks) grid.dataset.forks = grid.innerHTML; const clamp = !!(FORK_SPECS[k] && FORK_SPECS[k].clamp);
+            h.textContent = '🏭 Elige el escenario'; p.innerHTML = `Raymond <b style="color:#c8102e">${FORK_SPECS[k].code}</b> · ¿dónde quieres practicar?`;
+            grid.innerHTML = Object.entries(SCENARIOS).map(([id, S]) => { const off = clamp && id !== 'generico'; return `<button class="fork-card" ${off ? 'disabled style="opacity:.45"' : ''} onclick="pickScenario('${k}','${id}')"><div style="font-size:42px">${S.icon}</div><b>${S.name}</b><small>${off ? 'Disponible para reach, contrabalanceo, orderpicker y patín (las bahías de línea blanca del clamp están en el Almacén Genérico).' : S.desc}</small></button>`; }).join('') + `<button class="fork-card" onclick="backToForks()" style="background:#20242c;color:#fff"><div style="font-size:30px">←</div><b>Cambiar montacargas</b></button>`; }
+        function backToForks() { const grid = document.getElementById('forkGrid'); if (grid.dataset.forks) grid.innerHTML = grid.dataset.forks; document.querySelector('#forkScreen h2').textContent = '🚛 Elige tu montacargas'; }
+        function pickScenario(k, id) { backToForks();
+            if (renderer && SCENARIO !== id) { try { sessionStorage.setItem('dicka_resume', JSON.stringify({ k, id, user: currentUser })); } catch (e) { } location.reload(); return; }
+            SCENARIO = id; startFork(k); }
+        // Al cambiar de escenario se recarga la página y se retoma automáticamente con el mismo operador y montacargas
+        window.addEventListener('load', () => { let R = null; try { R = JSON.parse(sessionStorage.getItem('dicka_resume') || 'null'); sessionStorage.removeItem('dicka_resume'); } catch (e) { } if (!R || !R.user) return;
+            setTimeout(() => { currentUser = R.user; ['regScreen', 'menuScreen', 'forkScreen'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.add('hidden'); }); const ub = document.getElementById('userBadge'); if (ub) ub.textContent = `👤 ${currentUser.name} · #${currentUser.num} · ${currentUser.puesto} · ${currentUser.wh}`; SCENARIO = R.id; startFork(R.k); }, 300); });
+        function startFork(k) {
             currentModel = k; document.getElementById('forkScreen').classList.add('hidden'); document.getElementById('simulatorScreen').classList.add('active'); document.body.classList.add('simfull'); setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
             if (!renderer) initSimulator(); else { createForklift(); resetPractice(); }
             const sp = spec(); document.getElementById('maxLbl').textContent = sp.maxSpeed;
@@ -1402,6 +1416,7 @@
         const BRAND = { azul: 0x1D2586, brillante: 0x2138D3, marino: 0x011131, gris: 0x838383, blanco: 0xFFFFFF };
         const WAREHOUSE = { w: 60, d: 90, h: 12 };   // ancho X, fondo Z, alto
         const AISLES = [];                              // pasillos {x, half}
+        let SCENARIO = 'generico'; const AISLE_Z = { z0: -39, z1: 2, custom: false };   // escenario elegido y rango Z de la zona de racks
         const obstacles = [];                           // cajas de colisión {minX,maxX,minZ,maxZ}
         let dropZone;
 
@@ -1437,6 +1452,7 @@
             const fill = new THREE.DirectionalLight(0x8fb4ff, 0.20); fill.position.set(-30, 25, -20); scene.add(fill);
             const rim = new THREE.DirectionalLight(0xffd9a0, 0.16); rim.position.set(10, 18, -45); scene.add(rim);   // contraluz: separa la figura del fondo
             buildEnvironment();
+            if (SCENARIO === 'agave1') { buildAgaveWorld(); buildTrailer(); } else {
             // Lámparas colgantes (high-bay)
             for (let z = -35; z <= 35; z += 17.5) for (let x = -20; x <= 20; x += 20) {
                 if ((z + 35) % 35 !== 0 || x === 0) { /* lámpara decorativa sin luz */ } else { const pl = new THREE.PointLight(0xfff4d6, 0.7, 80); pl.position.set(x, WAREHOUSE.h - 1, z); scene.add(pl); }
@@ -1450,10 +1466,11 @@
             buildSafetySigns();
             buildRacks();
             buildDock();
+            }
             createForklift();
             createCargo();
             makeBeacon();
-            buildTraffic();
+            if (SCENARIO === 'agave1') buildTrafficAgave(); else buildTraffic();
             beginAct(0);
 
             forkPosition = { x: 0, y: 0, z: 30 }; forkRotation = { y: Math.PI };
@@ -2243,7 +2260,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v13.3 recorrido, peso variable, niveles y luz azul';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v13.4 escenarios: Genérico y Agave 1';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -2491,7 +2508,7 @@
         
         /* Brazo de cámara: si entre el punto observado y la cámara hay un rack o la carga, la cámara se acerca para no quedar tapada */
         const RACK_XS = [-18.15, -12.35, -6.9, -1.1, 4.35, 10.15, 15.35, 21.15];
-        function camOccluded(x, y, z, noCargo) { if (y < 11.5 && z > -38.4 && z < 1.6 && RACK_XS.some(rx => Math.abs(x - rx) < 1.3)) return true;
+        function camOccluded(x, y, z, noCargo) { if (y < 11.5 && z > AISLE_Z.z0 + .6 && z < AISLE_Z.z1 - .4 && RACK_XS.some(rx => Math.abs(x - rx) < 1.3)) return true;
             if (!noCargo && cargo && cargo.visible) { const c = cargo.position; if (Math.abs(x - c.x) < 0.75 && Math.abs(z - c.z) < 0.75 && y > c.y - 0.05 && y < c.y + 1.25) return true; } return false; }
         function camUnblock(look, target, noCargo) { const N = 28; let free = false, lastFree = null;
             for (let i = 1; i <= N; i++) { const t = i / N, x = look.x + (target.x - look.x) * t, y = look.y + (target.y - look.y) * t, z = look.z + (target.z - look.z) * t, occ = camOccluded(x, y, z, noCargo);
@@ -3416,7 +3433,7 @@
         function showReplay(a) { if (!a || a.type === 'checklist' || TRACK.pts.length < 3) return; const W = 420, H = 300, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
             const xs = TRACK.pts.map(p => p[0]).concat(TRACK.marks.map(m => m.x)), zs = TRACK.pts.map(p => p[1]).concat(TRACK.marks.map(m => m.z)); let x0 = Math.min(...xs) - 6, x1 = Math.max(...xs) + 6, z0 = Math.min(...zs) - 6, z1 = Math.max(...zs) + 6;
             const sc = Math.min((W - 20) / (x1 - x0), (H - 20) / (z1 - z0)), ox = (W - (x1 - x0) * sc) / 2, oz = (H - (z1 - z0) * sc) / 2, P = (x, z) => [ox + (x - x0) * sc, oz + (z - z0) * sc];
-            g.fillStyle = '#e9ecf2'; g.fillRect(0, 0, W, H); g.fillStyle = '#9aa6c4'; RACK_XS.forEach(rx => { const [a1, b1] = P(rx - 1.2, -38), [a2, b2] = P(rx + 1.2, 1.2); g.fillRect(a1, b1, a2 - a1, b2 - b1); });
+            g.fillStyle = '#e9ecf2'; g.fillRect(0, 0, W, H); g.fillStyle = '#9aa6c4'; RACK_XS.forEach(rx => { const [a1, b1] = P(rx - 1.2, AISLE_Z.z0 + 1), [a2, b2] = P(rx + 1.2, AISLE_Z.z1 - .8); g.fillRect(a1, b1, a2 - a1, b2 - b1); });
             g.strokeStyle = '#2148a8'; g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath(); TRACK.pts.forEach((p, i) => { const [u, v] = P(p[0], p[1]); i ? g.lineTo(u, v) : g.moveTo(u, v); }); g.stroke();
             const [sx, sz] = P(TRACK.pts[0][0], TRACK.pts[0][1]), [ex, ez] = P(TRACK.pts[TRACK.pts.length - 1][0], TRACK.pts[TRACK.pts.length - 1][1]); g.fillStyle = '#2e9e5b'; g.beginPath(); g.arc(sx, sz, 7, 0, 7); g.fill(); g.fillStyle = '#111'; g.beginPath(); g.arc(ex, ez, 7, 0, 7); g.fill();
             TRACK.marks.forEach((m, i) => { const [u, v] = P(m.x, m.z); g.fillStyle = '#c8102e'; g.beginPath(); g.arc(u, v, 10, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '900 12px Arial'; g.textAlign = 'center'; g.fillText(i + 1, u, v + 4); });
