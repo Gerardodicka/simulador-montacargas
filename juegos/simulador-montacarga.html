@@ -667,6 +667,49 @@
         .fork-card .fc-go { border: 0; border-radius: 9px; padding: 8px 14px; font: 800 13px Poppins, Arial; color: #fff; background: #c8102e; cursor: pointer; white-space: nowrap; }
         .fork-card .tag { margin-top: 0; }
         @media (max-width: 700px) { .menu-screen { padding: 1.2rem; } .menu-grid { grid-template-columns: 1fr; } .scr-head h2, .menu-title { font-size: 22px; } }
+        /* ===== Ficha de misión y validación de controles (rediseño) ===== */
+        .brief { background: rgba(1,17,49,.82); backdrop-filter: blur(3px); }
+        .brief-card { width: min(720px, 100%); border-radius: 18px; overflow: hidden auto; }
+        .brief-head { border-radius: 0; padding: 18px 22px 16px; background: linear-gradient(135deg, #1D2586, #2138D3); display: grid; gap: 8px; letter-spacing: 0; }
+        .bh-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .bh-eyebrow { font: 700 11.5px Poppins, Arial; letter-spacing: .14em; color: #f5c400; }
+        .bh-dots { display: flex; gap: 5px; } .bh-dots i { width: 22px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.25); } .bh-dots i.done { background: #7dffb0; } .bh-dots i.now { background: #f5c400; }
+        .bh-title { display: flex; align-items: center; gap: 12px; font: 800 24px Poppins, Arial; line-height: 1.15; }
+        .bh-title span { width: 46px; height: 46px; flex: none; border-radius: 12px; background: rgba(255,255,255,.14); display: grid; place-items: center; font-size: 24px; }
+        .brief-head small { font-size: 12.5px; opacity: .8; font-weight: 500; }
+        .brief-body { padding: 18px 22px 22px; display: grid; gap: 14px; font-size: 14px; }
+        .brief-body .goal { margin: 0; display: flex; gap: 12px; align-items: flex-start; background: #fff7d6; border: 0; border-left: 5px solid #f5c400; border-radius: 10px; padding: 12px 14px; font-weight: 700; font-size: 14.5px; line-height: 1.45; }
+        .brief-body .goal .gi { font-size: 20px; line-height: 1; }
+        .brief-body .goal .loc { display: inline-block; margin-top: 6px; background: #011131; color: #f5c400; border-radius: 6px; padding: 2px 8px; font: 700 12.5px ui-monospace, Menlo, monospace; }
+        .bsec h4 { margin: 0 0 8px; font: 700 11.5px Poppins, Arial; letter-spacing: .12em; color: #2138D3; }
+        .bsteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: bs; }
+        .bsteps li { counter-increment: bs; display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; margin: 0; line-height: 1.45; }
+        .bsteps li::before { content: counter(bs); width: 28px; height: 28px; border-radius: 50%; background: #eef0fb; color: #1D2586; font: 800 13px Poppins, Arial; display: grid; place-items: center; }
+        .bcols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .bcard { border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.45; }
+        .bcard.warn { background: #fdecec; border: 1px solid #f5c2c2; } .bcard.warn h4 { color: #c62828; }
+        .bcard.ctl { background: #f2f4fb; border: 1px solid #e0e4f2; }
+        .bchips { display: flex; flex-wrap: wrap; gap: 6px; } .bchips span { background: #fff; border: 1px solid #dfe3f2; border-radius: 8px; padding: 3px 8px; font-size: 12px; }
+        .brief-body kbd { border-radius: 5px; padding: 1px 6px; }
+        .bprog { display: flex; flex-wrap: wrap; gap: 6px; } .bprog span { font-size: 12px; border-radius: 99px; padding: 4px 10px; background: #f2f4fb; color: #6b7390; } .bprog span.done { background: #e6f4ec; color: #1f8a4c; } .bprog span.cur { background: #1D2586; color: #fff; font-weight: 700; }
+        .brief-go { margin-top: 0; padding: 15px; font: 800 17px Poppins, Arial; border-radius: 12px; box-shadow: 0 8px 20px rgba(46,158,91,.35); } .brief-go:hover { filter: brightness(1.06); }
+        @media (max-width: 600px) { .bcols { grid-template-columns: 1fr; } .bh-title { font-size: 20px; } .brief-body, .brief-head { padding-left: 16px; padding-right: 16px; } }
+        .cc-wrap { width: min(640px, 94%); border-radius: 18px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.55); }
+        .cc-head { border-radius: 0; padding: 16px 20px; background: linear-gradient(135deg, #1D2586, #2138D3); letter-spacing: 0; font: 800 19px Poppins, Arial; display: grid; gap: 3px; }
+        .cc-head small { font: 500 12.5px Poppins, Arial; opacity: .85; }
+        .cc-body { border-radius: 0; padding: 18px 20px 20px; display: grid; gap: 12px; }
+        .cc-row { grid-template-columns: 48px 1fr auto; margin: 0; border: 1px solid #e0e4f2; border-left: 5px solid #c62828; background: #fff; padding: 12px 14px; border-radius: 12px; }
+        .cc-ico { width: 44px; height: 44px; border-radius: 10px; background: #f2f4fb; display: grid; place-items: center; font-size: 22px; }
+        .cc-row b { font-size: 14px; } .cc-row small { font-size: 12px; }
+        .cc-st { font-size: 11px; padding: 4px 10px; border-radius: 99px; background: #fde8eb; } .cc-row.ok .cc-st { background: #e6f4ec; }
+        .cc-label { font: 700 11px Poppins, Arial; letter-spacing: .12em; color: #2138D3; margin-bottom: -4px; }
+        .cc-tests { margin: 0; gap: 8px; } .cc-tests div { background: #f2f4fb; border: 1px solid #e0e4f2; border-radius: 8px; padding: 7px 9px; font-size: 12.5px; } .cc-tests div.done { background: #e6f4ec; border-color: #bfe5cd; color: #1f8a4c; font-weight: 700; }
+        .cc-note { border-radius: 10px; font-size: 12.5px; line-height: 1.45; }
+        .cc-actions { margin: 0; display: grid; grid-template-columns: 1fr; gap: 8px; }
+        .cc-actions .btn-next { margin: 0; padding: 13px; border-radius: 12px; font: 800 15px Poppins, Arial; }
+        .cc-actions .cc-sec { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .cc-actions .cc-sec .btn-next { background: #fff !important; color: #1D2586; border: 2px solid #1D2586; font-size: 13.5px; padding: 10px; } .cc-actions .cc-sec #ccQuest { color: #5b2bd9; border-color: #5b2bd9; }
+        @media (max-width: 560px) { .cc-tests { grid-template-columns: 1fr 1fr; } .cc-row { grid-template-columns: 40px 1fr; } .cc-st { grid-column: 2; justify-self: start; } }
         .fork-grid.esc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; max-width: 900px; margin: 0 auto; }
         .esc-card { display: grid; grid-template-columns: 120px 1fr; gap: 18px; text-align: left; border: 2px solid #e3e6f0; border-radius: 16px; padding: 18px; background: #fff; transition: .2s; }
         .esc-card:hover { border-color: #2138D3; box-shadow: 0 12px 28px rgba(29,37,134,.18); transform: translateY(-3px); }
@@ -990,13 +1033,13 @@
                 <button id="mvrExitBtn" onclick="mvrExit()" style="display:none;position:fixed;top:10px;right:10px;z-index:70;background:rgba(1,17,49,.8);color:#fff;border:2px solid #2138D3;border-radius:50%;width:40px;height:40px;font-size:18px;font-weight:900">✕</button>
                 <div id="vrViewerStart" style="display:none;position:absolute;inset:0;z-index:40;background:rgba(1,17,49,.92);align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;font-family:Poppins,sans-serif;text-align:center;padding:1rem"><div style="font-size:18px;font-weight:800">📱 Cabina conectada a la laptop</div><div style="font-size:13px;color:#c5cdf5">Toca el botón, coloca el celular en el visor y mira la cabina. Conduce desde la laptop.</div><button class="btn-next" style="background:#7a2bd9;font-size:18px;padding:1rem 2rem" onclick="document.getElementById('vrViewerStart').style.display='none'; mvrEnter(false);">🥽 CON VISOR · dos ojos</button><button class="btn-next" style="background:#2138D3;font-size:16px;padding:.8rem 1.6rem" onclick="document.getElementById('vrViewerStart').style.display='none'; mvrEnter(true);">🪟 SIN VISOR · una vista, mueve el celular para mirar</button><div style="font-size:11px;color:#9fb0ff">En cualquier modo, un botón ✕ arriba a la derecha regresa a la pantalla normal</div></div>
                 <div class="ctrl-check" id="ctrlCheck"><div class="cc-wrap">
-                    <div class="cc-head">🔌 VALIDACIÓN DE CONTROLES · antes de operar</div>
+                    <div class="cc-head">Validación de controles<small>Antes de operar, confirma que el joystick y el volante responden.</small></div>
                     <div class="cc-body">
                         <div class="cc-row" id="ccStick"><span class="cc-ico">🎮</span><div><b>Joystick Logitech Extreme 3D Pro</b><small id="ccStickTxt">Buscando… mueve la palanca o presiona el gatillo</small></div><span class="cc-st" id="ccStickSt">…</span></div>
                         <div class="cc-row" id="ccWheel"><span class="cc-ico">🛞</span><div><b>Volante Logitech G920 (solo dirección)</b><small id="ccWheelTxt">Buscando… gira el volante o presiona un botón</small></div><span class="cc-st" id="ccWheelSt">…</span></div>
-                        <div class="cc-tests"><div id="cc1">⬜ Palanca adelante</div><div id="cc2">⬜ Palanca a un lado</div><div id="cc3">⬜ Gatillo (claxon)</div><div id="cc4">⬜ Volante derecha</div><div id="cc5">⬜ Volante izquierda</div><div id="cc6">⬜ Botón Y (cámara)</div></div>
+                        <div class="cc-label">PRUEBA CADA MOVIMIENTO</div><div class="cc-tests"><div id="cc1">⬜ Palanca adelante</div><div id="cc2">⬜ Palanca a un lado</div><div id="cc3">⬜ Gatillo (claxon)</div><div id="cc4">⬜ Volante derecha</div><div id="cc5">⬜ Volante izquierda</div><div id="cc6">⬜ Botón Y (cámara)</div></div>
                         <div class="cc-note" id="ccNote">Si no aparecen, presiona un botón de cada aparato: el navegador no los muestra hasta la primera pulsación. Sin ellos puedes practicar con joystick táctil o teclado.</div>
-                        <div class="cc-actions"><button class="btn-next" id="ccQuest" onclick="questChoose()" style="background:#5b2bd9">🥽 Uso gafas META QUEST</button><button class="btn-next" id="ccGo" onclick="ctrlCheckDone()" style="background:#838383">▶ Continuar con táctil / teclado</button><button class="btn-next" onclick="toggleGpHelp(true); renderDeviceList(); refreshSwitches();" style="background:#2138D3">⚙️ Configurar dispositivos</button></div>
+                        <div class="cc-actions"><button class="btn-next" id="ccGo" onclick="ctrlCheckDone()" style="background:#838383">▶ Continuar con táctil / teclado</button><div class="cc-sec"><button class="btn-next" onclick="toggleGpHelp(true); renderDeviceList(); refreshSwitches();" style="background:#2138D3">⚙️ Configurar dispositivos</button><button class="btn-next" id="ccQuest" onclick="questChoose()">🥽 Usar gafas Meta Quest</button></div></div>
                     </div>
                 </div></div>
                 <div class="gp-help" id="gpHelp">
@@ -1165,8 +1208,8 @@
         </div>
 
     <script src="comun/three-libs.js?v=12.2"></script>
-    <script src="comun/almacen-comun.js?v=13.5"></script>
-    <script src="escenarios/agave1.js?v=13.4"></script>
+    <script src="comun/almacen-comun.js?v=13.6"></script>
+    <script src="escenarios/agave1.js?v=13.7"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1955,7 +1998,7 @@
             const dicka = (w, x, y, z, ry) => { const t = new THREE.TextureLoader().load(LOGO_DATA_W); t.anisotropy = 4; const l = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 70 / 242), new THREE.MeshBasicMaterial({ map: t, transparent: true })); l.position.set(x, y, z); l.rotation.y = ry; forklift.add(l); };
             const mastRails = (h, z, gap) => { [-gap, gap].forEach(dx => { add(new THREE.BoxGeometry(0.09, h, 0.16), steel, dx, h / 2, z, 'mastRail'); add(new THREE.BoxGeometry(0.06, h - 0.2, 0.06), dark, dx * 0.6, h / 2, z - 0.1, 'mastRail'); }); add(new THREE.BoxGeometry(gap * 2 + 0.09, 0.08, 0.16), steel, 0, h - 0.04, z); add(new THREE.BoxGeometry(gap * 2 + 0.09, 0.08, 0.16), steel, 0, 0.3, z); };
             const forks = (z, len) => { [-0.3, 0.3].forEach(dx => { add(new THREE.BoxGeometry(0.1, 0.045, len), black, dx, 0.12, z + len / 2 - 0.2, 'fork'); add(new THREE.BoxGeometry(0.1, 0.5, 0.05), black, dx, 0.35, z - 0.2, 'fork'); }); };
-            const beacon = (x, y, z) => { add(new THREE.CylinderGeometry(0.07, 0.09, 0.14, 12), new THREE.MeshStandardMaterial({ color: 0x3d8bff, emissive: 0x1a5cff, emissiveIntensity: 1.3 }), x, y, z); };
+            const beacon = (x, y, z) => { const m = add(new THREE.CylinderGeometry(0.07, 0.09, 0.14, 12), new THREE.MeshStandardMaterial({ color: 0x1f6bff, emissive: 0x2a6bff, emissiveIntensity: 0.15, transparent: true, opacity: .92 }), x, y, z); add(new THREE.CylinderGeometry(0.095, 0.095, 0.03, 12), new THREE.MeshStandardMaterial({ color: 0x151515 }), x, y - 0.085, z); window.PLAYER_BEACON = m; };   // torreta: gira/destella con la llave puesta
             const blue = new THREE.SpotLight(0x3366ff, 1.2, 8, 0.4, 0.6); blue.position.set(0, 2.2, -sp.len / 2); blue.target.position.set(0, 0, -5); forklift.add(blue); forklift.add(blue.target);
 
             if (sp.type === 'Reach' || sp.type === 'Double Reach') {
@@ -2325,7 +2368,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v13.5 pantallas de inicio renovadas';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v13.7 Agave según fotos reales';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -2355,10 +2398,10 @@
         function questChoose() { QUEST.mode = true; if (CC.open) { document.getElementById('ctrlCheck').classList.remove('open'); CC.open = false; }
             const a = ACTS[actIdx]; if (a && a.type === 'checklist' && !XR.active) { if (typeof showChecklist === 'function') showChecklist(); toast('🥽 Modo Meta Quest: responde la inspección con el rayo del control (gatillo = tocar). Al terminar entrarás a VR.'); return; }
             xrEnter(); }
-        function questHelp() { const d = document.createElement('div'); d.className = 'brief open'; d.innerHTML = `<div class="brief-card"><div class="brief-head">🥽 Conectar gafas META QUEST<small>Este navegador todavía no ve las gafas en modo VR</small></div><div class="brief-body">
-            <h4>Opción A · Directo en las gafas (recomendado)</h4><ol><li>Ponte el Quest y abre el <b>navegador del Quest</b> (Meta Browser).</li><li>Entra a <b>https://simuladordickalogistics.netlify.app</b> (código DICKA2026).</li><li>Presiona <b>🥽 META QUEST</b> y acepta el permiso de VR.</li></ol>
-            <h4>Opción B · Desde esta PC con cable o Air Link</h4><ol><li>Instala y abre la app <b>Meta Quest Link</b> en la PC.</li><li>En la app: Configuración → General → activa <b>Fuentes desconocidas</b> y presiona <b>Meta Quest Link como runtime de OpenXR activo</b>.</li><li>Conecta el Quest con cable USB-C (o Air Link) y acepta <b>Quest Link</b> dentro de las gafas.</li><li>Abre esta página en <b>Chrome o Edge</b> de la PC, recarga (Ctrl+F5) y presiona <b>🥽 META QUEST</b>.</li></ol>
-            <div class="fail">${location.protocol !== 'https:' ? '⛔ La página debe abrirse con https.' : 'Si sigue sin entrar: cierra otras apps de VR (SteamVR) y vuelve a recargar.'}</div><button class="brief-go" onclick="this.closest('.brief').remove()">Entendido</button></div></div>`; document.getElementById('simulatorScreen').appendChild(d); }
+        function questHelp() { const d = document.createElement('div'); d.className = 'brief open'; const stp = a => '<ol class="bsteps">' + a.map(t => '<li><div>' + t + '</div></li>').join('') + '</ol>'; d.innerHTML = `<div class="brief-card" style="width:min(640px,100%)"><div class="brief-head"><div class="bh-top"><span class="bh-eyebrow">REALIDAD VIRTUAL</span></div><div class="bh-title"><span>🥽</span>Conectar gafas Meta Quest</div><small>Este navegador todavía no detecta las gafas en modo VR. Elige una opción:</small></div><div class="brief-body">
+            <div class="bcard ctl bsec" style="border-left:5px solid #2e9e5b"><h4>OPCIÓN A · DIRECTO EN LAS GAFAS <span style="background:#2e9e5b;color:#fff;border-radius:99px;padding:2px 8px;font-size:10px;letter-spacing:.05em">RECOMENDADO</span></h4>${stp(['Ponte el Quest y abre el <b>navegador del Quest</b> (Meta Browser).', 'Entra a <span class="loc" style="background:#011131;color:#f5c400;border-radius:6px;padding:1px 6px;font:700 12px ui-monospace,monospace">simuladordickalogistics.netlify.app</span> (código <b>DICKA2026</b>).', 'Presiona <b>🥽 META QUEST</b> y acepta el permiso de VR.'])}</div>
+            <div class="bcard ctl bsec"><h4>OPCIÓN B · DESDE ESTA PC (CABLE O AIR LINK)</h4>${stp(['Instala y abre la app <b>Meta Quest Link</b> en la PC.', 'En la app: Configuración → General → activa <b>Fuentes desconocidas</b> y <b>Meta Quest Link como runtime de OpenXR activo</b>.', 'Conecta el Quest con cable USB-C (o Air Link) y acepta <b>Quest Link</b> dentro de las gafas.', 'Abre esta página en <b>Chrome o Edge</b>, recarga (<kbd>Ctrl</kbd>+<kbd>F5</kbd>) y presiona <b>🥽 META QUEST</b>.'])}</div>
+            <div class="bcard warn">${location.protocol !== 'https:' ? '⛔ La página debe abrirse con <b>https</b>.' : '💡 <b>¿Sigue sin entrar?</b> Cierra otras apps de VR (SteamVR) y vuelve a recargar.'}</div><button class="brief-go" onclick="this.closest('.brief').remove()">✓ Entendido</button></div></div>`; document.getElementById('simulatorScreen').appendChild(d); }
         async function xrInit() { { const qt = document.getElementById('questTop'); if (qt && IS_QUEST) qt.style.display = 'block'; } if (IS_QUEST) { const m = document.getElementById('btnMVR'); if (m) m.remove(); }   // en el Quest no se ofrece el VR de celular
             const q = document.getElementById('ccQuest'); if (q && (IS_QUEST || navigator.xr)) q.style.display = '';
             if (!navigator.xr) return; try { XR.supported = await navigator.xr.isSessionSupported('immersive-vr'); } catch (e) { XR.supported = false; }
@@ -2613,7 +2656,7 @@
             if (XR.active && renderer.xr.isPresenting) { xrUpdateRig(); return; }
             if (MVR.on) { xrUpdateRig(); return; }
             { const opG = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); if (opG && !(XR.active)) opG.visible = mode !== 'first'; }
-            camera.position.lerp(target, lerp); camLookSmooth.lerp(look, Math.min(1, lerp * 1.5));
+            if (!window._camT || window._camT.distanceTo(target) > 25) window._camT = target.clone(); else window._camT.lerp(target, mode === 'first' ? 1 : 0.18); camera.position.lerp(window._camT, lerp); camLookSmooth.lerp(look, Math.min(1, lerp * 1.5));   // doble suavizado: sin vaivén al librar racks
             updateAvatarLOD();
             if (shake > 0.001) { camera.position.x += (Math.random() - .5) * shake; camera.position.y += (Math.random() - .5) * shake * .6; camera.position.z += (Math.random() - .5) * shake; shake *= 0.86; }
             camera.lookAt(camLookSmooth);
@@ -3286,11 +3329,13 @@
         };
         function showBrief(i, onGo) { const a = ACTS[i], b = BRIEF[a.id]; if (!b) { onGo && onGo(); return; }
             const lvl = a.drop && a.drop.level !== undefined ? '≈ ' + (a.drop.level + 0.15).toFixed(1) + ' m' : 'unos cm arriba de la viga'; const fill = t => t.replace(/__(\w+)__/g, (m, k) => k === 'lvl' ? lvl : (CTL[k] || m));
-            document.getElementById('briefHead').innerHTML = `MISIÓN ${i + 1} DE ${ACTS.length} · ${a.icon} ${a.name}<small>Lee los pasos y presiona COMENZAR. Puedes volver a verlos tocando la tarjeta de misión (arriba).</small>`;
-            document.getElementById('briefBody').innerHTML = `<div class="goal">🎯 ${b.goal}${a.locCode ? '<br>📍 Ubicación: ' + a.locCode : ''}</div><h4>Paso a paso</h4><ol>${b.steps.map(t => '<li>' + fill(t) + '</li>').join('')}</ol>
-                <h4>Cuidado</h4><div class="fail">⛔ ${b.fail}</div><h4>Controles útiles</h4><div class="all">${CTL.cam} · velocidad máxima ${SIM_CFG.limitFwd} km/h · respeta pasillos peatonales amarillos.</div>
-                <h4>Tu práctica completa</h4><div class="all">${ACTS.map((x, j) => `<span class="${j === i ? 'cur' : ''}">${j + 1}. ${x.name}${j < i ? ' ✓' : ''}</span>`).join(' · ')}</div>
-                ${(IS_QUEST || XR.supported) && !XR.active ? '<button class="brief-go" id="briefQuest" style="background:#5b2bd9">🥽 USO GAFAS META QUEST</button>' : ''}<button class="brief-go" id="briefGo">▶ COMENZAR MISIÓN ${i + 1}</button>`;
+            document.getElementById('briefHead').innerHTML = `<div class="bh-top"><span class="bh-eyebrow">MISIÓN ${i + 1} DE ${ACTS.length}</span><span class="bh-dots">${ACTS.map((x, j) => `<i class="${j < i ? 'done' : j === i ? 'now' : ''}"></i>`).join('')}</span></div><div class="bh-title"><span>${a.icon}</span>${a.name}</div><small>Lee los pasos y presiona COMENZAR. Puedes volver a verlos tocando la tarjeta de misión (arriba).</small>`;
+            const startTip = a.type !== 'checklist' && typeof safeAuto === 'function' && !safeAuto() ? '<span><kbd>K</kbd> llave</span><span><kbd>B</kbd> cinturón</span><span><kbd>P</kbd> freno</span>' : '';
+            document.getElementById('briefBody').innerHTML = `<div class="goal"><span class="gi">🎯</span><div>${b.goal}${a.locCode ? `<br><span class="loc">📍 ${a.locCode}</span>` : ''}</div></div>
+                <div class="bsec"><h4>PASO A PASO</h4><ol class="bsteps">${b.steps.map(t => '<li><div>' + fill(t) + '</div></li>').join('')}</ol></div>
+                <div class="bcols"><div class="bcard warn bsec"><h4>⛔ CUIDADO</h4>${b.fail}</div><div class="bcard ctl bsec"><h4>CONTROLES ÚTILES</h4><div class="bchips"><span>${CTL.cam}</span><span>máx. <b>${SIM_CFG.limitFwd} km/h</b></span>${startTip}<span>respeta pasillos peatonales</span></div></div></div>
+                <div class="bsec"><h4>TU PRÁCTICA</h4><div class="bprog">${ACTS.map((x, j) => `<span class="${j === i ? 'cur' : j < i ? 'done' : ''}">${j < i ? '✓ ' : (j + 1) + '. '}${x.name}</span>`).join('')}</div></div>
+                ${(IS_QUEST || XR.supported) && !XR.active ? '<button class="brief-go" id="briefQuest" style="background:#5b2bd9;box-shadow:none">🥽 USO GAFAS META QUEST</button>' : ''}<button class="brief-go" id="briefGo">▶ COMENZAR MISIÓN ${i + 1}</button>`;
             const el = document.getElementById('brief'); el.classList.add('open'); const go = document.getElementById('briefGo'); const bq = document.getElementById('briefQuest'); if (bq) bq.onclick = () => { el.classList.remove('open'); QUEST.mode = true; if (a.type === 'checklist') { if (!CC.shownOnce) CC.shownOnce = true; questChoose(); } else { xrEnter(); onGo && onGo(); } }; if (QUEST.mode && !XR.active && a.type !== 'checklist') go.textContent = '🥽 ENTRAR A VR Y COMENZAR MISIÓN ' + (i + 1); go.onclick = () => { el.classList.remove('open'); if (QUEST.mode && !XR.active && a.type !== 'checklist') xrEnter(); onGo && onGo(); }; }
         const results = [];   // {name, score, ok, faults, secs}
         // Catálogo de errores críticos (editable): cualquiera de ellos impide aprobar la actividad y la práctica
@@ -3424,6 +3469,7 @@
                 if (!P.panel && ready) openChargePanel(a); if (P.panel && !inZone && P.step < 3) closeChargePanel();
                 txt = !inZone ? (forkPosition.z > -WAREHOUSE.d / 2 ? 'Ve al CUARTO DE CARGA (fondo derecho) y entra por el portón' : 'Estaciona en el cajón libre junto a la regadera') : !ready ? (mh >= 5 ? '⬇ Baja las horquillas' : 'Detente por completo') : P.charging ? `Cargando batería… ${Math.round(P.pct)} %` : 'Sigue el protocolo en el panel: paso ' + (P.step + 1) + ' de 8';
                 if (P.charging) { P.pct = Math.min(100, P.pct + 0.6); CHARGE.pct[2] = P.pct; chargeScreen(2); if (P.pct >= 100) { P.charging = false; toast('🔋 Batería al 100 %: apaga el cargador, desconecta y retira el EPP'); renderChargePanel(); } } }
+            if (window.PLAYER_BEACON) { const on = typeof SAFE === 'object' ? !!SAFE.keyOn : true, ph = (Date.now() % 700) / 700; PLAYER_BEACON.material.emissiveIntensity = on ? (ph < .5 ? 3.2 : .35) : .1; }
             if (beacon && target) { beacon.position.x = target.x; beacon.position.z = target.z; beacon.visible = true; beacon.material.opacity = 0.15 + 0.1 * Math.sin(Date.now() / 250); }
             missionNudge(a, txt, target ? dist : null);
             document.getElementById('missionStep').textContent = `ACTIVIDAD ${actIdx + 1} / ${ACTS.length} · ${a.icon} ${a.name}`;
@@ -3676,8 +3722,8 @@
 
             forklift.position.copy(forkPosition);
             // Dinámica de chasis: cabeceo al acelerar/frenar y balanceo en curvas; suspensión de masas
-            const accel = (velKmh - (prevVel || 0)) / Math.max(dtS, 1e-3); prevVel = velKmh;
-            pitchTarget = THREE.MathUtils.clamp(-accel * 0.0035, -0.045, 0.045); pitch += (pitchTarget - pitch) * 0.12;
+            const accRaw = (velKmh - (prevVel || 0)) / Math.max(dtS, 1e-3); prevVel = velKmh; window._accF = (window._accF || 0) + (THREE.MathUtils.clamp(accRaw, -25, 25) - (window._accF || 0)) * Math.min(1, dtS * 4); const accel = Math.abs(window._accF) < 1.5 ? 0 : window._accF;   // aceleración filtrada: sin cabeceo por ruido
+            pitchTarget = THREE.MathUtils.clamp(-accel * 0.0025, -0.03, 0.03); pitch += (pitchTarget - pitch) * Math.min(1, dtS * 3);
             rollTarget = THREE.MathUtils.clamp(-turn * simSpeed * 0.0055 * Math.sign(velKmh || 1), -0.06, 0.06); roll += (rollTarget - roll) * 0.1;
             forklift.rotation.set(pitch, forkRotation.y, roll, 'YXZ');
             // Ruedas: giran con la velocidad, la motriz/direccional se orienta con el volante
