@@ -110,12 +110,14 @@ function buildAgaveWorld() { const A = AGV, H = 12;
   wall(A.west, A.southL, -2, A.southL); wall(2, A.southL, A.offX0, A.southL); { const l = new THREE.Mesh(new THREE.BoxGeometry(4, H - 3.4, .5), wallMat); l.position.set(0, 3.4 + (H - 3.4) / 2, A.southL); scene.add(l); }
   wall(A.offX0, A.southL, A.offX0, A.offZ1); wall(A.offX0, A.offZ1, A.offX1, A.offZ1); wall(A.offX1, A.offZ1, A.offX1, A.southR); wall(A.offX1, A.southR, A.east, A.southR);
   // Oficinas, mesa de control y sanitarios (bloque sur-centro)
-  { const ox0 = A.offX0 + .3, ox1 = A.offX1 - .3, oz0 = A.offZ0, oz1 = A.offZ1 - .3, oh = 3.6, glass = new THREE.MeshStandardMaterial({ color: 0x9fc3e8, transparent: true, opacity: .45, roughness: .1, metalness: .2 });
+  { const ox0 = A.offX0 + .3, ox1 = A.offX1 - .3, oz0 = A.offZ0, oz1 = A.offZ1 - .3, oh = 7.2, glass = new THREE.MeshStandardMaterial({ color: 0x9fc3e8, transparent: true, opacity: .45, roughness: .1, metalness: .2 });
     const ow = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), m = new THREE.Mesh(new THREE.BoxGeometry(L, oh, .2), wallMat); m.position.set((x0 + x1) / 2, oh / 2, (z0 + z1) / 2); m.rotation.y = -Math.atan2(z1 - z0, x1 - x0); scene.add(m); };
     ow(ox0, oz0, ox1, oz0); obstacles.push({ minX: ox0 - .3, maxX: ox1 + .3, minZ: oz0 - .5, maxZ: oz1 + .3 });
-    for (let x = ox0 + 3; x < ox1 - 2; x += 5) { const w = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.4), glass); w.position.set(x, 1.9, oz0 - .11); w.rotation.y = Math.PI; scene.add(w); }
+    for (let x = ox0 + 3; x < ox1 - 2; x += 5) [1.9, 5.5].forEach(wy => { const w = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.4), glass); w.position.set(x, wy, oz0 - .11); w.rotation.y = Math.PI; scene.add(w); });   // planta baja y planta alta
+    { const slab = new THREE.Mesh(new THREE.BoxGeometry(ox1 - ox0, .25, .3), new THREE.MeshStandardMaterial({ color: 0x1D2586 })); slab.position.set((ox0 + ox1) / 2, 3.6, oz0 - .2); scene.add(slab);
+      const st = new THREE.Group(), sm = new THREE.MeshStandardMaterial({ color: 0x8a929e, metalness: .5, roughness: .4 }); for (let i = 0; i < 18; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(1.1, .06, .3), sm); s.position.set(ox1 - 1.2, .2 + i * .2, oz0 - .5 - (17 - i) * .25 * 0); s.position.x = ox1 - 1.2 - i * .28; s.position.z = oz0 - .7; st.add(s); } const rl = new THREE.Mesh(new THREE.BoxGeometry(5.2, .05, .05), new THREE.MeshStandardMaterial({ color: 0xf2c200 })); rl.position.set(ox1 - 3.6, 2.7, oz0 - 1.2); rl.rotation.z = -Math.atan2(3.6, 5); st.add(rl); scene.add(st); }   // escalera exterior a planta alta
     const tag = (t, x, w, col = '#ffffff', bg = '#1D2586') => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, .7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: t, size: 70, color: col }], { w: 1024, h: Math.round(1024 * .7 / w), bg }) })); m.position.set(x, 3.15, oz0 - .12); m.rotation.y = Math.PI; scene.add(m); };
-    tag('OFICINAS · MESA DE CONTROL', ox0 + 12, 9); tag('ÁREA DE OFICINAS · 5 km/h', ox0 + 27, 8, '#f5c400', '#20242c');
+    tag('OFICINAS · MESA DE CONTROL', ox0 + 12, 9); { const m = new THREE.Mesh(new THREE.PlaneGeometry(9, .7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'OFICINAS · PLANTA ALTA', size: 70, color: '#ffffff' }], { w: 1024, h: 80, bg: '#1D2586' }) })); m.position.set(ox0 + 12, 6.75, oz0 - .12); m.rotation.y = Math.PI; scene.add(m); } tag('ÁREA DE OFICINAS · 5 km/h', ox0 + 27, 8, '#f5c400', '#20242c');
     agvSign('sanMujeres', ox1 - 7, 2.2, oz0 - .13, Math.PI, .8); agvSign('sanHombres', ox1 - 5.8, 2.2, oz0 - .13, Math.PI, .8); agvSign('botiquin', ox0 + 4, 2.2, oz0 - .13, Math.PI); agvSign('extintor', ox0 + 6, 2.2, oz0 - .13, Math.PI); makeExtinguisher(ox0 + 6, oz0 - .35, Math.PI);
     const roof = new THREE.Mesh(new THREE.BoxGeometry(ox1 - ox0, .2, oz1 - oz0), new THREE.MeshStandardMaterial({ color: 0xb8bec8 })); roof.position.set((ox0 + ox1) / 2, oh, (oz0 + oz1) / 2); scene.add(roof); }
   // Andenes: cortinas, numeración P1–P41, topes y tráileres estacionados
@@ -137,12 +139,12 @@ function buildAgaveWorld() { const A = AGV, H = 12;
       agvSegments(z0, z1).forEach(([a, b], si) => { const bays = si === 1 ? midBays : Math.floor((b - a) / 2.8); agvRack(x, si === 1 ? mid[0] : a, bays, A.rackH, f, L, si === 1); });
       RACK_LAYOUT.xs.push(x); RACK_LAYOUT.facing.push(f); RACK_LAYOUT.aisleOf.push(k + 1 + j); }); });
   // Pasillos de la zona oriente (1 = poniente de la fila A/B … 14 = oriente de la última fila)
-  for (let k = 0; k <= 13; k++) { const x = k === 0 ? A.colX[0] - 3.95 : A.colX[k - 1] + 3.95; AISLES.push({ x, half: 1.55, label: 'PASILLO ' + (k + 1) });
+  for (let k = 0; k <= 13; k++) { const x = k === 0 ? A.colX[0] - 3.95 : A.colX[k - 1] + 3.95; AISLES.push({ x, half: 1.55, label: 'PASILLO ' + (k + 1), endZ: k >= 7 ? A.Z(635) : A.Z(585) });
     const s = new THREE.Mesh(new THREE.PlaneGeometry(2.6, .9), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'PASILLO ' + (k + 1), size: 72, color: '#fff' }], { w: 512, h: 180, bg: '#c8102e' }), side: THREE.DoubleSide })); s.position.set(x, 9.5, A.Z(600)); scene.add(s); }
   // Racks zona poniente (3 filas)
   const wz0 = A.Z(275), wz1 = A.Z(535), lz0 = A.Z(320), lz1 = A.Z(545);
   [[-42.7, 1, wz0, wz1], [-37.3, -1, lz0, lz1], [-34.9, 1, lz0, lz1], [-29.5, -1, lz0, lz1]].forEach(([x, f, z0, z1], i) => { RACK_XS.push(x); agvSegments(z0, z1).forEach(([a, b], si) => agvRack(x, a, Math.floor((b - a) / 2.8), 5, f, 'W' + (i + 1), si === 1)); });
-  AISLES.push({ x: -40.0, half: 1.5, label: 'PASILLO 15' }, { x: -32.2, half: 1.5, label: 'PASILLO 16' });
+  AISLES.push({ x: -40.0, half: 1.5, label: 'PASILLO 15', endZ: lz1 }, { x: -32.2, half: 1.5, label: 'PASILLO 16', endZ: lz1 });
   flushRackInstances();
   // Pasillos transversales (franjas naranjas del plano)
   A.cuts.forEach(cz => { const m = new THREE.Mesh(new THREE.PlaneGeometry(A.colX[12] - A.colX[0] + 6, A.cutW - .6), new THREE.MeshBasicMaterial({ color: 0xff7a1a, transparent: true, opacity: .28, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set((A.colX[0] + A.colX[12]) / 2, .011, cz); scene.add(m); });
