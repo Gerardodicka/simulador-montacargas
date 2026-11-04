@@ -1116,14 +1116,14 @@ function toggleFullscreen() { const w = document.getElementById('canvasWrap'); c
 
 function cycleCam() { camMode = (camMode + 1) % CAMS.length; document.getElementById('camLbl').textContent = CAMS[camMode].name === 'HORQUILLAS' ? 'HORQ.' : CAMS[camMode].name; toast('📷 ' + CAMS[camMode].name + ' · ' + CAMS[camMode].desc); }
 
-function playerAisle() { const z = forkPosition.z; if (z < -39 || z > 2) return null; let a = null; AISLES.forEach((x, i) => { if (Math.abs(forkPosition.x - x.x) < x.half + 0.8) a = i + 1; }); return a; }
+function playerAisle() { const z = forkPosition.z, AZ = typeof AISLE_Z !== 'undefined' ? AISLE_Z : { z0: -39, z1: 2 }; if (z < AZ.z0 || z > AZ.z1) return null; let a = null; AISLES.forEach((x, i) => { if (Math.abs(forkPosition.x - x.x) < x.half + 0.8) a = i + 1; }); return a; }
 
 function checkRackDistance() { if (rackWarnCd > 0) { rackWarnCd--; return; } const a = playerAisle(); if (a === null || simSpeed < 0.3) return; const half = AISLES[a - 1].half, cx = AISLES[a - 1].x; const gap = half - Math.abs(forkPosition.x - cx) - spec().w / 2; const minGap = SIM_CFG.rackDistance !== undefined ? SIM_CFG.rackDistance : 0.35;
             if (gap < minGap) { registerFault('proximidadRack'); rackWarnCd = 90; } else if (gap < minGap + 0.2 && rackWarnCd === 0) { toast('⚠️ Muy cerca del rack: ' + Math.max(0, gap).toFixed(2) + ' m'); rackWarnCd = 60; } }
 
 function checkAisleRule() { const a = playerAisle(); if (a !== lastAisle) { if (a !== null) { const busy = NPC.forks.some(f => f.aisle === a && Math.abs(f.z) < 40 && Math.abs(f.x - forkPosition.x) < 3); if (busy) registerFault('pasilloOcupado'); } lastAisle = a; } }
 
-function inAisle() { const z = forkPosition.z; if (z < -39 || z > 2) return false; return AISLES.some(a => Math.abs(forkPosition.x - a.x) < a.half + 0.6); }
+function inAisle() { const z = forkPosition.z, AZ = typeof AISLE_Z !== 'undefined' ? AISLE_Z : { z0: -39, z1: 2 }; if (z < AZ.z0 || z > AZ.z1) return false; return AISLES.some(a => Math.abs(forkPosition.x - a.x) < a.half + 0.6); }
 
 function pointBlocked(x, y, z) { if (y > 11) return false; return obstacles.some(o => !o.disabled && x > o.minX - 0.3 && x < o.maxX + 0.3 && z > o.minZ - 0.3 && z < o.maxZ + 0.3); }
 
@@ -1367,7 +1367,7 @@ function animatePedCore(pd, walking, dtS, now) { const g = pd.g, B = n => g.getO
             if (pd.wait > 0) { B('armR').rotation.x = -2.7 + Math.sin(now / 130) * .25; B('elbowR').rotation.x = -.3; B('armL').rotation.x += (0 - B('armL').rotation.x) * .15; B('elbowL').rotation.x = -.5; B('head').rotation.y = 0; }
             else { B('armL').rotation.x += (0 - B('armL').rotation.x) * .1; B('armR').rotation.x += (0 - B('armR').rotation.x) * .1; B('elbowL').rotation.x = -.4; B('elbowR').rotation.x = -.4; B('head').rotation.y = Math.sin(now / 1800 + pd.idle) * .5; } } }
 
-function aisleZRange() { const L = RACK_LAYOUT; return { near: L.zStart + L.bays * L.bayW + 2.5, far: L.zStart + 1.5 }; }
+function aisleZRange() { if (typeof AISLE_Z !== 'undefined' && AISLE_Z.custom) return { near: AISLE_Z.z1 + 2.5, far: AISLE_Z.z0 + 1.5 }; const L = RACK_LAYOUT; return { near: L.zStart + L.bays * L.bayW + 2.5, far: L.zStart + 1.5 }; }
 
 function transitZ() { return aisleZRange().near + 5.5; }
 
@@ -1617,7 +1617,7 @@ function makeBeacon() {
             beacon.position.y = 15; scene.add(beacon);
             slotMarker = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.2, 1.3), new THREE.MeshBasicMaterial({ color: 0x2e9e5b, transparent: true, opacity: 0.35 })); slotMarker.visible = false; scene.add(slotMarker);
             // Zona RECEPCIÓN
-            const rz = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshStandardMaterial({ color: 0x2e9e5b, emissive: 0x0a3d1c, transparent: true, opacity: 0.85 })); rz.rotation.x = -Math.PI / 2; rz.position.set(-8, 0.013, 20); scene.add(rz); paintLabel('RECEPCIÓN', -8, 20, 2.2, '#ffffff');
+            const rz = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshStandardMaterial({ color: 0x2e9e5b, emissive: 0x0a3d1c, transparent: true, opacity: 0.85 })); rz.rotation.x = -Math.PI / 2; const RP = (typeof window !== 'undefined' && window.RECEP_POS) || { x: -8, z: 20 }; rz.position.set(RP.x, 0.013, RP.z); scene.add(rz); paintLabel('RECEPCIÓN', RP.x, RP.z, 2.2, '#ffffff');
             // Zona de estacionamiento (baterías)
             const pz = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 4.5), new THREE.MeshStandardMaterial({ color: 0x2138D3, emissive: 0x0a1560, transparent: true, opacity: 0.85 })); pz.rotation.x = -Math.PI / 2; pz.position.set(22.5, 0.013, 40.5); scene.add(pz); paintLabel('ESTACIONAR', 22.5, 40.5, 2, '#ffffff');
             // Línea de ALTO antes del paso peatonal

@@ -65,6 +65,21 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     const L = new THREE.Vector3(-4, 6, -20), T = new THREE.Vector3(-9, 7, -20); camUnblock(L, T, true); add('Cámara', 'no queda detrás de un rack', T.x > -5.6, 'x=' + T.x.toFixed(2));
     return R; });
   sim.forEach(r => res.push(r));
+  // Escenario Agave 1: selector, construcción y misiones alcanzables
+  { const q = await b.newPage({ viewport: { width: 1100, height: 700 } }); const e3 = []; q.on('pageerror', e => e3.push(e.message));
+    await q.goto(url('juegos/simulador-montacarga.html')); await q.waitForTimeout(1500);
+    const sel = await q.evaluate(() => { currentUser = { user: '1', name: 'Prueba', num: '1', puesto: 'M', wh: 'Agave 1' }; ['regScreen', 'menuScreen'].forEach(id => document.getElementById(id).classList.add('hidden')); startSimulator(); chooseFork('doublereach'); const t = document.getElementById('forkGrid').innerText; return /Almacén Genérico/.test(t) && /Agave 1/.test(t); });
+    ok('Agave 1', 'selector de escenario tras elegir montacargas', sel);
+    await q.evaluate(() => pickScenario('doublereach', 'agave1')); await q.waitForTimeout(7000);
+    const R = await q.evaluate(() => { const reach = (T, model) => { const prev = currentModel; currentModel = model; const sp = spec(); let ok = false; for (let k = 0; k < 72 && !ok; k++) { const a = k * Math.PI / 36; for (let r = 0; r <= sp.reachM + 1e-6 && !ok; r += Math.max(.1, sp.reachM / 4 || 1)) { const off = sp.forkZ + .5 + r; if (!bodyHits(T.x - Math.sin(a) * off, T.z - Math.cos(a) * off, a)) ok = true; } } currentModel = prev; return ok; };
+      let slots = 0, okS = 0; RACK_LAYOUT.xs.forEach((x, i) => ['A', 'B'].forEach(pos => { slots++; if (reach(slotWorld({ rack: i, bay: 4, level: 1, pos }), 'doublereach')) okS++; }));
+      const drops = ACTS.filter(a => a.drop && !a.drop.slot).map(a => a.id + ':' + (reach(a.drop, 'doublereach') ? 'ok' : 'X'));
+      return { esc: SCENARIO, racks: RACK_LAYOUT.xs.length, aisles: AISLES.length, slots, okS, drops, acts: ACTS.length, spawn: !bodyHits(forkPosition.x, forkPosition.z, forkRotation.y), trailer: !bodyHits(0, TRAILER.z0 + 4, 0) }; });
+    ok('Agave 1', 'escenario construido (26 racks, 16 pasillos)', R.esc === 'agave1' && R.racks === 26 && R.aisles === 16, `${R.racks} racks · ${R.aisles} pasillos · ${R.acts} misiones`);
+    ok('Agave 1', 'todas las ubicaciones A/B alcanzables (7700)', R.okS === R.slots, `${R.okS}/${R.slots}`);
+    ok('Agave 1', 'destinos de piso alcanzables', R.drops.every(d => /ok$/.test(d)), R.drops.join(' '));
+    ok('Agave 1', 'arranque libre y caja de tráiler en andén P6', R.spawn && R.trailer);
+    ok('Agave 1', 'sin errores de ejecución', !e3.length, e3[0] || ''); await q.close(); }
   // turno-seguro-3d comparte el almacén: debe arrancar sin errores
   { const q = await b.newPage({ viewport: { width: 1280, height: 720 } }); const e2 = []; q.on('pageerror', e => e2.push(e.message));
     await q.goto(url('juegos/turno-seguro-3d.html')); await q.waitForTimeout(1500);
