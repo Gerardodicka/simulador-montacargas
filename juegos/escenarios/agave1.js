@@ -60,17 +60,22 @@ function agvRealismo(A, H, dm) { const BH = 3.6;
     const rail = new THREE.MeshStandardMaterial({ color: 0xff8a00, roughness: .5, metalness: .3 }), r = (w, d, x, y, z) => agvBox(w, .08, d, 0xff8a00, x, y, z).material = rail;
     r(x1 - x0, .08, (x0 + x1) / 2, 1.05, z1 - .2); r(x1 - x0, .08, (x0 + x1) / 2, .55, z1 - .2); for (let x = x0; x <= x1 + .01; x += 1.5) agvBox(.08, 1.1, .08, 0xff8a00, x, .55, z1 - .2).material = rail;
     obstacles.push({ minX: x0 - .2, maxX: x1 + .2, minZ: z0, maxZ: z1 });
-    for (let x = x0 + 1.5; x < x1 - 1; x += 2.6) { agvBox(1.6, .08, .7, 0x6b4a2b, x, .95, z0 + 2.2); agvBox(.06, .9, .6, 0x333333, x - .7, .45, z0 + 2.2); agvBox(.06, .9, .6, 0x333333, x + .7, .45, z0 + 2.2); agvBox(.45, .32, .04, 0x111111, x, 1.25, z0 + 2); }
-    const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, .9), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'RECIBO', size: 110, color: '#1D2586' }], { w: 512, h: 180, bg: '#ffffff' }) })); sg.position.set((x0 + x1) / 2, 3.2, A.north + .3); scene.add(sg); }
+    window.AGV_DESKS = []; for (let x = x0 + 1.5; x < x1 - 1; x += 2.6) { AGV_DESKS.push({ x, z: z0 + 2.2 }); agvBox(1.6, .08, .7, 0x6b4a2b, x, .95, z0 + 2.2); agvBox(.06, .9, .6, 0x333333, x - .7, .45, z0 + 2.2); agvBox(.06, .9, .6, 0x333333, x + .7, .45, z0 + 2.2); agvBox(.45, .32, .04, 0x111111, x, 1.25, z0 + 2); }
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, .9), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'RECIBO', size: 110, color: '#1D2586' }], { w: 512, h: 180, bg: '#ffffff' }) })); sg.position.set((x0 + x1) / 2 + 1.3, 2.25, z1 - .2); sg.rotation.y = Math.PI; scene.add(sg); const sg2 = sg.clone(); sg2.rotation.y = 0; sg2.position.z += .02; scene.add(sg2); agvBox(.08, 1.2, .08, 0xff8a00, (x0 + x1) / 2 + .1, 1.7, z1 - .2); agvBox(.08, 1.2, .08, 0xff8a00, (x0 + x1) / 2 + 2.5, 1.7, z1 - .2); }   // letrero sobre el barandal (visible, sin columna enfrente)
   // Letreros de cliente colgados en las cabeceras de pasillo (EPSON · LASER · TOCONSA …)
   const CL = ['EPSON', 'LASER', 'TOCONSA', 'LIVERPOOL', 'EPSON', 'LASER', 'TOCONSA', 'LIVERPOOL', 'EPSON', 'LASER', 'TOCONSA', 'LIVERPOOL', 'EPSON', 'LASER'];
   AISLES.slice(0, 14).forEach((a, k) => { const z = (k < 8 ? A.Z(585) : A.Z(635)) + .2, name = CL[k]; const sm = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: name, size: 90, color: '#1D2586' }], { w: 512, h: 240, bg: '#ffffff' }), side: THREE.DoubleSide })); sm.position.set(a.x - 2.2, 7.6, z); scene.add(sm); });
   // Pendones morados colgados del techo (cultura DICKA) en el pasillo central
   ['SEGURIDAD PRIMERO', 'GIVE ME FIVE · 5S', 'CALIDAD', 'TRABAJO EN EQUIPO', 'RESPETO AL PEATÓN'].forEach((t, k) => { const b = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 3.6), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: t, size: 54, color: '#ffffff' }], { w: 256, h: 660, bg: '#4b2a8c' }), side: THREE.DoubleSide })); b.position.set(-8 + k * 6, 9, A.north + 5); scene.add(b); });
   // Tarimas emplayadas en STAGE IN y STAGE OUT (orilla poniente de cada zona, fuera de las rutas)
-  const n = 24, wrap = new THREE.InstancedMesh(new THREE.BoxGeometry(1.15, 1.3, 1.15), new THREE.MeshStandardMaterial({ color: 0xa88a5c, roughness: .3, metalness: .1 }), n), pal = new THREE.InstancedMesh(new THREE.BoxGeometry(1.2, .14, 1.2), new THREE.MeshStandardMaterial({ color: 0x2f6fd6, roughness: .7 }), n); let pi = 0;
-  [[-14, -57, -41], [-14, 14, 20]].forEach(([x, za, zb]) => { for (let z = za; z <= zb && pi < n; z += 1.6) for (const dx of [0, 1.4]) { if (pi >= n) break; dm.rotation.set(0, (Math.random() - .5) * .1, 0); dm.position.set(x + dx, .07, z); dm.updateMatrix(); pal.setMatrixAt(pi, dm.matrix); dm.position.set(x + dx, .14 + .65 * (.7 + Math.random() * .3), z); dm.scale.set(1, .7 + Math.random() * .3, 1); dm.updateMatrix(); wrap.setMatrixAt(pi, dm.matrix); dm.scale.set(1, 1, 1); pi++; } obstacles.push({ minX: x - .7, maxX: x + 2.1, minZ: za - .7, maxZ: zb + .7 }); });
-  wrap.count = pal.count = pi; scene.add(wrap, pal); }
+  // mismas texturas liberadas en el almacén genérico: tarima de madera + carga de cartón (3 variantes) + etiqueta DICKA
+  const n = 24, pal = new THREE.InstancedMesh(palletGeometry('lite'), new THREE.MeshStandardMaterial({ map: woodTex(), roughness: .9 }), n), loads = [0, 1, 2].map(v => new THREE.InstancedMesh(new THREE.BoxGeometry(.95, 1, 1.1), unitLoadMat(v), n)), cnt = [0, 0, 0], lbl = new THREE.InstancedMesh(new THREE.PlaneGeometry(.5, .25), new THREE.MeshBasicMaterial({ color: BRAND.brillante }), n); let pi = 0;
+  [[-14, -57, -41], [-14, 14, 20]].forEach(([x, za, zb]) => { for (let z = za; z <= zb && pi < n; z += 1.6) for (const dx of [0, 1.4]) { if (pi >= n) break; const bh = .7 + Math.random() * .7, v = pi % 3;
+      dm.scale.set(1, 1, 1); dm.rotation.set(0, Math.PI / 2, 0); dm.position.set(x + dx, .14, z); dm.updateMatrix(); pal.setMatrixAt(pi, dm.matrix);
+      dm.rotation.set(0, 0, 0); dm.position.set(x + dx, .21 + bh / 2, z); dm.scale.set(1, bh, 1); dm.updateMatrix(); loads[v].setMatrixAt(cnt[v]++, dm.matrix);
+      dm.scale.set(1, 1, 1); dm.position.set(x + dx + .49, .21 + bh / 2, z); dm.rotation.set(0, Math.PI / 2, 0); dm.updateMatrix(); lbl.setMatrixAt(pi, dm.matrix); pi++; }
+    obstacles.push({ minX: x - .7, maxX: x + 2.1, minZ: za - .7, maxZ: zb + .7 }); });
+  pal.count = lbl.count = pi; loads.forEach((m, v) => { m.count = cnt[v]; m.receiveShadow = true; scene.add(m); }); scene.add(pal, lbl); }
 // ---------- Simbología de seguridad e higiene (según el plano) ----------
 const AGV_SIGN = {};
 function agvSignTex(type) { if (AGV_SIGN[type]) return AGV_SIGN[type]; const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
@@ -185,7 +190,7 @@ function buildAgaveWorld() { const A = AGV, H = 12;
   // Techo de lámina a 12 m (se oculta al ver desde arriba)
   { const roof = new THREE.Mesh(new THREE.PlaneGeometry(A.east - A.west, A.offZ1 - A.north), new THREE.MeshStandardMaterial({ color: 0x9aa3b2, side: THREE.DoubleSide, roughness: .7, metalness: .3 })); roof.rotation.x = Math.PI / 2; roof.position.set((A.west + A.east) / 2, H, (A.north + A.offZ1) / 2); roof.name = 'roof'; window.roofMesh = roof; scene.add(roof);
     const sky = new THREE.MeshStandardMaterial({ color: 0xe9f3ff, emissive: 0xdcecff, emissiveIntensity: .7, side: THREE.DoubleSide }); for (let z = A.north + 12; z < A.southL - 6; z += 22) { const sk = new THREE.Mesh(new THREE.PlaneGeometry(A.east - A.west - 8, 1.6), sky); sk.rotation.x = Math.PI / 2; sk.position.set((A.west + A.east) / 2, H - .02, z); scene.add(sk); } }
-  agvRealismo(A, H, dm);
+  agvRealismo(A, H, dm); agvDeskWorkers(0);
   window.RECEP_POS = { x: -1.5, z: -43 };
   agvMissions(); }
 
@@ -207,8 +212,18 @@ function buildTrafficAgave() { const A = AGV;
   npcForklift('17', [[-12, A.cuts[1]], [118, A.cuts[1]]], 0.4);
   npcForklift('22', [[-10, -44], [8, -44], [8, -56], [-10, -56]], 0.1);
   const fem = typeof GLTF_FEM !== 'undefined' && GLTF_FEM.gltf;
+  // Personal de RECIBO trabajando de pie en las computadoras (mismo modelo y tecleo que la oficina del almacén genérico)
   npcPed('Auxiliar de embarque', [[A.west + 2, A.southL - 1.6], [-8, A.southL - 1.6]], 0.2, { prop: 'scanner' });
   npcPed('Verificador de recibo', [[A.west + 2, A.north + 1.6], [A.east - 2, A.north + 1.6]], 0.45, { prop: 'clipboard' });
   npcPed('Supervisor de turno', [[A.east - 2, A.north + 1.6], [A.west + 2, A.north + 1.6]], 0.7, fem ? { fem: true, prop: 'radio' } : { prop: 'radio' });
   npcPed('Auxiliar de preparación', [[-31, 27.5], [-31, 41]], 0.35, fem ? { fem: true, prop: 'scanner' } : { prop: 'scanner' });
-  npcPed('Auxiliar de inventario', [[A.west + 1.4, -60], [A.west + 1.4, 40]], 0.55, { prop: 'scanner' }); }
+  npcPed('Auxiliar de inventario', [[A.west + 1.4, -60], [A.west + 1.4, 40]], 0.55, { prop: 'scanner' });
+  agvDeskWorkers(0); }
+function agvDeskWorkers(n) { if (window.AGV_DESK_DONE) return; if (!(GLTF_AVATAR.gltf && GLTF_AVATAR.gltf.scene)) { if (n < 40) setTimeout(() => agvDeskWorkers(n + 1), 1500); return; } window.AGV_DESK_DONE = true;
+  (window.AGV_DESKS || []).forEach((d, i) => { try { const op = makeStandingOperator(QUALITY.preset.hiDist === 0); op.position.set(d.x, 0, d.z + .62); op.rotation.y = Math.PI; scene.add(op); op.updateMatrixWorld(true);
+      const av = op.userData.gltf || op.userData.av; const root = av ? av.obj : op; const kb = new THREE.Vector3(d.x, 1.0, d.z + .15);
+      if (av && typeof ikReach === 'function') { ikReach(av, 'Right', kb.clone().add(new THREE.Vector3(-.13, 0, 0))); ikReach(av, 'Left', kb.clone().add(new THREE.Vector3(.13, 0, 0))); }
+      const typing = ['RightHand', 'LeftHand', 'RightForeArm', 'LeftForeArm'].map(n => root.getObjectByName(n)).filter(Boolean).map(b => ({ b, q: b.quaternion.clone() }));
+      if (typing.length && typeof OFFICE_WORKERS !== 'undefined') OFFICE_WORKERS.push({ seat: op, typing, st: { x: d.x, z: d.z }, sd: 1, t: 0, dur: 1e9, state: 'type', ph: i * 1.3 });
+      obstacles.push({ minX: d.x - .35, maxX: d.x + .35, minZ: d.z + .3, maxZ: d.z + .95 }); } catch (e) { console.warn('[SIM] recibo:', e.message); } }); }
+
