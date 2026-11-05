@@ -86,6 +86,16 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     const st = await q.evaluate(() => { try { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); const sc = document.getElementById('simulatorScreen'); if (sc) sc.classList.add('active'); initSimulator(); return 'ok'; } catch (e) { return e.message; } });
     await q.waitForTimeout(6000); const ms = await q.evaluate(() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; });
     ok('Turno seguro 3D', 'arranca el almacén compartido', st === 'ok' && !e2.length && ms > 500, st !== 'ok' ? st : e2[0] || ms + ' objetos'); await q.close(); }
+  // Dojo de Mando: la ruta recomendada aprueba y la de evitar el problema no
+  { const play = async path => { const q = await b.newPage({ viewport: { width: 1000, height: 700 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(800);
+      const r = await q.evaluate(async path => { const C = s => { const el = document.querySelector(s); if (el && el.offsetParent !== null) { el.click(); return true; } return false; }; const w = ms => new Promise(r => setTimeout(r, ms));
+        document.getElementById('pname').value = 'Prueba Dojo'; C('#intro .btn'); C('#brief .btn'); await w(300);
+        for (const i of path) { document.querySelectorAll('.opt')[i].click(); await w(50); C('#talk .next'); await w(50); while (C('#evOk')) await w(50); }
+        return window.REPORT ? { s: REPORT.score, ok: REPORT.ok, p: REPORT.path } : null; }, path); await q.close(); return { r, e }; };
+    const good = await play([1, 1, 1]), bad = await play([2, 0, 0]);
+    ok('Dojo de Mando', 'ruta recomendada B-B-B aprueba', !!(good.r && good.r.ok), good.r ? good.r.s + '/100' : 'sin reporte');
+    ok('Dojo de Mando', 'ruta C-A-A (evitar y ceder) no aprueba', !!(bad.r && !bad.r.ok), bad.r ? bad.r.s + '/100' : 'sin reporte');
+    ok('Dojo de Mando', 'sin errores de ejecución', !good.e.length && !bad.e.length, good.e[0] || bad.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
