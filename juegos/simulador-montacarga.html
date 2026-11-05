@@ -1230,7 +1230,7 @@
 
     <script src="comun/three-libs.js?v=12.2"></script>
     <script src="comun/almacen-comun.js?v=13.6"></script>
-    <script src="comun/avatares.js?v=14.7"></script>
+    <script src="comun/avatares.js?v=14.8"></script>
     <script src="escenarios/agave1.js?v=14.6"></script>
     
     <script>
@@ -2393,7 +2393,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v14.7 Dojo con avatares reales y voz';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v14.8 rendimiento: espejos optimizados';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3307,12 +3307,14 @@
         let MIR = null, crossState = { inAisle: false };
         // Reflejo real de los espejos convexos: una CubeCamera se coloca en el espejo más cercano al operador y captura la escena (montacargas, peatones, racks)
         const MIR_RT = { domes: [], cam: null, rt: null, last: 0, m: null,
-            mat() { if (this.m) return this.m; const lowGPU = typeof IS_QUEST !== 'undefined' && IS_QUEST; this.rt = new THREE.WebGLCubeRenderTarget(lowGPU ? 128 : 256, { format: THREE.RGBFormat, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, encoding: THREE.sRGBEncoding });
-                this.cam = new THREE.CubeCamera(0.15, 45, this.rt); scene.add(this.cam);
+            mat() { if (this.m) return this.m; const lowGPU = typeof IS_QUEST !== 'undefined' && IS_QUEST; this.rt = new THREE.WebGLCubeRenderTarget(lowGPU ? 64 : 128, { format: THREE.RGBFormat, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, encoding: THREE.sRGBEncoding });
+                this.cam = new THREE.CubeCamera(0.15, 16, this.rt); this.face = 0; scene.add(this.cam);
                 this.m = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: .02, envMap: this.rt.texture, envMapIntensity: 1.15 }); return this.m; },
-            update(now) { if (!this.cam || !this.domes.length || now - this.last < (typeof IS_QUEST !== 'undefined' && IS_QUEST ? 250 : 90)) return; this.last = now;
-                let best = null, bd = 1e9; const w = new THREE.Vector3(); this.domes.forEach(d => { d.getWorldPosition(w); const dd = Math.hypot(w.x - forkPosition.x, w.z - forkPosition.z); if (dd < bd) { bd = dd; best = d; } });
-                if (!best || bd > 35) return; best.getWorldPosition(w); this.cam.position.copy(w); this.domes.forEach(d => d.visible = false); try { this.cam.update(renderer, scene); } catch (e) { } this.domes.forEach(d => d.visible = true); } };
+            update(now) { if (!this.cam || !this.domes.length) return;   // una cara del cubo por cuadro (antes: 6 caras juntas cada 90 ms → tirones)
+                if (this.face === 0) { if (now - this.last < (typeof IS_QUEST !== 'undefined' && IS_QUEST ? 600 : 250)) return; let best = null, bd = 1e9; const w = new THREE.Vector3(); this.domes.forEach(d => { d.getWorldPosition(w); const dd = Math.hypot(w.x - forkPosition.x, w.z - forkPosition.z); if (dd < bd) { bd = dd; best = d; } }); if (!best || bd > 14) return; best.getWorldPosition(w); this.cam.position.copy(w); this.cam.updateMatrixWorld(true); }
+                const f = this.face, cams = this.cam.children, prevRT = renderer.getRenderTarget(), prevXR = renderer.xr.enabled; renderer.xr.enabled = false; this.domes.forEach(d => d.visible = false);
+                this.rt.texture.generateMipmaps = f === 5; try { renderer.setRenderTarget(this.rt, f); renderer.render(scene, cams[f]); } catch (e) { } renderer.setRenderTarget(prevRT); renderer.xr.enabled = prevXR;
+                this.domes.forEach(d => d.visible = true); this.face = (f + 1) % 6; if (this.face === 0) this.last = now; } };
         function mediaReset() { CAP.pending = false; CAP.asked = {}; EMG.done = false; EMG.on = false; PHONE.done = false; PHONE.on = false; ['capPanel', 'emgPanel', 'phonePanel'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); if (EMG.mesh) { scene.remove(EMG.mesh); EMG.mesh = null; } if (EMG.cones) { scene.remove(EMG.cones); EMG.cones = null; } }
         function mediaPanel(id, html, border) { let d = document.getElementById(id); if (d) d.remove(); d = document.createElement('div'); d.id = id; d.style.cssText = `position:absolute;left:50%;top:18%;transform:translateX(-50%);width:min(420px,86%);background:rgba(1,17,49,.95);border:3px solid ${border};border-radius:14px;color:#fff;padding:14px 16px;z-index:40;font:600 14px Poppins,Arial;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5)`; d.innerHTML = html; document.getElementById('canvasWrap').appendChild(d); return d; }
         // 7 · punto azul de advertencia proyectado al frente de cada montacargas
