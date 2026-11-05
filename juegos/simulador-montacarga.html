@@ -1209,7 +1209,7 @@
 
     <script src="comun/three-libs.js?v=12.2"></script>
     <script src="comun/almacen-comun.js?v=13.6"></script>
-    <script src="escenarios/agave1.js?v=13.9"></script>
+    <script src="escenarios/agave1.js?v=14.0"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -2371,7 +2371,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v13.9 patín Raymond 8250, tarimas con textura y personal en RECIBO';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v14.0 espejos con reflejo real y computadoras en RECIBO';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3493,16 +3493,24 @@
         // ===== Mejoras de seguridad (prioridad media) =====
         const CAP = { pending: false, asked: {} }, EMG = { done: false, on: false, t: 0, mesh: null, cones: null }, PHONE = { done: false, on: false, t: 0 };
         let MIR = null, crossState = { inAisle: false };
+        // Reflejo real de los espejos convexos: una CubeCamera se coloca en el espejo más cercano al operador y captura la escena (montacargas, peatones, racks)
+        const MIR_RT = { domes: [], cam: null, rt: null, last: 0, m: null,
+            mat() { if (this.m) return this.m; const lowGPU = typeof IS_QUEST !== 'undefined' && IS_QUEST; this.rt = new THREE.WebGLCubeRenderTarget(lowGPU ? 128 : 256, { format: THREE.RGBFormat, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, encoding: THREE.sRGBEncoding });
+                this.cam = new THREE.CubeCamera(0.15, 45, this.rt); scene.add(this.cam);
+                this.m = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: .02, envMap: this.rt.texture, envMapIntensity: 1.15 }); return this.m; },
+            update(now) { if (!this.cam || !this.domes.length || now - this.last < (typeof IS_QUEST !== 'undefined' && IS_QUEST ? 250 : 90)) return; this.last = now;
+                let best = null, bd = 1e9; const w = new THREE.Vector3(); this.domes.forEach(d => { d.getWorldPosition(w); const dd = Math.hypot(w.x - forkPosition.x, w.z - forkPosition.z); if (dd < bd) { bd = dd; best = d; } });
+                if (!best || bd > 35) return; best.getWorldPosition(w); this.cam.position.copy(w); this.domes.forEach(d => d.visible = false); try { this.cam.update(renderer, scene); } catch (e) { } this.domes.forEach(d => d.visible = true); } };
         function mediaReset() { CAP.pending = false; CAP.asked = {}; EMG.done = false; EMG.on = false; PHONE.done = false; PHONE.on = false; ['capPanel', 'emgPanel', 'phonePanel'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); if (EMG.mesh) { scene.remove(EMG.mesh); EMG.mesh = null; } if (EMG.cones) { scene.remove(EMG.cones); EMG.cones = null; } }
         function mediaPanel(id, html, border) { let d = document.getElementById(id); if (d) d.remove(); d = document.createElement('div'); d.id = id; d.style.cssText = `position:absolute;left:50%;top:18%;transform:translateX(-50%);width:min(420px,86%);background:rgba(1,17,49,.95);border:3px solid ${border};border-radius:14px;color:#fff;padding:14px 16px;z-index:40;font:600 14px Poppins,Arial;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5)`; d.innerHTML = html; document.getElementById('canvasWrap').appendChild(d); return d; }
         // 7 · punto azul de advertencia proyectado al frente de cada montacargas
         function blueSpot() { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 4, 64, 64, 62); gr.addColorStop(0, 'rgba(80,160,255,1)'); gr.addColorStop(.55, 'rgba(40,110,255,.8)'); gr.addColorStop(1, 'rgba(40,110,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
             const m = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); m.rotation.x = -Math.PI / 2; m.position.set(0, .03, 3.6); m.name = 'blueSpot'; return m; }
         // 8 · espejos convexos en la salida de cada pasillo
-        function buildMirrors() { MIR = new THREE.Group(); const { near } = aisleZRange(); const pole = new THREE.MeshStandardMaterial({ color: 0xf5c400, roughness: .5 }), rim = new THREE.MeshStandardMaterial({ color: 0xe0761a, roughness: .5 }), glass = new THREE.MeshStandardMaterial({ color: 0xcfd8e6, metalness: 1, roughness: .05 });
+        function buildMirrors() { MIR = new THREE.Group(); const { near } = aisleZRange(); const pole = new THREE.MeshStandardMaterial({ color: 0xf5c400, roughness: .5 }), rim = new THREE.MeshStandardMaterial({ color: 0xe0761a, roughness: .5 }), glass = MIR_RT.mat();
             AISLES.forEach(A => [-1, 1].forEach(sd => { const ez = A.endZ !== undefined ? A.endZ : near - 2.5, xp = A.x + sd * (A.half + .1), x = A.x + sd * (A.half - .45), z = ez + .35, y = 4.2; if (typeof pointBlocked === 'function' && pointBlocked(A.x, 1, ez + 1.5)) return;   // espejo convexo colgado de la cabecera del rack (sin poste al piso)
                 const arm = new THREE.Mesh(new THREE.BoxGeometry(.6, .05, .05), pole); arm.position.set((xp + x) / 2, y + .45, z); MIR.add(arm); const hang = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .4, 6), pole); hang.position.set(x, y + .25, z); MIR.add(hang);
-                const dome = new THREE.Mesh(new THREE.SphereGeometry(.32, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2.6), glass); dome.rotation.x = Math.PI / 2; const ring = new THREE.Mesh(new THREE.TorusGeometry(.3, .03, 8, 24), rim); const h = new THREE.Group(); h.add(dome, ring); h.position.set(x, y, z); h.rotation.y = (sd > 0 ? -Math.PI / 4 : Math.PI / 4) + Math.PI; h.rotation.x = -.25; MIR.add(h); }));
+                const dome = new THREE.Mesh(new THREE.SphereGeometry(.32, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2.6), glass); MIR_RT.domes.push(dome); dome.rotation.x = Math.PI / 2; const ring = new THREE.Mesh(new THREE.TorusGeometry(.3, .03, 8, 24), rim); const h = new THREE.Group(); h.add(dome, ring); h.position.set(x, y, z); h.rotation.y = (sd > 0 ? -Math.PI / 4 : Math.PI / 4) + Math.PI; h.rotation.x = -.25; MIR.add(h); }));
             scene.add(MIR); }
         function nivel() { const el = document.getElementById('rNivel'); let v = el && el.value; if (!v) { try { v = localStorage.getItem('dicka_nivel'); } catch (e) { } } return v || 'intermedio'; }
         const TRACK = { act: -1, pts: [], marks: [], nf: 0, acc: 0, t0: 0, late: false };
@@ -3512,6 +3520,7 @@
             TRACK.acc += dtS; if (TRACK.acc > .3) { TRACK.acc = 0; const L = TRACK.pts[TRACK.pts.length - 1]; if (!L || Math.hypot(L[0] - forkPosition.x, L[1] - forkPosition.z) > .4) TRACK.pts.push([forkPosition.x, forkPosition.z]); if (TRACK.pts.length > 3000) TRACK.pts.shift(); }
             while (TRACK.nf < faultLog.length) { TRACK.marks.push({ x: forkPosition.x, z: forkPosition.z, label: faultLog[TRACK.nf].label }); TRACK.nf++; }
             if (lv === 'certificacion' && a && a.type !== 'checklist' && !TRACK.late && Date.now() - TRACK.t0 > 240000) { TRACK.late = true; registerFault('tiempoExcedido'); }
+            MIR_RT.update(now);
             NPC.forks.forEach(f => { if (!f.g) return; if (!f.spot) { f.spot = blueSpot(); f.g.add(f.spot); } f.spot.material.opacity = .65 + .35 * Math.sin(now / 140); });
             if (!forklift.getObjectByName('blueSpot')) forklift.add(blueSpot()); { const bs = forklift.getObjectByName('blueSpot'); bs.material.opacity = SAFE.keyOn || safeAuto() ? .7 + .3 * Math.sin(now / 140) : 0; }
             if (!MIR && typeof AISLES !== 'undefined' && AISLES.length) buildMirrors();
