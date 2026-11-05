@@ -34,6 +34,23 @@ const AGV_PC = { gltf: null, wait: [], tried: false };
 function agvComputer(x, y, z) { const place = src => { const m = src.clone(true); m.position.set(x, y, z); m.rotation.y = -Math.PI / 2; m.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } }); scene.add(m); };   // frente hacia +Z (hacia el operador)
   if (AGV_PC.gltf) return place(AGV_PC.gltf); AGV_PC.wait.push(place); if (AGV_PC.tried || !THREE.GLTFLoader) return; AGV_PC.tried = true;
   new THREE.GLTFLoader().load('assets/models/computadora.glb', g => { AGV_PC.gltf = g.scene; AGV_PC.wait.splice(0).forEach(f => f(g.scene)); }, undefined, () => { AGV_PC.wait.splice(0).forEach(() => {}); }); }
+// Etiquetadora automática de tarimas: bastidor, banda de rodillos, cabezal aplicador con rollo de etiquetas, pantalla de control, torreta y guarda
+function agvLabeler(x, z) { const g = new THREE.Group(), M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .5, metalness: .3 }, o || {})), B = (w, h, d, m, px, py, pz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(px, py, pz); g.add(b); return b; };
+  const steel = M(0xb8bec6, { metalness: .7, roughness: .3 }), blue = M(0x1D2586), dark = M(0x23262c), yel = M(0xf2c200);
+  [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([sx, sz]) => B(.08, .55, .08, steel, sx * 1.05, .275, sz * .6));   // patas
+  B(2.3, .1, 1.35, steel, 0, .58, 0);   // bastidor
+  for (let i = 0; i < 14; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 1.25, 10), M(0x9aa0a8, { metalness: .8, roughness: .25 })); r.rotation.x = Math.PI / 2; r.position.set(-1.05 + i * .162, .66, 0); g.add(r); }   // rodillos
+  B(.12, 2.1, .12, blue, -.3, 1.05 + .6, -.75); B(.12, 2.1, .12, blue, .3, 1.05 + .6, -.75); B(.75, .14, .14, blue, 0, 2.7, -.75);   // pórtico
+  B(.5, .45, .5, blue, 0, 2.35, -.45);   // cabezal aplicador
+  const roll = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .12, 24), M(0xf4f4f0, { metalness: 0, roughness: .7 })); roll.rotation.x = Math.PI / 2; roll.position.set(0, 2.45, -.12); g.add(roll);   // rollo de etiquetas
+  const core = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .14, 12), dark); core.rotation.x = Math.PI / 2; core.position.copy(roll.position); g.add(core);
+  B(.32, .03, .02, M(0xffffff, { metalness: 0 }), 0, 2.08, -.19);   // etiqueta saliendo
+  B(.05, .5, .05, steel, 0, 1.88, -.3);   // pistón del aplicador
+  const scr = B(.42, .3, .05, dark, .95, 1.35, -.75); const sc = new THREE.Mesh(new THREE.PlaneGeometry(.36, .24), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'ETIQUETAR', size: 60, color: '#7dffb0' }], { w: 256, h: 170, bg: '#0b1a3f' }) })); sc.position.set(.95, 1.35, -.72); g.add(sc); B(.06, .75, .06, steel, .95, .95, -.75);   // pantalla HMI
+  [[0xe53935, 3.05], [0xf2c200, 2.95], [0x2e9e5b, 2.85]].forEach(([c, y], i) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .1, 12), new THREE.MeshStandardMaterial({ color: c, emissive: i === 2 ? c : 0x000000, emissiveIntensity: .8 })); l.position.set(.3, y, -.75); g.add(l); });   // torreta: verde = operando
+  B(2.3, .9, .02, M(0xf2c200, { transparent: true, opacity: .35 }), 0, 1.1, .7);   // guarda frontal
+  B(.3, .3, .01, yel, -.8, 1.2, .72);
+  g.position.set(x, 0, z); g.rotation.y = Math.PI / 2; scene.add(g); obstacles.push({ minX: x - .8, maxX: x + .9, minZ: z - 1.25, maxZ: z + 1.25 }); }
 // ---------- Apariencia según fotos de la nave real (Agave 1) ----------
 const AGV_TEX = {};
 function agvTex(kind) { if (AGV_TEX[kind]) return AGV_TEX[kind]; const c = document.createElement('canvas'), g = c.getContext('2d');
@@ -122,7 +139,12 @@ function buildAgaveWorld() { const A = AGV, H = 12;
   // Oficinas, mesa de control y sanitarios (bloque sur-centro)
   { const ox0 = A.offX0 + .3, ox1 = A.offX1 - .3, oz0 = A.offZ0, oz1 = A.offZ1 - .3, oh = 7.2, glass = new THREE.MeshStandardMaterial({ color: 0x9fc3e8, transparent: true, opacity: .45, roughness: .1, metalness: .2 });
     const ow = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), m = new THREE.Mesh(new THREE.BoxGeometry(L, oh, .2), wallMat); m.position.set((x0 + x1) / 2, oh / 2, (z0 + z1) / 2); m.rotation.y = -Math.atan2(z1 - z0, x1 - x0); scene.add(m); };
-    ow(ox0, oz0, ox1, oz0); obstacles.push({ minX: ox0 - .3, maxX: ox1 + .3, minZ: oz0 - .5, maxZ: oz1 + .3 });
+    ow(ox0, oz0, ox1, oz0); ow(ox1, oz0, ox1, oz1);   // fachada norte y fachada oriente (antes abierta: se veía el interior vacío)
+    for (let z = oz0 + 2.5; z < oz1 - 2; z += 4.5) [1.9, 5.5].forEach(wy => { const w = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.4), glass); w.position.set(ox1 + .11, wy, z); w.rotation.y = Math.PI / 2; scene.add(w); const f = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 1.6), new THREE.MeshStandardMaterial({ color: 0x1D2586 })); f.position.set(ox1 + .105, wy, z); f.rotation.y = Math.PI / 2; scene.add(f); });
+    { const sl = new THREE.Mesh(new THREE.BoxGeometry(.3, .25, oz1 - oz0), new THREE.MeshStandardMaterial({ color: 0x1D2586 })); sl.position.set(ox1 + .2, 3.6, (oz0 + oz1) / 2); scene.add(sl);
+      const dr = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.2), new THREE.MeshStandardMaterial({ color: 0x5b6577, metalness: .4, roughness: .4 })); dr.position.set(ox1 + .11, 1.1, oz0 + 6); dr.rotation.y = Math.PI / 2; scene.add(dr);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(8, .7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'OFICINAS · PLANTA BAJA Y ALTA', size: 62, color: '#ffffff' }], { w: 1024, h: 90, bg: '#1D2586' }) })); m.position.set(ox1 + .12, 6.75, (oz0 + oz1) / 2); m.rotation.y = Math.PI / 2; scene.add(m); }
+    obstacles.push({ minX: ox0 - .3, maxX: ox1 + .3, minZ: oz0 - .5, maxZ: oz1 + .3 });
     for (let x = ox0 + 3; x < ox1 - 2; x += 5) [1.9, 5.5].forEach(wy => { const w = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.4), glass); w.position.set(x, wy, oz0 - .11); w.rotation.y = Math.PI; scene.add(w); });   // planta baja y planta alta
     { const slab = new THREE.Mesh(new THREE.BoxGeometry(ox1 - ox0, .25, .3), new THREE.MeshStandardMaterial({ color: 0x1D2586 })); slab.position.set((ox0 + ox1) / 2, 3.6, oz0 - .2); scene.add(slab);
       const st = new THREE.Group(), sm = new THREE.MeshStandardMaterial({ color: 0x8a929e, metalness: .5, roughness: .4 }); for (let i = 0; i < 18; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(1.1, .06, .3), sm); s.position.set(ox1 - 1.2, .2 + i * .2, oz0 - .5 - (17 - i) * .25 * 0); s.position.x = ox1 - 1.2 - i * .28; s.position.z = oz0 - .7; st.add(s); } const rl = new THREE.Mesh(new THREE.BoxGeometry(5.2, .05, .05), new THREE.MeshStandardMaterial({ color: 0xf2c200 })); rl.position.set(ox1 - 3.6, 2.7, oz0 - 1.2); rl.rotation.z = -Math.atan2(3.6, 5); st.add(rl); scene.add(st); }   // escalera exterior a planta alta
@@ -162,7 +184,7 @@ function buildAgaveWorld() { const A = AGV, H = 12;
   agvZone(-15, -60, 12, -38, 0xf5c400, .18); agvFloorLabel('STAGE IN · RECIBO', -1.5, -49, 20, 3);
   agvZone(-15, 12, 12, 33, 0xf5c400, .18); agvFloorLabel('STAGE OUT · EMBARQUE', -1.5, 22, 20, 3);
   agvZone(-38, -62, -26, -53.6, 0xff7a1a, .45); agvFloorLabel('PREPARACIÓN Y CONSOLIDACIÓN', -32, -57.8, 11.5, 1.6, '#011131');
-  agvZone(-38, -52.5, -26, -48.5, 0xff7a1a, .3); agvFloorLabel('ETIQUETADO', -29, -50.5, 5, 1.2, '#011131'); agvBox(2.2, 1.4, 1.6, 0x5b6577, -35.5, .7, -50.5, { metalness: .4 }); agvFloorLabel('ETIQUETADORA', -35.5, -48.9, 3.6, .8, '#ffffff', '#1D2586');
+  agvZone(-38, -52.5, -26, -48.5, 0xff7a1a, .3); agvFloorLabel('ETIQUETADO', -29, -50.5, 5, 1.2, '#011131'); agvLabeler(-35.5, -50.5); agvFloorLabel('ETIQUETADORA', -35.5, -48.9, 3.6, .8, '#ffffff', '#1D2586');
   agvZone(-38, 26.5, -28.6, 41.9, 0xff7a1a, .45); agvFloorLabel('PREPARACIÓN LIVERPOOL', -33.3, 34, 9, 1.5, '#011131', 'rgba(0,0,0,0)', Math.PI / 2);
   agvZone(-18, 5, -12, 11, 0x1d4fd8, .35); agvFloorLabel('ESTACIONAMIENTO DE EQUIPOS', -15, 8, 5.6, 1.2, '#ffffff');
   // Cruce peatonal frente al andén de prácticas (alto en Z 36.5, zona verde hasta Z 40.5)
@@ -223,6 +245,18 @@ function buildTrafficAgave() { const A = AGV;
   npcPed('Supervisor de turno', [[A.east - 2, A.north + 1.6], [A.west + 2, A.north + 1.6]], 0.7, fem ? { fem: true, prop: 'radio' } : { prop: 'radio' });
   npcPed('Auxiliar de preparación', [[-31, 27.5], [-31, 41]], 0.35, fem ? { fem: true, prop: 'scanner' } : { prop: 'scanner' });
   npcPed('Auxiliar de inventario', [[A.west + 1.4, -60], [A.west + 1.4, 40]], 0.55, { prop: 'scanner' });
+  // 10 personas más en movimiento: andenes, recibo, embarque, preparación y pasillos transversales (pasos peatonales)
+  const F = o => fem ? Object.assign({ fem: true }, o) : o, ax = n => AISLES[n - 1].x;
+  npcPed('Auxiliar de recibo', [[-30, A.north + 1.6], [10, A.north + 1.6]], 0.15, F({ prop: 'clipboard' }));
+  npcPed('Checador de andén', [[20, A.north + 1.6], [70, A.north + 1.6]], 0.6, { prop: 'scanner' });
+  npcPed('Auxiliar de embarque', [[A.west + 2, A.southL - 1.6], [-8, A.southL - 1.6]], 0.75, F({ prop: 'scanner' }));
+  npcPed('Auditor de calidad', [[8, A.southL - 1.6], [A.offX0 - 1, A.southL - 1.6]], 0.4, { prop: 'clipboard' });
+  npcPed('Auxiliar de preparación', [[-37, 27.5], [-29, 27.5], [-29, 41], [-37, 41]], 0.6, F({ prop: 'scanner' }));
+  npcPed('Etiquetador', [[-37.5, -53], [-27, -53], [-27, -48.8], [-37.5, -48.8]], 0.2, { prop: 'scanner' });
+  npcPed('Auxiliar de consolidación', [[-37, -61], [-27, -61]], 0.5, F({ prop: 'clipboard' }));
+  npcPed('Supervisor de piso', [[A.west + 1.4, 40], [A.west + 1.4, -60]], 0.25, { prop: 'radio' });
+  npcPed('Auxiliar de inventario cíclico', [[ax(1) - 3, A.cuts[0]], [ax(14) + 3, A.cuts[0]]], 0.3, F({ prop: 'scanner' }));
+  npcPed('Montacarguista en relevo', [[ax(14) + 3, A.cuts[1] + 1], [ax(1) - 3, A.cuts[1] + 1]], 0.65, { prop: 'radio' });
   agvDeskWorkers(0); }
 function agvDeskWorkers(n) { if (window.AGV_DESK_DONE) return; if (!(GLTF_AVATAR.gltf && GLTF_AVATAR.gltf.scene)) { if (n < 200) setTimeout(() => agvDeskWorkers(n + 1), 1500); return; } window.AGV_DESK_DONE = true;
   (window.AGV_DESKS || []).forEach((d, i) => { try { const op = makeStandingOperator(QUALITY.preset.hiDist === 0); op.position.set(d.x, 0, d.z + .62); op.rotation.y = Math.PI; scene.add(op); op.updateMatrixWorld(true);
