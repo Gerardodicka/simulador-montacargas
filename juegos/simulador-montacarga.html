@@ -1230,7 +1230,7 @@
 
     <script src="comun/three-libs.js?v=12.2"></script>
     <script src="comun/almacen-comun.js?v=13.6"></script>
-    <script src="escenarios/agave1.js?v=14.0"></script>
+    <script src="escenarios/agave1.js?v=14.2"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -2392,7 +2392,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v14.1 tipografía de fichas más grande y legible';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v14.2 cámara sin temblor, oficinas, etiquetadora y más personal';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -2684,7 +2684,8 @@
             if (XR.active && renderer.xr.isPresenting) { xrUpdateRig(); return; }
             if (MVR.on) { xrUpdateRig(); return; }
             { const opG = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); if (opG && !(XR.active)) opG.visible = mode !== 'first'; }
-            if (!window._camT || window._camT.distanceTo(target) > 25 || window._camMode !== mode) { window._camT = target.clone(); window._camMode = mode; camera.position.copy(target); } else window._camT.lerp(target, mode === 'first' ? 1 : 0.18); camera.position.lerp(window._camT, lerp); camLookSmooth.lerp(look, Math.min(1, lerp * 1.5));   // doble suavizado: sin vaivén al librar racks
+            { const tn = performance.now(), fr = Math.min(4, Math.max(.25, (tn - (window._camLastT || tn - 16.7)) / 16.7)); window._camLastT = tn; const K = l => 1 - Math.pow(1 - Math.min(.999, l), fr);   // suavizado independiente de los FPS: sin temblor cuando varía el cuadro
+              if (!window._camT || window._camT.distanceTo(target) > 25 || window._camMode !== mode) { window._camT = target.clone(); window._camMode = mode; camera.position.copy(target); camLookSmooth.copy(look); } else window._camT.lerp(target, mode === 'first' ? 1 : K(0.25)); camera.position.lerp(window._camT, mode === 'first' ? 1 : K(Math.max(lerp, .2))); camLookSmooth.lerp(look, mode === 'first' ? 1 : K(Math.min(1, Math.max(lerp, .2) * 1.5))); }   // doble suavizado: sin vaivén al librar racks
             updateAvatarLOD();
             if (shake > 0.001) { camera.position.x += (Math.random() - .5) * shake; camera.position.y += (Math.random() - .5) * shake * .6; camera.position.z += (Math.random() - .5) * shake; shake *= 0.86; }
             camera.lookAt(camLookSmooth);
