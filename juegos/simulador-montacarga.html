@@ -2392,7 +2392,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v14.3 personal de RECIBO en movimiento con manos sobre el teclado';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v14.4 vista horquillas fija al equipo';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -2671,7 +2671,7 @@
             else if (mode === 'first') { // ojos del operador según el puesto: sentado (contrabalanceo/clamp), de pie (reach/patín) o plataforma (orderpicker)
                 const seatedT = !sp.stand; const eyeY = sp.platform ? 1.95 + mastHeight : seatedT ? 1.82 : 1.85; const back = seatedT ? 1.38 : sp.type === 'Orderpicker' ? -0.25 : sp.type === 'Pallet Truck' ? 1.45 : 0.3; const lat = seatedT ? 0.0 : 0.0;
                 target = new THREE.Vector3(px - sx * back + cz * lat, eyeY, pz - cz * back - sx * lat); const fz = sp.forkZ + reach + 1.0; const lookY = Math.min(eyeY + 2.5, Math.max(0.5, mastHeight + 0.5)); look = new THREE.Vector3(px + sx * fz, lookY, pz + cz * fz); lerp = 0.2; lerp = 0.35; }
-            else if (mode === 'forks') { const fz = sp.forkZ + reach; target = new THREE.Vector3(px - sx * 1.6 + cz * 0.7, 1.9 + mastHeight, pz - cz * 1.6 - sx * 0.7); look = new THREE.Vector3(px + sx * (fz + 1.0), 0.35 + mastHeight, pz + cz * (fz + 1.0)); lerp = 0.14; }
+            else if (mode === 'forks') { const fz = sp.forkZ + reach; target = new THREE.Vector3(px - sx * 1.6 + cz * 0.7, 1.9 + mastHeight, pz - cz * 1.6 - sx * 0.7); if (pointBlocked(target.x, target.y, target.z)) target.set(px - sx * 0.6, 1.9 + mastHeight, pz - cz * 0.6); /* pegado a muro o rack: la cámara se recorre al centro del equipo */ look = new THREE.Vector3(px + sx * (fz + 1.0), 0.35 + mastHeight, pz + cz * (fz + 1.0)); lerp = 0.14; }
             { const wantFar = MVR.on ? 70 : (mode === 'bird' || mode === 'map') ? 400 : 150; if (camera.far !== wantFar) { camera.far = wantFar; camera.updateProjectionMatrix(); } }
             if (false) {}
             else if (mode === 'bird') { target = new THREE.Vector3(px - sx * 3, 9 + Math.max(0, mastHeight - 2), pz - cz * 3); look = new THREE.Vector3(px + sx * 2.5, 0.4 + mastHeight * 0.5, pz + cz * 2.5); }
@@ -2680,12 +2680,12 @@
                 if (pointBlocked(target.x, target.y, target.z)) target.set(px - cz * 6.5, 2.2 + mastHeight * 0.6, pz + sx * 6.5); }
             else if (!target) { target = new THREE.Vector3(px, 28, pz + 0.01); look = new THREE.Vector3(px, 0, pz); }   // mapa / modo desconocido
             if (mode === 'forks' && cargo && cargo.visible && Math.hypot(cargo.position.x - px, cargo.position.z - pz) < 4) { const top = cargo.position.y + 1.25; if (target.y < top + 0.6) target.y = top + 0.6; }
-            if (mode !== 'first') camUnblock(look, target, mode === 'forks');
+            if (mode !== 'first' && mode !== 'forks') camUnblock(look, target, false);   // horquillas: cámara montada en el mástil, sin desvíos
             if (XR.active && renderer.xr.isPresenting) { xrUpdateRig(); return; }
             if (MVR.on) { xrUpdateRig(); return; }
             { const opG = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); if (opG && !(XR.active)) opG.visible = mode !== 'first'; }
             { const tn = performance.now(), fr = Math.min(4, Math.max(.25, (tn - (window._camLastT || tn - 16.7)) / 16.7)); window._camLastT = tn; const K = l => 1 - Math.pow(1 - Math.min(.999, l), fr);   // suavizado independiente de los FPS: sin temblor cuando varía el cuadro
-              if (!window._camT || window._camT.distanceTo(target) > 25 || window._camMode !== mode) { window._camT = target.clone(); window._camMode = mode; camera.position.copy(target); camLookSmooth.copy(look); } else window._camT.lerp(target, mode === 'first' ? 1 : K(0.25)); camera.position.lerp(window._camT, mode === 'first' ? 1 : K(Math.max(lerp, .2))); camLookSmooth.lerp(look, mode === 'first' ? 1 : K(Math.min(1, Math.max(lerp, .2) * 1.5))); }   // doble suavizado: sin vaivén al librar racks
+              if (!window._camT || window._camT.distanceTo(target) > 25 || window._camMode !== mode) { window._camT = target.clone(); window._camMode = mode; camera.position.copy(target); camLookSmooth.copy(look); } else { const rigid = mode === 'first' || mode === 'forks'; window._camT.lerp(target, rigid ? 1 : K(0.25)); camera.position.lerp(window._camT, rigid ? 1 : K(Math.max(lerp, .2))); camLookSmooth.lerp(look, rigid ? 1 : K(Math.min(1, Math.max(lerp, .2) * 1.5))); } }   // doble suavizado: sin vaivén al librar racks
             updateAvatarLOD();
             if (shake > 0.001) { camera.position.x += (Math.random() - .5) * shake; camera.position.y += (Math.random() - .5) * shake * .6; camera.position.z += (Math.random() - .5) * shake; shake *= 0.86; }
             camera.lookAt(camLookSmooth);
