@@ -51,6 +51,52 @@ function agvLabeler(x, z) { const g = new THREE.Group(), M = (c, o) => new THREE
   B(2.3, .9, .02, M(0xf2c200, { transparent: true, opacity: .35 }), 0, 1.1, .7);   // guarda frontal
   B(.3, .3, .01, yel, -.8, 1.2, .72);
   g.position.set(x, 0, z); g.rotation.y = Math.PI / 2; scene.add(g); obstacles.push({ minX: x - .8, maxX: x + .9, minZ: z - 1.25, maxZ: z + 1.25 }); }
+// ---------- Fachada corporativa de oficinas: muro cortina con interior iluminado, franja de ventanas, losa azul, cornisa con letrero, acceso con marquesina, barandal peatonal y escalera ----------
+const AGV_OFF = {};
+function agvOfficeInteriorTex() { if (AGV_OFF.tex) return AGV_OFF.tex; const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#f4f6fa'); gr.addColorStop(1, '#c9d1dc'); g.fillStyle = gr; g.fillRect(0, 0, 512, 256);
+  g.fillStyle = '#fffbe8'; for (let x = 20; x < 512; x += 120) g.fillRect(x, 10, 80, 7);   // luminarias
+  g.fillStyle = '#dfe4ec'; g.fillRect(0, 120, 512, 6);
+  for (let x = 30; x < 512; x += 128) { g.fillStyle = '#8b6b4a'; g.fillRect(x, 168, 96, 10); g.fillStyle = '#5c6470'; g.fillRect(x + 4, 178, 6, 60); g.fillRect(x + 86, 178, 6, 60);   // escritorio
+    g.fillStyle = '#1b1f26'; g.fillRect(x + 18, 134, 30, 22); g.fillRect(x + 56, 134, 30, 22); g.fillStyle = '#2a5cc4'; g.fillRect(x + 20, 136, 26, 18); g.fillStyle = '#3b7a57'; g.fillRect(x + 58, 136, 26, 18);   // monitores encendidos
+    g.fillStyle = '#20242c'; g.fillRect(x + 38, 196, 22, 34); g.beginPath(); g.arc(x + 49, 110 + 70, 0, 0, 7); g.fill();
+    if ((x / 128 | 0) % 2 === 0) { g.fillStyle = '#1D2586'; g.fillRect(x + 40, 140, 18, 30); g.fillStyle = '#d8a27a'; g.beginPath(); g.arc(x + 49, 132, 8, 0, 7); g.fill(); } }   // persona en su puesto
+  g.fillStyle = 'rgba(29,37,134,.12)'; g.fillRect(0, 0, 512, 256);
+  const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; return (AGV_OFF.tex = t); }
+function agvOfficeFacade(a, d, L, H, o) { o = o || {}; const g = new THREE.Group(), n = new THREE.Vector3(d.z, 0, -d.x), origin = a.clone().addScaledVector(d, L);   // n: normal hacia afuera; el eje local X recorre la fachada desde el extremo final
+  const M = (c, x) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .55, metalness: .2 }, x || {})), B = (w, h, dp, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, dp), m); b.position.set(x, y, z); g.add(b); return b; };
+  const alu = M(0x2b2f36, { metalness: .7, roughness: .35 }), panel = M(0xe6e9ee, { roughness: .45 }), navy = M(0x1D2586, { roughness: .4 }), yel = M(0xf2c200, { roughness: .5 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x6f93bf, transparent: true, opacity: .18, roughness: .05, metalness: .3, depthWrite: false });
+  const it = agvOfficeInteriorTex().clone(); it.needsUpdate = true; it.repeat.set(L / 8, 1); const inner = new THREE.MeshBasicMaterial({ map: it, toneMapped: false });
+  const gy0 = .25, gy1 = 3.15, uy0 = 4.25, uy1 = 5.95;
+  B(L, H, .12, panel, L / 2, H / 2, .02);   // revestimiento de panel compuesto
+  const ip = new THREE.Mesh(new THREE.PlaneGeometry(L - .6, gy1 - gy0), inner); ip.position.set(L / 2, (gy0 + gy1) / 2, .1); g.add(ip);   // interior iluminado planta baja
+  const ip2 = new THREE.Mesh(new THREE.PlaneGeometry(L - .6, uy1 - uy0), inner); ip2.position.set(L / 2, (uy0 + uy1) / 2, .09); g.add(ip2);
+  [[gy0, gy1], [uy0, uy1]].forEach(([y0, y1]) => { const gl = new THREE.Mesh(new THREE.PlaneGeometry(L - .6, y1 - y0), glass); gl.position.set(L / 2, (y0 + y1) / 2, .16); g.add(gl);
+    for (let x = .3; x <= L - .29; x += 1.5) B(.07, y1 - y0, .1, alu, x, (y0 + y1) / 2, .16);   // parteluces
+    [y0, y1, y0 + (y1 - y0) * .72].forEach(y => B(L - .6, .07, .1, alu, L / 2, y, .16)); });   // travesaños
+  B(L + .2, .5, .35, navy, L / 2, 3.65, .2);   // losa / franja azul DICKA
+  B(L + .2, .9, .3, navy, L / 2, H - .1, .18);   // cornisa
+  if (o.sign) { const sg = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(L * .7, 16), .62), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: o.sign, size: 64, color: '#ffffff' }], { w: 1400, h: 90, bg: '#1D2586' }) })); sg.position.set(L / 2, H - .1, .34); g.add(sg); }
+  if (o.door) { const dx = o.door; B(2.4, 2.5, .12, alu, dx, 1.25, .2); const dg = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.35), new THREE.MeshStandardMaterial({ color: 0x7fa2c8, transparent: true, opacity: .55, metalness: .5, roughness: .1 })); dg.position.set(dx, 1.2, .27); g.add(dg); B(.04, 2.35, .05, alu, dx, 1.2, .29);
+    B(3.6, .18, 1.6, navy, dx, 2.85, .9); [-1.6, 1.6].forEach(o2 => B(.08, 2.8, .08, alu, dx + o2, 1.4, 1.6));   // marquesina con columnas
+    const ac = new THREE.Mesh(new THREE.PlaneGeometry(2.4, .35), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'ACCESO OFICINAS', size: 60, color: '#1D2586' }], { w: 512, h: 76, bg: '#ffffff' }) })); ac.position.set(dx, 3.05, 1.71); g.add(ac); }
+  if (o.rail) { const rz = 1.05, gap = o.door ? [o.door - 2.1, o.door + 2.1] : null; const seg = (x0, x1) => { if (x1 - x0 < .4) return; B(x1 - x0, .07, .07, yel, (x0 + x1) / 2, 1.0, rz); B(x1 - x0, .07, .07, yel, (x0 + x1) / 2, .5, rz); for (let x = x0; x <= x1 + .01; x += 1.6) B(.09, 1.05, .09, yel, Math.min(x, x1), .52, rz); };
+    const stop = o.stair ? o.stair - .5 : L; if (gap) { seg(.3, gap[0]); seg(gap[1], stop); } else seg(.3, stop);
+    const wk = new THREE.Mesh(new THREE.PlaneGeometry(L, .95), new THREE.MeshBasicMaterial({ color: 0x2e9e5b })); wk.rotation.x = -Math.PI / 2; wk.position.set(L / 2, .015, .55); g.add(wk); }   // andador peatonal verde junto a la fachada
+  if (o.stair) { const s0 = o.stair, w = 1.2, z = 1.0, steps = 18, rise = 3.6 / steps, run = .28, sm = M(0x8a929e, { metalness: .6, roughness: .35 });
+    for (let i = 0; i < steps; i++) B(run + .02, .05, w, sm, s0 + i * run, rise * (i + 1), z);   // huellas
+    const len = steps * run, ang = Math.atan2(3.6, len); [z - w / 2, z + w / 2].forEach(zz => { const st = B(Math.hypot(len, 3.6), .22, .06, alu, s0 + len / 2, 1.8, zz); st.rotation.z = ang; const hr = B(Math.hypot(len, 3.6), .05, .05, yel, s0 + len / 2, 2.8, zz); hr.rotation.z = ang; });
+    B(2.2, .12, w + .2, sm, s0 + len + 1.0, 3.6, z); [z - w / 2 - .1, z + w / 2 + .1].forEach(zz => B(2.2, .05, .05, yel, s0 + len + 1.0, 4.6, zz)); B(.05, 1.0, w + .2, yel, s0 + len + 2.1, 4.1, z);   // descanso con barandal
+    B(1.0, 2.2, .1, M(0x5b6577, { metalness: .4 }), s0 + len + 1.0, 4.75, .2);   // puerta de planta alta
+    [s0, s0 + len].forEach(x => B(.12, x === s0 ? .3 : 3.6, .12, alu, x, (x === s0 ? .3 : 3.6) / 2, z)); }
+  g.traverse(m => { if (m.isMesh) { m.castShadow = false; m.receiveShadow = true; } });
+  g.position.copy(origin); g.rotation.y = Math.atan2(n.x, n.z); scene.add(g);
+  // obstáculos: barandal y escalera (no se puede pasar por encima)
+  const w2 = (lx, lz) => new THREE.Vector3(lx, 0, lz).applyAxisAngle(new THREE.Vector3(0, 1, 0), g.rotation.y).add(origin);
+  const box = (x0, z0, x1, z1) => { const p = [w2(x0, z0), w2(x1, z1)]; obstacles.push({ minX: Math.min(p[0].x, p[1].x), maxX: Math.max(p[0].x, p[1].x), minZ: Math.min(p[0].z, p[1].z), maxZ: Math.max(p[0].z, p[1].z) }); };
+  if (o.rail) box(0, -.1, L, 1.2);
+  if (o.stair) box(o.stair - .3, 0, o.stair + 18 * .28 + 2.3, 1.8); }
 // ---------- Apariencia según fotos de la nave real (Agave 1) ----------
 const AGV_TEX = {};
 function agvTex(kind) { if (AGV_TEX[kind]) return AGV_TEX[kind]; const c = document.createElement('canvas'), g = c.getContext('2d');
@@ -141,16 +187,11 @@ function buildAgaveWorld() { const A = AGV, H = 12;
   { const ox0 = A.offX0 + .3, ox1 = A.offX1 - .3, oz0 = A.offZ0, oz1 = A.offZ1 - .3, oh = 7.2, glass = new THREE.MeshStandardMaterial({ color: 0x9fc3e8, transparent: true, opacity: .45, roughness: .1, metalness: .2 });
     const ow = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), m = new THREE.Mesh(new THREE.BoxGeometry(L, oh, .2), wallMat); m.position.set((x0 + x1) / 2, oh / 2, (z0 + z1) / 2); m.rotation.y = -Math.atan2(z1 - z0, x1 - x0); scene.add(m); };
     ow(ox0, oz0, ox1, oz0); ow(ox1, oz0, ox1, oz1);   // fachada norte y fachada oriente (antes abierta: se veía el interior vacío)
-    for (let z = oz0 + 2.5; z < oz1 - 2; z += 4.5) [1.9, 5.5].forEach(wy => { const w = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.4), glass); w.position.set(ox1 + .11, wy, z); w.rotation.y = Math.PI / 2; scene.add(w); const f = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 1.6), new THREE.MeshStandardMaterial({ color: 0x1D2586 })); f.position.set(ox1 + .105, wy, z); f.rotation.y = Math.PI / 2; scene.add(f); });
-    { const sl = new THREE.Mesh(new THREE.BoxGeometry(.3, .25, oz1 - oz0), new THREE.MeshStandardMaterial({ color: 0x1D2586 })); sl.position.set(ox1 + .2, 3.6, (oz0 + oz1) / 2); scene.add(sl);
-      const dr = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.2), new THREE.MeshStandardMaterial({ color: 0x5b6577, metalness: .4, roughness: .4 })); dr.position.set(ox1 + .11, 1.1, oz0 + 6); dr.rotation.y = Math.PI / 2; scene.add(dr);
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(8, .7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'OFICINAS · PLANTA BAJA Y ALTA', size: 62, color: '#ffffff' }], { w: 1024, h: 90, bg: '#1D2586' }) })); m.position.set(ox1 + .12, 6.75, (oz0 + oz1) / 2); m.rotation.y = Math.PI / 2; scene.add(m); }
     obstacles.push({ minX: ox0 - .3, maxX: ox1 + .3, minZ: oz0 - .5, maxZ: oz1 + .3 });
-    for (let x = ox0 + 3; x < ox1 - 2; x += 5) [1.9, 5.5].forEach(wy => { const w = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.4), glass); w.position.set(x, wy, oz0 - .11); w.rotation.y = Math.PI; scene.add(w); });   // planta baja y planta alta
-    { const slab = new THREE.Mesh(new THREE.BoxGeometry(ox1 - ox0, .25, .3), new THREE.MeshStandardMaterial({ color: 0x1D2586 })); slab.position.set((ox0 + ox1) / 2, 3.6, oz0 - .2); scene.add(slab);
-      const st = new THREE.Group(), sm = new THREE.MeshStandardMaterial({ color: 0x8a929e, metalness: .5, roughness: .4 }); for (let i = 0; i < 18; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(1.1, .06, .3), sm); s.position.set(ox1 - 1.2, .2 + i * .2, oz0 - .5 - (17 - i) * .25 * 0); s.position.x = ox1 - 1.2 - i * .28; s.position.z = oz0 - .7; st.add(s); } const rl = new THREE.Mesh(new THREE.BoxGeometry(5.2, .05, .05), new THREE.MeshStandardMaterial({ color: 0xf2c200 })); rl.position.set(ox1 - 3.6, 2.7, oz0 - 1.2); rl.rotation.z = -Math.atan2(3.6, 5); st.add(rl); scene.add(st); }   // escalera exterior a planta alta
+    // Fachadas corporativas: norte (frente a racks, con acceso principal) y oriente (con escalera a planta alta)
+    agvOfficeFacade(new THREE.Vector3(ox0, 0, oz0), new THREE.Vector3(1, 0, 0), ox1 - ox0, oh, { door: 12, sign: 'DICKA LOGISTICS · OFICINAS · MESA DE CONTROL', rail: true });
+    agvOfficeFacade(new THREE.Vector3(ox1, 0, oz0), new THREE.Vector3(0, 0, 1), oz1 - oz0, oh, { door: 6, sign: 'OFICINAS · PLANTA BAJA Y ALTA', rail: true, stair: oz1 - oz0 - 9 });
     const tag = (t, x, w, col = '#ffffff', bg = '#1D2586') => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, .7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: t, size: 70, color: col }], { w: 1024, h: Math.round(1024 * .7 / w), bg }) })); m.position.set(x, 3.15, oz0 - .12); m.rotation.y = Math.PI; scene.add(m); };
-    tag('OFICINAS · MESA DE CONTROL', ox0 + 12, 9); { const m = new THREE.Mesh(new THREE.PlaneGeometry(9, .7), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'OFICINAS · PLANTA ALTA', size: 70, color: '#ffffff' }], { w: 1024, h: 80, bg: '#1D2586' }) })); m.position.set(ox0 + 12, 6.75, oz0 - .12); m.rotation.y = Math.PI; scene.add(m); } tag('ÁREA DE OFICINAS · 5 km/h', ox0 + 27, 8, '#f5c400', '#20242c');
     agvSign('sanMujeres', ox1 - 7, 2.2, oz0 - .13, Math.PI, .8); agvSign('sanHombres', ox1 - 5.8, 2.2, oz0 - .13, Math.PI, .8); agvSign('botiquin', ox0 + 4, 2.2, oz0 - .13, Math.PI); agvSign('extintor', ox0 + 6, 2.2, oz0 - .13, Math.PI); makeExtinguisher(ox0 + 6, oz0 - .35, Math.PI);
     const roof = new THREE.Mesh(new THREE.BoxGeometry(ox1 - ox0, .2, oz1 - oz0), new THREE.MeshStandardMaterial({ color: 0xb8bec8 })); roof.position.set((ox0 + ox1) / 2, oh, (oz0 + oz1) / 2); scene.add(roof); }
   // Andenes: cortinas, numeración P1–P41, topes y tráileres estacionados
