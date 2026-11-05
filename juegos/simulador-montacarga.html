@@ -1209,7 +1209,7 @@
 
     <script src="comun/three-libs.js?v=12.2"></script>
     <script src="comun/almacen-comun.js?v=13.6"></script>
-    <script src="escenarios/agave1.js?v=13.8"></script>
+    <script src="escenarios/agave1.js?v=13.9"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -1917,14 +1917,14 @@
         // Operador a bordo del jugador (humano v4 o modelo realista): se construye al crear el equipo y se reconstruye cuando termina de cargar el GLB
         function buildPlayerOperator() { if (!forklift) return; const sp = spec(); const old = forklift.getObjectByName('operator') || forklift.getObjectByName('platform'); if (old) forklift.remove(old); const seated = !sp.stand;
                 if (seated && GLTF_AVATAR.ok && GLTF_AVATAR.clips.sit) { const av = makeGLTFAvatar(); gltfPlay(av, 'sit'); const op = new THREE.Group(); op.name = 'operator'; op.add(av.obj); av.obj.position.set(0, 0, 0); const hg = new THREE.Group(); hg.name = 'opHead'; op.add(hg); op.position.set(0, GLTF_SEAT.y, GLTF_SEAT.z); op.userData.gltf = av; forklift.add(op); return; }
-                if (!seated && GLTF_AVATAR.ok) { const op = makeStandingOperator(QUALITY.preset.hiDist === 0); op.name = sp.type === 'Orderpicker' ? 'platform' : 'operator'; if (sp.type === 'Reach' || sp.type === 'Double Reach') { op.position.set(0, 0.2, -0.3); op.rotation.y = -Math.PI / 2 + 0.55; } else if (sp.type === 'Orderpicker') { op.position.set(0, 0.4, 0.25); } else { op.position.set(0, 0.25, -0.15); } forklift.add(op); return; }
+                if (!seated && GLTF_AVATAR.ok) { const op = makeStandingOperator(QUALITY.preset.hiDist === 0); op.name = sp.type === 'Orderpicker' ? 'platform' : 'operator'; if (sp.type === 'Reach' || sp.type === 'Double Reach') { op.position.set(0, 0.2, -0.3); op.rotation.y = -Math.PI / 2 + 0.55; } else if (sp.type === 'Orderpicker') { op.position.set(0, 0.4, 0.25); } else if (sp.type === 'Pallet Truck') { op.position.set(0.05, 0.2, -1.45); op.rotation.y = -Math.PI / 2 + 0.55; } else { op.position.set(0, 0.25, -0.15); } forklift.add(op); return; }
                 const op = buildHuman({ seatbelt: seated, glasses: true }, { seated, hipY: 0.94 }); op.name = 'operator';
                 op.traverse(o => { if (o.name === 'head') o.name = 'opHead'; });
                 ['armL', 'armR', 'elbowL', 'elbowR'].forEach(n => op.traverse(o => { if (o.name === n) { if (n.startsWith('arm')) o.rotation.x = seated ? -1.05 : -0.75; else o.rotation.x = seated ? -0.55 : -0.9; } }));
                 // brazos hacia los controles: sentado al volante (9 y 3), de pie sobre el timón/palancas
 
                 if (seated) { op.position.set(0, 0.10, -1.30); }
-                else if (sp.type === 'Reach' || sp.type === 'Double Reach') { op.position.set(0, 0.2, -0.3); op.rotation.y = -Math.PI / 2; }
+                else if (sp.type === 'Reach' || sp.type === 'Double Reach') { op.position.set(0, 0.2, -0.3); op.rotation.y = -Math.PI / 2; } else if (sp.type === 'Pallet Truck') { op.position.set(0.05, 0.2, -1.45); op.rotation.y = -Math.PI / 2 + 0.55; }
                 else if (sp.type === 'Orderpicker') { op.position.set(0, 0.4, 0.25); op.name = 'platform'; }
                 else { op.position.set(0, 0.25, -0.15); }
                 op.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); forklift.add(op); }
@@ -1964,10 +1964,11 @@
                     jg.position.set(0.3, 1.12, -0.62); }
                 else if (sp.type === 'Reach' || sp.type === 'Double Reach') { jg.position.set(-0.42, 1.12, -0.05); jg.rotation.y = -Math.PI / 2; }   // consola de control del reach (operador de costado)
                 else if (sp.type === 'Orderpicker') { jg.position.set(0.3, 1.1, 0.55); }
-                else return;   // patín: timón
+                else if (sp.type === 'Pallet Truck') { jg.position.set(-0.2, 1.12, -1.22); jg.rotation.y = -Math.PI / 2; }   // manubrio de control Raymond sobre el cuerpo motriz
+                else return;
                 jg.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } }); target.add(jg); 
             // barra de sujeción para la mano izquierda (equipos de pie)
-            if (sp.stand && !sp.tiller) { const rail = new THREE.Group(); rail.name = 'cabinRail'; const bar = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, .32, 12), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: .5, metalness: .4 })); bar.rotation.z = Math.PI / 2; rail.add(bar); [-.14, .14].forEach(x => { const post = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .08, 8), bar.material); post.position.set(x, -.04, 0); rail.add(post); }); rail.position.set(0.42, 1.1, -0.05); rail.visible = false; target.add(rail); }
+            if (sp.stand) { const rail = new THREE.Group(); rail.name = 'cabinRail'; const bar = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, .32, 12), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: .5, metalness: .4 })); bar.rotation.z = Math.PI / 2; rail.add(bar); [-.14, .14].forEach(x => { const post = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .08, 8), bar.material); post.position.set(x, -.04, 0); rail.add(post); }); rail.position.set(0.42, 1.1, -0.05); rail.visible = false; target.add(rail); }
             return target.getObjectByName('cabinJoystick'); }
         // ====== Detalle realista Raymond (reach): carrocería redondeada, pintura satinada, cilindros, cadenas, mangueras, defensas y luces ======
         
@@ -2088,17 +2089,19 @@
                 logo(0.8, 0, 0.8, -1.86, Math.PI); logo(0.7, -W / 2 - 0.01, 0.55, -1.2, -Math.PI / 2); logo(0.7, W / 2 + 0.01, 0.55, -1.2, Math.PI / 2);
                 beacon(0, 2.4, -1.0);
             }
-            else if (sp.type === 'Pallet Truck') {
-                add(new THREE.BoxGeometry(W, 0.9, 0.9), red, 0, 0.55, -0.9); add(new THREE.BoxGeometry(W - 0.1, 0.25, 0.8), dark, 0, 1.1, -0.9);
-                add(new THREE.BoxGeometry(W - 0.1, 0.1, 0.6), red, 0, 0.2, -0.15);      // plataforma operador
-                add(new THREE.BoxGeometry(W - 0.1, 0.9, 0.06), red, 0, 0.7, -0.45);    // respaldo
-                // timón
-                const till = add(new THREE.CylinderGeometry(0.03, 0.03, 1.2, 8), steel, 0, 1.2, -1.2); till.rotation.x = -0.6;
-                add(new THREE.BoxGeometry(0.6, 0.12, 0.2), dark, 0, 1.75, -1.55);
-                wheel(0.13, 0.12, 0, 0.13, -1.1, 'wheelSteer'); [-1, 1].forEach(sd => wheel(0.09, 0.08, sd * 0.3, 0.09, 1.9, 'wheelRoll'));
-                add(new THREE.BoxGeometry(0.9, 0.5, 0.06), dark, 0, 0.45, -0.45, 'carriage');
+            else if (sp.type === 'Pallet Truck') {   // Raymond 8250 (end rider): horquillas → respaldo de carga → cuerpo motriz con batería → plataforma del operador atrás, con respaldo y guardas
+                add(new THREE.BoxGeometry(W, 0.85, 0.8), red, 0, 0.55, -0.75); add(new THREE.BoxGeometry(W - 0.06, 0.08, 0.76), dark, 0, 1.01, -0.75);   // cuerpo motriz y tapa
+                add(new THREE.BoxGeometry(W - 0.1, 0.3, 0.06), dark, 0, 0.75, -1.16);   // panel trasero del cuerpo (frente al operador)
+                add(new THREE.BoxGeometry(W - 0.04, 0.08, 0.58), dark, 0, 0.16, -1.47);   // plataforma antiderrapante
+                add(new THREE.BoxGeometry(W - 0.04, 0.03, 0.05), new THREE.MeshStandardMaterial({ color: 0xf2c200 }), 0, 0.215, -1.2);   // orilla amarilla de la plataforma
+                add(new THREE.BoxGeometry(W, 1.05, 0.08), red, 0, 0.72, -1.78); add(new THREE.BoxGeometry(W - 0.2, 0.45, 0.06), dark, 0, 0.95, -1.73);   // respaldo envolvente con cojín
+                add(new THREE.BoxGeometry(0.07, 1.05, 0.6), red, -W / 2 + 0.035, 0.72, -1.48);   // guarda lateral (la entrada queda del lado derecho)
+                [[-W / 2 + 0.03, -1.2], [W / 2 - 0.03, -1.75]].forEach(([x, z]) => add(new THREE.CylinderGeometry(0.02, 0.02, 1.1, 10), dark, x, 0.75, z));   // postes de sujeción
+                add(new THREE.CylinderGeometry(0.02, 0.02, 0.56, 10), dark, W / 2 - 0.03, 1.28, -1.47).rotation.x = Math.PI / 2;   // pasamanos superior lado de entrada
+                wheel(0.13, 0.12, 0, 0.13, -0.75, 'wheelSteer'); [-0.3, 0.3].forEach(dx => wheel(0.06, 0.08, dx * 1.3, 0.06, -1.6, 'wheelCast')); [-1, 1].forEach(sd => wheel(0.09, 0.08, sd * 0.3, 0.09, 1.9, 'wheelRoll'));
+                add(new THREE.BoxGeometry(0.9, 0.95, 0.06), dark, 0, 0.6, -0.32, 'carriage');   // respaldo de carga
                 [-0.3, 0.3].forEach(dx => add(new THREE.BoxGeometry(0.17, 0.07, 2.3), black, dx, 0.09, 0.9, 'fork'));
-                logo(0.7, 0, 0.7, -1.36, Math.PI); logo(0.6, -W / 2 - 0.01, 0.55, -0.9, -Math.PI / 2); logo(0.6, W / 2 + 0.01, 0.55, -0.9, Math.PI / 2);
+                logo(0.6, -W / 2 - 0.01, 0.55, -0.75, -Math.PI / 2); logo(0.6, W / 2 + 0.01, 0.55, -0.75, Math.PI / 2); logo(0.6, 0, 1.2, -1.83, Math.PI);
             }
             buildPlayerOperator();
             // Joystick de cabina (control multifunción): se inclina con la entrada del operador; la mano derecha del avatar procedural lo toma
@@ -2368,7 +2371,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v13.8 cámara estable, espejos y oficinas en 2 plantas';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v13.9 patín Raymond 8250, tarimas con textura y personal en RECIBO';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -2606,7 +2609,7 @@
         
         
         /* Contorno de colisión por equipo (chasis y contrapeso; horquillas, brazos de apoyo y placas quedan fuera porque entran al rack / bajo la tarima). hw = medio ancho, zr = trasera, zf = frente del mástil */
-        const BODY_FOOT = { reach: { hw: 0.6, zr: -2.0, zf: 0.5 }, doublereach: { hw: 0.62, zr: -2.0, zf: 0.5 }, counter: { hw: 0.64, zr: -2.1, zf: 0.5 }, orderpicker: { hw: 0.5, zr: -1.85, zf: 0.5 }, clamp: { hw: 0.66, zr: -2.1, zf: 0.5 }, pallet: { hw: 0.42, zr: -1.6, zf: 0.05 } };
+        const BODY_FOOT = { reach: { hw: 0.6, zr: -2.0, zf: 0.5 }, doublereach: { hw: 0.62, zr: -2.0, zf: 0.5 }, counter: { hw: 0.64, zr: -2.1, zf: 0.5 }, orderpicker: { hw: 0.5, zr: -1.85, zf: 0.5 }, clamp: { hw: 0.66, zr: -2.1, zf: 0.5 }, pallet: { hw: 0.42, zr: -1.85, zf: 0.05 } };
         function bodyPoints(x, z, a) { const F = BODY_FOOT[currentModel] || BODY_FOOT.doublereach, s = Math.sin(a), c = Math.cos(a), pts = [];
             const nz = Math.max(2, Math.ceil((F.zf - F.zr) / 0.45)), nx = 2;
             for (let i = 0; i <= nz; i++) { const lz = F.zr + (F.zf - F.zr) * i / nz; [-F.hw, F.hw].forEach(lx => pts.push([x + c * lx + s * lz, z - s * lx + c * lz])); }
@@ -2645,7 +2648,7 @@
                 // si el punto queda dentro de un rack, acércala y súbela para no perder al equipo
                 if (pointBlocked(target.x, target.y, target.z)) { target.set(px - sx * 3.2, 5.5, pz - cz * 3.2); } }
             else if (mode === 'first') { // ojos del operador según el puesto: sentado (contrabalanceo/clamp), de pie (reach/patín) o plataforma (orderpicker)
-                const seatedT = !sp.stand; const eyeY = sp.platform ? 1.95 + mastHeight : seatedT ? 1.82 : 1.85; const back = seatedT ? 1.38 : sp.type === 'Orderpicker' ? -0.25 : 0.3; const lat = seatedT ? 0.0 : 0.0;
+                const seatedT = !sp.stand; const eyeY = sp.platform ? 1.95 + mastHeight : seatedT ? 1.82 : 1.85; const back = seatedT ? 1.38 : sp.type === 'Orderpicker' ? -0.25 : sp.type === 'Pallet Truck' ? 1.45 : 0.3; const lat = seatedT ? 0.0 : 0.0;
                 target = new THREE.Vector3(px - sx * back + cz * lat, eyeY, pz - cz * back - sx * lat); const fz = sp.forkZ + reach + 1.0; const lookY = Math.min(eyeY + 2.5, Math.max(0.5, mastHeight + 0.5)); look = new THREE.Vector3(px + sx * fz, lookY, pz + cz * fz); lerp = 0.2; lerp = 0.35; }
             else if (mode === 'forks') { const fz = sp.forkZ + reach; target = new THREE.Vector3(px - sx * 1.6 + cz * 0.7, 1.9 + mastHeight, pz - cz * 1.6 - sx * 0.7); look = new THREE.Vector3(px + sx * (fz + 1.0), 0.35 + mastHeight, pz + cz * (fz + 1.0)); lerp = 0.14; }
             { const wantFar = MVR.on ? 70 : (mode === 'bird' || mode === 'map') ? 400 : 150; if (camera.far !== wantFar) { camera.far = wantFar; camera.updateProjectionMatrix(); } }
