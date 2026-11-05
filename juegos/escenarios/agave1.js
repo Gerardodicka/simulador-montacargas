@@ -82,6 +82,7 @@ function agvRealismo(A, H, dm) { const BH = 3.6;
     const rail = new THREE.MeshStandardMaterial({ color: 0xff8a00, roughness: .5, metalness: .3 }), r = (w, d, x, y, z) => agvBox(w, .08, d, 0xff8a00, x, y, z).material = rail;
     r(x1 - x0, .08, (x0 + x1) / 2, 1.05, z1 - .2); r(x1 - x0, .08, (x0 + x1) / 2, .55, z1 - .2); for (let x = x0; x <= x1 + .01; x += 1.5) agvBox(.08, 1.1, .08, 0xff8a00, x, .55, z1 - .2).material = rail;
     obstacles.push({ minX: x0 - .2, maxX: x1 + .2, minZ: z0, maxZ: z1 });
+    window.AGV_PRINTER = { x: x1 - .7 }; agvBox(.8, .75, .55, 0x6b4a2b, x1 - .7, .375, z0 + 2.2); agvBox(.45, .3, .38, 0xe8eaee, x1 - .7, .9, z0 + 2.2); agvBox(.3, .02, .2, 0xffffff, x1 - .7, 1.06, z0 + 2.3); agvBox(.12, .04, .02, 0x2e9e5b, x1 - .55, 1.0, z0 + 2.4);   // impresora de etiquetas
     window.AGV_DESKS = []; for (let x = x0 + 1.5; x < x1 - 1; x += 2.6) { AGV_DESKS.push({ x, z: z0 + 2.2 }); agvBox(1.6, .08, .7, 0x6b4a2b, x, .95, z0 + 2.2); agvBox(.06, .9, .6, 0x333333, x - .7, .45, z0 + 2.2); agvBox(.06, .9, .6, 0x333333, x + .7, .45, z0 + 2.2); agvComputer(x, .99, z0 + 2.38); }   // computadora (modelo 3D: monitor, gabinete, teclado y mouse)
     const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, .9), new THREE.MeshBasicMaterial({ map: makeTextTexture([{ text: 'RECIBO', size: 110, color: '#1D2586' }], { w: 512, h: 180, bg: '#ffffff' }) })); sg.position.set((x0 + x1) / 2 + 1.3, 2.25, z1 - .2); sg.rotation.y = Math.PI; scene.add(sg); const sg2 = sg.clone(); sg2.rotation.y = 0; sg2.position.z += .02; scene.add(sg2); agvBox(.08, 1.2, .08, 0xff8a00, (x0 + x1) / 2 + .1, 1.7, z1 - .2); agvBox(.08, 1.2, .08, 0xff8a00, (x0 + x1) / 2 + 2.5, 1.7, z1 - .2); }   // letrero sobre el barandal (visible, sin columna enfrente)
   // Letreros de cliente colgados en las cabeceras de pasillo (EPSON · LASER · TOCONSA …)
@@ -258,12 +259,26 @@ function buildTrafficAgave() { const A = AGV;
   npcPed('Auxiliar de inventario cíclico', [[ax(1) - 3, A.cuts[0]], [ax(14) + 3, A.cuts[0]]], 0.3, F({ prop: 'scanner' }));
   npcPed('Montacarguista en relevo', [[ax(14) + 3, A.cuts[1] + 1], [ax(1) - 3, A.cuts[1] + 1]], 0.65, { prop: 'radio' });
   agvDeskWorkers(0); }
-function agvDeskWorkers(n) { if (window.AGV_DESK_DONE) return; if (!(GLTF_AVATAR.gltf && GLTF_AVATAR.gltf.scene)) { if (n < 200) setTimeout(() => agvDeskWorkers(n + 1), 1500); return; } window.AGV_DESK_DONE = true;
-  (window.AGV_DESKS || []).forEach((d, i) => { try { const op = makeStandingOperator(QUALITY.preset.hiDist === 0); op.position.set(d.x, 0, d.z + .62); op.rotation.y = Math.PI; scene.add(op); op.updateMatrixWorld(true);
-      { const hb = op.getObjectByName('Hips') || op.getObjectByName('mixamorigHips'); if (hb) { const hp = hb.getWorldPosition(new THREE.Vector3()); op.position.x += d.x - hp.x; op.position.z += (d.z + .62) - hp.z; op.updateMatrixWorld(true); } }   // centra la cadera frente a su mesa
-      const av = op.userData.gltf || op.userData.av; const root = av ? av.obj : op; const kb = new THREE.Vector3(d.x, 1.04, d.z + .18);
-      if (av && typeof ikReach === 'function') { ikReach(av, 'Right', kb.clone().add(new THREE.Vector3(-.13, 0, 0))); ikReach(av, 'Left', kb.clone().add(new THREE.Vector3(.13, 0, 0))); }
-      const typing = ['RightHand', 'LeftHand', 'RightForeArm', 'LeftForeArm'].map(n => root.getObjectByName(n)).filter(Boolean).map(b => ({ b, q: b.quaternion.clone() }));
-      if (typing.length && typeof OFFICE_WORKERS !== 'undefined') OFFICE_WORKERS.push({ seat: op, typing, st: { x: d.x, z: d.z }, sd: 1, t: 0, dur: 1e9, state: 'type', ph: i * 1.3 });
-      obstacles.push({ minX: d.x - .35, maxX: d.x + .35, minZ: d.z + .3, maxZ: d.z + .95 }); } catch (e) { console.warn('[SIM] recibo:', e.message); } }); }
+function agvDeskWorkers(n) { if (window.AGV_DESK_DONE) return; if (!(GLTF_AVATAR.gltf && GLTF_AVATAR.gltf.scene) || !window.AGV_DESKS) { if (n < 200) setTimeout(() => agvDeskWorkers(n + 1), 1500); return; } window.AGV_DESK_DONE = true;
+  // Personal de RECIBO que se mueve: teclea en su computadora, camina a otra mesa o a la impresora de etiquetas, recoge la hoja y vuelve a operar
+  const D = AGV_DESKS, laneZ = D[0].z + .62, PR = window.AGV_PRINTER, W = [], HF = window.AGV_HAND_FIX || { x: 0, y: Math.PI, z: 0 };
+  const stations = D.map(d => ({ x: d.x, desk: true, busy: false })).concat(PR ? [{ x: PR.x, desk: false, busy: false }] : []);
+  const bonesOf = av => { const L = []; av.obj.traverse(o => { if (o.isBone) L.push(o); }); return L; }, snap = L => L.map(b => [b.quaternion.clone(), b.position.clone()]), apply = (L, S) => L.forEach((b, i) => { b.quaternion.copy(S[i][0]); b.position.copy(S[i][1]); });
+  D.forEach((d, i) => { try { const op = makeStandingOperator(QUALITY.preset.hiDist === 0); op.position.set(d.x, 0, laneZ); op.rotation.y = Math.PI; scene.add(op); op.updateMatrixWorld(true); const av = op.userData.gltf; if (!av) return;
+      const hb = op.getObjectByName('Hips') || op.getObjectByName('mixamorigHips'); let hdx = 0, hdz = 0; if (hb) { const hp = hb.getWorldPosition(new THREE.Vector3()); hdx = d.x - hp.x; hdz = laneZ - hp.z; op.position.x += hdx; op.position.z += hdz; op.updateMatrixWorld(true); }
+      const L = bonesOf(av), neutral = snap(L); const kb = new THREE.Vector3(d.x, 1.03, d.z + .18);
+      ikReach(av, 'Right', kb.clone().add(new THREE.Vector3(-.12, 0, 0))); ikReach(av, 'Left', kb.clone().add(new THREE.Vector3(.12, 0, 0)));
+      ['RightHand', 'LeftHand'].forEach(n => { const h = av.obj.getObjectByName(n); if (h) { h.rotateX(HF.x); h.rotateY(HF.y); h.rotateZ(HF.z); } });   // palmas hacia el teclado
+      const type = snap(L), anim = ['RightHand', 'LeftHand', 'RightForeArm', 'LeftForeArm'].map(n => L.findIndex(b => b.name === n)).filter(k => k >= 0);
+      stations[i].busy = true; W.push({ op, av, L, neutral, type, anim, hdx: -hdx, hdz, st: stations[i], state: 'type', t: 0, dur: 6 + Math.random() * 8 + i * 3, w: Math.random() * 6, ph: i * 1.7 }); } catch (e) { console.warn('[SIM] recibo:', e.message); } });
+  let last = performance.now();
+  const tick = () => { const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now; if (typeof SCENARIO !== 'undefined' && SCENARIO !== 'agave1') return;
+    W.forEach(k => { k.t += dt;
+      if (k.state === 'type' || k.state === 'pick') { if (k.state === 'type') { apply(k.L, k.type); k.anim.forEach((bi, j) => k.L[bi].rotateX(Math.sin(now * .022 + k.ph + j * 1.7) * (j < 2 ? .14 : .03) * (Math.sin(now * .0011 + k.ph) > -.3 ? 1 : 0))); } else apply(k.L, k.neutral);
+        if (k.t > k.dur) { const free = stations.filter(s => !s.busy && s !== k.st); if (!free.length) { k.t = 0; return; } const nx = free[Math.floor(Math.random() * free.length)]; k.st.busy = false; nx.busy = true; k.st = nx; k.state = 'walk'; k.t = 0; apply(k.L, k.neutral); } return; }
+      if (k.state === 'walk') { const tx = k.st.x - k.hdx, dx = tx - k.op.position.x, s = Math.sign(dx); k.op.rotation.y = s > 0 ? Math.PI / 2 : -Math.PI / 2; k.w += dt * 6.5;
+        try { gltfWalkPose(k.av, true, k.w, now, false, 0); } catch (e) { }
+        const step = 1.05 * dt; if (Math.abs(dx) <= step) { k.op.position.x = tx; k.op.rotation.y = Math.PI; k.state = k.st.desk ? 'type' : 'pick'; k.t = 0; k.dur = k.st.desk ? 9 + Math.random() * 10 : 3 + Math.random() * 2; } else k.op.position.x += s * step; } });
+    requestAnimationFrame(tick); };
+  requestAnimationFrame(tick); window.AGV_WORKERS = W; }
 

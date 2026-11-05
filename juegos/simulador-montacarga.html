@@ -1230,7 +1230,7 @@
 
     <script src="comun/three-libs.js?v=12.2"></script>
     <script src="comun/almacen-comun.js?v=13.6"></script>
-    <script src="escenarios/agave1.js?v=14.2"></script>
+    <script src="escenarios/agave1.js?v=14.3"></script>
     
     <script>
         // ========== DATOS DE PREGUNTAS ==========
@@ -2392,7 +2392,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v14.2 cámara sin temblor, oficinas, etiquetadora y más personal';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v14.3 personal de RECIBO en movimiento con manos sobre el teclado';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
