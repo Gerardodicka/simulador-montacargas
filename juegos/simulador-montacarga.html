@@ -882,6 +882,27 @@
             }
         }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Tipografía de fichas: Inter para lectura, Poppins para títulos; tamaños mayores */
+        .brief-card, .cc-wrap { font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; }
+        .bh-title { font-family: Poppins, Inter, Arial, sans-serif; font-size: 28px; font-weight: 700; }
+        .bh-eyebrow, .bsec h4, .cc-label { font-family: Inter, Arial, sans-serif; font-size: 13px; font-weight: 800; letter-spacing: .1em; }
+        .brief-head small, .cc-head small { font-family: Inter, Arial, sans-serif; font-size: 14.5px; }
+        .brief-body { font-size: 16px; gap: 16px; }
+        .brief-body .goal { font-size: 17px; font-weight: 700; }
+        .bsteps li { font-size: 16.5px; line-height: 1.5; grid-template-columns: 32px 1fr; }
+        .bsteps li::before { width: 32px; height: 32px; font: 700 14px Poppins, Inter, Arial; }
+        .bcard { font-size: 15px; line-height: 1.5; } .bchips span { font-size: 14px; padding: 4px 10px; } .brief-body kbd { font-size: 13.5px; }
+        .bprog span { font-size: 13.5px; padding: 5px 12px; }
+        .brief-go { font-family: Poppins, Inter, Arial, sans-serif; font-size: 19px; font-weight: 700; padding: 16px; }
+        .cc-head { font-family: Poppins, Inter, Arial, sans-serif; font-size: 22px; font-weight: 700; }
+        .cc-row b { font-size: 16px; } .cc-row small { font-size: 13.5px; } .cc-st { font-size: 12.5px; }
+        .cc-tests div { font-size: 14px; } .cc-note { font-size: 14px; }
+        .cc-actions .btn-next { font-family: Poppins, Inter, Arial, sans-serif; font-weight: 700; font-size: 16px; } .cc-actions .cc-sec .btn-next { font-size: 14.5px; }
+        @media (max-width: 600px) { .bh-title { font-size: 22px; } .brief-body { font-size: 15px; } .bsteps li { font-size: 15.5px; } }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -2371,7 +2392,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v14.0 espejos con reflejo real y computadoras en RECIBO';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v14.1 tipografía de fichas más grande y legible';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
