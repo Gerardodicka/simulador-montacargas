@@ -42,7 +42,8 @@ input,select{width:100%;padding:12px;border:2px solid #dfe3f0;border-radius:10px
 .line{display:flex;gap:10px;align-items:flex-start}.av{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:20px;flex:none;background:var(--papel)}
 .line .tx{font-size:15.5px;line-height:1.5}.line .tx b{font:700 13px Poppins,Inter;color:var(--brillante);display:block;letter-spacing:.02em}
 .q{font:700 14px Inter;color:var(--azul);letter-spacing:.06em}
-.opts{display:grid;gap:8px}.opt{display:flex;gap:10px;text-align:left;padding:12px 14px;border-radius:12px;border:2px solid #dfe3f2;background:#fff;font:500 15px Inter;cursor:pointer;align-items:flex-start;transition:.15s}.opt:hover{border-color:var(--brillante);background:#f4f6ff}.opt .k{width:28px;height:28px;border-radius:8px;background:var(--azul);color:#fff;display:grid;place-items:center;font:800 14px Poppins;flex:none}
+.opts{display:grid;gap:8px}.opt{display:flex;gap:10px;text-align:left;padding:12px 14px;border-radius:12px;border:2px solid #dfe3f2;background:#fff;font:500 15px Inter;cursor:pointer;align-items:flex-start;transition:.15s}.opt:hover{border-color:var(--brillante);background:#f4f6ff}.opt .hint{display:block;margin-top:6px;font-size:13px;color:#1f8a4c;font-weight:600}
+.opt .k{width:28px;height:28px;border-radius:8px;background:var(--azul);color:#fff;display:grid;place-items:center;font:800 14px Poppins;flex:none}
 .cons{background:var(--papel);border-radius:12px;padding:10px 12px;font-size:14px}.ch{display:inline-block;margin:3px 6px 0 0;font-weight:800;font-size:12.5px;padding:2px 8px;border-radius:6px;color:#fff}
 .next{justify-self:end;width:auto;padding:12px 22px}
 /* ---------- reporte ---------- */
@@ -64,9 +65,16 @@ input,select{width:100%;padding:12px;border:2px solid #dfe3f0;border-radius:10px
   <div class="card"><div class="hd"><small>REGISTRO DEL PARTICIPANTE</small><h2>¿Quién toma el mando hoy?</h2></div>
     <div class="bd">
       <div><span class="lbl">NOMBRE COMPLETO</span><input id="pname" placeholder="Nombre y apellido"></div>
-      <div class="row2"><div><span class="lbl">NIVEL DE LIDERAZGO</span><select id="ppuesto"><option>Jefe de turno</option><option selected>Gerente de área</option><option>Director</option></select></div>
+      <div class="row2"><div><span class="lbl">PUESTO · DEFINE LA DIFICULTAD</span><select id="ppuesto"><option>Supervisor de Operaciones</option><option selected>Jefe de Operaciones</option><option>Gerente de Operaciones</option></select></div>
         <div><span class="lbl">ALMACÉN</span><select id="pwh"><option>Almacén Genérico</option><option>Agave 1</option><option>Otro</option></select></div></div>
-      <button class="btn" onclick="goBrief()">Continuar →</button>
+      <div id="lvInfo" class="chips"></div>
+      <details id="dataBox" style="background:#f4f6fb;border-radius:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:800;color:#1D2586">⚙️ Datos del almacén: cargar y actualizar (reales de DICKA)</summary>
+        <p style="font-size:13px;color:#6b7390;margin:6px 0">Carga un archivo CSV con los indicadores reales o captúralos aquí. Se guardan en este navegador con fecha de actualización y se usan en el briefing y en las decisiones. Si un dato queda vacío, se usa el valor de referencia.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><label class="btn sec" style="padding:10px;font-size:14px;width:auto;flex:1;text-align:center;cursor:pointer">📂 Cargar CSV<input type="file" id="dataFile" accept=".csv,.txt" style="display:none" onchange="loadDataFile(this)"></label><button class="btn sec" style="padding:10px;font-size:14px;width:auto;flex:1" onclick="templateCSV()">⬇ Descargar plantilla CSV</button></div>
+        <div id="dataForm" class="row2"></div>
+        <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" style="padding:10px;font-size:14px" onclick="saveData()">💾 Guardar / actualizar datos</button><button class="btn sec" style="padding:10px;font-size:14px" onclick="resetData()">Restablecer referencia</button></div>
+        <small id="dataSrc" style="display:block;margin-top:6px;color:#6b7390"></small></details>
+      <button class="btn" id="goBtn" onclick="goBrief()">Continuar →</button>
     </div></div>
 </div>
 <!-- ============ BRIEFING ============ -->
@@ -74,10 +82,10 @@ input,select{width:100%;padding:12px;border:2px solid #dfe3f0;border-radius:10px
   <div class="brand"><small>ESCENARIO PILOTO · 20 A 30 MIN</small><h1>"El mejor operador"</h1></div>
   <div class="card"><div class="hd"><small>BRIEFING · 2 MIN</small><h2 id="bRole">Tu rol: Gerente de área</h2></div>
     <div class="bd">
-      <p><b>Situación.</b> Ricardo, supervisor del turno nocturno, tiene los mejores números de productividad del almacén. Anoche lo vieron <b>saltarse el protocolo de seguridad en el montacargas</b> (operó sin cinturón y con la carga elevada en tránsito). Además, <b>dos auxiliares se quejaron de su trato</b>. El director de operaciones te pidió "no hacer ruido" porque el área cumple metas.</p>
+      <p id="bSit"></p><div id="bData"></div>
       <div class="goal">🎯 Meta de la sesión: corregir la conducta insegura y el trato de Ricardo sin perder al equipo ni los resultados.</div>
       <div><span class="lbl">PERSONAJES</span>
-        <div class="people" style="margin-top:8px"><div class="pc"><b>👷 Ricardo</b><i>Supervisor nocturno · confianza 60</i><br>Defensivo: minimiza el incidente y cita sus resultados.</div><div class="pc"><b>👩‍🔧 Ana</b><i>Auxiliar de almacén · confianza 50</i><br>Evasiva: teme represalias si habla.</div><div class="pc"><b>📞 Director de operaciones</b><i>Por teléfono · confianza 60</i><br>Presiona por cumplir metas sin escándalos.</div></div></div>
+        <div class="people" style="margin-top:8px" id="bPeople"></div></div>
       <div><span class="lbl">INDICADORES QUE SE VIGILAN</span><div class="chips" style="margin-top:8px"><span>🤝 Confianza del equipo</span><span>💬 Claridad del mensaje</span><span>📦 Ejecución (metas)</span><span>🌡️ Clima laboral</span><span>🛡️ Cumplimiento</span></div></div>
       <p style="font-size:14px;color:var(--gris)">Regla del Dojo: ninguna decisión sube un indicador sin costo en otro. Observa los efectos: cada personaje cambia de actitud según cómo lo trates.</p>
       <button class="btn" onclick="startSim()">▶ Entrar al piso</button>
@@ -109,11 +117,39 @@ const LOG = [];   // decisiones tomadas
 const COMP = { feedback: 0, delegacion: 0, conflicto: 0, decisiones: 0, etica: 0, haciaArriba: 0 };
 const COMPN = { feedback: 'Retroalimentación', delegacion: 'Delegación', conflicto: 'Manejo de conflicto', decisiones: 'Toma de decisiones', etica: 'Ética y cumplimiento', haciaArriba: 'Gestión hacia arriba' };
 const FLAGS = {};
+// Datos de referencia del almacén (ficticios: reemplázalos por los reales de DICKA cuando los tengas)
+const DOJO_DATA = { productividad: 112, incidentes30d: 2, diasSinAccidente: 41, rotacionAnual: 38, quejasTrato: 2, costoAccidente: 450000, multaCliente: 120000, otif: 97.4 };
+const LEVELS = {
+  'Supervisor de Operaciones': { key: 'sup', diff: 'Básico', pass: 58, mult: .8, hints: true, timer: 0, extra: false, ric: 'Operador líder de montacargas', boss: 'Jefe de operaciones',
+    know: ['productividad', 'incidentes30d'], note: 'El mentor te da pistas en cada decisión. Los errores cuestan menos. Mínimo aprobatorio 58.' },
+  'Jefe de Operaciones': { key: 'jefe', diff: 'Intermedio', pass: 62, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
+    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato'], note: 'Sin pistas. Consecuencias completas. Mínimo aprobatorio 62.' },
+  'Gerente de Operaciones': { key: 'ger', diff: 'Avanzado', pass: 66, mult: 1.25, hints: false, timer: 45, extra: true, ric: 'Jefe de turno nocturno', boss: 'Director de operaciones',
+    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato', 'diasSinAccidente', 'costoAccidente', 'multaCliente', 'otif'], note: 'Sin pistas, 45 s por decisión (si no decides, evitas el tema) y una 4.ª decisión de prevención sistémica. Los errores cuestan 25% más. Mínimo aprobatorio 66.' } };
+const DATA_LBL = { productividad: ['Productividad del turno', v => v + '% de la meta'], incidentes30d: ['Incidentes de montacargas (30 días)', v => v], diasSinAccidente: ['Días sin accidente incapacitante', v => v], rotacionAnual: ['Rotación anual del turno nocturno', v => v + '%'], quejasTrato: ['Quejas por trato', v => v], costoAccidente: ['Costo promedio de un accidente', v => '$' + v.toLocaleString('es-MX')], multaCliente: ['Penalización del cliente por incidente', v => '$' + v.toLocaleString('es-MX')], otif: ['OTIF del cliente', v => v + '%'] };
+let LV = LEVELS['Jefe de Operaciones'];
+// Datos reales: se cargan desde CSV (clave,valor) o se capturan a mano; se guardan en localStorage con fecha
+const DATA_REF = Object.assign({}, DOJO_DATA); let DATA_REAL = null;
+try { const d = JSON.parse(localStorage.getItem('dicka_dojo_data') || 'null'); if (d) { Object.assign(DOJO_DATA, d.v); DATA_REAL = d; } } catch (e) { }
+function dataForm() { $('dataForm').innerHTML = Object.keys(DATA_LBL).map(k => `<div><span class="lbl">${DATA_LBL[k][0].toUpperCase()}</span><input type="number" step="any" id="dd_${k}" value="${DOJO_DATA[k]}" placeholder="${DATA_REF[k]}"></div>`).join('');
+  $('dataSrc').textContent = DATA_REAL ? `✔ Datos reales${DATA_REAL.origen ? ' (' + DATA_REAL.origen + ')' : ''} · actualizados ${new Date(DATA_REAL.fecha).toLocaleString('es-MX')}` : 'Usando datos de referencia (ficticios)'; }
+function storeData(v, origen) { Object.assign(DOJO_DATA, v); DATA_REAL = { v: Object.assign({}, DOJO_DATA), real: true, origen, fecha: new Date().toISOString() }; try { localStorage.setItem('dicka_dojo_data', JSON.stringify(DATA_REAL)); } catch (e) { } dataForm(); }
+function saveData() { const v = {}; Object.keys(DATA_LBL).forEach(k => { const x = parseFloat($('dd_' + k).value); v[k] = isFinite(x) ? x : DATA_REF[k]; }); storeData(v, 'captura manual'); }
+function resetData() { Object.assign(DOJO_DATA, DATA_REF); DATA_REAL = null; try { localStorage.setItem('dicka_dojo_data', 'null'); } catch (e) { } dataForm(); }
+function templateCSV() { const rows = ['clave,valor,descripcion'].concat(Object.keys(DATA_LBL).map(k => `${k},${DOJO_DATA[k]},"${DATA_LBL[k][0]}"`)); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv' })); a.download = 'dojo_datos_almacen.csv'; a.click(); }
+function loadDataFile(inp) { const f = inp.files && inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v = {}; let n = 0; String(r.result).replace(/^\ufeff/, '').split(/\r?\n/).forEach(line => { const c = line.split(/[,;\t]/); const k = (c[0] || '').trim(), x = parseFloat(String(c[1] || '').replace(/[$%\s]/g, '')); if (DATA_LBL[k] && isFinite(x)) { v[k] = x; n++; } });
+  if (!n) { alert('No se encontraron datos válidos. Usa la plantilla: columnas clave,valor.'); return; } storeData(v, f.name); alert(`✔ ${n} indicador(es) cargado(s) desde ${f.name}`); inp.value = ''; }; r.readAsText(f); }
+const tx = t => String(t).replace(/[Dd]irector de operaciones/g, LV.boss).replace(/\bdirector\b/g, LV.boss.split(' ')[0].toLowerCase()).replace(/\bDirector\b/g, LV.boss.split(' ')[0]);   // el jefe del jugador depende del nivel
+const scl = fx => Object.fromEntries(Object.entries(fx || {}).map(([k, v]) => [k, v < 0 ? Math.round(v * LV.mult) : v]));   // dificultad: los errores pesan según el nivel
+const HINTS = { d1: { A: 'Corregir en público suele cerrar a la persona y asusta al equipo.', B: 'Privado + hechos concretos: baja la defensiva sin suavizar el mensaje.', C: 'Lo que no se corrige, se normaliza.' },
+  d2: { A: 'Ceder enseña que los resultados compran excepciones.', B: 'Reconoce el desempeño y separa la conducta: "lo que haces bien" vs "lo que no es negociable".', C: 'Un acuerdo con responsable y fecha convierte la plática en cambio.' },
+  d3: { A: 'Sin registro no hay seguimiento ni defensa ante una auditoría.', B: 'Gestionar hacia arriba = traducir el riesgo a datos que tu jefe entienda.', C: 'Cumple la norma, pero sin transparencia rompe confianza.' },
+  d4: { A: 'Una sanción general castiga a todos por la conducta de uno.', B: 'Ataca la causa: si solo premias productividad, eso es lo que obtienes.', C: 'Mover el problema de turno no cambia el sistema que lo genera.' } };
 
 // ---------- guion (opciones, consecuencias y reacciones) ----------
 const D1 = { id: 'd1', step: 'DECISIÓN 1 DE 3', place: '📍 Piso de operación · 02:40 h · Turno nocturno', scene: 'piso',
-  intro: [['narr', 'Llegas al piso a mitad del turno. Ricardo acaba de estacionar el montacargas; Ana está a unos metros acomodando tarimas. El video de anoche lo tienes en tu celular.'],
-    ['ricardo', '¿Qué pasó, jefe? Vamos 12% arriba de la meta. Si vienes a felicitarme, adelante.']],
+  intro: () => [['narr', 'Llegas al piso a mitad del turno. Ricardo acaba de estacionar el montacargas; Ana está a unos metros acomodando tarimas. El video de anoche lo tienes en tu celular.'],
+    ['ricardo', `¿Qué pasó, jefe? Vamos ${Math.round(DOJO_DATA.productividad - 100)}% ${DOJO_DATA.productividad >= 100 ? 'arriba' : 'abajo'} de la meta. Si vienes a felicitarme, adelante.`]],
   q: '¿Cómo inicias la conversación con Ricardo?',
   opts: [
     { k: 'A', t: 'Lo confrontas ahí mismo, frente al equipo: "Te vieron sin cinturón y con la carga arriba. Eso se acaba hoy."', fx: { ejecucion: +5, clima: -15, confianza: -5 }, tr: { ricardo: -20, ana: -5 }, comp: { conflicto: -2, feedback: -1, etica: +1 }, mood: { ricardo: 'Humillado y a la defensiva', ana: 'Asustada' }, pose: { ricardo: 'cross', ana: 'down' },
@@ -139,11 +175,20 @@ const D3 = { id: 'd3', step: 'DECISIÓN 3 DE 3', place: '📍 Oficina de turno �
   opts: [
     { k: 'A', t: 'Aceptas: no documentas nada para no generar ruido.', fx: { ejecucion: +5, cumplimiento: -25, claridad: -5 }, tr: { director: +10, ana: -10 }, comp: { etica: -3, haciaArriba: -2 }, mood: { director: 'Satisfecho', ana: 'Desconfiada' }, event: 'auditoria',
       say: [['director', 'Perfecto. Así se trabaja.']], cost: 'No documentar dejó a la empresa expuesta: sin registro no hay defensa ni seguimiento, y la auditoría lo detectó.' },
-    { k: 'B', t: 'Explicas el riesgo con datos (2 eventos en 30 días, costo de un accidente) y propones documentar como acción correctiva interna, sin escalar al cliente.', fx: { cumplimiento: +10, claridad: +5, ejecucion: -5 }, tr: { director: +5, ricardo: +5 }, comp: { haciaArriba: +3, etica: +2, decisiones: +2 }, mood: { director: 'Convencido con reservas' },
+    { k: 'B', t: 'Explicas el riesgo con datos (eventos en 30 días y costo de un accidente) y propones documentar como acción correctiva interna, sin escalar al cliente.', fx: { cumplimiento: +10, claridad: +5, ejecucion: -5 }, tr: { director: +5, ricardo: +5 }, comp: { haciaArriba: +3, etica: +2, decisiones: +2 }, mood: { director: 'Convencido con reservas' },
       say: [['director', 'Mmm… si queda interno y él sigue al frente del turno, va. Mándame el resumen.']], cost: 'Defender la documentación con datos tomó tiempo de gestión, pero protegió a la persona, al equipo y a la empresa.' },
     { k: 'C', t: 'Cuelgas y escalas directamente a Recursos Humanos sin avisarle a Ricardo.', fx: { cumplimiento: +5, clima: -10, confianza: -5 }, tr: { ricardo: -15, director: -15 }, comp: { haciaArriba: -2, conflicto: -1, etica: +1 }, mood: { ricardo: 'Traicionado', director: 'Molesto' },
       say: [['director', '¿Lo mandaste a RH sin decirme? Hablamos mañana.'], ['ricardo', '(Al día siguiente:) ¿Me acusaste con RH sin decirme nada? Pensé que estábamos trabajando en esto.']], cost: 'Escalar sin transparencia cumplió la norma, pero rompió la confianza con Ricardo y con tu jefe.' } ] };
 
+const D4 = { id: 'd4', step: 'DECISIÓN 4', place: '📍 Sala de juntas · revisión mensual', scene: 'oficina', q: 'Prevención sistémica: ¿qué cambias para que no vuelva a pasar en ningún turno?',
+  intro: () => [['narr', `Revisión mensual. Datos: productividad ${DOJO_DATA.productividad}% · ${DOJO_DATA.incidentes30d} incidentes en 30 días · rotación nocturna ${DOJO_DATA.rotacionAnual}% · costo promedio de un accidente $${DOJO_DATA.costoAccidente.toLocaleString('es-MX')}. 3 de 4 turnos tienen bono solo por productividad.`], ['director', 'Necesito una medida para todos los turnos, no solo para el de Ricardo. ¿Qué propones?']],
+  opts: [
+    { k: 'A', t: 'Emites un memorándum general: sanción a quien opere sin cinturón o con la carga elevada en tránsito.', fx: { cumplimiento: +5, clima: -10, confianza: -5 }, tr: { ana: -5 }, comp: { etica: +1, conflicto: -1, decisiones: -1 }, mood: { ana: 'Molesta por la medida general' },
+      say: [['director', 'Ok, es rápido. Veremos si funciona.']], cost: 'La sanción general mandó un mensaje, pero castigó a todos por la conducta de uno y no atacó la causa.' },
+    { k: 'B', t: 'Propones un análisis de causa raíz y rediseñar el bono: "productividad segura" (meta + cero actos inseguros + clima del equipo).', fx: { cumplimiento: +10, clima: +5, ejecucion: -5 }, tr: { director: +5, ana: +5 }, comp: { decisiones: +2, etica: +2, delegacion: +1, haciaArriba: +1 }, mood: { director: 'Interesado', ana: 'Motivada' },
+      say: [['director', 'Me gusta: si lo premiamos, lo vamos a ver. Arma el piloto con dos turnos.']], cost: 'Cambiar el incentivo requiere ajustar metas un trimestre, pero ataca la causa del problema en todos los turnos.' },
+    { k: 'C', t: 'Cambias a Ricardo al turno de día, bajo tu supervisión directa.', fx: { cumplimiento: +5, ejecucion: -10, confianza: -5 }, tr: { ricardo: -10 }, comp: { delegacion: -2, decisiones: +1 }, mood: { ricardo: 'Castigado' },
+      say: [['ricardo', '¿Me mueven de turno? O sea que el problema soy yo.']], cost: 'Mover a la persona alivió el turno nocturno, pero perdiste productividad y el sistema que causó el problema sigue igual.' } ] };
 const EVENTS = {
   riesgo: { title: '⚠️ Evento de riesgo · 3 días después', text: 'Ricardo da una vuelta cerrada con la carga elevada y una tarima golpea el rack del pasillo 4. No hay lesionados, pero se cae mercancía y Ana estaba a 2 metros.', fx: { cumplimiento: -10, clima: -5, ejecucion: -5 }, tr: { ana: -10 } },
   auditoria: { title: '📋 Evento de auditoría · fin de mes', text: 'La auditoría de seguridad del cliente revisa los videos del turno nocturno. Encuentra el incidente y no hay ningún registro de acción correctiva.', fx: { cumplimiento: -10, confianza: -5 }, tr: { director: -20 } } };
@@ -202,20 +247,22 @@ function whoHTML() { $('who').innerHTML = Object.entries(P).map(([k, p]) => `<di
 function applyFx(fx, tr) { Object.entries(fx || {}).forEach(([k, v]) => { K[k] = Math.max(0, Math.min(100, K[k] + v)); }); Object.entries(tr || {}).forEach(([k, v]) => { P[k].trust = Math.max(0, Math.min(100, P[k].trust + v)); });
   kpiHTML(); Object.entries(fx || {}).forEach(([k, v]) => { const e = document.querySelector(`#k_${k} .delta`); if (e) { e.textContent = (v > 0 ? '+' : '') + v; e.className = 'delta on ' + (v > 0 ? 'up' : 'dn'); setTimeout(() => e.classList.remove('on'), 2600); } }); whoHTML(); }
 const NM = { ricardo: ['👷', 'Ricardo'], ana: ['👩‍🔧', 'Ana'], director: ['📞', 'Director de operaciones'], narr: ['🎬', 'Escena'], tu: ['🧭', 'Tú'] };
-function lines(L) { return L.map(([k, t]) => `<div class="line"><div class="av">${NM[k][0]}</div><div class="tx"><b>${NM[k][1].toUpperCase()}</b>${t}</div></div>`).join(''); }
+function lines(L) { return L.map(([k, t]) => `<div class="line"><div class="av">${NM[k][0]}</div><div class="tx"><b>${tx(NM[k][1]).toUpperCase()}</b>${tx(t)}</div></div>`).join(''); }
 function fxChips(fx, tr) { return Object.entries(fx || {}).map(([k, v]) => `<span class="ch" style="background:${v > 0 ? '#2e9e5b' : '#c62828'}">${KN[k][1]} ${v > 0 ? '+' : ''}${v}</span>`).join('') + Object.entries(tr || {}).map(([k, v]) => `<span class="ch" style="background:${v > 0 ? '#2138D3' : '#7a3b8f'}">Confianza ${P[k].name.split(' ')[0]} ${v > 0 ? '+' : ''}${v}</span>`).join(''); }
 
-function showDecision(D) { $('tStep').textContent = D.step; if (D.place) $('place').textContent = D.place; if (D.scene) goScene(D.scene);
+let TMR = null;
+function showDecision(D) { clearInterval(TMR); const N = LV.extra ? 4 : 3, n = { d1: 1, d2: 2, d3: 3, d4: 4 }[D.id]; $('tStep').textContent = `DECISIÓN ${n} DE ${N} · ${LV.diff.toUpperCase()}`; if (D.place) $('place').textContent = tx(D.place); if (D.scene) goScene(D.scene);
   const intro = typeof D.intro === 'function' ? D.intro() : D.intro; const sp = intro.filter(l => l[0] !== 'narr').map(l => l[0]); if (sp[0]) speak(sp[0]); if (D.id === 'd3') setPose('ricardo', 'neutral');
-  $('talk').innerHTML = lines(intro) + `<div class="q">${D.q}</div><div class="opts">` + D.opts.map((o, i) => `<button class="opt" onclick="choose('${D.id}',${i})"><span class="k">${o.k}</span><span>${o.t}</span></button>`).join('') + '</div>'; $('talk').scrollTop = 0; }
-const DEC = { d1: D1, d2: D2, d3: D3 };
-function choose(id, i) { const D = DEC[id], o = D.opts[i]; LOG.push({ id, step: D.step, k: o.k, t: o.t, fx: o.fx, tr: o.tr, cost: o.cost, w: Object.values(o.fx).reduce((s, v) => s + Math.abs(v), 0) + Object.values(o.tr || {}).reduce((s, v) => s + Math.abs(v), 0) });
+  $('talk').innerHTML = lines(intro) + `<div class="q">${tx(D.q)} <span id="tmr"></span></div><div class="opts">` + D.opts.map((o, i) => `<button class="opt" onclick="choose('${D.id}',${i})"><span class="k">${o.k}</span><span>${tx(o.t)}${LV.hints ? `<small class="hint">💡 ${HINTS[D.id][o.k]}</small>` : ''}</span></button>`).join('') + '</div>'; $('talk').scrollTop = 0;
+  if (LV.timer) { let t = LV.timer; const up = () => { const e = $('tmr'); if (e) e.textContent = `⏱ ${t}s`; if (e) e.style.color = t <= 10 ? '#c62828' : '#2138D3'; }; up(); TMR = setInterval(() => { t--; up(); if (t <= 0) { clearInterval(TMR); COMP.decisiones -= 2; FLAGS.timeouts = (FLAGS.timeouts || 0) + 1; choose(D.id, D.opts.findIndex(o => o.k === { d1: 'C', d2: 'A', d3: 'A', d4: 'C' }[D.id]), true); } }, 1000); } }
+const DEC = { d1: D1, d2: D2, d3: D3, d4: D4 };
+function choose(id, i, timeout) { clearInterval(TMR); const D = DEC[id], o0 = D.opts[i], o = Object.assign({}, o0, { fx: scl(o0.fx), tr: scl(o0.tr) }); const N = LV.extra ? 4 : 3, stepTxt = `DECISIÓN ${{ d1: 1, d2: 2, d3: 3, d4: 4 }[id]} DE ${N}`; LOG.push({ id, step: stepTxt, k: o.k, t: tx(o.t), fx: o.fx, tr: o.tr, cost: tx(o.cost) + (timeout ? ' (Se acabó el tiempo: no decidir también es decidir.)' : ''), w: Object.values(o.fx).reduce((s, v) => s + Math.abs(v), 0) + Object.values(o.tr || {}).reduce((s, v) => s + Math.abs(v), 0) });
   Object.entries(o.comp || {}).forEach(([k, v]) => COMP[k] += v); applyFx(o.fx, o.tr); Object.entries(o.mood || {}).forEach(([k, m]) => P[k].mood = m); whoHTML();
-  Object.entries(o.pose || {}).forEach(([k, p]) => setPose(k, p)); if (o.place) $('place').textContent = o.place; if (o.scene) goScene(o.scene);
+  Object.entries(o.pose || {}).forEach(([k, p]) => setPose(k, p)); if (o.place) $('place').textContent = tx(o.place); if (o.scene) goScene(o.scene);
   if (id === 'd1' && o.k === 'B') FLAGS.pressure = true;   // dificultad adaptativa: si el líder lo hace bien, Ricardo presiona más
   if (id === 'd3') setPose('ricardo', o.k === 'C' ? 'cross' : 'neutral');
   const sp = o.say.filter(l => l[0] !== 'narr'); if (sp[0]) speak(sp[0][0]);
-  $('talk').innerHTML = `<div class="line"><div class="av">🧭</div><div class="tx"><b>TU DECISIÓN · OPCIÓN ${o.k}</b>${o.t}</div></div>` + lines(o.say) + `<div class="cons"><b>Consecuencia:</b> ${o.cost}<br>${fxChips(o.fx, o.tr)}</div><button class="btn next" onclick="after('${id}','${o.event || ''}')">Continuar →</button>`; }
+  $('talk').innerHTML = `<div class="line"><div class="av">${timeout ? '⏱' : '🧭'}</div><div class="tx"><b>${timeout ? 'SE ACABÓ EL TIEMPO · EVITASTE EL TEMA' : 'TU DECISIÓN · OPCIÓN ' + o.k}</b>${tx(o.t)}</div></div>` + lines(o.say) + `<div class="cons"><b>Consecuencia:</b> ${tx(o.cost)}<br>${fxChips(o.fx, o.tr)}</div><button class="btn next" onclick="after('${id}','${o.event || ''}')">Continuar →</button>`; }
 function after(id, ev) { if (ev) return showEvent(ev, () => nextOf(id)); nextOf(id); }
 // Epílogo: consecuencias a 2 semanas según la ruta (lo bien hecho se recupera; lo evitado se acumula)
 function epilogue() { const d = Object.fromEntries(LOG.filter(l => !l.id.startsWith('ev_')).map(l => [l.id, l.k])), fx = {}, notes = [], add = (k, v) => fx[k] = (fx[k] || 0) + v;
@@ -225,36 +272,44 @@ function epilogue() { const d = Object.fromEntries(LOG.filter(l => !l.id.startsW
   if (d.d1 === 'A' || d.d2 === 'A') { add('clima', -5); notes.push('El equipo sigue sin confiar en reportar problemas.'); }
   if (!notes.length) notes.push('Sin cambios relevantes: los efectos de tus decisiones se mantienen.');
   return { fx, notes }; }
-function nextOf(id) { if (id === 'd1') { setTimeout(() => setPose('ricardo', FLAGS.riesgo ? 'cross' : 'open'), 400); showDecision(D2); } else if (id === 'd2') showDecision(D3); else finish(); }
-function showEvent(ev, cb) { const E = EVENTS[ev]; FLAGS[ev] = true; const el = $('evt'); el.innerHTML = `<h3>${E.title}</h3><p>${E.text}</p><p style="margin-top:8px">${fxChips(E.fx, E.tr)}</p><button class="btn" style="margin-top:10px;background:#fff;color:#c62828;box-shadow:none" id="evOk">Continuar</button>`; el.classList.remove('hidden'); applyFx(E.fx, E.tr);
+function nextOf(id) { if (id === 'd1') { setTimeout(() => setPose('ricardo', FLAGS.riesgo ? 'cross' : 'open'), 400); showDecision(D2); } else if (id === 'd2') showDecision(D3); else if (id === 'd3' && LV.extra) showDecision(D4); else finish(); }
+function showEvent(ev, cb) { const E0 = EVENTS[ev], E = Object.assign({}, E0, { fx: scl(E0.fx), tr: scl(E0.tr) }); FLAGS[ev] = true; const el = $('evt'); el.innerHTML = `<h3>${E.title}</h3><p>${E.text}</p><p style="margin-top:8px">${fxChips(E.fx, E.tr)}</p><button class="btn" style="margin-top:10px;background:#fff;color:#c62828;box-shadow:none" id="evOk">Continuar</button>`; el.classList.remove('hidden'); applyFx(E.fx, E.tr);
   LOG.push({ id: 'ev_' + ev, step: 'EVENTO', k: '!', t: E.title, fx: E.fx, tr: E.tr, cost: E.text, w: Object.values(E.fx).reduce((s, v) => s + Math.abs(v), 0) + 10 });
   if (ev === 'riesgo') { setPose('ana', 'down'); P.ana.mood = 'Con miedo'; whoHTML(); } $('evOk').onclick = () => { el.classList.add('hidden'); cb(); }; }
 
 // ---------- inicio ----------
-function goBrief() { const n = $('pname').value.trim(); if (n.length < 3) { alert('Escribe tu nombre completo'); return; } who = { name: n, puesto: $('ppuesto').value, wh: $('pwh').value }; $('bRole').textContent = 'Tu rol: ' + who.puesto; $('intro').classList.add('hidden'); $('brief').classList.remove('hidden'); scrollTo(0, 0); }
+function lvChips() { const L = LEVELS[$('ppuesto').value]; $('lvInfo').innerHTML = `<span>🎚️ Dificultad: <b>${L.diff}</b></span><span>${L.note}</span>`; }
+function goBrief() { const n = $('pname').value.trim(); if (n.length < 3) { alert('Escribe tu nombre completo'); return; } who = { name: n, puesto: $('ppuesto').value, wh: $('pwh').value }; LV = LEVELS[who.puesto];
+  P.ricardo.role = LV.ric; P.director.name = LV.boss; NM.director = ['📞', LV.boss];
+  $('bRole').textContent = `Tu rol: ${who.puesto} · nivel ${LV.diff}`;
+  $('bSit').innerHTML = `<b>Situación.</b> Ricardo, <b>${LV.ric.toLowerCase()}</b>, tiene los mejores números de productividad del almacén. Anoche lo vieron <b>saltarse el protocolo de seguridad en el montacargas</b> (operó sin cinturón y con la carga elevada en tránsito). Además, <b>dos auxiliares se quejaron de su trato</b>. Tu jefe, el <b>${LV.boss.toLowerCase()}</b>, te pidió "no hacer ruido" porque el área cumple metas.`;
+  $('bData').innerHTML = `<span class="lbl">LO QUE SABES (SEGÚN TU PUESTO) · ${DATA_REAL ? 'DATOS REALES' : 'DATOS DE REFERENCIA'}</span><div class="chips" style="margin-top:8px">${LV.know.map(k => `<span>📊 ${DATA_LBL[k][0]}: <b>${DATA_LBL[k][1](DOJO_DATA[k])}</b></span>`).join('')}</div><p style="font-size:13px;color:#6b7390;margin-top:6px">${LV.note}${LV.extra ? ' Como gerente, además respondes por la prevención en todos los turnos.' : ''}</p>`;
+  $('bPeople').innerHTML = `<div class="pc"><b>👷 Ricardo</b><i>${LV.ric} · confianza 60</i><br>Defensivo: minimiza el incidente y cita sus resultados.</div><div class="pc"><b>👩‍🔧 Ana</b><i>Auxiliar de almacén · confianza 50</i><br>Evasiva: teme represalias si habla.</div><div class="pc"><b>📞 ${LV.boss}</b><i>Tu jefe, por teléfono · confianza 60</i><br>Presiona por cumplir metas sin escándalos.</div>`;
+  $('intro').classList.add('hidden'); $('brief').classList.remove('hidden'); scrollTo(0, 0); }
+document.addEventListener('DOMContentLoaded', () => { $('ppuesto').addEventListener('change', lvChips); lvChips(); dataForm(); }); if (document.readyState !== 'loading') setTimeout(() => { $('ppuesto').addEventListener('change', lvChips); lvChips(); dataForm(); }, 0);
 function startSim() { t0 = Date.now(); $('brief').classList.add('hidden'); $('sim').classList.remove('hidden'); kpiHTML(); whoHTML(); if (!renderer) initScene(); showDecision(D1); }
 
 // ---------- debrief y reporte ----------
 function chk(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h.toString(36).toUpperCase().slice(0, 6); }
 function finish() { if (!FLAGS.epi) { FLAGS.epi = true; const E = epilogue(); applyFx(E.fx); LOG.push({ id: 'ev_epi', step: 'EPÍLOGO · 2 SEMANAS DESPUÉS', k: '!', t: 'Epílogo · 2 semanas después', fx: E.fx, tr: {}, cost: E.notes.join(' '), w: 0 }); $('evt').innerHTML = `<h3>🗓️ Dos semanas después…</h3><p>${E.notes.join('<br>')}</p><p style="margin-top:8px">${fxChips(E.fx, {})}</p><button class="btn" style="margin-top:10px;background:#fff;color:#1D2586;box-shadow:none" id="evOk">Ver debrief con el mentor →</button>`; $('evt').style.background = '#1D2586'; $('evt').classList.remove('hidden'); $('evOk').onclick = () => { $('evt').classList.add('hidden'); finish(); }; return; }
   const path = LOG.filter(l => !l.id.startsWith('ev_')).map(l => l.k).join('-');
-  const kAvg = Object.values(K).reduce((s, v) => s + v, 0) / 5, tAvg = (P.ricardo.trust + P.ana.trust + P.director.trust) / 3, score = Math.round(kAvg * .7 + tAvg * .3), ok = score >= PASS;
+  const kAvg = Object.values(K).reduce((s, v) => s + v, 0) / 5, tAvg = (P.ricardo.trust + P.ana.trust + P.director.trust) / 3, score = Math.round(kAvg * .7 + tAvg * .3), ok = score >= LV.pass;
   const cs = Object.fromEntries(Object.entries(COMP).map(([k, v]) => [k, Math.max(0, Math.min(100, 50 + v * 12))]));
   const ranked = Object.entries(cs).sort((a, b) => b[1] - a[1]), best = ranked[0], gap = ranked[ranked.length - 1];
   const top = LOG.slice().sort((a, b) => b.w - a.w).slice(0, 3), worst = LOG.filter(l => !l.id.startsWith('ev_')).sort((a, b) => (Object.values(a.fx).filter(v => v < 0).reduce((s, v) => s + v, 0)) - (Object.values(b.fx).filter(v => v < 0).reduce((s, v) => s + v, 0)))[0];
-  const ideal = path === 'B-B-B' || path === 'B-C-B';
+  const ideal = /^B-[BC]-B(-B)?$/.test(path) && (!LV.extra || /-B$/.test(path.slice(5)));
   const PLAN = ['Separar a la persona de la conducta al dar retroalimentación', 'Empezar las conversaciones difíciles en privado y con hechos', 'Cerrar cada acuerdo con responsable y fecha de seguimiento', 'Defender las decisiones ante mi jefe con datos', 'Escuchar a quien teme hablar antes de decidir'];
-  const secs = Math.round((Date.now() - t0) / 1000), date = new Date(); const base = `REG|${GAME_ID}|${who.name}|${who.puesto}|${who.wh}|${score}|100|${ok ? 'APROBADO' : 'NO APROBADO'}|${path}|${date.toISOString().slice(0, 16)}`, REG = base + '|' + chk(base + 'DICKA');
+  const secs = Math.round((Date.now() - t0) / 1000), date = new Date(); const base = `REG|${GAME_ID}|${who.name}|${who.puesto}|${LV.diff}|${who.wh}|${score}|100|${ok ? 'APROBADO' : 'NO APROBADO'}|${path}|${date.toISOString().slice(0, 16)}`, REG = base + '|' + chk(base + 'DICKA');
   window.REPORT = { score, ok, path, REG, cs, K: { ...K }, secs };
   $('sim').classList.add('hidden'); const r = $('report'); r.classList.remove('hidden');
   r.innerHTML = `<div class="brand"><small>DEBRIEF CON TU MENTOR · 5 MIN</small><h1>Resultado de la sesión</h1></div>
-  <div class="card"><div class="hd"><small>${who.puesto.toUpperCase()} · ${who.name}</small><h2>El mejor operador · ruta ${path}</h2></div><div class="bd">
-   <div class="score"><div class="big">${score}</div><div><span class="badge" style="background:${ok ? '#2e9e5b' : '#c62828'}">${ok ? '✓ LIDERAZGO EQUILIBRADO' : '✗ REQUIERE PRÁCTICA'}</span><p style="margin-top:6px;font-size:14px;color:#6b7390">70% indicadores del equipo + 30% confianza de los personajes · mínimo ${PASS}</p></div></div>
+  <div class="card"><div class="hd"><small>${who.puesto.toUpperCase()} · NIVEL ${LV.diff.toUpperCase()} · ${who.name}</small><h2>El mejor operador · ruta ${path}</h2></div><div class="bd">
+   <div class="score"><div class="big">${score}</div><div><span class="badge" style="background:${ok ? '#2e9e5b' : '#c62828'}">${ok ? '✓ LIDERAZGO EQUILIBRADO' : '✗ REQUIERE PRÁCTICA'}</span><p style="margin-top:6px;font-size:14px;color:#6b7390">70% indicadores del equipo + 30% confianza de los personajes · mínimo ${LV.pass} · nivel ${LV.diff}${FLAGS.timeouts ? ` · ${FLAGS.timeouts} decisión(es) sin responder a tiempo` : ''}</p></div></div>
    <div><span class="lbl">INDICADORES FINALES</span><div class="comp" style="margin-top:8px">${Object.keys(K).map(k => `<div><span>${KN[k][0]} ${KN[k][1]}</span><div class="bar"><i style="width:${K[k]}%;background:${col(K[k])}"></i></div><b>${Math.round(K[k])}</b></div>`).join('')}</div></div>
    <div><span class="lbl">PUNTAJE POR COMPETENCIA</span><div class="comp" style="margin-top:8px">${Object.entries(cs).map(([k, v]) => `<div><span>${COMPN[k]}</span><div class="bar"><i style="width:${v}%"></i></div><b>${v}</b></div>`).join('')}</div></div>
    <div><span class="lbl">LAS 3 DECISIONES CON MÁS IMPACTO</span><div class="imp" style="margin-top:8px">${top.map(l => `<div><b>${l.step} · ${l.k === '!' ? l.t : 'Opción ' + l.k}</b><br>${l.cost}<br>${fxChips(l.fx, l.tr)}</div>`).join('')}</div></div>
    <div class="fg"><div class="f"><b>💪 Fortaleza:</b> ${best[1] > 50 ? `${COMPN[best[0]]} (${best[1]})` : 'Aún sin una fortaleza destacada en este escenario'}</div><div class="g"><b>🎯 Brecha:</b> ${COMPN[gap[0]]} (${gap[1]})</div></div>
-   <div class="mentor"><div class="av">🥋</div><div><b>Mentor:</b> ${worst && !ideal ? `La decisión con mayor costo fue <b>${worst.step} · opción ${worst.k}</b>: ${worst.cost} ` : ''}${ideal ? 'Tu ruta es de las que mejor equilibran resultados y confianza: hablaste en privado y con hechos, separaste el desempeño del incumplimiento y defendiste la documentación con datos.' : 'La combinación que mejor equilibra resultados y confianza es <b>B → B (o C) → B</b>: hablar en privado y con hechos, reconocer los resultados sin negociar la seguridad (o pedir un plan con fecha) y documentar internamente explicando el riesgo con datos al director.'} Recuerda: en el Dojo ninguna decisión es gratis; lo que buscamos es que el costo sea consciente y temporal, no que se acumule en la gente o en el riesgo.</div></div>
+   <div class="mentor"><div class="av">🥋</div><div><b>Mentor:</b> ${worst && !ideal ? `La decisión con mayor costo fue <b>${worst.step} · opción ${worst.k}</b>: ${worst.cost} ` : ''}${ideal ? 'Tu ruta es de las que mejor equilibran resultados y confianza: hablaste en privado y con hechos, separaste el desempeño del incumplimiento y defendiste la documentación con datos.' : 'La combinación que mejor equilibra resultados y confianza es <b>B → B (o C) → B' + (LV.extra ? ' → B' : '') + '</b>: hablar en privado y con hechos, reconocer los resultados sin negociar la seguridad (o pedir un plan con fecha) y documentar internamente explicando el riesgo con datos al director.'} Recuerda: en el Dojo ninguna decisión es gratis; lo que buscamos es que el costo sea consciente y temporal, no que se acumule en la gente o en el riesgo.</div></div>
    <div><span class="lbl">PLAN DE PRÁCTICA · ELIGE UNA CONDUCTA PARA TU SIGUIENTE SESIÓN</span><div class="plan" style="margin-top:8px">${PLAN.map((p, i) => `<label><input type="radio" name="plan" value="${i}" ${i === ({ feedback: 0, conflicto: 1, delegacion: 2, decisiones: 2, haciaArriba: 3, etica: 4 }[gap[0]] ?? 0) ? 'checked' : ''}>${p}</label>`).join('')}</div></div>
    <div class="code">Código de verificación: ${REG}</div>
    <button class="btn" onclick="saveAndShare()">📲 Guardar y enviar resultado por WhatsApp</button><button class="btn sec" onclick="location.reload()">🔄 Repetir el escenario</button>
