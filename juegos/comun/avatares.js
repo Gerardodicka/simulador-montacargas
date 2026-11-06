@@ -110,7 +110,8 @@ function safetyBoots(root, find, attach, capOnly) { if (!BOOT_MATS.leather) { BO
 // pantalón de mezclilla en piernas (cubre short y piel), camisa azul marino en brazos/torso, chaleco azul con bandas reflejantes, casco ABS y guantes
 const GLTF_FEM = { gltf: null, scale: 1, rigScale: 1, tried: false };
 // modelos adicionales (Mixamo) para que el personal no se vea igual: mismo proceso y uniforme que la operaria
-const GLTF_EXTRA = [{ file: 'operario2.glb', fem: false }, { file: 'operario3.glb', fem: false }, { file: 'operaria2.glb', fem: true }, { file: 'operaria3.glb', fem: true, ownOutfit: true }].map(x => Object.assign({ gltf: null, scale: 1, rigScale: 1, tried: false }, x));
+// operaria3.glb (191 mallas por persona) queda fuera del personal hasta optimizarla: frenaba el simulador
+const GLTF_EXTRA = [{ file: 'operario2.glb', fem: false }, { file: 'operario3.glb', fem: false }, { file: 'operaria2.glb', fem: true }].map(x => Object.assign({ gltf: null, scale: 1, rigScale: 1, tried: false }, x));
 function loadExtraAvatars() { return Promise.all(GLTF_EXTRA.map(T => loadOperaria(T).catch(() => false))); }
 function pickAvatar(fem) { const pool = GLTF_EXTRA.filter(T => T.gltf && T.fem === !!fem); if (fem && GLTF_FEM.gltf) pool.push(GLTF_FEM); if (!fem) pool.push(null); const T = pool[Math.floor(Math.random() * pool.length)]; return T ? makeFemAvatar(T) : makeGLTFAvatar(false, false); }
 function loadOperaria(T = GLTF_FEM) { if (T.tried || !THREE.GLTFLoader) return Promise.resolve(false); T.tried = true; const file = T.file || 'operaria.glb';
