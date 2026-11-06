@@ -271,7 +271,7 @@ function place(sc, snap) { const S = SPOTS[sc]; ['ricardo', 'ana'].forEach(k => 
 function setPose(k, p) { if (AV[k]) AV[k].pose = p; }
 function speak(k) { Object.values(AV).forEach(a => a.talking = false); if (AV[k]) { AV[k].talking = true; AV[k].talkT = 2.6; } }
 // ===== Voz humana de los personajes (síntesis de voz del navegador en español) =====
-const VOICE = { on: true, mode: false, list: [], queue: 0 };
+const VOICE = { on: true, mode: false, list: [], queue: 0 };   // mode: micrófono automático después de cada intervención (se activa al entrar si el navegador lo permite)
 try { VOICE.on = localStorage.getItem('dicka_dojo_tts') !== 'off'; } catch (e) { }
 const VPROF = { ricardo: { male: true, pitch: .85, rate: 1.02 }, ana: { male: false, pitch: 1.08, rate: .95 }, director: { male: true, pitch: .72, rate: 1.06 }, narr: { male: false, pitch: 1, rate: 1.08 }, tu: { male: true, pitch: 1, rate: 1 } };
 function loadVoices() { if (!window.speechSynthesis) return; VOICE.list = speechSynthesis.getVoices().filter(v => /^es/i.test(v.lang)); }
@@ -284,12 +284,12 @@ function sayLines(L, done) { if (!VOICE.on || !window.speechSynthesis) { if (don
   items.forEach(([k, t], i) => { const u = new SpeechSynthesisUtterance(t), pr = VPROF[k] || VPROF.narr; u.lang = 'es-MX'; const v = pickVoice(pr.male); if (v) u.voice = v; u.pitch = pr.pitch; u.rate = pr.rate;
     u.onstart = () => { if (AV[k]) speak(k); if (AV[k]) AV[k].talkT = 30; }; u.onend = () => { if (AV[k]) AV[k].talkT = 0; if (i === items.length - 1 && my === VOICE.queue && done) done(); }; speechSynthesis.speak(u); }); }
 function toggleTTS() { VOICE.on = !VOICE.on; try { localStorage.setItem('dicka_dojo_tts', VOICE.on ? 'on' : 'off'); } catch (e) { } if (!VOICE.on && window.speechSynthesis) speechSynthesis.cancel(); vbarUI(); }
-function vbarUI() { const t = $('ttsBtn'), m = $('srBtn'); if (t) { t.textContent = VOICE.on ? '🔊 Voz' : '🔇 Sin voz'; t.classList.toggle('on', VOICE.on); } if (m) { m.style.display = SR_OK ? '' : 'none'; m.textContent = VOICE.mode ? '🎙️ Modo voz: ON' : '🎙️ Modo voz'; m.classList.toggle('on', VOICE.mode); } }
+function vbarUI() { const t = $('ttsBtn'), m = $('srBtn'); if (t) { t.textContent = VOICE.on ? '🔊 Voz' : '🔇 Sin voz'; t.classList.toggle('on', VOICE.on); } if (m) { m.style.display = SR_OK ? '' : 'none'; m.textContent = VOICE.mode ? '🎙️ Mic auto' : '🎙️ Mic off'; m.title = VOICE.mode ? 'El micrófono se abre solo cuando el personaje termina de hablar' : 'Micrófono automático apagado'; m.classList.toggle('on', VOICE.mode); } }
 // ===== Interacción por voz del participante (reconocimiento de voz) =====
 const SRC = window.SpeechRecognition || window.webkitSpeechRecognition, SR_OK = !!SRC; let REC = null, LISTEN = false;
 const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ ]/g, ' ').replace(/\s+/g, ' ').trim();
 function listen() { if (!SR_OK || LISTEN) return; try { if (window.speechSynthesis) speechSynthesis.cancel(); REC = new SRC(); REC.lang = 'es-MX'; REC.interimResults = false; REC.maxAlternatives = 3; LISTEN = true; micUI();
-    REC.onresult = e => { const alts = [...e.results[0]].map(r => r.transcript); handleSpeech(alts); }; REC.onerror = e => { LISTEN = false; micUI(e.error === 'no-speech' ? 'No te escuché. Toca 🎤 o di "opción A, B o C".' : e.error === 'not-allowed' ? 'Permite el micrófono en el navegador para responder con voz.' : ''); };
+    REC.onresult = e => { const alts = [...e.results[0]].map(r => r.transcript); handleSpeech(alts); }; REC.onerror = e => { LISTEN = false; if (e.error === 'no-speech' && VOICE.mode) { setTimeout(listen, 400); return; } micUI(e.error === 'no-speech' ? 'No te escuché. Toca 🎤 o di "opción A, B o C".' : e.error === 'not-allowed' ? 'Permite el micrófono en el navegador para responder con voz.' : ''); };
     REC.onend = () => { LISTEN = false; micUI(); }; REC.start(); } catch (e) { LISTEN = false; micUI('El reconocimiento de voz no está disponible en este navegador (usa Chrome o Edge).'); } }
 function micUI(msg) { const b = $('micBtn'), m = $('micMsg'), sb = $('srBtn'); if (b) { b.textContent = LISTEN ? '⏺ Escuchando… habla ahora' : '🎤 Responder con voz'; b.classList.toggle('rec', LISTEN); } if (sb) sb.classList.toggle('rec', LISTEN); if (m && msg !== undefined) m.textContent = msg || m.dataset.def || ''; }
 function ownHTML() { return `<div class="own"><select id="ownTo" onchange="talkTo(this.value)"><option value="">✍️ Mi decisión</option><option value="ricardo">💬 Hablar con Ricardo</option><option value="ana">💬 Hablar con Ana</option></select><input id="ownTxt" placeholder="💬 Háblale como lo harías en persona…" onkeydown="if(event.key==='Enter')ownSend()"><button onclick="ownSend()">Responder</button></div>`; }
@@ -311,16 +311,44 @@ async function charTalkLocal(k, said) { const p = P[k], line = (who, t) => `<div
 function micHTML() { return ownHTML() + (SR_OK ? `<div class="mic"><button id="micBtn" onclick="listen()">🎤 Responder con voz</button><small id="micMsg" data-def='Di "opción A/B/C" o explica con tus palabras lo que harías.'>Di "opción A/B/C" o explica con tus palabras lo que harías.</small></div>` : `<div class="mic"><small>🎤 Para responder con voz abre el Dojo en Chrome o Edge.</small></div>`); }
 // ===== Plática real con los personajes (Claude vía función de Netlify); sin IA usa respaldo local =====
 const AI = { off: location.protocol === 'file:', busy: false, status: '' }; let CONV = [];
-function aiBadge(txt, ok) { let b = $('aiBadge'); if (!b) { b = document.createElement('span'); b.id = 'aiBadge'; b.className = 'vbtn'; const v = document.querySelector('.vbar'); if (v) v.prepend(b); } b.textContent = txt; b.classList.toggle('on', !!ok); b.title = ok ? 'La plática con los personajes usa IA' : 'Respaldo por palabras clave'; }
+function aiBadge(txt, ok) { const full = txt; txt = ok ? '🧠 IA' : '⚠️ IA'; let b = $('aiBadge'); if (!b) { b = document.createElement('span'); b.id = 'aiBadge'; b.className = 'vbtn'; const v = document.querySelector('.vbar'); if (v) v.prepend(b); } b.textContent = txt; b.classList.toggle('on', !!ok); b.title = ok ? 'IA activa: la plática usa Claude' : full.replace('⚠️ ', '') + ' — la plática usa el respaldo local'; b.style.cursor = 'help'; b.onclick = () => alert(b.title); }
 async function aiPing() { if (AI.off) { aiBadge('⚠️ IA sin conexión'); return; } try { const r = await fetch('/.netlify/functions/dojo-ia', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ping: true }) }).then(x => x.json());
     if (r.ok) aiBadge('🧠 IA activa', true); else { AI.status = r.motivo + (r.detalle ? ': ' + r.detalle : ''); if (r.motivo === 'sin_clave' || r.motivo === 'api_401') AI.off = true; aiBadge('⚠️ IA: ' + ({ sin_clave: 'falta la clave en Netlify', api_401: 'clave inválida', api_400: 'revisa crédito o modelo', api_404: 'modelo no disponible', api_429: 'límite de uso' }[r.motivo] || r.motivo)); console.warn('[Dojo] IA:', AI.status); } }
   catch (e) { AI.off = true; aiBadge('⚠️ IA sin conexión'); } }
 function chatLog() { let c = document.querySelector('#talk .chatlog'); if (!c) { c = document.createElement('div'); c.className = 'chatlog chat'; const a = document.querySelector('#talk .own'); a ? a.before(c) : $('talk').append(c); } return c; }   // la plática queda en orden, arriba de la caja para escribir
+// ===== Plática local (sin IA): el personaje contesta por tema y ánimo; la decisión se registra solo si tu postura es clara =====
+const TOPICS = { ricardo: [
+    [/\b(hola|buenas|buenos dias|buenas noches|que tal|como estas|como te va)\b/, ['Bien, jefe, aquí sacando la chamba. ¿Qué se le ofrece?', 'Todo bien, vamos arriba de la meta. ¿Pasa algo?'], ['Bien… ¿qué necesita?']],
+    [/\b(video|camara|grabacion|evidencia|te vieron|vi)\b/, ['¿Me andan grabando? Ok… sí, ese era yo. Pero fue una vez.'], ['Sí, ese era yo. No tengo excusa.']],
+    [/\b(cinturon|montacargas|carga|elevad|protocolo|autoriz|seguridad|subiste|manejaste|operaste|riesgo|accidente)\b/, ['Fue una sola tarima, iba con prisa por el embarque. No pasó nada.', 'Jefe, llevo años manejando, sé lo que hago. No exagere.'], ['Tiene razón… no debí mover la carga elevada ni quitarme el cinturón. ¿Qué hago para corregirlo?']],
+    [/\b(grit|trato|ana|auxiliar|equipo|gente|queja|respeto|maltrat)\b/, ['¿Quién le dijo eso? Yo solo exijo que saquemos la meta.', 'Si no los apuro, no sale el turno. Así es esto.'], ['No sabía que lo sentían así… a veces me presiono y me desquito con ellos.']],
+    [/\b(meta|resultado|productividad|numeros|indicador|bono|felicit)\b/, ['Ahí están mis números: 112%. Nadie saca lo que yo saco.'], ['Gracias. Quiero seguir dando resultados, pero bien hechos.']],
+    [/\b(plan|compromiso|mejorar|corregir|ayuda|apoyo|que propones|que harias)\b/, ['¿Un plan? Pues… checar el cinturón al arrancar, supongo.'], ['Le propongo: checklist de cinturón al arranque y 5 minutos con mi gente al iniciar el turno. Se lo traigo el viernes.']],
+    [/\b(gracias|ok|entiendo|esta bien|de acuerdo)\b/, ['Va, jefe.'], ['Gracias por decírmelo de frente.']]],
+  ana: [[/\b(hola|como estas|buenas)\b/, ['Hola… bien, aquí trabajando.'], ['Hola, jefe. Bien, gracias.']], [/\b(ricardo|grit|trato|turno|como te trata|que paso)\b/, ['Prefiero no meterme en problemas…'], ['A veces nos grita cuando no llegamos a la meta. Yo ya no quería venir al turno de noche.']], [/\b(confia|tranquila|no te va a pasar|confidencial|apoyo)\b/, ['…está bien. Gracias.'], ['Gracias por escucharme, de verdad.']]],
+  director: [[/\b(dato|riesgo|costo|accidente|multa|cliente|auditoria)\b/, ['Mmm… con esos números cambia la cosa. ¿Qué propones?'], ['Ok, documentémoslo interno. Mándame el resumen.']], [/\b(documentar|expediente|rh|recursos humanos)\b/, ['No quiero ruido con el cliente este mes.'], ['Si queda interno, adelante.']], [/\b(meta|resultado|ricardo)\b/, ['Es mi mejor turno, no me lo descompongas.'], ['Mientras el turno siga dando, apóyalo.']]] };
+const DEFAULTS = { ricardo: ['¿A qué quiere llegar, jefe? Dígamelo directo.', 'No le entiendo… ¿qué me quiere decir?'], ana: ['(Ana duda y te mira en silencio.)', 'No sé qué decirle, jefe.'], director: ['Ve al grano, que tengo junta.', '¿Y entonces qué propones?'] };
+function localReply(k, said) { const n = norm(said), p = P[k], open = p.trust >= (k === 'ana' ? 55 : 62) || CONV.length >= 4, list = TOPICS[k] || TOPICS.ricardo;
+  const hits = list.filter(([re]) => re.test(n)), pick = hits.find(h => !/hola/.test(h[0].source)) || hits[0];   // si saluda y pregunta, contesta la pregunta
+  if (pick) { const used = new Set(CONV.map(c => c.texto)), all = (open ? pick[2] : pick[1]).concat(open ? pick[1] : pick[2]), arr = all.filter(x => !used.has(x)).length ? all.filter(x => !used.has(x)) : all; const r = arr[Math.floor(Math.random() * Math.min(arr.length, 2))]; return hits.length > 1 && pick !== hits[0] && /hola/.test(hits[0][0].source) ? (k === 'ricardo' ? 'Bien, jefe. ' : '') + r : r; }
+  const d = DEFAULTS[k] || DEFAULTS.ricardo; return d[Math.floor(Math.random() * d.length)]; }
+function localIntent(said) { const opts = [...document.querySelectorAll('#talk .opt')]; if (!opts.length) return null; const N = [norm(said)], text = N[0];
+  for (const n of N) { const m = n.match(/\b(?:opcion|letra|inciso)\s+(a|b|c)\b/) || n.match(/^(a|b|c)$/); if (m) return { el: opts[{ a: 0, b: 1, c: 2 }[m[1]]], k: m[1].toUpperCase(), sure: true }; }
+  const INTENT = [[/\b(frente a todos|enfrente de todos|en publico|exhib|lo regano ahi)/, 0], [/\b(a solas|en privado|a la oficina|vamos a la oficina|aparte)/, 1], [/\b(dejarlo pasar|no hacer nada|lo dejo pasar|ignorar)/, 2],
+    [/\b(tienes razon|lo dejo asi|olvidalo|no pasa nada)/, 0], [/\b(no es negociable|separar|reconozco tus resultados pero|tus numeros son buenos pero)/, 1], [/\b(plan|para el viernes|con fecha|compromiso por escrito|seguimiento)/, 2],
+    [/\b(no lo documento|sin expediente|no abro expediente|como usted diga)/, 0], [/\b(con datos|documentarlo interno|accion correctiva|el riesgo es)/, 1], [/\b(recursos humanos|rh|lo escalo)/, 2],
+    [/\b(memorandum|sancion general)/, 0], [/\b(causa raiz|bono|incentivo)/, 1], [/\b(cambiarlo de turno|turno de dia|moverlo)/, 2]];
+  const base = { d1: 0, d2: 3, d3: 6, d4: 9 }[CUR_DEC] || 0; for (const [re, k] of INTENT.slice(base, base + 3)) if (re.test(text)) return { el: opts[k], k: 'ABC'[k] }; return null; }
+function localConverse(said) { const k = speakerFor(), it = localIntent(said), reply = localReply(k, said), box = document.createElement('div'); box.className = 'chat';
+  box.innerHTML = lineHTML('tu', said) + lineHTML(k, reply); chatLog().append(box); box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); micUI('');
+  CONV.push({ quien: 'Líder', texto: said }, { quien: P[k].name, texto: reply }); if (AV[k]) { AV[k].listen = true; speak(k); }
+  if (it && it.el) { let done = false; const go = () => { if (done) return; done = true; VOICE.heard = { t: said, k: it.k, own: !it.sure }; it.el.click(); }; sayLines([[k, reply]], () => setTimeout(go, 400)); setTimeout(go, 1800 + (VOICE.on ? reply.length * 70 : 0)); return; }
+  sayLines([[k, reply]], () => { if (AV[k]) AV[k].listen = false; afterSpeech(); }); }
 function speakerFor() { return TALK || (CUR_DEC === 'd3' ? 'director' : 'ricardo'); }
 const lineHTML = (who, t, extra) => `<div class="line"><div class="av">${NM[who][0]}</div><div class="tx"><b>${tx(NM[who][1]).toUpperCase()}</b>${t}${extra || ''}</div></div>`;
 async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!said) return;
   if (document.querySelector('#talk .next') || !$('evt').classList.contains('hidden')) return handleSpeechLocal(alts);
-  if (AI.off || AI.busy) return TALK ? charTalkLocal(TALK, said) : handleSpeechLocal(alts);
+  if (AI.off || AI.busy) return localConverse(said);
   const k = speakerFor(), p = P[k], box = document.createElement('div'); box.className = 'chat';
   box.innerHTML = lineHTML('tu', said) + lineHTML(k, '<i class="typing">está pensando<span>.</span><span>.</span><span>.</span></i>');
   chatLog().append(box); box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -329,7 +357,7 @@ async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!sa
   const ctx = [...document.querySelectorAll('#talk > .line .tx')].map(e => e.textContent).join(' | ').slice(0, 900), q = (document.querySelector('#talk .guide') || {}).textContent || '';
   try { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 12000);
     const r = await fetch('/.netlify/functions/dojo-ia', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ dicho: said, personaje: p.name, animo: p.mood, confianzaPersonaje: p.trust, historial: CONV, opciones: opts, contexto: ctx, pregunta: q, nivel: who.puesto || '' }) }).then(x => x.json()); clearTimeout(to); AI.busy = false;
-    if (!r.ok) { AI.status = r.motivo; if (r.motivo === 'sin_clave' || r.motivo === 'api_401') AI.off = true; aiBadge('⚠️ IA: ' + r.motivo); box.remove(); return TALK ? charTalkLocal(TALK, said) : handleSpeechLocal(alts); }
+    if (!r.ok) { AI.status = r.motivo; if (r.motivo === 'sin_clave' || r.motivo === 'api_401') AI.off = true; aiBadge('⚠️ IA: ' + r.motivo); box.remove(); return localConverse(said); }
     if (r.tipo === 'continuar') { box.remove(); return handleSpeechLocal(['continuar']); }
     if (r.tipo === 'pregunta') { box.innerHTML = lineHTML('tu', said) + `<div class="help">🥋 <b>Mentor:</b> ${r.mentor || r.respuesta}</div>`; sayLines([['narr', r.mentor || r.respuesta]], afterSpeech); return; }
     CONV.push({ quien: 'Líder', texto: said }); if (r.respuesta) CONV.push({ quien: p.name, texto: r.respuesta });
@@ -338,7 +366,7 @@ async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!sa
     if (r.tipo === 'decision' && r.opcion && r.confianza >= .6) { const el = [...document.querySelectorAll('#talk .opt')].find(o => o.querySelector('.k').textContent === r.opcion);
       if (el) { let done = false; const go = () => { if (done) return; done = true; VOICE.heard = { t: said, k: r.opcion, own: true, mentor: r.mentor }; el.click(); }; sayLines([[k, r.respuesta]], () => setTimeout(go, 400)); setTimeout(go, 1800 + (VOICE.on ? (r.respuesta || '').length * 70 : 0)); return; } }
     sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; afterSpeech(); });
-  } catch (e) { AI.busy = false; box.remove(); aiBadge('⚠️ IA tardó demasiado'); return TALK ? charTalkLocal(TALK, said) : handleSpeechLocal(alts); } }
+  } catch (e) { AI.busy = false; box.remove(); aiBadge('⚠️ IA tardó demasiado'); return localConverse(said); } }
 function handleSpeechLocal(alts) { const said = alts[0] || '', N = alts.map(norm);
   const ev = $('evt'); if (ev && !ev.classList.contains('hidden')) { if (N.some(n => /continua|siguiente|ok|listo|adelante|sigue|vale|entendido/.test(n))) { $('evOk').click(); return; } }
   const nx = document.querySelector('#talk .next'); if (nx) { if (N.some(n => /continua|siguiente|ok|listo|adelante|sigue|vale|entendido/.test(n))) { heard(said); nx.click(); return; } micUI('Di "continuar" para seguir.'); return; }
@@ -365,8 +393,8 @@ function helpVoice(said, T) { let a;
   const h = document.createElement('div'); h.className = 'help'; h.innerHTML = `🎤 <b>Preguntaste:</b> "${said}"<br>🥋 <b>Mentor:</b> ${a}`; const g = document.querySelector('#talk .opts'); if (g) g.after(h);
   micUI(''); sayLines([['narr', a]], afterSpeech); }
 function heard(t, k, own) { VOICE.heard = { t, k, own }; VOICE.typed = false; }
-function toggleVoiceMode() { VOICE.mode = !VOICE.mode; vbarUI(); if (VOICE.mode) { if (!VOICE.on) toggleTTS(); listen(); } else if (REC) try { REC.abort(); } catch (e) { } }
-function afterSpeech() { if (VOICE.mode && SR_OK) setTimeout(listen, 350); }
+function toggleVoiceMode() { VOICE.mode = !VOICE.mode; try { localStorage.setItem('dicka_dojo_mic', VOICE.mode ? 'on' : 'off'); } catch (e) { } vbarUI(); if (VOICE.mode) { if (!VOICE.on) toggleTTS(); listen(); } else if (REC) try { REC.abort(); } catch (e) { } }
+function afterSpeech() { if (VOICE.mode && SR_OK && $('sim') && !$('sim').classList.contains('hidden')) setTimeout(listen, 300); }
 function animate(dt, t) { cam.position.lerp(camTo, 1 - Math.pow(.02, dt)); camLook.lerp(camLookTo, 1 - Math.pow(.02, dt)); cam.lookAt(camLook);
   Object.entries(AV).forEach(([k, a]) => { if (a.av) { a.g.position.copy(a.to); a.g.rotation.y += (a.ry - a.g.rotation.y) * Math.min(1, dt * 3); a.talkT = Math.max(0, a.talkT - dt); poseReal(a, dt, t); return; } const d = a.to.clone().sub(a.g.position); if (d.length() > .02) { a.g.position.addScaledVector(d, Math.min(1, dt * 1.4)); a.g.rotation.y = Math.atan2(d.x, d.z); a.walk = true; } else { a.walk = false; a.g.rotation.y += (a.ry - a.g.rotation.y) * Math.min(1, dt * 3); }
     a.talkT = Math.max(0, a.talkT - dt); const P0 = POSES[a.pose] || POSES.neutral;
@@ -427,7 +455,7 @@ function goBrief() { const n = $('pname').value.trim(); if (n.length < 3) { aler
   $('bPeople').innerHTML = `<div class="pc"><div class="ic">👷</div><b>Ricardo · ${LV.ric}</b><i>Se defiende y presume sus resultados.</i></div><div class="pc"><div class="ic">👩‍🔧</div><b>Ana · auxiliar de almacén</b><i>Tiene miedo de hablar.</i></div><div class="pc"><div class="ic">📞</div><b>${LV.boss} · tu jefe</b><i>Quiere metas sin escándalos.</i></div>`; BS = 0; bStep(0);
   $('intro').classList.add('hidden'); $('brief').classList.remove('hidden'); scrollTo(0, 0); }
 document.addEventListener('DOMContentLoaded', () => { $('ppuesto').addEventListener('change', lvChips); lvChips(); dataForm(); }); if (document.readyState !== 'loading') setTimeout(() => { $('ppuesto').addEventListener('change', lvChips); lvChips(); dataForm(); }, 0);
-function startSim() { setTimeout(aiPing, 400); if (window.speechSynthesis) { loadVoices(); try { speechSynthesis.speak(new SpeechSynthesisUtterance('')); } catch (e) { } } t0 = Date.now(); $('brief').classList.add('hidden'); $('sim').classList.remove('hidden'); kpiHTML(); whoHTML(); if (!renderer) initScene(); showDecision(D1); }
+function startSim() { setTimeout(aiPing, 400); try { VOICE.mode = SR_OK && localStorage.getItem('dicka_dojo_mic') !== 'off'; } catch (e) { VOICE.mode = SR_OK; } if (window.speechSynthesis) { loadVoices(); try { speechSynthesis.speak(new SpeechSynthesisUtterance('')); } catch (e) { } } t0 = Date.now(); $('brief').classList.add('hidden'); $('sim').classList.remove('hidden'); kpiHTML(); whoHTML(); if (!renderer) initScene(); showDecision(D1); }
 
 // ---------- debrief y reporte ----------
 function chk(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h.toString(36).toUpperCase().slice(0, 6); }
