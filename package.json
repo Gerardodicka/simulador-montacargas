@@ -9,6 +9,6 @@
   "scripts": {
     "test:db": "node pruebas/db.test.mjs",
     "validar": "node pruebas/validar.js",
-    "test": "node pruebas/db.test.mjs && node pruebas/validar.js"
+    "test": "node pruebas/db.test.mjs && node pruebas/dojo-ia.test.mjs && node pruebas/validar.js"
   }
 }

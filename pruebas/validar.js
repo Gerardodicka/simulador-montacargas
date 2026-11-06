@@ -89,7 +89,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
   // Dojo de Mando: la ruta recomendada aprueba y la de evitar el problema no
   { const play = async path => { const q = await b.newPage({ viewport: { width: 1000, height: 700 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(800);
       const r = await q.evaluate(async path => { const C = s => { const el = document.querySelector(s); if (el && el.offsetParent !== null) { el.click(); return true; } return false; }; const w = ms => new Promise(r => setTimeout(r, ms));
-        document.getElementById('pname').value = 'Prueba Dojo'; C('#goBtn'); C('#brief .btn'); await w(300);
+        document.getElementById('pname').value = 'Prueba Dojo'; C('#goBtn'); C('#bNext'); C('#bNext'); C('#bNext'); await w(300);
         for (const i of path) { document.querySelectorAll('.opt')[i].click(); await w(50); C('#talk .next'); await w(50); while (C('#evOk')) await w(50); }
         return window.REPORT ? { s: REPORT.score, ok: REPORT.ok, p: REPORT.path } : null; }, path); await q.close(); return { r, e }; };
     const good = await play([1, 1, 1]), bad = await play([2, 0, 0]);
