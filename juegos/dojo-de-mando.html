@@ -74,6 +74,7 @@ input,select{width:100%;padding:12px;border:2px solid #dfe3f0;border-radius:10px
 .ball i{width:6px;height:16px;border-radius:3px;background:#fff;opacity:.9}.orb[data-st=listen] .ball{background:radial-gradient(circle at 35% 30%,#ff7a7d,#c62828 70%);animation:pulse 1.2s infinite}.orb[data-st=listen] .ball i{animation:wave .7s infinite ease-in-out}.orb[data-st=listen] .ball i:nth-child(2){animation-delay:.15s}.orb[data-st=listen] .ball i:nth-child(3){animation-delay:.3s}
 .orb[data-st=think] .ball i{height:6px;animation:blink 1s infinite}.orb[data-st=think] .ball i:nth-child(2){animation-delay:.2s}.orb[data-st=think] .ball i:nth-child(3){animation-delay:.4s}.orb[data-st=talk] .ball{background:radial-gradient(circle at 35% 30%,#4fd08b,#2e9e5b 70%)}.orb[data-st=talk] .ball i{animation:wave .5s infinite ease-in-out}
 @keyframes wave{50%{height:30px}}@keyframes pulse{50%{box-shadow:0 0 0 14px rgba(198,40,40,.12)}}
+.lvbox{margin-top:10px;background:#eef0fb;border:1px solid #dfe3f2;border-radius:12px;padding:10px 14px}.lvbox b{color:var(--azul);font:700 15px Poppins,Inter}.lvbox ul{margin:6px 0 0 18px;display:grid;gap:3px;font-size:14px;color:#1b2240}
 .btalk{outline:3px solid #f5b800;border-radius:12px;background:#fff8dc!important;transition:.3s}
 .help{background:#e6f4ec;border-radius:10px;padding:10px 14px;font-size:14.5px}
 @media(max-width:900px){#top{flex-wrap:wrap}.kpis{order:3;flex-basis:100%}}
@@ -262,15 +263,15 @@ function realAvatars() { if (typeof loadOperarioModel !== 'function') return;
   loadOperarioModel().then(ok => { if (ok && AV.ricardo) swapAvatar('ricardo', makeStandingOperator(false)); return loadOperaria(); }).then(() => { if (GLTF_FEM.gltf && AV.ana) { const av = makeFemAvatar(); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av); const op = new THREE.Group(); op.add(av.obj); op.userData.gltf = av; swapAvatar('ana', op); } }).catch(e => console.warn('[Dojo] avatares:', e.message)); }
 function swapAvatar(k, op) { const a = AV[k]; if (!op || !op.userData.gltf) return; a.proc.visible = false; op.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } }); a.g.add(op); a.av = op.userData.gltf; a.hand = { L: null, R: null }; }
 // Objetivos de las manos por postura, en metros respecto al personaje (frente = +Z, izquierda del personaje = +X)
-const HANDS = { cross: { L: [-.13, 1.24, .17], R: [.13, 1.2, .19] }, open: { L: [.33, 1.1, .34], R: [-.33, 1.1, .34] }, talk: { R: [-.2, 1.22, .36] }, phone: { R: [-.12, 1.6, .06] } };
+const HANDS = { cross: { L: [-.13, 1.24, .17], R: [.13, 1.2, .19] }, open: { L: [.26, .98, .2], R: [-.26, .98, .2] }, talk: { R: [-.18, 1.05, .28] }, phone: { R: [-.12, 1.6, .06] } };
 const HEADS = { down: [.38, .3], cross: [-.06, 0], open: [-.04, 0] };
-function poseReal(a, dt, t) { if (a.cineWalk) { a.w = (a.w || 0) + dt * 7; try { gltfWalkPose(a.av, true, a.w, performance.now(), false, 0); } catch (e) { } return; } const av = a.av, H = HANDS[a.pose] || {}, hp = (HEADS[a.pose] || [0, 0]).slice(); if (a.talkT > 0 || a.listen || LISTEN) { const v = cam.position.clone().sub(a.g.position); hp[1] = Math.max(-.8, Math.min(.8, Math.atan2(v.x, v.z) - a.g.rotation.y)); if (a.pose === 'down' && a.listen) hp[0] = .1; }   // voltea a ver al participante
+function poseReal(a, dt, t) { if (a.cineWalk) { a.w = (a.w || 0) + dt * 7; try { gltfStandPose(a.av, .95, 0); gltfWalkPose(a.av, true, a.w, performance.now(), false, 0); } catch (e) { } return; } const av = a.av, H = HANDS[a.pose] || {}, hp = (HEADS[a.pose] || [0, 0]).slice(); if (a.talkT > 0 || a.listen || LISTEN) { const v = cam.position.clone().sub(a.g.position); hp[1] = Math.max(-.8, Math.min(.8, Math.atan2(v.x, v.z) - a.g.rotation.y)); if (a.pose === 'down' && a.listen) hp[0] = .1; }   // voltea a ver al participante
   a.hn = (a.hn || 0) + ((a.talkT > 0 ? Math.sin(t * 8) * .05 : 0) + hp[0] - (a.hn || 0)) * Math.min(1, dt * 6); a.hy = (a.hy || 0) + ((a.talkT > 0 ? Math.sin(t * 2.2) * .1 : 0) + hp[1] - (a.hy || 0)) * Math.min(1, dt * 4);
   gltfStandPose(av, .95, a.hy); if (av.bones && av.bones.head) setBoneWorld(av, 'head', (av.calib ? av.calib.swing : 1) * a.hn, a.hy);
   a.g.updateMatrixWorld(true);
-  ['L', 'R'].forEach(sd => { const tg = H[sd]; if (!tg) { a.hand[sd] = null; return; } let v = new THREE.Vector3(tg[0], tg[1], tg[2]); if (a.pose === 'talk' && a.talkT > 0) v.y += Math.sin(t * 5) * .06; v = a.g.localToWorld(v);
+  ['L', 'R'].forEach(sd => { const tg = H[sd]; if (!tg) { a.hand[sd] = null; return; } let v = new THREE.Vector3(tg[0], tg[1], tg[2]); if (a.talkT > 0) { v.y += Math.sin(t * 4.2 + (sd === 'L' ? 1 : 0)) * .05; v.x += Math.sin(t * 2.3) * .03; } else { v.y += Math.sin(t * 1.3 + (sd === 'L' ? 2 : 0)) * .012; } v = a.g.localToWorld(v);
     a.hand[sd] = a.hand[sd] ? a.hand[sd].lerp(v, Math.min(1, dt * 5)) : v.clone(); try { ikReach(av, sd === 'L' ? 'Left' : 'Right', a.hand[sd], 16); } catch (e) { } });
-  if (av.bones && av.bones.hips && av.hipsY0 !== undefined) av.bones.hips.position.y = av.hipsY0 + Math.sin(t * 1.6) * .004 / (av.uScale || .01); }
+  if (av.bones && av.bones.hips && av.hipsY0 !== undefined) av.bones.hips.position.y = av.hipsY0 + Math.sin(t * 1.6) * .004 / (av.uScale || .01); a.g.rotation.z = Math.sin(t * .7 + (a.ph || (a.ph = Math.random() * 6))) * .012; }
 // ===== Escena inicial: lo que pasó anoche (video de seguridad narrado con voz) =====
 let CINE = null;
 const CINE_LINES = [[0, 'Anoche, once cuarenta y siete. Cámara cuatro, pasillo tres.', '📹 Anoche · 23:47 · Cámara 4, pasillo 3'],
@@ -319,7 +320,7 @@ function voiceFor(pr) { if (!VOICE.list.length) loadVoices(); const v = pickVoic
 function sayLines(L, done) { if (!VOICE.on || !window.speechSynthesis) { if (done) setTimeout(done, 300); return; } const wasBusy = speechSynthesis.speaking || speechSynthesis.pending; if (wasBusy) speechSynthesis.cancel(); const items = L.map(([k, t]) => [k, tx(String(t)).replace(/<[^>]+>/g, '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()]).filter(x => x[1].length > 1);
   if (!items.length) { if (done) setTimeout(done, 300); return; } const my = ++VOICE.queue;
   /* Safari/iPhone: a veces no termina ni avisa (onend) tras usar el micrófono; un vigilante asegura que la plática continúe */
-  let fired = false; const fin = () => { if (fired || my !== VOICE.queue) return; fired = true; if (done) done(); }; const total = items.reduce((n, x) => n + x[1].length, 0); setTimeout(fin, 2500 + total * 90);
+  let fired = false; const fin = () => { if (fired || my !== VOICE.queue) return; fired = true; if (done) done(); }; const total = items.reduce((n, x) => n + x[1].length, 0); const guard = () => { if (window.speechSynthesis && speechSynthesis.speaking && Date.now() - st0 < 60000) return setTimeout(guard, 400); fin(); }; const st0 = Date.now(); setTimeout(guard, 2500 + total * 90);
   const run = () => items.forEach(([k, t], i) => { const u = new SpeechSynthesisUtterance(t), pr = VPROF[k] || VPROF.narr; u.lang = 'es-MX'; const vf = voiceFor(pr); if (vf.v) u.voice = vf.v; u.pitch = vf.pitch; u.rate = pr.rate;
     u.onstart = () => { if (AV[k]) speak(k); if (AV[k]) AV[k].talkT = 30; }; u.onend = () => { if (AV[k]) AV[k].talkT = 0; if (i === items.length - 1) fin(); }; u.onerror = () => { if (i === items.length - 1) fin(); }; speechSynthesis.speak(u); });
   if (wasBusy) setTimeout(() => { if (my === VOICE.queue) run(); }, 120); else run(); }
@@ -328,7 +329,7 @@ function vbarUI() { const t = $('ttsBtn'), m = $('srBtn'); if (t) { t.textConten
 // ===== Interacción por voz del participante (reconocimiento de voz) =====
 const SRC = window.SpeechRecognition || window.webkitSpeechRecognition, SR_OK = !!SRC; let REC = null, LISTEN = false;
 const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ ]/g, ' ').replace(/\s+/g, ' ').trim();
-function listen() { if (!SR_OK || LISTEN) return; try { if (window.speechSynthesis) speechSynthesis.cancel(); REC = new SRC(); REC.lang = 'es-MX'; REC.interimResults = true; REC.maxAlternatives = 3; LISTEN = true; micUI();
+function listen() { if (!SR_OK || LISTEN) return; if (window.speechSynthesis && speechSynthesis.speaking) return setTimeout(listen, 400); try { REC = new SRC(); REC.lang = 'es-MX'; REC.interimResults = true; REC.maxAlternatives = 3; LISTEN = true; micUI();
     /* Safari (iPhone) a veces nunca marca el resultado como final: tras 1.6 s de silencio se cierra y se envía lo escuchado */
     let got = false, last = '', sil = null; const send = alts => { if (got) return; got = true; clearTimeout(sil); orbLive(''); handleSpeech(alts); };
     REC.onresult = e => { const all = [...e.results].map(x => x[0].transcript).join(' ').replace(/\s+/g, ' ').trim(), r = e.results[e.results.length - 1]; last = all;
@@ -388,7 +389,9 @@ function localReply(k, said) { let r = humanize(k, localReplyBase(k, said)); if 
 function localReplyBase(k, said) { const n = norm(said), p = P[k], open = p.trust >= (k === 'ana' ? 55 : 62) || CONV.length >= 4, list = TOPICS[k] || TOPICS.ricardo;
   const hits = list.filter(([re]) => re.test(n)), pick = hits.find(h => !/hola/.test(h[0].source)) || hits[0];   // si saluda y pregunta, contesta la pregunta
   if (pick) { const used = new Set(CONV.map(c => c.texto)), all = (open ? pick[2] : pick[1]).concat(open ? pick[1] : pick[2]), arr = all.filter(x => !used.has(x)).length ? all.filter(x => !used.has(x)) : all; const r = arr[Math.floor(Math.random() * Math.min(arr.length, 2))]; return hits.length > 1 && pick !== hits[0] && /hola/.test(hits[0][0].source) && !/^jefe/i.test(r) ? (k === 'ricardo' ? 'Bien, jefe. ' : '') + r : r; }
-  const d = DEFAULTS[k] || DEFAULTS.ricardo; return d[Math.floor(Math.random() * d.length)]; }
+  const XTRA = { ricardo: [[/recursos humanos|rh\b|document|acta|reporte|expediente/, 'Órale… ¿a recursos humanos? ¿Por una sola vez? Si eso queda en mi expediente, ¿quién va a querer trabajar conmigo?'], [/pol[ií]tica|regla|procedimiento|norma/, 'Ya sé que la regla dice eso, jefe, pero en la noche no hay quien me cubra. ¿Usted qué propone?'], [/riesgo|lastim|accidente|pudo|vida/, '…Sí, ya sé que pudo salir mal. No lo había visto así.'], [/ayud|apoy|juntos|conf[ií]o/, 'Si me apoya, yo le entro. Nomás no me exhiba frente a mi gente.']] };
+  const x = (XTRA[k] || []).find(([re]) => re.test(n)), used = new Set(CONV.map(c => c.texto)); if (x && !used.has(x[1])) return x[1];
+  const d = (DEFAULTS[k] || DEFAULTS.ricardo).concat(k === 'ricardo' ? ['Mire, jefe, dígame qué decidió y yo me ajusto.', 'Le escucho. ¿Entonces qué sigue?', 'No sé qué más quiere que le diga, jefe.'] : []), fresh = d.filter(t => !used.has(t)); const arr = fresh.length ? fresh : d; return arr[Math.floor(Math.random() * arr.length)]; }
 function localIntent(said) { const opts = [...document.querySelectorAll('#talk .opt')]; if (!opts.length) return null; const N = [norm(said)], text = N[0];
   for (const n of N) { const m = n.match(/\b(?:opcion|letra|inciso)\s+(a|b|c)\b/) || n.match(/^(a|b|c)$/); if (m) return { el: opts[{ a: 0, b: 1, c: 2 }[m[1]]], k: m[1].toUpperCase(), sure: true }; }
   const INTENT = [[/\b(frente a todos|enfrente de todos|en publico|exhib|lo regano ahi)/, 0], [/\b(a solas|en privado|a la oficina|vamos a la oficina|aparte)/, 1], [/\b(dejarlo pasar|no hacer nada|lo dejo pasar|ignorar)/, 2],
@@ -396,11 +399,12 @@ function localIntent(said) { const opts = [...document.querySelectorAll('#talk .
     [/\b(no lo documento|sin expediente|no abro expediente|como usted diga)/, 0], [/\b(con datos|documentarlo interno|accion correctiva|el riesgo es)/, 1], [/\b(recursos humanos|rh|lo escalo)/, 2],
     [/\b(memorandum|sancion general)/, 0], [/\b(causa raiz|bono|incentivo)/, 1], [/\b(cambiarlo de turno|turno de dia|moverlo)/, 2]];
   const base = { d1: 0, d2: 3, d3: 6, d4: 9 }[CUR_DEC] || 0; for (const [re, k] of INTENT.slice(base, base + 3)) if (re.test(text)) return { el: opts[k], k: 'ABC'[k] }; return null; }
-function localConverse(said) { const k = speakerFor(), it = localIntent(said), reply = localReply(k, said), box = document.createElement('div'); box.className = 'chat';
+function localConverse(said) { const k = speakerFor(), lt = CONV.filter(c => c.quien === 'Líder').length, it = localIntent(said) || (lt >= 4 ? localIntent(CONV.filter(c => c.quien === 'Líder').map(c => c.texto).concat(said).join(' ')) : null), reply = localReply(k, said), box = document.createElement('div'); box.className = 'chat';
   box.innerHTML = lineHTML('tu', said) + lineHTML(k, reply); chatLog().append(box); box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); micUI('');
   CONV.push({ quien: 'Líder', texto: said }, { quien: P[k].name, texto: reply }); if (AV[k]) { AV[k].listen = true; speak(k); }
   if (it && it.el) { let done = false; const go = () => { if (done) return; done = true; VOICE.heard = { t: said, k: it.k, own: !it.sure }; it.el.click(); }; sayLines([[k, reply]], () => setTimeout(go, 400)); setTimeout(go, 1800 + (VOICE.on ? reply.length * 70 : 0)); return; }
-  const turns = CONV.filter(c => c.quien === 'Líder').length; if (turns >= 4 && turns % 2 === 0) { const nudge = { ricardo: 'Bueno, jefe, ¿entonces qué va a pasar conmigo?', director: 'Al grano: ¿qué vas a hacer?', ana: '¿Usted qué va a hacer?' }[k]; if (nudge) { box.innerHTML += lineHTML(k, nudge); CONV.push({ quien: P[k].name, texto: nudge }); return sayLines([[k, reply], [k, nudge]], () => { if (AV[k]) AV[k].listen = false; afterSpeech(); }); } }
+  const turns = CONV.filter(c => c.quien === 'Líder').length; if (turns >= 6) { const o = document.querySelector('#talk .opts'); if (o) o.classList.remove('hidden'); const m = 'Para cerrar esta parte, toca la opción que más se parece a lo que decidiste, o dilo con tus palabras: por ejemplo, “vamos a la oficina”.'; box.innerHTML += `<div class="help">🥋 <b>Mentor:</b> ${m}</div>`; return sayLines([[k, reply], ['narr', m]], () => { if (AV[k]) AV[k].listen = false; afterSpeech(); }); }
+  if (turns >= 4 && turns % 2 === 0) { const nudge = { ricardo: 'Bueno, jefe, ¿entonces qué va a pasar conmigo?', director: 'Al grano: ¿qué vas a hacer?', ana: '¿Usted qué va a hacer?' }[k]; if (nudge) { box.innerHTML += lineHTML(k, nudge); CONV.push({ quien: P[k].name, texto: nudge }); return sayLines([[k, reply], [k, nudge]], () => { if (AV[k]) AV[k].listen = false; afterSpeech(); }); } }
   sayLines([[k, reply]], () => { if (AV[k]) AV[k].listen = false; afterSpeech(); }); }
 function speakerFor() { return TALK || (CUR_DEC === 'd3' ? 'director' : 'ricardo'); }
 const lineHTML = (who, t, extra) => `<div class="line"><div class="av">${NM[who][0]}</div><div class="tx"><b>${tx(NM[who][1]).toUpperCase()}</b>${t}${extra || ''}</div></div>`;
@@ -424,9 +428,9 @@ async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!sa
   if (AV[k]) AV[k].listen = true; AI.busy = true; micUI('');
   const opts = [...document.querySelectorAll('#talk .opt')].map(o => ({ k: o.querySelector('.k').textContent, t: o.querySelector('span:last-child').childNodes[0].textContent }));
   const ctx = [...document.querySelectorAll('#talk > .line .tx')].map(e => e.textContent).join(' | ').slice(0, 900), q = (document.querySelector('#talk .guide') || {}).textContent || '';
-  try { const call = async () => { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 15000); try { return await fetch('/.netlify/functions/dojo-ia', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ dicho: said, personaje: p.name, animo: p.mood, confianzaPersonaje: p.trust, historial: CONV, opciones: opts, contexto: ctx, pregunta: q, nivel: who.puesto || '', presion: presion() }) }).then(x => x.json()); } finally { clearTimeout(to); } };
+  try { const call = async () => { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 9500); try { return await fetch('/.netlify/functions/dojo-ia', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ dicho: said, personaje: p.name, animo: p.mood, confianzaPersonaje: p.trust, historial: CONV, opciones: opts, contexto: ctx, pregunta: q, nivel: who.puesto || '', presion: presion(), cerrar: CONV.filter(c => c.quien === 'Líder').length >= 4 }) }).then(x => x.json()); } finally { clearTimeout(to); } };
     let r; try { r = await call(); } catch (e1) { r = await call(); } AI.busy = false;
-    if (!r.ok) { AI.status = r.motivo; if (r.motivo === 'sin_clave' || r.motivo === 'api_401') AI.off = true; aiBadge('⚠️ IA: ' + r.motivo); box.remove(); return localConverse(said); }
+    if (!r.ok) { AI.status = r.motivo; if (r.motivo === 'sin_clave' || r.motivo === 'api_401') AI.off = true; aiBadge('⚠️ IA: ' + r.motivo + (r.detalle ? ' · ' + r.detalle : '')); box.remove(); return localConverse(said); }
     if (r.tipo === 'continuar') { box.remove(); return handleSpeechLocal(['continuar']); }
     if (r.tipo === 'pregunta') { box.innerHTML = lineHTML('tu', said) + `<div class="help">🥋 <b>Mentor:</b> ${r.mentor || r.respuesta}</div>`; sayLines([['narr', r.mentor || r.respuesta]], afterSpeech); return; }
     CONV.push({ quien: 'Líder', texto: said }); if (r.respuesta) CONV.push({ quien: p.name, texto: r.respuesta });
@@ -518,11 +522,33 @@ function bStep(d) { BS = Math.max(0, Math.min(2, BS + d)); document.querySelecto
   $('bPrev').style.visibility = BS ? 'visible' : 'hidden'; setTimeout(bNarrate, 350); const n = $('bNext'); n.textContent = BS === 2 ? '▶ Entrar al piso' : 'Siguiente →'; n.onclick = BS === 2 ? startSim : () => bStep(1); scrollTo(0, 0); }
 /* Briefing narrado: cada punto se lee en voz alta, se ilumina y avanza solo */
 let BTOK = 0;
+/* Guion hablado del briefing: explica con palabras naturales (no lee el texto tal cual) e ilumina cada elemento */
+function bScript(sl) { const q = x => sl.querySelector(x), qa = x => [...sl.querySelectorAll(x)], boss = LV.boss.toLowerCase(), L = [];
+  const add = (e, t) => { if (e) L.push([e, t]); };
+  if (BS === 0) { const li = qa('#bSit li');
+    add(q('h3'), 'Hola. Antes de entrar al piso, te cuento en un minuto qué pasó.');
+    add(li[0], `Ricardo es el ${LV.ric.toLowerCase()}. Sus números son los mejores del almacén, y el equipo lo ve como el que saca el trabajo.`);
+    add(li[1], 'Pero anoche la cámara lo grabó manejando el montacargas sin cinturón y con la carga levantada mientras avanzaba. Eso puede provocar una volcadura o lastimar a alguien. Además, dos auxiliares se quejaron de cómo les habla.');
+    add(li[2], `Y para complicarlo, tu jefe, el ${boss}, te pidió no hacer ruido: no quiere problemas ni que bajen los números.`);
+    add(q('.goal'), 'Tu reto: corregir la conducta de Ricardo sin perder al equipo ni los resultados. No hay una respuesta perfecta; todo lo que digas tiene consecuencias.'); }
+  else if (BS === 1) { const pc = qa('.pc');
+    add(q('h3'), 'Ahora, ¿con quién vas a hablar?');
+    add(pc[0], 'Con Ricardo. Se va a defender con sus resultados y va a minimizar lo que pasó. Escúchalo, pero no negocies la seguridad.');
+    add(pc[1], 'Con Ana, auxiliar de almacén. La carga pasó a menos de un metro de ella. Tiene miedo de hablar, y solo te contará la verdad si siente confianza.');
+    add(pc[2], `Y con tu jefe, el ${boss}, por teléfono. Quiere cumplir las metas sin escándalos. Lo convences con datos, no con opiniones.`); }
+  else { const ch = q('#bData .chips'), note = q('#bData .lvbox'), ind = qa('.chips')[1];
+    add(q('h3'), 'Por último, lo que sabes y cómo se mide.');
+    const say = v => String(v).replace(/\$\s?([\d,]+)/g, (m, n) => n.replace(/,/g, '') + ' pesos').replace(/(\d+(?:\.\d+)?)\s?%/g, '$1 por ciento'); add(ch, 'Estos son los datos del turno. ' + LV.know.map(k => DATA_LBL[k][0] + ': ' + say(DATA_LBL[k][1](DOJO_DATA[k]))).join('. ') + '. Úsalos en la plática: los datos convencen más que las opiniones.');
+    add(note, `Estás en nivel ${LV.diff}. ` + LV.note.replace(/(\d+)%/g, '$1 por ciento').replace(/Mínimo aprobatorio (\d+)/, 'Para aprobar necesitas al menos $1 puntos de 100'));
+    add(ind, 'Durante la plática verás cinco indicadores arriba: confianza, claridad, ejecución, clima y cumplimiento. Suben o bajan según lo que digas.');
+    add(q('.rule'), 'Recuerda: ninguna decisión es gratis. Si sube un indicador, normalmente otro baja.');
+    add($('bNext'), 'Al entrar, primero verás el video de lo que pasó anoche. Después Ricardo te hablará: contéstale con tu voz, como en una plática normal. El micrófono se abre solo.'); }
+  return L; }
 function bNarrate() { const tok = ++BTOK, sl = document.querySelector('.bslide[data-s="' + BS + '"]'); if (!sl) return;
-  const its = [...sl.querySelectorAll('h3,#bSit > *,.pc,.goal,#bData > *,.rule')].filter(e => e.textContent.trim().length > 2); let i = 0;
+  const its = bScript(sl); let i = 0;
   const step = () => { if (tok !== BTOK || $('brief').classList.contains('hidden')) return; its.forEach(e => e.classList.remove('btalk'));
     if (i >= its.length) { setTimeout(() => { if (tok !== BTOK || $('brief').classList.contains('hidden')) return; if (BS < 2) bStep(1); else startSim(); }, 900); return; }
-    const e = its[i++]; e.classList.add('btalk'); e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); const t = e.textContent.replace(/\p{Extended_Pictographic}|\uFE0F/gu, '').replace(/\s+/g, ' ').trim();
+    const it = its[i++], e = it[0]; e.classList.add('btalk'); e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); const t = it[1];
     let a = false, b = false; const go = () => { if (a && b) step(); }; setTimeout(() => { a = true; go(); }, 900 + t.length * 55); sayLines([['narr', t]], () => { b = true; go(); }); if (!VOICE.on) b = true; };
   step(); }
 function lvChips() { const L = LEVELS[$('ppuesto').value]; $('lvInfo').innerHTML = `<span>🎚️ Dificultad: <b>${L.diff}</b></span><span>${L.note}</span>`; }
@@ -530,7 +556,7 @@ function goBrief() { const n = $('pname').value.trim(); if (n.length < 3) { aler
   P.ricardo.role = LV.ric; P.director.name = LV.boss; NM.director = ['📞', LV.boss];
   $('bRole').textContent = `Tu rol: ${who.puesto} · nivel ${LV.diff}`;
   $('bSit').innerHTML = `<ul class="sit"><li><span>🏆</span><div>Ricardo, ${LV.ric.toLowerCase()}, tiene <b>la mejor productividad</b> del almacén.</div></li><li><span>⚠️</span><div>Anoche operó el montacargas <b>sin cinturón y con la carga elevada</b>. Dos auxiliares se quejaron de su trato.</div></li><li><span>📞</span><div>Tu jefe, el ${LV.boss.toLowerCase()}, te pidió <b>"no hacer ruido"</b>.</div></li></ul>`;
-  $('bData').innerHTML = `<span class="lbl">${DATA_REAL ? 'DATOS REALES' : 'DATOS DE REFERENCIA'}</span><div class="chips" style="margin-top:8px">${LV.know.map(k => `<span>📊 ${DATA_LBL[k][0]}: <b>${DATA_LBL[k][1](DOJO_DATA[k])}</b></span>`).join('')}</div><p style="font-size:13px;color:#6b7390;margin-top:8px">🎚️ Nivel ${LV.diff}: ${LV.note}</p>`;
+  $('bData').innerHTML = `<span class="lbl">${DATA_REAL ? 'DATOS REALES' : 'DATOS DE REFERENCIA'}</span><div class="chips" style="margin-top:8px">${LV.know.map(k => `<span>📊 ${DATA_LBL[k][0]}: <b>${DATA_LBL[k][1](DOJO_DATA[k])}</b></span>`).join('')}</div><div class="lvbox"><b>🎚️ Nivel ${LV.diff}</b><ul>${LV.note.split(/\.\s+/).filter(Boolean).map(x => `<li>${x.replace(/\.$/, '')}</li>`).join('')}</ul></div>`;
   $('bPeople').innerHTML = `<div class="pc"><div class="ic">👷</div><b>Ricardo · ${LV.ric}</b><i>Se defiende y presume sus resultados.</i></div><div class="pc"><div class="ic">👩‍🔧</div><b>Ana · auxiliar de almacén</b><i>Tiene miedo de hablar.</i></div><div class="pc"><div class="ic">📞</div><b>${LV.boss} · tu jefe</b><i>Quiere metas sin escándalos.</i></div>`; BS = 0; bStep(0);
   $('intro').classList.add('hidden'); $('brief').classList.remove('hidden'); scrollTo(0, 0); }
 document.addEventListener('DOMContentLoaded', () => { $('ppuesto').addEventListener('change', lvChips); lvChips(); dataForm(); }); if (document.readyState !== 'loading') setTimeout(() => { $('ppuesto').addEventListener('change', lvChips); lvChips(); dataForm(); }, 0);
