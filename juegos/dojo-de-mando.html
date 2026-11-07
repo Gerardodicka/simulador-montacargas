@@ -308,11 +308,13 @@ if (window.speechSynthesis) { loadVoices(); speechSynthesis.onvoiceschanged = lo
 /* Voz: prefiere voces neuronales (Natural/Online/Neural/Google) y respeta el género del personaje */
 const reM = /jorge|gerardo|cecilio|diego|ra[uú]l|pablo|juan|carlos|enrique|[aá]lvaro|alonso|jos[eé]|miguel|andr[eé]s|tom[aá]s|liberto|yago|male|hombre/i, reF = /paulina|m[oó]nica|sabina|helena|laura|luc[ií]a|female|mujer|elvira|dalia|marisol|ximena|elena|paloma|renata|beatriz|candela|larissa|nuria|irene|google espa/i;
 const reNat = /natural|online|neural|premium|enhanced|mejorad/i;
-function voiceRank(v) { return (reNat.test(v.name) ? 4 : 0) + (/es-MX/i.test(v.lang) ? 2 : /es-(US|419)/i.test(v.lang) ? 1 : 0) + (v.localService === false ? 1 : 0); }
+/* Safari/Apple incluye voces de novedad (Eddy, Flo, Rocko…) que suenan robóticas: van al final */
+const reRobot = /eddy|flo\b|grandma|grandpa|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph|abuel/i;
+function voiceRank(v) { return (reRobot.test(v.name) ? -20 : 0) + (reNat.test(v.name) ? 4 : 0) + (/es-MX/i.test(v.lang) ? 2 : /es-(US|419)/i.test(v.lang) ? 1 : 0) + (v.localService === false ? 1 : 0); }
 function pickVoice(male) { const L = VOICE.list; if (!L.length) return null; const re = male ? reM : reF, by = a => a.slice().sort((x, y) => voiceRank(y) - voiceRank(x));
-  const g = by(L.filter(v => re.test(v.name))); if (g.length) return g[0];
+  const g = by(L.filter(v => re.test(v.name) && !reRobot.test(v.name))); if (g.length) return g[0];
   const neutral = by(L.filter(v => !reM.test(v.name) && !reF.test(v.name))); return male ? null : (by(L.filter(v => reF.test(v.name)))[0] || neutral[0] || L[0]); }
-function voiceFor(pr) { const v = pickVoice(pr.male); if (v) return { v, pitch: pr.pitch };
+function voiceFor(pr) { if (!VOICE.list.length) loadVoices(); const v = pickVoice(pr.male); if (v) return { v, pitch: pr.pitch };
   /* sin voz masculina instalada: usa la mejor disponible con tono grave */ const L = VOICE.list.slice().sort((x, y) => voiceRank(y) - voiceRank(x)); return { v: L[0] || null, pitch: pr.male ? Math.min(pr.pitch, .62) : pr.pitch }; }
 function sayLines(L, done) { if (!VOICE.on || !window.speechSynthesis) { if (done) setTimeout(done, 300); return; } speechSynthesis.cancel(); const items = L.map(([k, t]) => [k, tx(String(t)).replace(/<[^>]+>/g, '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()]).filter(x => x[1].length > 1);
   if (!items.length) { if (done) setTimeout(done, 300); return; } const my = ++VOICE.queue;
@@ -324,8 +326,12 @@ function vbarUI() { const t = $('ttsBtn'), m = $('srBtn'); if (t) { t.textConten
 const SRC = window.SpeechRecognition || window.webkitSpeechRecognition, SR_OK = !!SRC; let REC = null, LISTEN = false;
 const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ ]/g, ' ').replace(/\s+/g, ' ').trim();
 function listen() { if (!SR_OK || LISTEN) return; try { if (window.speechSynthesis) speechSynthesis.cancel(); REC = new SRC(); REC.lang = 'es-MX'; REC.interimResults = true; REC.maxAlternatives = 3; LISTEN = true; micUI();
-    REC.onresult = e => { const r = e.results[e.results.length - 1]; if (!r.isFinal) { orbLive(r[0].transcript); return; } orbLive(''); const alts = [...r].map(x => x.transcript); handleSpeech(alts); }; REC.onerror = e => { LISTEN = false; if (e.error === 'no-speech' && VOICE.mode) { setTimeout(listen, 400); return; } micUI(e.error === 'no-speech' ? 'No te escuché. Toca el círculo y vuelve a hablar.' : e.error === 'not-allowed' ? 'Permite el micrófono en el navegador para responder con voz.' : ''); };
-    REC.onend = () => { LISTEN = false; micUI(); }; REC.start(); } catch (e) { LISTEN = false; micUI('El reconocimiento de voz no está disponible en este navegador (usa Chrome o Edge).'); } }
+    /* Safari (iPhone) a veces nunca marca el resultado como final: tras 1.6 s de silencio se cierra y se envía lo escuchado */
+    let got = false, last = '', sil = null; const send = alts => { if (got) return; got = true; clearTimeout(sil); orbLive(''); handleSpeech(alts); };
+    REC.onresult = e => { const all = [...e.results].map(x => x[0].transcript).join(' ').replace(/\s+/g, ' ').trim(), r = e.results[e.results.length - 1]; last = all;
+      if (r.isFinal) { const alts = e.results.length > 1 ? [all] : [...r].map(x => x.transcript); return send(alts); }
+      orbLive(all); clearTimeout(sil); sil = setTimeout(() => { try { REC.stop(); } catch (x) { } setTimeout(() => { if (last) send([last]); }, 500); }, 1600); }; REC.onerror = e => { LISTEN = false; if (e.error === 'no-speech' && VOICE.mode) { setTimeout(listen, 400); return; } micUI(e.error === 'no-speech' ? 'No te escuché. Toca el círculo y vuelve a hablar.' : e.error === 'not-allowed' ? 'Permite el micrófono en el navegador para responder con voz.' : ''); };
+    REC.onend = () => { LISTEN = false; clearTimeout(sil); if (!got && last) send([last]); else micUI(); }; REC.start(); } catch (e) { LISTEN = false; micUI('El reconocimiento de voz no está disponible en este navegador (usa Chrome o Edge).'); } }
 function micUI(msg) { const sb = $('srBtn'); if (sb) sb.classList.toggle('rec', LISTEN); orbState(LISTEN ? 'listen' : AI.busy ? 'think' : (window.speechSynthesis && speechSynthesis.speaking) ? 'talk' : 'idle', msg); }
 // ===== Orbe de voz: escuchando / pensando / hablando (como una llamada de voz) =====
 function orbState(st, msg) { const o = $('orb'); if (!o) return; o.dataset.st = st; const who = NM[speakerFor()] ? NM[speakerFor()][1] : 'Ricardo';
