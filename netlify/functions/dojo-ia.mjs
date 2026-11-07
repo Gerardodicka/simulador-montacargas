@@ -12,7 +12,7 @@ const json = (status, body) => new Response(JSON.stringify(body), { status, head
 const clip = (v, n) => String(v ?? "").slice(0, n);
 
 const SYSTEM = `Eres el motor de un simulador de liderazgo de DICKA Logistics (almacenes en México). Haces dos cosas a la vez:
-1) INTERPRETAS AL PERSONAJE con quien habla el participante y le CONTESTAS como en una plática real: natural, breve (1 a 3 frases), en español de México, en primera persona, sin groserías, coherente con su personalidad, su estado de ánimo y su nivel de confianza (baja = se cierra o se defiende; alta = coopera y se abre). Nunca hables como narrador ni como IA.
+1) INTERPRETAS AL PERSONAJE con quien habla el participante y le CONTESTAS como en una plática real: natural, breve (1 a 2 frases, como se habla en persona: con titubeos, frases cortas, sin listas), en español de México, en primera persona, sin groserías, coherente con su personalidad, su estado de ánimo y su nivel de confianza (baja = se cierra o se defiende; alta = coopera y se abre). Nunca hables como narrador ni como IA.
 2) EVALÚAS en silencio la postura del líder frente a las opciones de la decisión actual.
 Personajes:
 - Ricardo: supervisor con la mejor productividad; defensivo; minimiza el incidente de seguridad (operó el montacargas sin cinturón y con la carga elevada) y presume sus resultados. Si lo tratan con respeto y hechos, poco a poco reconoce.
@@ -47,7 +47,7 @@ export default async (req) => {
   try {
     if (b.ping) { const r = await claude(key, "Responde solo: ok", [{ role: "user", content: "ping" }], 5); return json(200, r.error ? { ok: false, motivo: r.error, detalle: r.det, modelo: MODEL } : { ok: true, modelo: MODEL }); }
     const opciones = Array.isArray(b.opciones) ? b.opciones.slice(0, 4).map(o => `${clip(o.k, 2)}) ${clip(o.t, 400)}`).join("\n") : "";
-    const hist = Array.isArray(b.historial) ? b.historial.slice(-10).map(h => `${clip(h.quien, 30)}: ${clip(h.texto, 300)}`).join("\n") : "";
+    const hist = Array.isArray(b.historial) ? b.historial.slice(-8).map(h => `${clip(h.quien, 30)}: ${clip(h.texto, 300)}`).join("\n") : "";
     const user = `Nivel del líder: ${clip(b.nivel, 60)}
 Escena: ${clip(b.contexto, 1000)}
 Decisión actual: ${clip(b.pregunta, 300)}
@@ -59,7 +59,7 @@ Personaje con quien habla: ${clip(b.personaje || "Ricardo", 40)} (estado: ${clip
 Plática hasta ahora:
 ${hist || "(inicio)"}
 El líder dice ahora: "${clip(b.dicho, 600)}"`;
-    const r = await claude(key, SYSTEM, [{ role: "user", content: user }], 600);
+    const r = await claude(key, SYSTEM, [{ role: "user", content: user }], 420);
     if (r.error) return json(200, { ok: false, motivo: r.error, detalle: r.det });
     const m = r.text.match(/\{[\s\S]*\}/); let o = null; try { o = m && JSON.parse(m[0]); } catch { }
     if (!o) { const g = k => (r.text.match(new RegExp('"' + k + '"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)')) || [])[1];   // JSON cortado: rescata lo que se pueda
