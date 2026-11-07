@@ -308,11 +308,13 @@ if (window.speechSynthesis) { loadVoices(); speechSynthesis.onvoiceschanged = lo
 /* Voz: prefiere voces neuronales (Natural/Online/Neural/Google) y respeta el género del personaje */
 const reM = /jorge|gerardo|cecilio|diego|ra[uú]l|pablo|juan|carlos|enrique|[aá]lvaro|alonso|jos[eé]|miguel|andr[eé]s|tom[aá]s|liberto|yago|male|hombre/i, reF = /paulina|m[oó]nica|sabina|helena|laura|luc[ií]a|female|mujer|elvira|dalia|marisol|ximena|elena|paloma|renata|beatriz|candela|larissa|nuria|irene|google espa/i;
 const reNat = /natural|online|neural|premium|enhanced|mejorad/i;
-function voiceRank(v) { return (reNat.test(v.name) ? 4 : 0) + (/es-MX/i.test(v.lang) ? 2 : /es-(US|419)/i.test(v.lang) ? 1 : 0) + (v.localService === false ? 1 : 0); }
+/* Safari/Apple incluye voces de novedad (Eddy, Flo, Rocko…) que suenan robóticas: van al final */
+const reRobot = /eddy|flo\b|grandma|grandpa|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph|abuel/i;
+function voiceRank(v) { return (reRobot.test(v.name) ? -20 : 0) + (reNat.test(v.name) ? 4 : 0) + (/es-MX/i.test(v.lang) ? 2 : /es-(US|419)/i.test(v.lang) ? 1 : 0) + (v.localService === false ? 1 : 0); }
 function pickVoice(male) { const L = VOICE.list; if (!L.length) return null; const re = male ? reM : reF, by = a => a.slice().sort((x, y) => voiceRank(y) - voiceRank(x));
-  const g = by(L.filter(v => re.test(v.name))); if (g.length) return g[0];
+  const g = by(L.filter(v => re.test(v.name) && !reRobot.test(v.name))); if (g.length) return g[0];
   const neutral = by(L.filter(v => !reM.test(v.name) && !reF.test(v.name))); return male ? null : (by(L.filter(v => reF.test(v.name)))[0] || neutral[0] || L[0]); }
-function voiceFor(pr) { const v = pickVoice(pr.male); if (v) return { v, pitch: pr.pitch };
+function voiceFor(pr) { if (!VOICE.list.length) loadVoices(); const v = pickVoice(pr.male); if (v) return { v, pitch: pr.pitch };
   /* sin voz masculina instalada: usa la mejor disponible con tono grave */ const L = VOICE.list.slice().sort((x, y) => voiceRank(y) - voiceRank(x)); return { v: L[0] || null, pitch: pr.male ? Math.min(pr.pitch, .62) : pr.pitch }; }
 function sayLines(L, done) { if (!VOICE.on || !window.speechSynthesis) { if (done) setTimeout(done, 300); return; } speechSynthesis.cancel(); const items = L.map(([k, t]) => [k, tx(String(t)).replace(/<[^>]+>/g, '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()]).filter(x => x[1].length > 1);
   if (!items.length) { if (done) setTimeout(done, 300); return; } const my = ++VOICE.queue;
