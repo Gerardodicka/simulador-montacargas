@@ -3,16 +3,16 @@
 (function (G) {
   const FOCUS = {
     desarrollo: { n: 'Liderazgo y desarrollo de personas', obj: ['retro', 'delegar'], sc: ['mejor', 'renuncia', 'rotacion', 'conflicto', 'accidente2'], tip: 'Da retroalimentación con hechos, conducta e impacto y cierra con responsable y fecha.' },
-    comunicacion: { n: 'Comunicación efectiva y asertiva', obj: ['retro', 'necesidades'], sc: ['conflicto', 'cliente', 'mejor', 'accidente3'], tip: 'Di la intención de tu mensaje al inicio, en frases cortas, y confirma que te entendieron.' },
+    comunicacion: { n: 'Comunicación efectiva y asertiva', obj: ['retro', 'necesidades'], sc: ['conflicto', 'antidoping', 'antidoping2', 'cliente', 'mejor', 'accidente3'], tip: 'Di la intención de tu mensaje al inicio, en frases cortas, y confirma que te entendieron.' },
     resultados: { n: 'Enfoque a resultados', obj: ['metas'], sc: ['cliente', 'faltante', 'accidente2', 'rotacion'], tip: 'Convierte cada plática en un acuerdo medible: qué, cuánto y para cuándo.' },
     procesos: { n: 'Control de procesos y ejecución', obj: ['metas', 'delegar'], sc: ['faltante', 'robo', 'accidente2', 'estado'], tip: 'Pide evidencia y define el control que evitará que se repita.' },
-    negociacion: { n: 'Negociación ganar-ganar', obj: ['necesidades', 'metas'], sc: ['cliente', 'renuncia'], tip: 'Pregunta qué necesita la otra parte antes de proponer; busca beneficio para ambos.' },
-    equipo: { n: 'Trabajo en equipo', obj: ['necesidades'], sc: ['conflicto', 'rotacion'], tip: 'Escucha a todas las partes y acuerda reglas que el equipo sienta como propias.' },
-    integridad: { n: 'Ética y cumplimiento', obj: ['retro'], sc: ['robo', 'faltante', 'estado', 'mejor'], tip: 'Sostén la norma aunque haya presión por resultados; documenta y escala cuando corresponde.' },
-    firmeza: { n: 'Firmeza y toma de postura', obj: ['retro', 'metas'], sc: ['mejor', 'estado', 'robo', 'cliente'], tip: 'Fija tu postura con respeto y sin rodeos; no cedas lo que no es negociable.' },
+    negociacion: { n: 'Negociación ganar-ganar', obj: ['necesidades', 'metas'], sc: ['tiempoextra', 'tiempoextra2', 'tiempoextra3', 'cliente', 'renuncia'], tip: 'Pregunta qué necesita la otra parte antes de proponer; busca beneficio para ambos.' },
+    equipo: { n: 'Trabajo en equipo', obj: ['necesidades'], sc: ['conflicto', 'tiempoextra', 'tiempoextra2', 'tiempoextra3', 'rotacion'], tip: 'Escucha a todas las partes y acuerda reglas que el equipo sienta como propias.' },
+    integridad: { n: 'Ética y cumplimiento', obj: ['retro'], sc: ['antidoping', 'antidoping2', 'robo', 'faltante', 'estado', 'mejor'], tip: 'Sostén la norma aunque haya presión por resultados; documenta y escala cuando corresponde.' },
+    firmeza: { n: 'Firmeza y toma de postura', obj: ['retro', 'metas'], sc: ['mejor', 'antidoping', 'antidoping2', 'estado', 'robo', 'cliente'], tip: 'Fija tu postura con respeto y sin rodeos; no cedas lo que no es negociable.' },
     conflicto: { n: 'Enfrentar conflictos', obj: ['necesidades', 'retro'], sc: ['conflicto', 'mejor'], tip: 'Aborda el problema pronto y en privado; evitarlo lo hace crecer.' },
     presion: { n: 'Manejo de la presión', obj: ['necesidades'], sc: ['accidente1', 'accidente3', 'cliente'], tip: 'Haz una pausa, ordena prioridades (personas, seguridad, operación) y comunica con calma.' },
-    escucha: { n: 'Escucha empática', obj: ['necesidades'], sc: ['renuncia', 'conflicto', 'accidente1'], tip: 'Haz dos preguntas abiertas antes de dar tu opinión.' } };
+    escucha: { n: 'Escucha empática', obj: ['necesidades'], sc: ['renuncia', 'tiempoextra', 'tiempoextra2', 'conflicto', 'accidente1'], tip: 'Haz dos preguntas abiertas antes de dar tu opinión.' } };
   const AF = [[/liderazgo|desarrollo de personas/i, 'desarrollo'], [/comunicaci/i, 'comunicacion'], [/resultados|objetivos/i, 'resultados'], [/procesos|ejecuci/i, 'procesos'], [/negociaci/i, 'negociacion'], [/equipo/i, 'equipo'], [/integridad/i, 'integridad']];
   const LOW = /^(bajo|muy bajo)$/i, HIGH = /^(alto|muy alto)$/i;
   async function pdfText(file) {

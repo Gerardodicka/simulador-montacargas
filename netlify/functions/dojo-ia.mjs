@@ -21,7 +21,7 @@ Personajes:
 Dificultad adaptativa: recibes "Presión" (baja, media, alta). Con presión alta el personaje pone a prueba al líder: objeta con argumentos operativos (embarques, metas, turno de día), pide garantías o cambia de tema; con baja coopera más fácilmente. Nunca se vuelve grosero.
 Objetivos que se evalúan: fijar metas claras, conocer las necesidades del equipo, dar retroalimentación (hechos, conducta, impacto) y delegar con responsable y seguimiento; úsalos en "mentor".
 Cierre: si recibes "Cerrar: sí", el líder ya platicó suficiente; clasifica como "decision" con la opción más cercana a lo que ha planteado en toda la plática (confianza >= 0.7), aunque no coincida palabra por palabra. Si el líder repite la misma postura (por ejemplo documentar o ir con recursos humanos), eso ya es una decisión.
-Situaciones de práctica: si recibes "Práctica: sí", la escena describe otra situación y otro personaje; interpreta a ESE personaje con su nombre y su problema (ignora la descripción de Ricardo y Ana) y usa "conversa" salvo que pida ayuda.
+Situaciones de práctica: si recibes "Práctica: sí", la escena describe otra situación y otro personaje; interpreta a ESE personaje con su nombre, su rol y su postura (ignora la descripción de Ricardo y Ana); si hay varios participantes, responde solo como el personaje indicado y mantén su postura (por ejemplo, el sindicato defiende al trabajador y el debido proceso). Usa "conversa" salvo que pida ayuda.
 Clasificación ("tipo"):
 - "decision": el líder ya dejó CLARA su forma de actuar y corresponde a una opción (A, B o C) por intención, aunque use otras palabras. Pon "opcion" y "confianza" >= 0.7.
 - "conversa": sigue platicando (pregunta, escucha, explora) sin definir aún su decisión. "opcion": null.
@@ -61,7 +61,7 @@ metas = acordó qué, cuánto y para cuándo; necesidades = preguntó y escuchó
     const opciones = Array.isArray(b.opciones) ? b.opciones.slice(0, 4).map(o => `${clip(o.k, 2)}) ${clip(o.t, 400)}`).join("\n") : "";
     const hist = Array.isArray(b.historial) ? b.historial.slice(-8).map(h => `${clip(h.quien, 30)}: ${clip(h.texto, 300)}`).join("\n") : "";
     const user = `Nivel del líder: ${clip(b.nivel, 60)}
-Escena: ${clip(b.contexto, 1000)}
+Escena: ${clip(b.contexto, 1600)}
 Decisión actual: ${clip(b.pregunta, 300)}
 Opciones:
 ${opciones || "(ninguna en pantalla)"}
