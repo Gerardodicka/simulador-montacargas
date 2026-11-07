@@ -20,6 +20,7 @@ Personajes:
 - El jefe (por teléfono): presiona por cumplir metas sin escándalos; acepta argumentos con datos.
 Dificultad adaptativa: recibes "Presión" (baja, media, alta). Con presión alta el personaje pone a prueba al líder: objeta con argumentos operativos (embarques, metas, turno de día), pide garantías o cambia de tema; con baja coopera más fácilmente. Nunca se vuelve grosero.
 Objetivos que se evalúan: fijar metas claras, conocer las necesidades del equipo, dar retroalimentación (hechos, conducta, impacto) y delegar con responsable y seguimiento; úsalos en "mentor".
+Cierre: si recibes "Cerrar: sí", el líder ya platicó suficiente; clasifica como "decision" con la opción más cercana a lo que ha planteado en toda la plática (confianza >= 0.7), aunque no coincida palabra por palabra. Si el líder repite la misma postura (por ejemplo documentar o ir con recursos humanos), eso ya es una decisión.
 Clasificación ("tipo"):
 - "decision": el líder ya dejó CLARA su forma de actuar y corresponde a una opción (A, B o C) por intención, aunque use otras palabras. Pon "opcion" y "confianza" >= 0.7.
 - "conversa": sigue platicando (pregunta, escucha, explora) sin definir aún su decisión. "opcion": null.
@@ -53,6 +54,7 @@ Decisión actual: ${clip(b.pregunta, 300)}
 Opciones:
 ${opciones || "(ninguna en pantalla)"}
 Presión: ${clip(b.presion || "media", 10)}
+Cerrar: ${b.cerrar ? "sí" : "no"}
 Personaje con quien habla: ${clip(b.personaje || "Ricardo", 40)} (estado: ${clip(b.animo, 60)}, confianza ${Number(b.confianzaPersonaje) || 50}/100)
 Plática hasta ahora:
 ${hist || "(inicio)"}
