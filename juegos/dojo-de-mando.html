@@ -263,9 +263,9 @@ function realAvatars() { if (typeof loadOperarioModel !== 'function') return;
   loadOperarioModel().then(ok => { if (ok && AV.ricardo) swapAvatar('ricardo', makeStandingOperator(false)); return loadOperaria(); }).then(() => { if (GLTF_FEM.gltf && AV.ana) { const av = makeFemAvatar(); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av); const op = new THREE.Group(); op.add(av.obj); op.userData.gltf = av; swapAvatar('ana', op); } }).catch(e => console.warn('[Dojo] avatares:', e.message)); }
 function swapAvatar(k, op) { const a = AV[k]; if (!op || !op.userData.gltf) return; a.proc.visible = false; op.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } }); a.g.add(op); a.av = op.userData.gltf; a.hand = { L: null, R: null }; }
 // Objetivos de las manos por postura, en metros respecto al personaje (frente = +Z, izquierda del personaje = +X)
-const HANDS = { cross: { L: [-.13, 1.24, .17], R: [.13, 1.2, .19] }, open: { L: [.26, .98, .2], R: [-.26, .98, .2] }, talk: { R: [-.18, 1.05, .28] }, phone: { R: [-.12, 1.6, .06] } };
+const HANDS = { neutral: { L: [.2, .86, .06], R: [-.2, .86, .06] }, down: { L: [.17, .84, .1], R: [-.17, .84, .1] }, cross: { L: [-.13, 1.24, .17], R: [.13, 1.2, .19] }, open: { L: [.26, .98, .2], R: [-.26, .98, .2] }, talk: { R: [-.18, 1.05, .28] }, phone: { R: [-.12, 1.6, .06] } };
 const HEADS = { down: [.38, .3], cross: [-.06, 0], open: [-.04, 0] };
-function poseReal(a, dt, t) { if (a.cineWalk) { a.w = (a.w || 0) + dt * 7; try { gltfStandPose(a.av, .95, 0); gltfWalkPose(a.av, true, a.w, performance.now(), false, 0); } catch (e) { } return; } const av = a.av, H = HANDS[a.pose] || {}, hp = (HEADS[a.pose] || [0, 0]).slice(); if (a.talkT > 0 || a.listen || LISTEN) { const v = cam.position.clone().sub(a.g.position); hp[1] = Math.max(-.8, Math.min(.8, Math.atan2(v.x, v.z) - a.g.rotation.y)); if (a.pose === 'down' && a.listen) hp[0] = .1; }   // voltea a ver al participante
+function poseReal(a, dt, t) { if (a.cineWalk) { a.w = (a.w || 0) + dt * 7; try { gltfStandPose(a.av, .95, 0); gltfWalkPose(a.av, true, a.w, performance.now(), false, 0); a.g.updateMatrixWorld(true); ['L', 'R'].forEach((sd, j) => { const v = a.g.localToWorld(new THREE.Vector3(sd === 'L' ? .2 : -.2, .86, .04 + Math.sin(a.w + j * Math.PI) * .14)); ikReach(a.av, sd === 'L' ? 'Left' : 'Right', v, 12); }); } catch (e) { } return; } const av = a.av, H = HANDS[a.pose] || HANDS.neutral, hp = (HEADS[a.pose] || [0, 0]).slice(); if (a.talkT > 0 || a.listen || LISTEN) { const v = cam.position.clone().sub(a.g.position); hp[1] = Math.max(-.8, Math.min(.8, Math.atan2(v.x, v.z) - a.g.rotation.y)); if (a.pose === 'down' && a.listen) hp[0] = .1; }   // voltea a ver al participante
   a.hn = (a.hn || 0) + ((a.talkT > 0 ? Math.sin(t * 8) * .05 : 0) + hp[0] - (a.hn || 0)) * Math.min(1, dt * 6); a.hy = (a.hy || 0) + ((a.talkT > 0 ? Math.sin(t * 2.2) * .1 : 0) + hp[1] - (a.hy || 0)) * Math.min(1, dt * 4);
   gltfStandPose(av, .95, a.hy); if (av.bones && av.bones.head) setBoneWorld(av, 'head', (av.calib ? av.calib.swing : 1) * a.hn, a.hy);
   a.g.updateMatrixWorld(true);
@@ -317,7 +317,7 @@ function pickVoice(male) { const L = VOICE.list; if (!L.length) return null; con
   const neutral = by(L.filter(v => !reM.test(v.name) && !reF.test(v.name))); return male ? null : (by(L.filter(v => reF.test(v.name)))[0] || neutral[0] || L[0]); }
 function voiceFor(pr) { if (!VOICE.list.length) loadVoices(); const v = pickVoice(pr.male); if (v) return { v, pitch: pr.pitch };
   /* sin voz masculina instalada: usa la mejor disponible con tono grave */ const L = VOICE.list.slice().sort((x, y) => voiceRank(y) - voiceRank(x)); return { v: L[0] || null, pitch: pr.male ? Math.min(pr.pitch, .62) : pr.pitch }; }
-function sayLines(L, done) { if (!VOICE.on || !window.speechSynthesis) { if (done) setTimeout(done, 300); return; } const wasBusy = speechSynthesis.speaking || speechSynthesis.pending; if (wasBusy) speechSynthesis.cancel(); const items = L.map(([k, t]) => [k, tx(String(t)).replace(/<[^>]+>/g, '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()]).filter(x => x[1].length > 1);
+function sayLines(L, done) { if (!VOICE.on || !window.speechSynthesis) { if (done) setTimeout(done, 300); return; } const wasBusy = speechSynthesis.speaking || speechSynthesis.pending; if (wasBusy) speechSynthesis.cancel(); const items = L.map(([k, t]) => [k, tx(String(t)).replace(/<[^>]+>/g, '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()]).filter(x => x[1].length > 1).flatMap(([k, t]) => (t.match(/[^.!?…]+[.!?…]*\s*/g) || [t]).map(x => [k, x.trim()]).filter(x => x[1].length > 1));
   if (!items.length) { if (done) setTimeout(done, 300); return; } const my = ++VOICE.queue;
   /* Safari/iPhone: a veces no termina ni avisa (onend) tras usar el micrófono; un vigilante asegura que la plática continúe */
   let fired = false; const fin = () => { if (fired || my !== VOICE.queue) return; fired = true; if (done) done(); }; const total = items.reduce((n, x) => n + x[1].length, 0); const guard = () => { if (window.speechSynthesis && speechSynthesis.speaking && Date.now() - st0 < 60000) return setTimeout(guard, 400); fin(); }; const st0 = Date.now(); setTimeout(guard, 2500 + total * 90);
@@ -329,12 +329,12 @@ function vbarUI() { const t = $('ttsBtn'), m = $('srBtn'); if (t) { t.textConten
 // ===== Interacción por voz del participante (reconocimiento de voz) =====
 const SRC = window.SpeechRecognition || window.webkitSpeechRecognition, SR_OK = !!SRC; let REC = null, LISTEN = false;
 const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ ]/g, ' ').replace(/\s+/g, ' ').trim();
-function listen() { if (!SR_OK || LISTEN) return; if (window.speechSynthesis && speechSynthesis.speaking) return setTimeout(listen, 400); try { REC = new SRC(); REC.lang = 'es-MX'; REC.interimResults = true; REC.maxAlternatives = 3; LISTEN = true; micUI();
+function listen() { if (!SR_OK || LISTEN) return; if (window.speechSynthesis && speechSynthesis.speaking) return setTimeout(listen, 400); try { REC = new SRC(); REC.lang = 'es-MX'; REC.interimResults = true; REC.continuous = true; REC.maxAlternatives = 3; LISTEN = true; micUI();
     /* Safari (iPhone) a veces nunca marca el resultado como final: tras 1.6 s de silencio se cierra y se envía lo escuchado */
     let got = false, last = '', sil = null; const send = alts => { if (got) return; got = true; clearTimeout(sil); orbLive(''); handleSpeech(alts); };
     REC.onresult = e => { const all = [...e.results].map(x => x[0].transcript).join(' ').replace(/\s+/g, ' ').trim(), r = e.results[e.results.length - 1]; last = all;
-      if (r.isFinal) { const alts = e.results.length > 1 ? [all] : [...r].map(x => x.transcript); return send(alts); }
-      orbLive(all); clearTimeout(sil); sil = setTimeout(() => { try { REC.stop(); } catch (x) { } setTimeout(() => { if (last) send([last]); }, 500); }, 1600); }; REC.onerror = e => { LISTEN = false; if (e.error === 'no-speech' && VOICE.mode) { setTimeout(listen, 400); return; } micUI(e.error === 'no-speech' ? 'No te escuché. Toca el círculo y vuelve a hablar.' : e.error === 'not-allowed' ? 'Permite el micrófono en el navegador para responder con voz.' : ''); };
+      /* escucha continua: solo envía cuando la persona deja de hablar ~2.8 s (permite pausas para pensar) */
+      orbLive(all); clearTimeout(sil); sil = setTimeout(() => { try { REC.stop(); } catch (x) { } setTimeout(() => { if (last) send([last]); }, 500); }, r.isFinal ? 2200 : 2800); }; REC.onerror = e => { LISTEN = false; if (e.error === 'no-speech' && VOICE.mode) { setTimeout(listen, 400); return; } micUI(e.error === 'no-speech' ? 'No te escuché. Toca el círculo y vuelve a hablar.' : e.error === 'not-allowed' ? 'Permite el micrófono en el navegador para responder con voz.' : ''); };
     REC.onend = () => { LISTEN = false; clearTimeout(sil); if (!got && last) send([last]); else micUI(); }; REC.start(); } catch (e) { LISTEN = false; micUI('El reconocimiento de voz no está disponible en este navegador (usa Chrome o Edge).'); } }
 function micUI(msg) { const sb = $('srBtn'); if (sb) sb.classList.toggle('rec', LISTEN); orbState(LISTEN ? 'listen' : AI.busy ? 'think' : (window.speechSynthesis && speechSynthesis.speaking) ? 'talk' : 'idle', msg); }
 // ===== Orbe de voz: escuchando / pensando / hablando (como una llamada de voz) =====
@@ -426,10 +426,13 @@ async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!sa
   box.innerHTML = lineHTML('tu', said) + lineHTML(k, '<i class="typing">está pensando<span>.</span><span>.</span><span>.</span></i>');
   chatLog().append(box); box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   if (AV[k]) AV[k].listen = true; AI.busy = true; micUI('');
+  /* pausa natural: si la respuesta tarda, el personaje reacciona como humano mientras piensa */
+  const FILL = { ricardo: ['Mmm…', 'A ver, jefe…', 'Pues…', 'Mire…', 'Eh…'], ana: ['Eh…', 'Pues…', 'Mmm…'], director: ['Mmm.', 'A ver…', 'Ajá…'] }[k] || ['Mmm…'];
+  const fillT = setTimeout(() => { if (AI.busy) { const f = FILL[Math.floor(Math.random() * FILL.length)]; if (AV[k]) speak(k); sayLines([[k, f]]); } }, 900);
   const opts = [...document.querySelectorAll('#talk .opt')].map(o => ({ k: o.querySelector('.k').textContent, t: o.querySelector('span:last-child').childNodes[0].textContent }));
   const ctx = [...document.querySelectorAll('#talk > .line .tx')].map(e => e.textContent).join(' | ').slice(0, 900), q = (document.querySelector('#talk .guide') || {}).textContent || '';
-  try { const call = async () => { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 9500); try { return await fetch('/.netlify/functions/dojo-ia', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ dicho: said, personaje: p.name, animo: p.mood, confianzaPersonaje: p.trust, historial: CONV, opciones: opts, contexto: ctx, pregunta: q, nivel: who.puesto || '', presion: presion(), cerrar: CONV.filter(c => c.quien === 'Líder').length >= 4 }) }).then(x => x.json()); } finally { clearTimeout(to); } };
-    let r; try { r = await call(); } catch (e1) { r = await call(); } AI.busy = false;
+  try { const call = async () => { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000); try { return await fetch('/.netlify/functions/dojo-ia', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ dicho: said, personaje: p.name, animo: p.mood, confianzaPersonaje: p.trust, historial: CONV, opciones: opts, contexto: ctx, pregunta: q, nivel: who.puesto || '', presion: presion(), cerrar: CONV.filter(c => c.quien === 'Líder').length >= 4 }) }).then(x => x.json()); } finally { clearTimeout(to); } };
+    let r; const t1 = Date.now(); try { r = await call(); } catch (e1) { if (Date.now() - t1 > 3000) { clearTimeout(fillT); throw e1; } r = await call(); } AI.busy = false; clearTimeout(fillT);
     if (!r.ok) { AI.status = r.motivo; if (r.motivo === 'sin_clave' || r.motivo === 'api_401') AI.off = true; aiBadge('⚠️ IA: ' + r.motivo + (r.detalle ? ' · ' + r.detalle : '')); box.remove(); return localConverse(said); }
     if (r.tipo === 'continuar') { box.remove(); return handleSpeechLocal(['continuar']); }
     if (r.tipo === 'pregunta') { box.innerHTML = lineHTML('tu', said) + `<div class="help">🥋 <b>Mentor:</b> ${r.mentor || r.respuesta}</div>`; sayLines([['narr', r.mentor || r.respuesta]], afterSpeech); return; }
@@ -546,7 +549,7 @@ function bScript(sl) { const q = x => sl.querySelector(x), qa = x => [...sl.quer
   return L; }
 function bNarrate() { const tok = ++BTOK, sl = document.querySelector('.bslide[data-s="' + BS + '"]'); if (!sl) return;
   const its = bScript(sl); let i = 0;
-  const step = () => { if (tok !== BTOK || $('brief').classList.contains('hidden')) return; its.forEach(e => e.classList.remove('btalk'));
+  const step = () => { if (tok !== BTOK || $('brief').classList.contains('hidden')) return; its.forEach(([e]) => e.classList.remove('btalk'));
     if (i >= its.length) { setTimeout(() => { if (tok !== BTOK || $('brief').classList.contains('hidden')) return; if (BS < 2) bStep(1); else startSim(); }, 900); return; }
     const it = its[i++], e = it[0]; e.classList.add('btalk'); e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); const t = it[1];
     let a = false, b = false; const go = () => { if (a && b) step(); }; setTimeout(() => { a = true; go(); }, 900 + t.length * 55); sayLines([['narr', t]], () => { b = true; go(); }); if (!VOICE.on) b = true; };
@@ -587,14 +590,33 @@ function finish() { if (!FLAGS.epi) { FLAGS.epi = true; const E = epilogue(); ap
    <div class="mentor"><div class="av">🥋</div><div><b>Mentor:</b> ${worst && !ideal ? `La decisión con mayor costo fue <b>${worst.step} · opción ${worst.k}</b>: ${worst.cost} ` : ''}${ideal ? 'Tu ruta es de las que mejor equilibran resultados y confianza: hablaste en privado y con hechos, separaste el desempeño del incumplimiento y defendiste la documentación con datos.' : 'La combinación que mejor equilibra resultados y confianza es <b>B → B (o C) → B' + (LV.extra ? ' → B' : '') + '</b>: hablar en privado y con hechos, reconocer los resultados sin negociar la seguridad (o pedir un plan con fecha) y documentar internamente explicando el riesgo con datos al director.'} Recuerda: en el Dojo ninguna decisión es gratis; lo que buscamos es que el costo sea consciente y temporal, no que se acumule en la gente o en el riesgo.</div></div>
    <div><span class="lbl">PLAN DE PRÁCTICA · ELIGE UNA CONDUCTA PARA TU SIGUIENTE SESIÓN</span><div class="plan" style="margin-top:8px">${PLAN.map((p, i) => `<label><input type="radio" name="plan" value="${i}" ${i === ({ feedback: 0, conflicto: 1, delegacion: 2, decisiones: 2, haciaArriba: 3, etica: 4 }[gap[0]] ?? 0) ? 'checked' : ''}>${p}</label>`).join('')}</div></div>
    <div class="code">Código de verificación: ${REG}</div>
-   <button class="btn" onclick="saveAndShare()">📲 Guardar y enviar resultado por WhatsApp</button><button class="btn sec" onclick="location.reload()">🔄 Repetir el escenario</button>
+   <button class="btn" onclick="saveAndShare()">📲 Guardar y enviar resultado por WhatsApp</button><button class="btn sec" onclick="location.reload()">🔄 Repetir el escenario</button><button class="btn sec" style="margin-top:8px" onclick="finishSession()">✅ Finalizar</button>
   </div></div>`; scrollTo(0, 0);
   try { const k = 'dicka_console_results', l = JSON.parse(localStorage.getItem(k) || '[]'); l.push({ juego: GAME_NAME, nombre: who.name, puesto: who.puesto, area: 'Liderazgo', almacen: who.wh, score: `${score}/100`, aprobado: ok, fecha: date.toISOString(), reg: REG, ruta: path, competencias: cs }); localStorage.setItem(k, JSON.stringify(l)); } catch (e) { }
   try { parent.postMessage({ type: 'dicka-result', juego: GAME_NAME, nombre: who.name, score: `${score}/100`, aprobado: ok }, '*'); } catch (e) { } }
+/* ===== Imagen del resultado para compartir (WhatsApp) ===== */
+function resultImage() { const R = window.REPORT, W = 1080, cv = document.createElement('canvas'), x = cv.getContext('2d'); const comps = Object.entries(R.cs), kk = Object.keys(R.K);
+  const H = 520 + kk.length * 52 + comps.length * 52 + 260; cv.width = W; cv.height = H;
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1D2586'); g.addColorStop(1, '#0b1040'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const rr = (X, Y, w, h, r, c) => { x.fillStyle = c; x.beginPath(); x.roundRect ? x.roundRect(X, Y, w, h, r) : x.rect(X, Y, w, h); x.fill(); };
+  rr(40, 40, W - 80, H - 80, 36, '#ffffff'); let y = 110; x.textAlign = 'left';
+  x.fillStyle = '#f5b800'; x.font = '700 30px Poppins, Arial'; x.fillText('🥋 DOJO DE MANDO · DICKA LOGISTICS', 90, y); y += 60;
+  x.fillStyle = '#1D2586'; x.font = '800 46px Poppins, Arial'; x.fillText('El mejor operador', 90, y); y += 46;
+  x.fillStyle = '#6b7390'; x.font = '500 28px Inter, Arial'; x.fillText(`${who.name} · ${who.puesto} · Nivel ${LV.diff}`, 90, y); y += 40; x.fillText(`${who.wh} · ${new Date().toLocaleDateString('es-MX')} · Ruta ${R.path}`, 90, y); y += 50;
+  rr(90, y, W - 180, 150, 24, R.ok ? '#e6f6ec' : '#fdecea'); x.fillStyle = R.ok ? '#2e9e5b' : '#c62828'; x.font = '800 96px Poppins, Arial'; x.fillText(String(R.score), 130, y + 112);
+  x.font = '800 34px Poppins, Arial'; x.fillText(R.ok ? '✓ LIDERAZGO EQUILIBRADO' : '✗ REQUIERE PRÁCTICA', 330, y + 70); x.fillStyle = '#6b7390'; x.font = '500 24px Inter, Arial'; x.fillText(`de 100 · mínimo ${LV.pass}`, 330, y + 110); y += 200;
+  const bars = (title, rows) => { x.fillStyle = '#2138d3'; x.font = '800 24px Poppins, Arial'; x.fillText(title, 90, y); y += 40;
+    rows.forEach(([n, v]) => { x.fillStyle = '#1b2240'; x.font = '500 26px Inter, Arial'; x.fillText(n, 90, y + 8); rr(470, y - 14, 440, 20, 10, '#e6e9f5'); rr(470, y - 14, 4.4 * Math.max(2, v), 20, 10, v >= 65 ? '#2e9e5b' : v >= 45 ? '#f5b800' : '#c62828'); x.fillStyle = '#1b2240'; x.font = '800 26px Inter, Arial'; x.fillText(String(Math.round(v)), 930, y + 8); y += 52; }); y += 20; };
+  bars('INDICADORES DEL EQUIPO', kk.map(k => [KN[k][1], R.K[k]])); bars('COMPETENCIAS', comps.map(([k, v]) => [COMPN[k], v]));
+  x.fillStyle = '#6b7390'; x.font = '500 20px ui-monospace, monospace'; x.fillText(R.REG.slice(0, 80), 90, H - 90); return cv; }
+async function shareResult(txt) { const cv = resultImage(); const blob = await new Promise(r => cv.toBlob(r, 'image/png')); const file = new File([blob], `dojo-${who.name.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text: txt, title: 'Resultado Dojo de Mando' }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click();   /* en computadora: descarga la imagen para adjuntarla en WhatsApp */
+  alert('Se descargó la imagen del resultado. En WhatsApp, adjúntala con el clip 📎 junto al mensaje.'); window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank'); }
+function finishSession() { if (window.speechSynthesis) speechSynthesis.cancel(); try { if (REC) REC.abort(); } catch (e) { } try { if (parent !== window) { parent.postMessage({ type: 'dicka-close' }, '*'); } } catch (e) { } location.href = '../index.html'; }
 function saveAndShare() { const R = window.REPORT, pi = document.querySelector('input[name=plan]:checked'), plan = pi ? pi.parentElement.textContent.trim() : '';
   try { localStorage.setItem('dicka_dojo_plan', JSON.stringify({ nombre: who.name, plan, fecha: new Date().toISOString() })); } catch (e) { }
-  const txt = `🥋 DOJO DE MANDO - DICKA LOGISTICS\nEscenario: El mejor operador\nNombre: ${who.name}\nNivel: ${who.puesto}\nAlmacén: ${who.wh}\nPuntaje: ${R.score}/100 (${R.ok ? 'EQUILIBRADO' : 'REQUIERE PRÁCTICA'})\nRuta: ${R.path}\nConducta a practicar: ${plan}\n\n${R.REG}`; window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank'); }
-
+  const txt = `🥋 DOJO DE MANDO - DICKA LOGISTICS\nEscenario: El mejor operador\nNombre: ${who.name}\nNivel: ${who.puesto}\nAlmacén: ${who.wh}\nPuntaje: ${R.score}/100 (${R.ok ? 'EQUILIBRADO' : 'REQUIERE PRÁCTICA'})\nRuta: ${R.path}\nConducta a practicar: ${plan}\n\n${R.REG}`; shareResult(txt); }
 </script>
 </body>
 </html>
