@@ -57,10 +57,11 @@ Personaje con quien habla: ${clip(b.personaje || "Ricardo", 40)} (estado: ${clip
 Plática hasta ahora:
 ${hist || "(inicio)"}
 El líder dice ahora: "${clip(b.dicho, 600)}"`;
-    const r = await claude(key, SYSTEM, [{ role: "user", content: user }], 260);
+    const r = await claude(key, SYSTEM, [{ role: "user", content: user }], 600);
     if (r.error) return json(200, { ok: false, motivo: r.error, detalle: r.det });
-    const m = r.text.match(/\{[\s\S]*\}/); if (!m) return json(200, { ok: false, motivo: "formato" });
-    const o = JSON.parse(m[0]); const op = /^[ABC]$/.test(String(o.opcion)) ? o.opcion : null;
+    const m = r.text.match(/\{[\s\S]*\}/); let o = null; try { o = m && JSON.parse(m[0]); } catch { }
+    if (!o) { const g = k => (r.text.match(new RegExp('"' + k + '"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)')) || [])[1];   // JSON cortado: rescata lo que se pueda
+      const resp = g("respuesta"); if (!resp) return json(200, { ok: false, motivo: "formato" }); o = { tipo: g("tipo") || "conversa", opcion: g("opcion"), confianza: 0, respuesta: resp, mentor: g("mentor") || "" }; } const op = /^[ABC]$/.test(String(o.opcion)) ? o.opcion : null;
     const tipos = ["conversa", "decision", "pregunta", "continuar", "otro"];
     return json(200, { ok: true, tipo: tipos.includes(o.tipo) ? o.tipo : "conversa", opcion: op, confianza: Number(o.confianza) || 0, respuesta: clip(o.respuesta || o.reaccion, 500), mentor: clip(o.mentor, 300) });
   } catch (e) { return json(200, { ok: false, motivo: "error", detalle: clip(e && e.message, 160) }); }
