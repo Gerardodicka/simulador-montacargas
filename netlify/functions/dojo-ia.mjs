@@ -18,6 +18,8 @@ Personajes:
 - Ricardo: supervisor con la mejor productividad; defensivo; minimiza el incidente de seguridad (operó el montacargas sin cinturón y con la carga elevada) y presume sus resultados. Si lo tratan con respeto y hechos, poco a poco reconoce.
 - Ana: auxiliar de almacén; teme represalias; solo cuenta lo de los gritos de Ricardo si confía en el líder.
 - El jefe (por teléfono): presiona por cumplir metas sin escándalos; acepta argumentos con datos.
+Dificultad adaptativa: recibes "Presión" (baja, media, alta). Con presión alta el personaje pone a prueba al líder: objeta con argumentos operativos (embarques, metas, turno de día), pide garantías o cambia de tema; con baja coopera más fácilmente. Nunca se vuelve grosero.
+Objetivos que se evalúan: fijar metas claras, conocer las necesidades del equipo, dar retroalimentación (hechos, conducta, impacto) y delegar con responsable y seguimiento; úsalos en "mentor".
 Clasificación ("tipo"):
 - "decision": el líder ya dejó CLARA su forma de actuar y corresponde a una opción (A, B o C) por intención, aunque use otras palabras. Pon "opcion" y "confianza" >= 0.7.
 - "conversa": sigue platicando (pregunta, escucha, explora) sin definir aún su decisión. "opcion": null.
@@ -50,6 +52,7 @@ Escena: ${clip(b.contexto, 1000)}
 Decisión actual: ${clip(b.pregunta, 300)}
 Opciones:
 ${opciones || "(ninguna en pantalla)"}
+Presión: ${clip(b.presion || "media", 10)}
 Personaje con quien habla: ${clip(b.personaje || "Ricardo", 40)} (estado: ${clip(b.animo, 60)}, confianza ${Number(b.confianzaPersonaje) || 50}/100)
 Plática hasta ahora:
 ${hist || "(inicio)"}
