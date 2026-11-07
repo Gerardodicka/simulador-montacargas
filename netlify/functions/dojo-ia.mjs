@@ -51,8 +51,8 @@ export default async (req) => {
       const hist = Array.isArray(b.historial) ? b.historial.slice(-24).map(h => `${clip(h.quien, 40)}: ${clip(h.texto, 300)}`).join("\n") : "";
       const sys = `Eres un mentor de liderazgo de DICKA Logistics (almacenes en México). Evalúa con justicia la plática de un líder de nivel ${clip(b.nivel, 30)} en una situación crítica. Español de México, claro y concreto. Responde SOLO JSON válido:
 {"puntaje":0-100,"objetivos":{"metas":bool,"necesidades":bool,"retro":bool,"delegar":bool},"fortaleza":"máx. 18 palabras","mejora":"máx. 25 palabras, acción concreta","resumen":"2 frases: qué logró y qué haría distinto la próxima vez"}
-metas = acordó qué, cuánto y para cuándo; necesidades = preguntó y escuchó; retro = dio retroalimentación con hechos, conducta e impacto; delegar = asignó responsable y seguimiento. Sé exigente: sin acuerdos concretos el puntaje no pasa de 60.`;
-      const r = await claude(key, sys, [{ role: "user", content: `Situación: ${clip(b.contexto, 800)}\nObjetivo del líder: ${clip(b.objetivo, 300)}\nPersonaje: ${clip(b.personaje, 40)}\nPlática:\n${hist}` }], 400);
+metas = acordó qué, cuánto y para cuándo; necesidades = preguntó y escuchó; retro = dio retroalimentación con hechos, conducta e impacto; delegar = asignó responsable y seguimiento. Sé exigente: sin acuerdos concretos el puntaje no pasa de 60. Si hay áreas a desarrollar según su evaluación psicométrica, enfoca la "mejora" y el "resumen" en esas áreas (sin mencionar las pruebas).`;
+      const r = await claude(key, sys, [{ role: "user", content: `Situación: ${clip(b.contexto, 800)}\nObjetivo del líder: ${clip(b.objetivo, 300)}\nÁreas a desarrollar según su evaluación psicométrica: ${Array.isArray(b.enfoque) && b.enfoque.length ? b.enfoque.slice(0, 4).map(x => clip(x, 60)).join(", ") : "(no disponible)"}\nPersonaje: ${clip(b.personaje, 40)}\nPlática:\n${hist}` }], 400);
       if (r.error) return json(200, { ok: false, motivo: r.error, detalle: r.det });
       let o = null; try { o = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [""])[0]); } catch { }
       if (!o) return json(200, { ok: false, motivo: "formato" });
