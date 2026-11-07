@@ -13,5 +13,7 @@ t("clasifica decisión B", r.ok && r.tipo === "decision" && r.opcion === "B"); t
 deps.fetch = reply('{"tipo":"conversa","opcion":null,"respuesta":"¿Y eso qué? Mis números hablan."}'); r = await (await fn(req(body))).json(); t("plática sin decisión", r.ok && r.tipo === "conversa" && r.opcion === null);
 deps.fetch = reply("", 500); r = await (await fn(req(body))).json(); t("error de API → respaldo", r.ok === false && r.motivo === "api_500");
 deps.fetch = reply('{"tipo":"decision","opcion":"Z"}'); r = await (await fn(req(body))).json(); t("opción inválida → null", r.ok && r.opcion === null);
+deps.fetch = reply('{"puntaje":72,"objetivos":{"metas":true,"necesidades":true,"retro":false,"delegar":true},"fortaleza":"Escuchó","mejora":"Dar hechos","resumen":"Bien."}'); r = await (await fn(req({ evaluar: true, historial: [{ quien: "Líder", texto: "¿qué pasó?" }], contexto: "faltante", objetivo: "investigar" }))).json();
+t("evalúa una práctica", r.ok && r.puntaje === 72 && r.objetivos.metas && !r.objetivos.retro);
 r = await (await fn(new Request("http://x", { method: "GET" }))).json(); t("solo POST", r.ok === false);
 console.log(`Dojo IA: ${ok}/${ok + bad} pruebas correctas`); process.exit(bad ? 1 : 0);

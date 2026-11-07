@@ -21,6 +21,7 @@ Personajes:
 Dificultad adaptativa: recibes "Presión" (baja, media, alta). Con presión alta el personaje pone a prueba al líder: objeta con argumentos operativos (embarques, metas, turno de día), pide garantías o cambia de tema; con baja coopera más fácilmente. Nunca se vuelve grosero.
 Objetivos que se evalúan: fijar metas claras, conocer las necesidades del equipo, dar retroalimentación (hechos, conducta, impacto) y delegar con responsable y seguimiento; úsalos en "mentor".
 Cierre: si recibes "Cerrar: sí", el líder ya platicó suficiente; clasifica como "decision" con la opción más cercana a lo que ha planteado en toda la plática (confianza >= 0.7), aunque no coincida palabra por palabra. Si el líder repite la misma postura (por ejemplo documentar o ir con recursos humanos), eso ya es una decisión.
+Situaciones de práctica: si recibes "Práctica: sí", la escena describe otra situación y otro personaje; interpreta a ESE personaje con su nombre y su problema (ignora la descripción de Ricardo y Ana) y usa "conversa" salvo que pida ayuda.
 Clasificación ("tipo"):
 - "decision": el líder ya dejó CLARA su forma de actuar y corresponde a una opción (A, B o C) por intención, aunque use otras palabras. Pon "opcion" y "confianza" >= 0.7.
 - "conversa": sigue platicando (pregunta, escucha, explora) sin definir aún su decisión. "opcion": null.
@@ -46,6 +47,17 @@ export default async (req) => {
   let b; try { b = await req.json(); } catch { return json(400, { ok: false, motivo: "json" }); }
   try {
     if (b.ping) { const r = await claude(key, "Responde solo: ok", [{ role: "user", content: "ping" }], 5); return json(200, r.error ? { ok: false, motivo: r.error, detalle: r.det, modelo: MODEL } : { ok: true, modelo: MODEL }); }
+    if (b.evaluar) {   // retroalimentación final de una situación de práctica
+      const hist = Array.isArray(b.historial) ? b.historial.slice(-24).map(h => `${clip(h.quien, 40)}: ${clip(h.texto, 300)}`).join("\n") : "";
+      const sys = `Eres un mentor de liderazgo de DICKA Logistics (almacenes en México). Evalúa con justicia la plática de un líder de nivel ${clip(b.nivel, 30)} en una situación crítica. Español de México, claro y concreto. Responde SOLO JSON válido:
+{"puntaje":0-100,"objetivos":{"metas":bool,"necesidades":bool,"retro":bool,"delegar":bool},"fortaleza":"máx. 18 palabras","mejora":"máx. 25 palabras, acción concreta","resumen":"2 frases: qué logró y qué haría distinto la próxima vez"}
+metas = acordó qué, cuánto y para cuándo; necesidades = preguntó y escuchó; retro = dio retroalimentación con hechos, conducta e impacto; delegar = asignó responsable y seguimiento. Sé exigente: sin acuerdos concretos el puntaje no pasa de 60. Si hay áreas a desarrollar según su evaluación psicométrica, enfoca la "mejora" y el "resumen" en esas áreas (sin mencionar las pruebas).`;
+      const r = await claude(key, sys, [{ role: "user", content: `Situación: ${clip(b.contexto, 800)}\nObjetivo del líder: ${clip(b.objetivo, 300)}\nÁreas a desarrollar según su evaluación psicométrica: ${Array.isArray(b.enfoque) && b.enfoque.length ? b.enfoque.slice(0, 4).map(x => clip(x, 60)).join(", ") : "(no disponible)"}\nPersonaje: ${clip(b.personaje, 40)}\nPlática:\n${hist}` }], 400);
+      if (r.error) return json(200, { ok: false, motivo: r.error, detalle: r.det });
+      let o = null; try { o = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [""])[0]); } catch { }
+      if (!o) return json(200, { ok: false, motivo: "formato" });
+      const ob = o.objetivos || {}; return json(200, { ok: true, puntaje: Math.max(0, Math.min(100, Number(o.puntaje) || 0)), objetivos: { metas: !!ob.metas, necesidades: !!ob.necesidades, retro: !!ob.retro, delegar: !!ob.delegar }, fortaleza: clip(o.fortaleza, 200), mejora: clip(o.mejora, 300), resumen: clip(o.resumen, 500) });
+    }
     const opciones = Array.isArray(b.opciones) ? b.opciones.slice(0, 4).map(o => `${clip(o.k, 2)}) ${clip(o.t, 400)}`).join("\n") : "";
     const hist = Array.isArray(b.historial) ? b.historial.slice(-8).map(h => `${clip(h.quien, 30)}: ${clip(h.texto, 300)}`).join("\n") : "";
     const user = `Nivel del líder: ${clip(b.nivel, 60)}
@@ -55,6 +67,7 @@ Opciones:
 ${opciones || "(ninguna en pantalla)"}
 Presión: ${clip(b.presion || "media", 10)}
 Cerrar: ${b.cerrar ? "sí" : "no"}
+Práctica: ${b.practica ? "sí" : "no"}
 Personaje con quien habla: ${clip(b.personaje || "Ricardo", 40)} (estado: ${clip(b.animo, 60)}, confianza ${Number(b.confianzaPersonaje) || 50}/100)
 Plática hasta ahora:
 ${hist || "(inicio)"}
