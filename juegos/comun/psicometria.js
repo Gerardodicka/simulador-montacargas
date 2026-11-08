@@ -31,7 +31,7 @@
     const ip = t.split('Interpretación por indicador')[1] || '', ia = ip.search(/Áreas de riesgo/); if (ia >= 0) { const fin = ip.indexOf('Áreas que se recomienda explorar'), seg = ip.slice(ia, fin > ia ? fin : undefined);   /* solo indicadores interpretados bajo «Áreas de riesgo» */
       ['Fraude', 'Robo', 'Soborno', 'Tendencia a la agresividad', 'Tendencia a la mentira', 'Acoso', 'Farmacodependencia', 'Rechazo a figuras de autoridad', 'Responsabilidad', 'Cooperación'].forEach(a => { if (seg.includes(a + ' ') && !prof.riesgo.includes(a)) prof.riesgo.push(a); }); }
     const tb = /Tabla de resultados Fecha de evaluación: [\d/]+ EVT(?: MX)? \| (.+?) Indicador Puntuación Porcentaje Rango (.*?)(?=Una solución Brivé|Tabla de resultados|$)/g;
-    while ((m = tb.exec(t))) { const test = m[1].trim(), rows = []; const rr = /([A-Za-zÁÉÍÓÚÑáéíóúñ.,()\- ]+?) (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)% (Muy Alto|Muy Bajo|Alto|Bajo|Moderado|Medio|Promedio|Functional|Non Functional)/g; let r;
+    while ((m = tb.exec(t))) { const test = m[1].trim(), rows = []; const rr = /([A-Za-zÁÉÍÓÚÑáéíóúñ0-9.,()\- ]+?) (-?\d+(?:\.\d+)?) (\d+(?:\.\d+)?)% (Muy Alto|Muy Bajo|Alto|Bajo|Moderado|Medio|Promedio|Functional|Non Functional)/g; let r;
       while ((r = rr.exec(m[2]))) rows.push({ n: r[1].trim(), pct: +r[3], rango: r[4] }); if (rows.length) { prof.pruebas[test] = rows; prof.fuentes.add('Diagnóstico de potencial'); } }
     return prof; }
   function plan(prof) {
