@@ -1,4 +1,4 @@
-/* DICKA Play · Lectura de pruebas psicométricas (reportes Evaluatest / Etegrity de Brivé) y plan de capacitación.
+/* DICKA Play · Lectura de pruebas psicométricas (reportes de Evaluatest: Índice de Afinidad, Etegrity y Diagnóstico de Potencial) y plan de capacitación.
    Los PDF se leen SOLO en el navegador con pdf.js; no se suben a ningún servidor. */
 (function (G) {
   const FOCUS = {
@@ -25,7 +25,7 @@
     const nm = t.match(/Evaluado: (.+?) \|/); if (nm && !prof.nombre) prof.nombre = nm[1].trim();
     const pu = t.match(/Puesto: (.+?) (?:Carlos|Reporte|Fortalezas|\d)/); if (pu && !prof.puesto && !/Etegrity/i.test(pu[1])) prof.puesto = pu[1].trim().slice(0, 60);
     let m; const re = /EVT \| ([^|]+?)\s+(Necesario|Deseable)\s+[\d.]+\s*-\s*[\d.]+\s+([\d.]+)\s+([\d.]+)\s+(-?\s*[\d.]+)/g;
-    while ((m = re.exec(t))) { const n = m[1].replace(/-\s+/g, '-').trim(); if (!prof.comp.some(c => c.n === n)) prof.comp.push({ n, tipo: m[2], puesto: +m[3], persona: +m[4], gap: +m[5].replace(/\s/g, '') }); prof.fuentes.add('Afinidad (Evaluatest)'); }
+    while ((m = re.exec(t))) { const n = m[1].replace(/-\s+/g, '-').trim(); if (!prof.comp.some(c => c.n === n)) prof.comp.push({ n, tipo: m[2], puesto: +m[3], persona: +m[4], gap: +m[5].replace(/\s/g, '') }); prof.fuentes.add('Índice de Afinidad'); }
     const af = t.match(/([\d.]+)% [^%]{0,60}?Afinidad con el puesto/); if (af && prof.afinidad == null) prof.afinidad = +af[1];
     const igi = t.match(/Índice General de Integridad \(IGI\) ([\d.]+) ?%/); if (igi) { prof.igi = +igi[1]; prof.fuentes.add('Etegrity'); }
     const ex = t.match(/Áreas que se recomienda explorar(.*?)(El contenido de este documento|$)/); if (ex) ['Enfoque-Cumplimiento', 'Fraude', 'Robo', 'Soborno', 'Tendencia a la agresividad', 'Tendencia a la mentira', 'Acoso', 'Rechazo a figuras de autoridad', 'Responsabilidad', 'Cooperación'].forEach(a => { if (ex[1].includes(a + ' ') && !prof.explorar.includes(a)) prof.explorar.push(a); });
@@ -33,7 +33,7 @@
       ['Fraude', 'Robo', 'Soborno', 'Tendencia a la agresividad', 'Tendencia a la mentira', 'Acoso', 'Farmacodependencia', 'Rechazo a figuras de autoridad', 'Responsabilidad', 'Cooperación'].forEach(a => { if (seg.includes(a + ' ') && !prof.riesgo.includes(a)) prof.riesgo.push(a); }); }
     const tb = /Tabla de resultados Fecha de evaluación: [\d/]+ EVT(?: MX)? \| (.+?) Indicador Puntuación Porcentaje Rango (.*?)(?=Una solución Brivé|Tabla de resultados|$)/g;
     while ((m = tb.exec(t))) { const test = m[1].trim(), rows = []; const rr = /([A-Za-zÁÉÍÓÚÑáéíóúñ0-9.,()\- ]+?) (-?\d+(?:\.\d+)?) (\d+(?:\.\d+)?)% (Muy Alto|Muy Bajo|Alto|Bajo|Moderado|Medio|Promedio|Functional|Non Functional)/g; let r;
-      while ((r = rr.exec(m[2]))) rows.push({ n: r[1].trim(), pct: +r[3], rango: r[4] }); if (rows.length) { prof.pruebas[test] = rows; prof.fuentes.add('Diagnóstico de potencial'); } }
+      while ((r = rr.exec(m[2]))) rows.push({ n: r[1].trim(), pct: +r[3], rango: r[4] }); if (rows.length) { prof.pruebas[test] = rows; prof.fuentes.add('Diagnóstico de Potencial'); } }
     return prof; }
   function plan(prof) {
     const w = {}, why = {}; const add = (k, v, e) => { w[k] = (w[k] || 0) + v; (why[k] = why[k] || []).push(e); };
