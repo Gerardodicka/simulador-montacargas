@@ -97,7 +97,7 @@ input,select{width:100%;padding:12px;border:2px solid #dfe3f0;border-radius:10px
   <div class="brand"><small>DICKA LOGISTICS · LIDERAZGO</small><h1>🥋 Dojo de Mando</h1><p>Practica decisiones difíciles en un entorno operativo real y mira cómo cada decisión afecta a tu equipo y a tus resultados.</p></div>
   <div class="card"><div class="hd"><small>REGISTRO DEL PARTICIPANTE</small><h2>¿Quién toma el mando hoy?</h2></div>
     <div class="bd">
-      <div><span class="lbl">NOMBRE COMPLETO</span><input id="pname" placeholder="Nombre y apellido"></div>
+      <div><span class="lbl">NOMBRE COMPLETO</span><input id="pname" placeholder="Nombre y apellido" autocomplete="off"></div>
       <div class="row2"><div><span class="lbl">NIVEL DE LIDERAZGO · DEFINE LA DIFICULTAD</span><select id="ppuesto"><option value="Supervisor de Operaciones">Supervisor</option><option value="Jefe de Operaciones" selected>Jefatura</option><option value="Gerente de Operaciones">Gerencia</option><option value="HRBP · Talento y Cultura">HRBP · Talento y Cultura</option></select></div>
         <div><span class="lbl">ALMACÉN</span><select id="pwh"><option>Almacén Genérico</option><option>Agave 1</option><option>Otro</option></select></div></div>
       <div id="lvInfo" class="chips"></div>
@@ -877,13 +877,15 @@ let PX = null;
 const progGet = () => { try { return JSON.parse(localStorage.getItem('dicka_dojo_prog') || '{}'); } catch (e) { return {}; } };
 /* ===== Perfil psicométrico → plan de capacitación ===== */
 const psiKey = n => String(n || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
-const psiAll = () => { try { return JSON.parse(localStorage.getItem('dicka_dojo_psico') || '{}'); } catch (e) { return {}; } };
+/* El perfil vive solo durante la sesión de esta pestaña: al cerrar o al entrar otra persona, no queda nada precargado */
+try { localStorage.removeItem('dicka_dojo_psico'); if (!sessionStorage.getItem('dicka_dojo_who')) sessionStorage.removeItem('dicka_dojo_psico'); } catch (e) { }   /* solo se conserva al «practicar de nuevo» */
+const psiAll = () => { try { return JSON.parse(sessionStorage.getItem('dicka_dojo_psico') || '{}'); } catch (e) { return {}; } };
 /* Cada participante usa SOLO su propio perfil: se asocia al nombre completo exacto (sin acentos ni mayúsculas) y vence a las 12 h en equipos compartidos */
-function psiFor(n) { const A = psiAll(), k = psiKey(n), p = k && A[k]; if (!p) return null; if (Date.now() - new Date(p.fecha).getTime() > 12 * 3600e3) { delete A[k]; try { localStorage.setItem('dicka_dojo_psico', JSON.stringify(A)); } catch (e) { } return null; } return p; }
+function psiFor(n) { const A = psiAll(), k = psiKey(n), p = k && A[k]; if (!p) return null; if (Date.now() - new Date(p.fecha).getTime() > 12 * 3600e3) { delete A[k]; try { sessionStorage.setItem('dicka_dojo_psico', JSON.stringify(A)); } catch (e) { } return null; } return p; }
 async function loadPsico(inp) { const fs = [...(inp.files || [])]; if (!fs.length) return; const o = $('psiOut'); o.innerHTML = '⏳ Leyendo ' + fs.length + ' PDF…';
   try { const p = await PSICO.readFiles(fs); if (p.nombres && p.nombres.length > 1) { o.innerHTML = `⚠️ Los PDF son de personas distintas (${p.nombres.join(' · ')}). Carga solo los reportes de un participante.`; inp.value = ''; return; } if (!p.comp.length && p.igi == null && !Object.keys(p.pruebas).length) { o.innerHTML = '⚠️ No reconocí resultados en esos PDF. Usa los reportes de Evaluatest (Índice de Afinidad, Etegrity o Diagnóstico de Potencial).'; return; }
     if (!p.nombre) p.nombre = $('pname').value.trim(); const typed = $('pname').value.trim(); if (typed && psiKey(typed) !== psiKey(p.nombre) && !confirm(`Los PDF son de «${p.nombre}» y escribiste «${typed}». ¿Usar el nombre del reporte?`)) { o.innerHTML = '⚠️ Carga los PDF que correspondan a la persona registrada.'; inp.value = ''; return; } $('pname').value = p.nombre;
-    const A = psiAll(); A[psiKey(p.nombre)] = p; try { localStorage.setItem('dicka_dojo_psico', JSON.stringify(A)); } catch (e) { } psiRender(); } catch (e) { o.innerHTML = '⚠️ No se pudo leer el PDF (' + (e && e.message || e) + ').'; } inp.value = ''; }
+    const A = psiAll(); A[psiKey(p.nombre)] = p; try { sessionStorage.setItem('dicka_dojo_psico', JSON.stringify(A)); } catch (e) { } psiRender(); } catch (e) { o.innerHTML = '⚠️ No se pudo leer el PDF (' + (e && e.message || e) + ').'; } inp.value = ''; }
 function psiRender() { const o = $('psiOut'); if (!o) return; const p = psiFor($('pname').value) || null; if (!p) { o.innerHTML = '<small style="color:#6b7390">Cada participante carga sus propios PDF de Evaluatest. Escribe tu nombre completo tal como aparece en tus reportes.</small>'; return; }
   o.innerHTML = psiCheck(p) + `<div style="font-size:13px;color:#5b2bb5;font-weight:700">➡️ Al tocar <b>Continuar</b> verás tu análisis completo y tu plan de capacitación.</div><div style="margin-top:6px"><a href="#" onclick="psiDelete();return false" style="font-size:13px;color:#c62828">🗑️ Borrar este perfil del navegador</a></div>`; }
 /* Validación de lo leído: qué se encontró en cada reporte y avisos si falta algo o no coincide */
@@ -934,7 +936,7 @@ function psiSumAf(p) { const ok = p.comp.filter(c => c.gap >= 0), gap = p.comp.f
 function psiSumT(t, rows) { const hi = rows.filter(r => /^(alto|muy alto|functional)$/i.test(r.rango)), lo = rows.filter(r => /^(bajo|muy bajo|non functional)$/i.test(r.rango)), nm = r => r.n.replace(/^(?:[IVX]+\.?|[A-Q]\d?\.)\s+/, '');
   if (/English/i.test(t)) { const g = rows.find(r => /Conocimientos/.test(r.n)); return `nivel general ${g ? g.rango.toLowerCase() + ' (' + g.pct + '%)' : '—'}; ${hi.length} de ${rows.length - 1} secciones funcionales.`; }
   return `${hi.length ? 'destaca en ' + hi.slice(0, 4).map(nm).join(', ').toLowerCase() : 'sin indicadores altos'}${lo.length ? '; bajo en ' + lo.slice(0, 4).map(nm).join(', ').toLowerCase() : ''}.`; }
-function psiDelete() { const A = psiAll(), p = psiFor($('pname').value); if (p) delete A[psiKey(p.nombre)]; try { localStorage.setItem('dicka_dojo_psico', JSON.stringify(A)); } catch (e) { } psiRender(); }
+function psiDelete() { const A = psiAll(), p = psiFor($('pname').value); if (p) delete A[psiKey(p.nombre)]; try { sessionStorage.setItem('dicka_dojo_psico', JSON.stringify(A)); } catch (e) { } psiRender(); }
 function planHTML(p, L) { const bid = id => id.replace(/(_h|\d)$/, ''), by = Object.fromEntries(L.map(S => [bid(S.id), S])), rec = p.plan.situaciones.map(bid).filter((x, i, a) => a.indexOf(x) === i && by[x]).map(x => by[x].id); const byId = Object.fromEntries(L.map(S => [S.id, S])); const pg = progGet();
   return `<div class="plan2"><div class="ph">🧠 <b>Tu plan de capacitación</b> <small>según tus pruebas de Evaluatest (${p.fuentes.join(', ')})</small></div>
    ${p.plan.focos.map((f, i) => `<div class="fo"><span class="n">${i + 1}</span><div><b>${f.n}</b><small>${f.evid.join(' · ')}</small><i>👉 ${f.tip}</i></div></div>`).join('')}
