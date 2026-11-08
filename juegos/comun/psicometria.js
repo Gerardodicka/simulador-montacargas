@@ -26,6 +26,7 @@
     const pu = t.match(/Puesto: (.+?) (?:Carlos|Reporte|Fortalezas|\d)/); if (pu && !prof.puesto && !/Etegrity/i.test(pu[1])) prof.puesto = pu[1].trim().slice(0, 60);
     let m; const re = /EVT \| ([^|]+?)\s+(Necesario|Deseable)\s+[\d.]+\s*-\s*[\d.]+\s+([\d.]+)\s+([\d.]+)\s+(-?\s*[\d.]+)/g;
     while ((m = re.exec(t))) { const n = m[1].replace(/-\s+/g, '-').trim(); if (!prof.comp.some(c => c.n === n)) prof.comp.push({ n, tipo: m[2], puesto: +m[3], persona: +m[4], gap: +m[5].replace(/\s/g, '') }); prof.fuentes.add('Afinidad (Evaluatest)'); }
+    const af = t.match(/([\d.]+)% [^%]{0,60}?Afinidad con el puesto/); if (af && prof.afinidad == null) prof.afinidad = +af[1];
     const igi = t.match(/Índice General de Integridad \(IGI\) ([\d.]+) ?%/); if (igi) { prof.igi = +igi[1]; prof.fuentes.add('Etegrity'); }
     const ex = t.match(/Áreas que se recomienda explorar(.*?)(El contenido de este documento|$)/); if (ex) ['Enfoque-Cumplimiento', 'Fraude', 'Robo', 'Soborno', 'Tendencia a la agresividad', 'Tendencia a la mentira', 'Acoso', 'Rechazo a figuras de autoridad', 'Responsabilidad', 'Cooperación'].forEach(a => { if (ex[1].includes(a + ' ') && !prof.explorar.includes(a)) prof.explorar.push(a); });
     const ip = t.split('Interpretación por indicador')[1] || '', ia = ip.search(/Áreas de riesgo/); if (ia >= 0) { const fin = ip.indexOf('Áreas que se recomienda explorar'), seg = ip.slice(ia, fin > ia ? fin : undefined);   /* solo indicadores interpretados bajo «Áreas de riesgo» */
@@ -54,5 +55,13 @@
     return { focos: top, fortalezas: fort, situaciones: Object.entries(scRank).sort((a, b) => b[1] - a[1]).map(x => x[0]) }; }
   async function readFiles(files) { const prof = { nombre: '', puesto: '', comp: [], igi: null, riesgo: [], explorar: [], pruebas: {}, fuentes: new Set() };
     for (const f of files) parse(await pdfText(f), prof); prof.fuentes = [...prof.fuentes]; prof.plan = plan(prof); prof.fecha = new Date().toISOString(); return prof; }
-  G.PSICO = { FOCUS, readFiles, parse, plan, pdfText };
+  const KEY_HI = [[/Kilmann.*:: Colaboración$/, 'Colabora y busca acuerdos (Thomas-Kilmann)'], [/Kilmann.*:: Compromiso/, 'Negocia intercambios justos (Thomas-Kilmann)'], [/16 FP.*:: C\. Estabilidad Emocional$/, 'Estabilidad emocional bajo presión (16PF)'], [/16 FP.*:: B\. Razonamiento$/, 'Razonamiento (16PF)'], [/16 FP.*:: H\. Audacia Social$/, 'Desenvolvimiento social (16PF)'], [/16 FP.*:: G\. Conciencia del Deber$/, 'Sentido del deber (16PF)'], [/Factor G.*:: Inteligencia Total$/, 'Capacidad intelectual (Factor G)'], [/IPV.*:: IV\. Tolerancia a la Frustración$/, 'Tolerancia a la frustración (IPV)'], [/IPV.*:: II\. Adaptabilidad$/, 'Adaptabilidad (IPV)'], [/Gordon.*:: Ejecución y Realización$/, 'Orientación a ejecutar (Gordon)']];
+  const KEY_LO = [[/Kilmann.*:: Competencia$/, 'Le cuesta tomar una postura firme (Thomas-Kilmann)'], [/16 FP.*:: E\. Dominancia$/, 'Baja dominancia o asertividad (16PF)'], [/IPV.*:: I\. Comprensión$/, 'Comprensión de los demás (IPV)'], [/IPV.*:: VI ?Dominancia$/, 'Influencia sobre otros (IPV)'], [/16 FP.*:: Q1\. Apertura al Cambio$/, 'Apertura al cambio (16PF)']];
+  function resumen(prof) { const hi = [], lo = [], pick = (L, rx, out) => Object.entries(prof.pruebas).forEach(([t, rows]) => rows.forEach(r => L.forEach(([re, lab]) => { if (re.test(t + ' :: ' + r.n) && rx.test(r.rango)) out.push(`${lab.replace(/ \(.*\)$/, '')} · ${r.rango.toLowerCase()}`); })));
+    prof.comp.filter(c => c.gap > 0).sort((a, b) => b.gap - a.gap).forEach(c => hi.push(`${c.n.split(/[-–]/)[0].trim()} · ${c.persona.toFixed(2)} ▲`));
+    pick(KEY_HI, HIGH, hi); if (prof.igi != null && prof.igi >= 66 && !prof.riesgo.length) hi.unshift(`Integridad confiable · ${prof.igi}%`);
+    prof.comp.filter(c => c.gap < 0).sort((a, b) => a.gap - b.gap).forEach(c => lo.push(`${c.n.split(/[-–]/)[0].trim()}${/Liderazgo/.test(c.n) ? ' y desarrollo de personas' : ''} · ${c.persona.toFixed(2)} de ${c.puesto.toFixed(2)} ▼`));
+    pick(KEY_LO, LOW, lo); prof.explorar.forEach(a => lo.push(`Explorar «${a}» (Etegrity)`)); prof.riesgo.forEach(a => lo.push(`Área de riesgo «${a}» (Etegrity)`));
+    return { fortalezas: hi.slice(0, 4), oportunidades: lo.slice(0, 4) }; }
+  G.PSICO = { FOCUS, readFiles, parse, plan, pdfText, resumen };
 })(window);
