@@ -15,6 +15,6 @@ Validación en consola del navegador (5 s tras entrar al simulador):
   GLTF_AVATAR.clips                                          // clips detectados
 
 oficina_mujer.glb / oficina_hombre.glb
-  Avatares Business_Female_01 y Business_Male_02 de Microsoft Rocketbox Avatar Library
+  Avatares Female_Adult_05 y Male_Adult_08 (ropa de oficina casual) de Microsoft Rocketbox Avatar Library
   (https://github.com/microsoft/Microsoft-Rocketbox), licencia MIT, Copyright (c) 2020 Microsoft.
   Convertidos de FBX a GLB con huesos renombrados al esquema Mixamo para el Dojo de Mando.
