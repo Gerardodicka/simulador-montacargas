@@ -49,13 +49,26 @@ const B = { type: "boolean" };
 const S_CONV = { type: "object", additionalProperties: false, required: ["tipo", "opcion", "confianza", "respuesta", "mentor"], properties: {
   tipo: { type: "string", enum: ["conversa", "decision", "pregunta", "continuar", "otro"] }, opcion: { anyOf: [{ type: "string", enum: ["A", "B", "C", "D"] }, { type: "null" }] },
   confianza: { type: "number" }, respuesta: { type: "string" }, mentor: { type: "string" } } };
-const S_EVAL = { type: "object", additionalProperties: false, required: ["puntaje", "objetivos", "sbi", "grow", "fortaleza", "mejora", "resumen", "reformula"], properties: {
+const CRIT = ["escucha", "meta", "preguntas", "delegacion", "tono"];
+const S_CRIT = { type: "object", additionalProperties: false, required: ["puntaje", "turno", "cita"], properties: { puntaje: { type: "integer" }, turno: { type: "integer" }, cita: { type: "string" } } };
+const S_EVAL = { type: "object", additionalProperties: false, required: ["puntaje", "objetivos", "sbi", "grow", "fortaleza", "mejora", "resumen", "reformula", "criterios"], properties: {
+  criterios: { type: "object", additionalProperties: false, required: CRIT, properties: Object.fromEntries(CRIT.map(k => [k, S_CRIT])) },
   puntaje: { type: "integer" }, objetivos: { type: "object", additionalProperties: false, required: ["metas", "necesidades", "retro", "delegar"], properties: { metas: B, necesidades: B, retro: B, delegar: B } },
   sbi: { type: "object", additionalProperties: false, required: ["situacion", "conducta", "impacto"], properties: { situacion: B, conducta: B, impacto: B } },
   grow: { type: "object", additionalProperties: false, required: ["meta", "realidad", "opciones", "voluntad"], properties: { meta: B, realidad: B, opciones: B, voluntad: B } },
   fortaleza: { type: "string" }, mejora: { type: "string" }, resumen: { type: "string" },
   reformula: { type: "object", additionalProperties: false, required: ["original", "mejor"], properties: { original: { type: "string" }, mejor: { type: "string" } } } } };
+const S_MOD = { type: "object", additionalProperties: false, required: ["turnos", "explicacion"], properties: {
+  turnos: { type: "array", items: { type: "object", additionalProperties: false, required: ["quien", "texto"], properties: { quien: { type: "string" }, texto: { type: "string" } } } },
+  explicacion: { type: "array", items: { type: "object", additionalProperties: false, required: ["modelo", "parte", "texto"], properties: { modelo: { type: "string", enum: ["SBI", "GROW"] }, parte: { type: "string" }, texto: { type: "string" } } } } } };
+/* historial numerado con el índice original de la plática (para que la evidencia apunte a un turno real) */
+const numHist = (h, n) => Array.isArray(h) ? h.slice(-n).map((x, j, a) => `[${Number.isInteger(x.i) ? x.i : h.length - a.length + j}] ${clip(x.quien, 40)}: ${clip(x.texto, 300)}`).join("\n") : "";
 
+/* F2-05: cada criterio debe apuntar a un turno existente del líder; si no, se marca sin evidencia */
+function validCrit(c, hist) { if (!c || typeof c !== "object") return null; const H = Array.isArray(hist) ? hist : [], out = {};
+  for (const k of CRIT) { const x = c[k] || {}, n = Number.isInteger(x.turno) ? x.turno : -1, h = H.find((y, j) => (Number.isInteger(y.i) ? y.i : j) === n);
+    const ok = h && /^l[ií]der$/i.test(String(h.quien)); out[k] = { puntaje: Math.max(0, Math.min(100, Number(x.puntaje) || 0)), turno: ok ? n : -1, cita: ok ? clip(x.cita || h.texto, 200) : "" }; }
+  return out; }
 export default async (req) => {
   if (req.method !== "POST") return json(405, { ok: false, motivo: "metodo" });
   const key = process.env.ANTHROPIC_API_KEY;
@@ -64,16 +77,25 @@ export default async (req) => {
   try {
     if (b.ping) { const r = await claude(key, "Responde solo: ok", [{ role: "user", content: "ping" }], 16, { effort: "low" }); return json(200, r.error ? { ok: false, motivo: r.error, detalle: r.det, modelo: MODEL } : { ok: true, modelo: MODEL }); }
     if (b.evaluar) {   // retroalimentación final de una situación de práctica
-      const hist = Array.isArray(b.historial) ? b.historial.slice(-24).map(h => `${clip(h.quien, 40)}: ${clip(h.texto, 300)}`).join("\n") : "";
+      const hist = numHist(b.historial, 40);
       const sys = `Eres un mentor de liderazgo de DICKA Logistics (almacenes en México). Evalúa con justicia la plática de un líder de nivel ${clip(b.nivel, 30)} en una situación crítica. Español de México, claro y concreto. Responde SOLO JSON válido:
-{"puntaje":0-100,"objetivos":{"metas":bool,"necesidades":bool,"retro":bool,"delegar":bool},"sbi":{"situacion":bool,"conducta":bool,"impacto":bool},"grow":{"meta":bool,"realidad":bool,"opciones":bool,"voluntad":bool},"fortaleza":"máx. 18 palabras","mejora":"máx. 25 palabras, acción concreta","resumen":"2 frases: qué logró y qué haría distinto la próxima vez","reformula":{"original":"la frase más débil que dijo el líder, textual","mejor":"cómo decirla mejor, natural y breve"}}
+{"puntaje":0-100,"objetivos":{"metas":bool,"necesidades":bool,"retro":bool,"delegar":bool},"sbi":{"situacion":bool,"conducta":bool,"impacto":bool},"grow":{"meta":bool,"realidad":bool,"opciones":bool,"voluntad":bool},"fortaleza":"máx. 18 palabras","mejora":"máx. 25 palabras, acción concreta","resumen":"2 frases: qué logró y qué haría distinto la próxima vez","reformula":{"original":"la frase más débil que dijo el líder, textual","mejor":"cómo decirla mejor, natural y breve"},"criterios":{"escucha":{"puntaje":0-100,"turno":n,"cita":"…"},"meta":{…},"preguntas":{…},"delegacion":{…},"tono":{…}}}
+Criterios (cada uno con puntaje 0-100, el número [n] del turno del LÍDER que mejor lo sustenta y la cita textual breve de ese turno; si no hay evidencia, turno -1 y cita vacía con puntaje bajo): escucha = escucha activa y empatía; meta = claridad de la meta o acuerdo; preguntas = uso de preguntas abiertas; delegacion = asigna responsable y seguimiento; tono = respeto y firmeza adecuados.
 SBI: describió la situación concreta, la conducta observable y el impacto. GROW: acordó meta, exploró la realidad con preguntas, pidió opciones al otro y cerró compromiso (voluntad) con fecha.
 metas = acordó qué, cuánto y para cuándo; necesidades = preguntó y escuchó; retro = dio retroalimentación con hechos, conducta e impacto; delegar = asignó responsable y seguimiento. Sé exigente: sin acuerdos concretos el puntaje no pasa de 60. Si hay áreas a desarrollar según su evaluación psicométrica, enfoca la "mejora" y el "resumen" en esas áreas (sin mencionar las pruebas).`;
       const r = await claude(key, sys, [{ role: "user", content: `Situación: ${clip(b.contexto, 800)}\nObjetivo del líder: ${clip(b.objetivo, 300)}\nÁreas a desarrollar según su evaluación psicométrica: ${Array.isArray(b.enfoque) && b.enfoque.length ? b.enfoque.slice(0, 4).map(x => clip(x, 60)).join(", ") : "(no disponible)"}\nPersonaje: ${clip(b.personaje, 40)}\nPlática:\n${hist}` }], 1200, { model: EVAL_MODEL, effort: "medium", schema: S_EVAL });
       if (r.error) return json(200, { ok: false, motivo: r.error, detalle: r.det });
       let o = null; try { o = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [""])[0]); } catch { }
       if (!o) return json(200, { ok: false, motivo: "formato" });
-      const ob = o.objetivos || {}; return json(200, { ok: true, puntaje: Math.max(0, Math.min(100, Number(o.puntaje) || 0)), objetivos: { metas: !!ob.metas, necesidades: !!ob.necesidades, retro: !!ob.retro, delegar: !!ob.delegar }, fortaleza: clip(o.fortaleza, 200), mejora: clip(o.mejora, 300), resumen: clip(o.resumen, 500), sbi: o.sbi ? { situacion: !!o.sbi.situacion, conducta: !!o.sbi.conducta, impacto: !!o.sbi.impacto } : null, grow: o.grow ? { meta: !!o.grow.meta, realidad: !!o.grow.realidad, opciones: !!o.grow.opciones, voluntad: !!o.grow.voluntad } : null, reformula: o.reformula && o.reformula.original ? { original: clip(o.reformula.original, 240), mejor: clip(o.reformula.mejor, 240) } : null });
+      const ob = o.objetivos || {}; return json(200, { ok: true, puntaje: Math.max(0, Math.min(100, Number(o.puntaje) || 0)), objetivos: { metas: !!ob.metas, necesidades: !!ob.necesidades, retro: !!ob.retro, delegar: !!ob.delegar }, fortaleza: clip(o.fortaleza, 200), mejora: clip(o.mejora, 300), resumen: clip(o.resumen, 500), sbi: o.sbi ? { situacion: !!o.sbi.situacion, conducta: !!o.sbi.conducta, impacto: !!o.sbi.impacto } : null, grow: o.grow ? { meta: !!o.grow.meta, realidad: !!o.grow.realidad, opciones: !!o.grow.opciones, voluntad: !!o.grow.voluntad } : null, reformula: o.reformula && o.reformula.original ? { original: clip(o.reformula.original, 240), mejor: clip(o.reformula.mejor, 240) } : null, criterios: validCrit(o.criterios, b.historial) });
+    }
+    if (b.modelo) {   // F2-04: plática ejemplar ("ver cómo lo manejaría")
+      const sys = `Eres un coach de liderazgo de DICKA Logistics (almacenes en México). Escribe una plática EJEMPLAR, breve y realista, de cómo un líder de nivel ${clip(b.nivel, 30)} manejaría bien esta situación. Español de México natural (sin groserías, sin tecnicismos de coaching dentro del diálogo). Entre 6 y 10 turnos alternados; el líder usa "Líder" como quien, y los demás su nombre exacto. Los personajes reaccionan de forma creíble (con resistencia al inicio). Después explica en 3 a 5 puntos por qué funciona, usando SBI (Situación, Conducta, Impacto) o GROW (Meta, Realidad, Opciones, Compromiso). Responde SOLO JSON: {"turnos":[{"quien":"Líder|Nombre","texto":"…"}],"explicacion":[{"modelo":"SBI|GROW","parte":"…","texto":"máx. 25 palabras"}]}`;
+      const r = await claude(key, sys, [{ role: "user", content: `Situación: ${clip(b.contexto, 900)}\nObjetivo: ${clip(b.objetivo, 300)}\nPersonajes: ${Array.isArray(b.personajes) ? b.personajes.slice(0, 4).map(x => clip(x, 60)).join("; ") : clip(b.personaje, 60)}\nLo que ya dijeron al inicio: ${clip(b.apertura, 600)}` }], 1400, { model: EVAL_MODEL, effort: "low", schema: S_MOD });
+      if (r.error) return json(200, { ok: false, motivo: r.error, detalle: r.det });
+      let o = null; try { o = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [""])[0]); } catch { }
+      if (!o || !Array.isArray(o.turnos) || o.turnos.length < 2) return json(200, { ok: false, motivo: "formato" });
+      return json(200, { ok: true, turnos: o.turnos.slice(0, 12).map(t => ({ quien: clip(t.quien, 40), texto: clip(t.texto, 400) })), explicacion: (o.explicacion || []).slice(0, 6).map(e => ({ modelo: e.modelo === "GROW" ? "GROW" : "SBI", parte: clip(e.parte, 30), texto: clip(e.texto, 220) })) });
     }
     const opciones = Array.isArray(b.opciones) ? b.opciones.slice(0, 4).map(o => `${clip(o.k, 2)}) ${clip(o.t, 400)}`).join("\n") : "";
     const hist = Array.isArray(b.historial) ? b.historial.slice(-8).map(h => `${clip(h.quien, 30)}: ${clip(h.texto, 300)}`).join("\n") : "";

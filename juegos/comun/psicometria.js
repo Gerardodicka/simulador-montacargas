@@ -35,22 +35,23 @@
     while ((m = tb.exec(t))) { const test = m[1].trim(), rows = []; const rr = /([A-Za-zÁÉÍÓÚÑáéíóúñ0-9.,()\- ]+?) (-?\d+(?:\.\d+)?) (\d+(?:\.\d+)?)% (Muy Alto|Muy Bajo|Alto|Bajo|Moderado|Medio|Promedio|Functional|Non Functional)/g; let r;
       while ((r = rr.exec(m[2]))) rows.push({ n: r[1].trim(), pct: +r[3], rango: r[4] }); if (rows.length) { prof.pruebas[test] = rows; prof.fuentes.add('Diagnóstico de Potencial'); } }
     return prof; }
+  const nice = n => String(n).replace(/\s*[-–]\s*/g, ' y ').replace(/(^|\s)(\S)(\S*)/g, (m, sp, f, r, off) => sp + (off === 0 ? f.toUpperCase() : f.toLowerCase()) + r.toLowerCase()).replace(/ingl[eé]s/i, 'inglés');
   function plan(prof) {
     const w = {}, why = {}; const add = (k, v, e) => { w[k] = (w[k] || 0) + v; (why[k] = why[k] || []).push(e); };
-    prof.comp.forEach(c => { const f = AF.find(([re]) => re.test(c.n)); if (f && c.gap < 0) add(f[1], -c.gap * (c.tipo === 'Necesario' ? 1.5 : 1) + .1, `${c.n}: ${c.persona.toFixed(2)} de ${c.puesto.toFixed(2)} requerido`); });
-    if (prof.igi && prof.igi < 66) add('integridad', 1, `Índice de integridad ${prof.igi}%`);
-    prof.riesgo.forEach(a => add('integridad', .8, `Etegrity: área de riesgo «${a}»`));
-    prof.explorar.forEach(a => { if (/Cumplimiento/.test(a)) { add('resultados', .35, 'Etegrity: requiere apoyo para planes de acción y seguimiento'); add('integridad', .2, 'Etegrity: explorar «Enfoque-Cumplimiento»'); } else add('integridad', .35, `Etegrity: explorar «${a}»`); });
+    prof.comp.forEach(c => { const f = AF.find(([re]) => re.test(c.n)); if (f && c.gap < 0) add(f[1], -c.gap * (c.tipo === 'Necesario' ? 1.5 : 1) + .1, `Índice de Afinidad: obtuviste ${c.persona.toFixed(2)} de ${c.puesto.toFixed(2)} que pide el puesto en ${nice(c.n).toLowerCase()}`); });
+    if (prof.igi && prof.igi < 66) add('integridad', 1, `Etegrity: tu índice de integridad es de ${Math.round(prof.igi)}%, abajo de lo esperado`);
+    prof.riesgo.forEach(a => add('integridad', .8, `Etegrity: aparece «${a}» como área de riesgo`));
+    prof.explorar.forEach(a => { if (/Cumplimiento/.test(a)) { add('resultados', .35, 'Etegrity: te conviene reforzar los planes de acción y su seguimiento'); add('integridad', .2, 'Etegrity: conviene revisar tu enfoque al cumplimiento'); } else add('integridad', .35, `Etegrity: explorar «${a}»`); });
     const each = (rx, fn) => Object.entries(prof.pruebas).forEach(([test, rows]) => rows.forEach(r => { if (rx.test(test + ' :: ' + r.n)) fn(r, test); }));
-    each(/Kilmann.*:: Competencia$/, r => { if (LOW.test(r.rango)) add('firmeza', .5, `Thomas-Kilmann: estilo «Competencia» ${r.rango.toLowerCase()} (${r.pct}%) — le cuesta tomar postura firme`); });
-    each(/Kilmann.*:: Evasión$/, r => { if (HIGH.test(r.rango)) add('conflicto', .5, `Thomas-Kilmann: tiende a evadir conflictos (${r.pct}%)`); });
-    each(/Kilmann.*:: Complacencia$/, r => { if (HIGH.test(r.rango)) add('firmeza', .4, `Thomas-Kilmann: tiende a complacer (${r.pct}%)`); });
-    each(/16 FP.*:: E\. Dominancia$/, r => { if (LOW.test(r.rango)) add('firmeza', .3, `16PF: dominancia ${r.rango.toLowerCase()} (${r.pct}%)`); });
-    each(/16 FP.*:: C\. Estabilidad Emocional$/, r => { if (LOW.test(r.rango)) add('presion', .4, `16PF: estabilidad emocional ${r.rango.toLowerCase()}`); });
-    each(/IPV.*:: I\. Comprensión$/, r => { if (LOW.test(r.rango)) add('escucha', .3, `IPV: comprensión de los demás ${r.rango.toLowerCase()} (${r.pct}%)`); });
-    each(/DISC.*:: Dominio y Empuje bajo presión$/, r => { if (LOW.test(r.rango)) add('firmeza', .2, 'DISC: baja dominancia bajo presión'); });
+    each(/Kilmann.*:: Competencia$/, r => { if (LOW.test(r.rango)) add('firmeza', .5, `Thomas-Kilmann: en un conflicto tiendes a ceder antes que sostener tu postura (estilo competitivo: ${r.pct}%)`); });
+    each(/Kilmann.*:: Evasión$/, r => { if (HIGH.test(r.rango)) add('conflicto', .5, `Thomas-Kilmann: tiendes a evitar los conflictos (${r.pct}%)`); });
+    each(/Kilmann.*:: Complacencia$/, r => { if (HIGH.test(r.rango)) add('firmeza', .4, `Thomas-Kilmann: tiendes a complacer a los demás (${r.pct}%)`); });
+    each(/16 FP.*:: E\. Dominancia$/, r => { if (LOW.test(r.rango)) add('firmeza', .3, `16PF: tu nivel de asertividad es ${r.rango.toLowerCase().replace('bajo', 'bajo')} (${r.pct}%)`); });
+    each(/16 FP.*:: C\. Estabilidad Emocional$/, r => { if (LOW.test(r.rango)) add('presion', .4, `16PF: tu estabilidad emocional es ${r.rango.toLowerCase()}`); });
+    each(/IPV.*:: I\. Comprensión$/, r => { if (LOW.test(r.rango)) add('escucha', .3, `IPV: te cuesta ponerte en el lugar de los demás (${r.pct}%)`); });
+    each(/DISC.*:: Dominio y Empuje bajo presión$/, r => { if (LOW.test(r.rango)) add('firmeza', .2, 'DISC: bajo presión tiendes a no imponer tu punto de vista'); });
     const top = Object.entries(w).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => ({ k, n: FOCUS[k].n, peso: +v.toFixed(2), tip: FOCUS[k].tip, obj: FOCUS[k].obj, evid: why[k].slice(0, 3) }));
-    const fort = prof.comp.filter(c => c.gap > 0).sort((a, b) => b.gap - a.gap).slice(0, 3).map(c => c.n);
+    const fort = prof.comp.filter(c => c.gap > 0).sort((a, b) => b.gap - a.gap).slice(0, 3).map(c => nice(c.n));
     const scRank = {}; top.forEach((f, i) => FOCUS[f.k].sc.forEach((s, j) => { scRank[s] = (scRank[s] || 0) + (f.peso * (4 - i)) / (j + 1); }));
     return { focos: top, fortalezas: fort, situaciones: Object.entries(scRank).sort((a, b) => b[1] - a[1]).map(x => x[0]) }; }
   async function readFiles(files) { const prof = { nombre: '', puesto: '', comp: [], igi: null, riesgo: [], explorar: [], pruebas: {}, fuentes: new Set() };
@@ -64,5 +65,5 @@
     prof.comp.filter(c => c.gap < 0).sort((a, b) => a.gap - b.gap).forEach(c => lo.push(`${c.n.split(/[-–]/)[0].trim()}${/Liderazgo/.test(c.n) ? ' y desarrollo de personas' : ''} · ${c.persona.toFixed(2)} de ${c.puesto.toFixed(2)} ▼`));
     pick(KEY_LO, LOW, lo); prof.explorar.forEach(a => lo.push(`Explorar «${a}» (Etegrity)`)); prof.riesgo.forEach(a => lo.push(`Área de riesgo «${a}» (Etegrity)`));
     return { fortalezas: hi.slice(0, 4), oportunidades: lo.slice(0, 4) }; }
-  G.PSICO = { FOCUS, readFiles, parse, plan, pdfText, resumen };
+  G.PSICO = { FOCUS, readFiles, parse, plan, pdfText, resumen, nice };
 })(window);
