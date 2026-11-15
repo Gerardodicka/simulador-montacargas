@@ -35,7 +35,19 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
+## Proceso de testeo (obligatorio en cada mejora)
+
+Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
+
+1. **Pruebas existentes:** `node pruebas/dojo-ia.test.mjs` y `node pruebas/validar.js` al 100 %.
+2. **Prueba nueva:** cada mejora agrega al menos una prueba automática que verifica su funcionalidad.
+3. **Regresión:** flujo completo (registro → situación → plática → resultado → descarga) sin errores.
+4. **Consola limpia:** cero errores de JavaScript en el navegador.
+5. **Visual:** capturas con Playwright en computadora (1280 px) y celular (390 px), revisadas.
+6. **Privacidad:** ningún dato personal se envía a servidores ni se sube al repositorio.
+7. **Registro:** el resultado de las pruebas se anota en la bitácora (columna Pruebas).
+
 ## Bitácora de ciclos
 
-| Fecha y hora | # | Mejora | PR | Estado |
-|---|---|---|---|---|
+| Fecha y hora | # | Mejora | Pruebas | PR | Estado |
+|---|---|---|---|---|---|
