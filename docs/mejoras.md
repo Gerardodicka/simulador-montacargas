@@ -20,7 +20,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 
 | # | Simulador | Tipo | Mejora | Inspirada en | Estado |
 |---|---|---|---|---|---|
-| 1 | Dojo de Mando | Usabilidad | Gestos naturales también en operadores y sindicato | Mursion | ⬜ |
+| 1 | Dojo de Mando | Usabilidad | Gestos naturales también en operadores y sindicato | Mursion | ✅ |
 | 2 | Dojo de Mando | Nuevo contenido | 5 casos de logística: auditoría del cliente, cambio de WMS, operador nuevo sin capacitar, robo hormiga reportado, chofer agresivo en andén | Attensi | ⬜ |
 | 3 | Dojo de Mando | Funcionalidad | "Repite lo que fallaste": reintento enfocado en el criterio más bajo con pista previa | FLIGBY | ⬜ |
 | 4 | Dojo de Mando | Usabilidad | Práctica rápida de 5 minutos en celular | Yoodli | ⬜ |
@@ -51,3 +51,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 
 | Fecha y hora | # | Mejora | Pruebas | PR | Estado |
 |---|---|---|---|---|---|
+| 2026-11-15 20:39 UTC | 1 | Gestos naturales en operadores y sindicato (v18.6) | 17/17 IA · validar.js 100 % (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | #116 | ✅ |
