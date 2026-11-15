@@ -104,6 +104,15 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       a.pose = 'cross'; await new Promise(r => setTimeout(r, 300)); return { talk, s1, op: TALK_SETS_OP.some(x => x.join() === s1), cross: a.gest === null }; });
     ok('Dojo de Mando', 'operadores gesticulan al hablar y respetan brazos cruzados', g ? g.talk && g.op && g.cross : true, g ? g.s1 : 'omitido: los avatares no cargaron en este entorno');
     ok('Dojo de Mando', 'gestos de operadores sin errores', !e.length, e[0] || ''); await q.close(); }
+  // Dojo de Mando: casos de logística nuevos (chofer, nuevo, hormiga, WMS, auditoría) completos, en su nivel y arrancan la plática
+  { const NEW = [['Supervisor de Operaciones', 'chofer'], ['Supervisor de Operaciones', 'nuevo'], ['Supervisor de Operaciones', 'hormiga'], ['Jefe de Operaciones', 'wms'], ['Gerente de Operaciones', 'auditoria']]; const bad = [], e = [];
+    for (const [pu, id] of NEW) { const q = await b.newPage({ viewport: { width: 1000, height: 700 } }); q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000);
+      const r = await q.evaluate(async ([pu, id]) => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = pu; P.dispatchEvent(new Event('change')); document.getElementById('pnom').value = 'Prueba'; document.getElementById('pape').value = 'Dojo'; document.getElementById('pnum').value = '12345'; document.getElementById('goBtn').click(); await w(400);
+        const S = (SCEN[LV.key] || []).find(x => x.id === id), bt = document.getElementById('sc_' + id); if (!S || !bt) return 'no aparece en el menú';
+        if (!(S.intro && S.open && S.goal && S.name && S.role && Array.isArray(S.fb) && S.fb.length >= 3)) return 'datos incompletos'; if (!ecFor(id).length) return 'sin estándar CONOCER';
+        bt.click(); await w(1500); return document.getElementById('talk').innerText.includes(S.open.slice(0, 25)) ? '' : 'no arranca la plática'; }, [pu, id]); if (r) bad.push(id + ': ' + r); await q.close(); }
+    ok('Dojo de Mando', '5 casos nuevos de logística en su nivel y arrancan', !bad.length, bad.join(' · '));
+    ok('Dojo de Mando', 'casos nuevos sin errores', !e.length, e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
