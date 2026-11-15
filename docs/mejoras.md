@@ -51,4 +51,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 
 | Fecha y hora | # | Mejora | Pruebas | PR | Estado |
 |---|---|---|---|---|---|
-| 2026-11-15 20:39 UTC | 1 | Gestos naturales en operadores y sindicato (v18.6) | 17/17 IA · validar.js 100 % (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
+| 2026-11-15 20:39 UTC | 1 | Gestos naturales en operadores y sindicato (v18.6) | 17/17 IA · validar.js 100 % (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | #116 | ✅ |
