@@ -21,7 +21,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | # | Simulador | Tipo | Mejora | Inspirada en | Estado |
 |---|---|---|---|---|---|
 | 1 | Dojo de Mando | Usabilidad | Gestos naturales también en operadores y sindicato | Mursion | ✅ |
-| 2 | Dojo de Mando | Nuevo contenido | 5 casos de logística: auditoría del cliente, cambio de WMS, operador nuevo sin capacitar, robo hormiga reportado, chofer agresivo en andén | Attensi | ⬜ |
+| 2 | Dojo de Mando | Nuevo contenido | 5 casos de logística: auditoría del cliente, cambio de WMS, operador nuevo sin capacitar, robo hormiga reportado, chofer agresivo en andén | Attensi | ✅ |
 | 3 | Dojo de Mando | Funcionalidad | "Repite lo que fallaste": reintento enfocado en el criterio más bajo con pista previa | FLIGBY | ⬜ |
 | 4 | Dojo de Mando | Usabilidad | Práctica rápida de 5 minutos en celular | Yoodli | ⬜ |
 | 5 | Montacargas | Medición | Métricas de seguridad: choques, velocidad en curva, carga caída, claxon, con reporte | Simuladores de montacargas comerciales | ⬜ |
@@ -52,3 +52,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | Fecha y hora | # | Mejora | Pruebas | PR | Estado |
 |---|---|---|---|---|---|
 | 2026-11-15 20:39 UTC | 1 | Gestos naturales en operadores y sindicato (v18.6) | 17/17 IA · validar.js 100 % (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | #116 | ✅ |
+| 2026-11-15 22:39 UTC | 2 | 5 casos de logística: chofer agresivo, operador nuevo sin DC-3, robo hormiga (Supervisor); cambio de WMS (Jefatura); auditoría del cliente (Gerencia) (v18.7) | 17/17 IA · validar.js 99/99 (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
