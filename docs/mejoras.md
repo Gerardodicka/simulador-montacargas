@@ -52,4 +52,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | Fecha y hora | # | Mejora | Pruebas | PR | Estado |
 |---|---|---|---|---|---|
 | 2026-11-15 20:39 UTC | 1 | Gestos naturales en operadores y sindicato (v18.6) | 17/17 IA · validar.js 100 % (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | #116 | ✅ |
-| 2026-11-15 22:39 UTC | 2 | 5 casos de logística: chofer agresivo, operador nuevo sin DC-3, robo hormiga (Supervisor); cambio de WMS (Jefatura); auditoría del cliente (Gerencia) (v18.7) | 17/17 IA · validar.js 99/99 (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
+| 2026-11-15 22:39 UTC | 2 | 5 casos de logística: chofer agresivo, operador nuevo sin DC-3, robo hormiga (Supervisor); cambio de WMS (Jefatura); auditoría del cliente (Gerencia) (v18.7) | 17/17 IA · validar.js 99/99 (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | #117 | ✅ |
