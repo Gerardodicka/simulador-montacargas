@@ -148,6 +148,17 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Recepción y decantado', 'ruta correcta 120/120 aprueba y guarda el resultado', g.r.score === 120 && g.r.ok && g.r.saved && g.r.kinds >= 6, JSON.stringify(g.r));
     ok('Recepción y decantado', 'recibir todo y dejar en piso no aprueba', !m.r.ok, m.r.score + '/120');
     ok('Recepción y decantado', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // Patio y andenes: buena coordinación aprueba; no asignar andenes no aprueba; atender sin cita antes que con cita penaliza
+  { const run = async mode => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/patio-andenes.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Patio'); await q.click('#startBtn'); await q.waitForTimeout(150);
+      const r = await q.evaluate(mode => { if (mode === 'prio') { advance(); const W = waiting(), sin = W.find(t => !t.cita), con = W.find(t => t.cita && t.temp === 'seco'); const s0 = score; if (!sin || !con) return { err: 'sin escenario' }; assign(sin.id, D.find(d => fits(sin, d) && !d.cold).n); return { pen: s0 - score }; }
+        for (let s = 0; s < SLOTS; s++) { if (mode === 'good') { const W = waiting().sort((a, b) => (b.cita - a.cita) || ((b.temp === 'frio') - (a.temp === 'frio'))); for (const t of W) { const free = D.filter(d => fits(t, d)), fw = waiting().some(x => x.temp === 'frio' && x.id !== t.id); const d = t.temp === 'frio' ? free.find(d => d.cold) : (free.find(d => !d.cold) || (!fw && free.find(d => d.cold))); if (d) assign(t.id, d.n); } } advance(); }
+        return { score, ok: score >= PASS, end: !document.getElementById('end').classList.contains('hidden') }; }, mode); await q.close(); return { r, e }; };
+    const g = await run('good'), idle = await run('idle'), pr = await run('prio');
+    ok('Patio y andenes', 'coordinación correcta aprueba', g.r.ok && g.r.end, JSON.stringify(g.r));
+    ok('Patio y andenes', 'sin asignar andenes no aprueba', !idle.r.ok && idle.r.end, idle.r.score + '/100');
+    ok('Patio y andenes', 'atender sin cita antes que con cita penaliza', pr.r.pen === 5, JSON.stringify(pr.r));
+    ok('Patio y andenes', 'sin errores de ejecución', !g.e.length && !idle.e.length && !pr.e.length, g.e[0] || idle.e[0] || pr.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
