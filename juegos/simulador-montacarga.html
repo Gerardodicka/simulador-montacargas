@@ -2345,6 +2345,7 @@
             presionExcesiva: { label: 'PRESIÓN EXCESIVA · DAÑO A PRODUCTO', tip: 'Aplasta el empaque; usa la presión autorizada', pts: 10 },
             clampDescentrado: { label: 'CARGA MAL CENTRADA EN PLACAS',  tip: 'Centra la carga entre las placas antes de cerrar', pts: 6 },
             liberacionInsegura: { label: 'LIBERACIÓN INSEGURA',        tip: 'Nunca abras las placas con la carga elevada', pts: 25 },
+            fallaNoReportada: { label: 'NO REPORTÓ FALLA DEL EQUIPO', tip: 'Ante una falla: detén el equipo, baja la carga y repórtala; no sigas operando', pts: 15 },
             caidaCarga:    { label: 'CAÍDA DE CARGA',                 tip: 'Baja la carga a 15-20 cm para trasladar y evita giros y frenados bruscos', pts: 30 },
             elevacionInestable: { label: 'ELEVACIÓN INESTABLE',       tip: 'La carga va descentrada: bájala y vuelve a entrar centrado', pts: 8 },
             apoyoMal:      { label: 'CARGA MAL APOYADA',              tip: 'Centra la tarima sobre las vigas y baja hasta apoyar antes de soltar', pts: 8 },
@@ -2393,7 +2394,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v19.0 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v19.1 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3326,6 +3327,19 @@
                 const arm = new THREE.Mesh(new THREE.BoxGeometry(.6, .05, .05), pole); arm.position.set((xp + x) / 2, y + .45, z); MIR.add(arm); const hang = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .4, 6), pole); hang.position.set(x, y + .25, z); MIR.add(hang);
                 const dome = new THREE.Mesh(new THREE.SphereGeometry(.32, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2.6), glass); MIR_RT.domes.push(dome); dome.rotation.x = Math.PI / 2; const ring = new THREE.Mesh(new THREE.TorusGeometry(.3, .03, 8, 24), rim); const h = new THREE.Group(); h.add(dome, ring); h.position.set(x, y, z); h.rotation.y = (sd > 0 ? -Math.PI / 4 : Math.PI / 4) + Math.PI; h.rotation.x = -.25; MIR.add(h); }));
             scene.add(MIR); }
+        /* Inyección de fallas en operación (niveles intermedio y certificación): una por práctica, en una misión de manejo.
+           Respuesta esperada: detener el equipo y reportar la falla antes de 12 s; si no, falta crítica de seguridad. */
+        const FALLAS = { frenos: { ic: '🛑', n: 'Frenos con retardo', d: 'El equipo tarda en detenerse.' }, direccion: { ic: '↪️', n: 'Deriva de dirección', d: 'El volante jala hacia un lado.' }, alarma: { ic: '🚨', n: 'Alarma de sobrecalentamiento', d: 'Se encendió el testigo de temperatura del motor.' } };
+        let FALLA = { ps: 0, at: 0, kind: null, active: false, t0: 0, warned: false, done: false, beep: 0 };
+        function injectFalla(kind) { const ks = Object.keys(FALLAS); kind = FALLAS[kind] ? kind : ks[Math.floor(Math.random() * ks.length)]; Object.assign(FALLA, { kind, active: true, t0: performance.now(), warned: false, done: false });
+            let el = document.getElementById('fallaBanner'); if (!el) { el = document.createElement('div'); el.id = 'fallaBanner'; el.style.cssText = 'position:absolute;left:50%;top:56px;transform:translateX(-50%);z-index:30;background:#c62828;color:#fff;padding:10px 14px;border-radius:12px;font:700 14px Arial;box-shadow:0 4px 14px rgba(0,0,0,.35);text-align:center;max-width:92%'; (document.querySelector('.canvas-wrapper') || document.body).appendChild(el); }
+            const F = FALLAS[kind]; el.innerHTML = `${F.ic} FALLA DEL EQUIPO: ${F.n}<br><small style="font-weight:500">${F.d} Detén el equipo y repórtala.</small><br><button id="btnFalla" onclick="reportFalla()" style="margin-top:6px;background:#fff;color:#c62828;border:0;border-radius:8px;padding:6px 12px;font-weight:800;cursor:pointer">📢 Reportar falla</button>`; el.style.display = 'block'; }
+        function reportFalla() { if (!FALLA.active) return; if (simSpeed > 0.5) { toast('Primero detén el equipo por completo y después reporta'); return; } const secs = (performance.now() - FALLA.t0) / 1000; FALLA.active = false; FALLA.done = true; const el = document.getElementById('fallaBanner'); if (el) el.style.display = 'none';
+            toast(FALLA.warned ? '📢 Falla reportada. Mantenimiento revisará el equipo.' : `✅ Bien: detuviste y reportaste la falla en ${secs.toFixed(0)} s. Mantenimiento la atiende.`); try { window._fallaLog = (window._fallaLog || []).concat([{ kind: FALLA.kind, secs: +secs.toFixed(1), aTiempo: !FALLA.warned }]); } catch (e) { } }
+        function fallaTick(now) { if (FALLA.ps !== practiceStart) { FALLA = { ps: practiceStart, at: 0, kind: null, active: false, t0: 0, warned: false, done: false, beep: 0 }; const el = document.getElementById('fallaBanner'); if (el) el.style.display = 'none'; }
+            const a = ACTS[actIdx]; if (!FALLA.done && !FALLA.active && nivel() !== 'principiante' && a && a.type !== 'checklist' && actIdx >= 1) { if (!FALLA.at) FALLA.at = now + 40000 + Math.random() * 50000; else if (now > FALLA.at && simSpeed > 1) injectFalla(); }
+            if (!FALLA.active) return; if (now - FALLA.beep > 1200) { FALLA.beep = now; try { hornSound([880], .12, .25); } catch (e) { } }
+            if (!FALLA.warned && now - FALLA.t0 > 12000) { FALLA.warned = true; registerFault('fallaNoReportada'); } }
         function nivel() { const el = document.getElementById('rNivel'); let v = el && el.value; if (!v) { try { v = localStorage.getItem('dicka_nivel'); } catch (e) { } } return v || 'intermedio'; }
         const TRACK = { act: -1, pts: [], marks: [], nf: 0, acc: 0, t0: 0, late: false };
         function mediaRules(dtS) { if (!forklift) return; const now = performance.now(), a = ACTS[actIdx]; const lv = nivel();
@@ -3515,14 +3529,14 @@
 
             // Curva suave del joystick (zona muerta + respuesta cuadrática) e inercia real
             const dz = 0.15; const shape = v => Math.abs(v) < dz ? 0 : Math.sign(v) * Math.pow((Math.abs(v) - dz) / (1 - dz), 1.6);
-            fwd = shape(fwd); turn = shape(turn); fwd = safeGate(fwd);
+            fwd = shape(fwd); turn = shape(turn); fwd = safeGate(fwd); if (FALLA.active && FALLA.kind === 'direccion' && Math.abs(velKmh || 0) > 0.5) turn = Math.max(-1, Math.min(1, turn + 0.22));
             const spd = spec(); const maxV = Math.min(spd.maxSpeed, fwd >= 0 ? SIM_CFG.limitFwd : SIM_CFG.limitRev) * (hasLoad ? 0.85 : 1) * (mastM() > 1.5 ? 0.35 : 1);   // gobernador: nunca supera el límite configurado
             const targetV = fwd * maxV;                       // km/h con signo
             if (velKmh === undefined) velKmh = 0;
             const nowT = performance.now(); const dtS = Math.min(0.05, (nowT - (lastT || nowT)) / 1000) || 1/60; lastT = nowT; const k = dtS * 60;
-            velKmh += (targetV - velKmh) * Math.min(1, (Math.abs(targetV) > Math.abs(velKmh) ? 0.035 : 0.07) * k);   // acelera despacio, frena más rápido
+            velKmh += (targetV - velKmh) * Math.min(1, (Math.abs(targetV) > Math.abs(velKmh) ? 0.035 : (FALLA.active && FALLA.kind === 'frenos' ? 0.012 : 0.07)) * k);   // acelera despacio, frena más rápido
             if (Math.abs(velKmh) < 0.05 && fwd === 0) velKmh = 0;
-            safeRules(dtS); try { mediaRules(dtS); } catch (e) { }
+            safeRules(dtS); try { mediaRules(dtS); } catch (e) { } try { fallaTick(performance.now()); } catch (e) { }
             simSpeed = Math.abs(velKmh);
             const throttle = Math.sign(velKmh) * Math.min(100, simSpeed / maxV * 100 + (simSpeed > 0.1 ? 6 : 0));
             const steering = turn * 100;

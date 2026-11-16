@@ -132,6 +132,13 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
         const r = { ok: !!el && /Choques\s*1 falta/.test(t) && /Manejo de carga\s*1 falta/.test(t) && /Claxon y peatones\s*✓/.test(t) && /Claxon usado: 2/.test(t) && /curva: 7\.4/.test(t) && /\b55\b/.test(t), t: t.replace(/\s+/g, ' ').slice(0, 160) };
         const h = JSON.parse(localStorage.getItem('dicka_practicas') || '[]').pop(); r.saved = !!(h && h.seguridad && h.seguridad.honks === 2); document.getElementById('summary').classList.remove('show'); resetPractice(); return r; } catch (e) { return { ok: false, t: e.message }; } });
     ok('Montacargas', 'métricas de seguridad en el resumen (choques, curva, carga, claxon)', m.ok && m.saved, m.t); }
+  // Montacargas: inyección de fallas (frenos, dirección, alarma) — reportar detenido a tiempo es correcto; no reportar es falta
+  { const r = await p.evaluate(() => { try { resetPractice(); fallaTick(performance.now()); const out = {};
+        injectFalla('frenos'); const bn = document.getElementById('fallaBanner'); out.banner = !!bn && bn.style.display !== 'none' && /Frenos con retardo/.test(bn.innerText);
+        simSpeed = 5; reportFalla(); out.bloqueaEnMovimiento = FALLA.active === true; simSpeed = 0; velKmh = 0; reportFalla(); out.reportada = !FALLA.active && bn.style.display === 'none' && window._fallaLog.slice(-1)[0].aTiempo === true;
+        const n = faultLog.length; injectFalla('direccion'); FALLA.t0 = performance.now() - 13000; fallaTick(performance.now()); out.falta = faultLog.slice(n).some(f => f.code === 'fallaNoReportada');
+        reportFalla(); injectFalla('alarma'); out.alarma = /sobrecalentamiento/.test(document.getElementById('fallaBanner').innerText); reportFalla(); resetPractice(); return out; } catch (e) { return { err: e.message }; } });
+    ok('Montacargas', 'inyección de fallas: aviso, reporte detenido y falta si no se reporta', r.banner && r.bloqueaEnMovimiento && r.reportada && r.falta && r.alarma, JSON.stringify(r)); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
