@@ -783,6 +783,18 @@ function setupJoystick(zoneId, knobId, target) {
             zone.addEventListener('lostpointercapture', reset);
         }
 
+/* Métricas de seguridad de la práctica: claxon usado, velocidad máxima y velocidad máxima en curva */
+var SAFEM = { honks: 0, maxSpeed: 0, maxCurve: 0 };
+const SAFE_CATS = [
+  ['💥', 'Choques', ['colision', 'golpePallet', 'atropello', 'coleo']],
+  ['🏎️', 'Velocidad y curvas', ['velocidad', 'retroceso', 'giroBrusco', 'volcadura']],
+  ['📦', 'Manejo de carga', ['caidaCarga', 'cargaAlta', 'horqAlta', 'horquillasBajas', 'extendido', 'liberacionInsegura', 'elevacionInestable', 'apoyoMal', 'sueltaFuera', 'alturaMal', 'agarreAlto', 'presionInsuficiente', 'presionExcesiva', 'clampDescentrado']],
+  ['📯', 'Claxon y peatones', ['sinClaxon', 'peatonal', 'noAlto', 'cruceSinPrecaucion']]];
+function safetyReportHTML() { const cnt = c => faultLog.filter(f => c.includes(f.code)).length, idx = Math.max(0, Math.round(100 - faultLog.reduce((a, f) => a + f.pts, 0))), col = idx >= 85 ? '#2e9e5b' : idx >= 60 ? '#f5b800' : '#c62828';
+  const lim = (typeof SIM_CFG !== 'undefined' && SIM_CFG.limitFwd) || 0;
+  return `<div class="safe-report" id="safeReport" style="margin-top:10px;background:#f4f6fb;border-radius:12px;padding:12px;text-align:left"><b>🛡️ Métricas de seguridad</b><div style="display:flex;align-items:center;gap:10px;margin:8px 0"><div style="font:800 28px Arial;color:${col}">${idx}</div><div style="font-size:13px;color:#555">Índice de seguridad (100 − puntos de falta)</div></div>`
+    + SAFE_CATS.map(([ic, n, codes]) => { const k = cnt(codes); return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e3e6ef;font-size:14px"><span>${ic} ${n}</span><b style="color:${k ? '#c62828' : '#2e9e5b'}">${k ? k + ' falta' + (k > 1 ? 's' : '') : '✓ sin faltas'}</b></div>`; }).join('')
+    + `<div style="font-size:13px;color:#555;margin-top:8px">📯 Claxon usado: <b>${SAFEM.honks}</b> ${SAFEM.honks === 1 ? 'vez' : 'veces'} · 🚀 Vel. máxima: <b>${SAFEM.maxSpeed.toFixed(1)} km/h</b>${lim ? ` (límite ${lim})` : ''} · ↪️ Vel. máx. en curva: <b>${SAFEM.maxCurve.toFixed(1)} km/h</b>${SAFEM.maxCurve > 6 ? ' ⚠️ reduce al girar' : ''}</div></div>`; }
 function registerFault(code) {
             if (practiceDone) return;
             const now = Date.now();
@@ -817,6 +829,7 @@ function toggleLog() { document.getElementById('faultLog').classList.toggle('ope
 function checkFaults(fwd, turn, mastHeightM, reachM) {
             if (practiceDone) return;
             const moving = simSpeed > 0.5;
+            if (simSpeed > SAFEM.maxSpeed) SAFEM.maxSpeed = simSpeed; if (moving && Math.abs(turn) > 0.5 && simSpeed > SAFEM.maxCurve) SAFEM.maxCurve = simSpeed;
             const speedKmh = simSpeed;
             if (moving && velKmh > 0 && speedKmh > SIM_CFG.limitFwd + 0.5) registerFault('velocidad');
             if (moving && velKmh < 0 && speedKmh > SIM_CFG.limitRev + 0.5) registerFault('retroceso');
@@ -840,11 +853,11 @@ function finishPractice() {
             document.getElementById('sumStats').innerHTML = `⏱️ Tiempo total: <b>${fmtT(t)}</b><br>✅ Actividades cumplidas (≥80%): <b>${done.filter(r => r.ok).length}/${ACTS.length}</b><br>⚠️ Errores: <b>${faultLog.length}</b> (−${penal} pts)<br>💥 Colisiones: <b>${faultLog.filter(f => f.code === 'colision').length}</b><br>Criterio: cumplimiento ≥80% y 0 colisiones`;
             document.getElementById('sumActs').innerHTML = '<b>Cumplimiento por actividad:</b>' + ACTS.map((a, i) => { const r = results[i]; return `<div><span>${a.icon} ${i + 1}. ${a.name}</span><b class="${r && r.ok ? 'ok' : 'bad'}">${r ? r.score + '% · ' + fmtT(r.secs) + (r.faults ? ' · ' + r.faults + ' err' : '') : '—'}</b></div>`; }).join('');
             const byType = {}; faultLog.forEach(f => byType[f.label] = (byType[f.label] || 0) + 1);
-            document.getElementById('sumErrors').innerHTML = faultLog.length ? '<b>Detalle de errores:</b><br>' + Object.entries(byType).map(([k, v]) => `• ${k} ×${v}`).join('<br>') : '<b>🎉 Práctica sin errores</b>';
+            document.getElementById('sumErrors').innerHTML = (faultLog.length ? '<b>Detalle de errores:</b><br>' + Object.entries(byType).map(([k, v]) => `• ${k} ×${v}`).join('<br>') : '<b>🎉 Práctica sin errores</b>'); { const se = document.getElementById('sumErrors'), old = document.getElementById('safeReport'); if (old) old.remove(); if (se) se.insertAdjacentHTML('beforebegin', safetyReportHTML()); }
             document.getElementById('summary').classList.add('show');
             try {
                 const hist = JSON.parse(localStorage.getItem('dicka_practicas') || '[]');
-                hist.push({ usuario: currentUser && currentUser.user, nombre: currentUser && currentUser.name, num: currentUser.num, puesto: currentUser.puesto, area: currentUser.area, almacen: currentUser && currentUser.wh, equipo: 'Raymond ' + spec().code, fecha: new Date().toISOString(), score: final, tiempo: t, errores: faultLog, actividades: results, aprobado: ok });
+                hist.push({ seguridad: { honks: SAFEM.honks, velMax: +SAFEM.maxSpeed.toFixed(1), velMaxCurva: +SAFEM.maxCurve.toFixed(1) }, usuario: currentUser && currentUser.user, nombre: currentUser && currentUser.name, num: currentUser.num, puesto: currentUser.puesto, area: currentUser.area, almacen: currentUser && currentUser.wh, equipo: 'Raymond ' + spec().code, fecha: new Date().toISOString(), score: final, tiempo: t, errores: faultLog, actividades: results, aprobado: ok });
                 localStorage.setItem('dicka_practicas', JSON.stringify(hist));
             } catch (e) {}
             window._lastPractice = { final, t, ok, byType, results: results.slice() };
@@ -860,7 +873,7 @@ function copyPractice() {
 
 function resetPractice() {
             velKmh = 0; simSpeed = 0; if (document.getElementById('needle')) updateSpeedo(0, spec().maxSpeed);
-            faultLog = []; faultCooldown = {}; practiceStart = Date.now(); practiceDone = false;
+            faultLog = []; faultCooldown = {}; practiceStart = Date.now(); practiceDone = false; SAFEM = { honks: 0, maxSpeed: 0, maxCurve: 0 };
             simScore = 0; simSafety = 100; simCollisions = 0; hasLoad = false; missionStep = 1; reachOut = false;
             document.getElementById('reachLbl').textContent = 'EXTENDER';
             ['mastHeight', 'reach1', 'reach2'].forEach(id => document.getElementById(id).value = 0);
@@ -1507,7 +1520,7 @@ function hornSound(freqs, dur, vol, ctx) { try { ctx = ctx || audioCtx(); const 
 
 function beep(freq, dur, vol) { hornSound([freq, freq * 1.26], dur, vol || .35); }
 
-function honk() { if (practiceDone) return; lastHonk = performance.now(); hornSound([415], .42, .6); setTimeout(() => hornSound([415], .3, .55), 520);
+function honk() { if (practiceDone) return; SAFEM.honks++; lastHonk = performance.now(); hornSound([415], .42, .6); setTimeout(() => hornSound([415], .3, .55), 520);
             const w = document.querySelector('.canvas-wrapper'); const r = document.createElement('div'); r.className = 'horn-ring'; w.appendChild(r); setTimeout(() => r.remove(), 800);
             const near = NPC.forks.filter(f => Math.hypot(f.x - forkPosition.x, f.z - forkPosition.z) < 14).length + NPC.peds.filter(p => Math.hypot(p.x - forkPosition.x, p.z - forkPosition.z) < 12).length;
             if (!near) npcReply('📣 Claxon · nadie cerca'); }
@@ -1767,7 +1780,7 @@ const LOTO = { step: 0, tag: null };
 function lotoReset() { LOTO.step = 0; lotoTag(false); document.querySelectorAll('#lotoSteps button').forEach(b => { b.disabled = false; b.style.background = '#1D2586'; }); const r = document.getElementById('lotoRelease'); if (r) r.disabled = true; }
 function lotoStep(n, btn) { if (n !== LOTO.step + 1) { if (typeof FAULTS !== 'undefined' && FAULTS.lotoFueraOrden) registerFault('lotoFueraOrden'); toast('⚠️ Orden correcto: llave fuera → candado → etiqueta → reporte'); return; }
   LOTO.step = n; btn.disabled = true; btn.style.background = '#2e9e5b'; btn.textContent = '✔ ' + btn.textContent.replace(/^\d · /, '');
-  if (n === 1 && typeof SAFE !== 'undefined') { SAFE.keyOn = false; if (typeof safeUi === 'function') safeUi(); }
+  if (n === 1 && typeof SAFEM !== 'undefined') { SAFEM.keyOn = false; if (typeof safeUi === 'function') safeUi(); }
   if (n === 3) lotoTag(true);
   if (n === 4) { toast('📞 Falla reportada a mantenimiento · equipo bloqueado'); const r = document.getElementById('lotoRelease'); if (r) r.disabled = false; } }
 function lotoTag(on) { if (!on) { if (LOTO.tag && LOTO.tag.parent) LOTO.tag.parent.remove(LOTO.tag); LOTO.tag = null; return; } if (LOTO.tag || typeof forklift === 'undefined' || !forklift) return;

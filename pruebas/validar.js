@@ -127,6 +127,11 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       for (let i = 0; i < 80 && document.getElementById('qtimer'); i++) await w(200); return !document.getElementById('report').classList.contains('hidden') && !document.getElementById('qtimer') ? '' : 'no cerró al terminar el tiempo'; });
     ok('Dojo de Mando', 'práctica rápida de 5 min con cronómetro y cierre automático', !r, r);
     ok('Dojo de Mando', 'práctica rápida sin errores', !e.length, e[0] || ''); await q.close(); }
+  // Montacargas: métricas de seguridad (choques, velocidad en curva, carga, claxon) en el resumen final
+  { const m = await p.evaluate(() => { try { resetPractice(); honk(); honk(); SAFEM.maxSpeed = 9.2; SAFEM.maxCurve = 7.4; registerFault('colision'); registerFault('caidaCarga'); finishPractice(); const el = document.getElementById('safeReport'), t = el ? el.innerText : '';
+        const r = { ok: !!el && /Choques\s*1 falta/.test(t) && /Manejo de carga\s*1 falta/.test(t) && /Claxon y peatones\s*✓/.test(t) && /Claxon usado: 2/.test(t) && /curva: 7\.4/.test(t) && /\b55\b/.test(t), t: t.replace(/\s+/g, ' ').slice(0, 160) };
+        const h = JSON.parse(localStorage.getItem('dicka_practicas') || '[]').pop(); r.saved = !!(h && h.seguridad && h.seguridad.honks === 2); document.getElementById('summary').classList.remove('show'); resetPractice(); return r; } catch (e) { return { ok: false, t: e.message }; } });
+    ok('Montacargas', 'métricas de seguridad en el resumen (choques, curva, carga, claxon)', m.ok && m.saved, m.t); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
