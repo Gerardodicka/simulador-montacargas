@@ -113,6 +113,13 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
         bt.click(); await w(1500); return document.getElementById('talk').innerText.includes(S.open.slice(0, 25)) ? '' : 'no arranca la plática'; }, [pu, id]); if (r) bad.push(id + ': ' + r); await q.close(); }
     ok('Dojo de Mando', '5 casos nuevos de logística en su nivel y arrancan', !bad.length, bad.join(' · '));
     ok('Dojo de Mando', 'casos nuevos sin errores', !e.length, e[0] || ''); }
+  // Dojo de Mando: "Repite lo que fallaste" ofrece reintento en el criterio más bajo, muestra la pista y compara antes/después
+  { const q = await b.newPage({ viewport: { width: 1000, height: 700 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000); let R = { b: null, tip: null, res: null };
+    try { R.b = await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = 'Supervisor de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await w(400); document.getElementById('sc_chofer').click(); await w(1200); AI.off = true; CONV.push({ quien: 'Líder', texto: 'Gracias por esperar. Le pido calma.' }); await endPractice(); const b = document.getElementById('retryFocus'); return b ? b.textContent : null; });
+      if (R.b) { await Promise.all([q.waitForNavigation(), q.click('#retryFocus')]); await q.waitForTimeout(2000); R.tip = await q.evaluate(() => !!document.getElementById('focusTip'));
+        R.res = await q.evaluate(async () => { AI.off = true; CONV.push({ quien: 'Líder', texto: '¿Qué pasó en el camino? ¿Cómo podemos acomodarlo?' }); await endPractice(); const f = document.querySelector('.focusres'); return f ? f.innerText : null; }); } } catch (x) { e.push(x.message); }
+    ok('Dojo de Mando', 'repite lo que fallaste: botón, pista y comparación', !!(R.b && R.tip && R.res && /→ ahora/.test(R.res)), R.res ? R.res.split('\n').pop() : JSON.stringify(R));
+    ok('Dojo de Mando', 'reintento enfocado sin errores', !e.length, e[0] || ''); await q.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
