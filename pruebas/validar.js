@@ -139,6 +139,15 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
         const n = faultLog.length; injectFalla('direccion'); FALLA.t0 = performance.now() - 13000; fallaTick(performance.now()); out.falta = faultLog.slice(n).some(f => f.code === 'fallaNoReportada');
         reportFalla(); injectFalla('alarma'); out.alarma = /sobrecalentamiento/.test(document.getElementById('fallaBanner').innerText); reportFalla(); resetPractice(); return out; } catch (e) { return { err: e.message }; } });
     ok('Montacargas', 'inyección de fallas: aviso, reporte detenido y falta si no se reporta', r.banner && r.bloqueaEnMovimiento && r.reportada && r.falta && r.alarma, JSON.stringify(r)); }
+  // Recepción y decantado: la ruta correcta da 120/120 y aprueba; recibir todo completo y dejarlo en piso no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/recepcion-decantado.html')); await q.waitForTimeout(400);
+      await q.fill('#pname', 'Prueba Recepción'); await q.click('#startBtn'); await q.waitForTimeout(200);
+      const r = await q.evaluate(async good => { const w = ms => new Promise(r => setTimeout(r, ms)); const kinds = new Set(P.map(x => x.k)); for (let i = 0; i < 8; i++) { const x = P[idx]; if (good) { document.querySelector(`[data-v="${x.dec}"]`).click(); await w(30); if (x.dec === 'rechazar') document.querySelector(`[data-m="${x.motivo}"]`).click(); else document.querySelector(`[data-z="${x.zona}"]`).click(); } else { document.querySelector('[data-v="completo"]').click(); await w(30); document.querySelector('[data-z="piso"]').click(); } await w(500); }
+        return { score, ok: score >= PASS, kinds: kinds.size, saved: JSON.parse(localStorage.getItem('dicka_console_results') || '[]').some(x => x.juego === 'Recepción y Decantado') }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Recepción y decantado', 'ruta correcta 120/120 aprueba y guarda el resultado', g.r.score === 120 && g.r.ok && g.r.saved && g.r.kinds >= 6, JSON.stringify(g.r));
+    ok('Recepción y decantado', 'recibir todo y dejar en piso no aprueba', !m.r.ok, m.r.score + '/120');
+    ok('Recepción y decantado', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

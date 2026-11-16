@@ -26,7 +26,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 4 | Dojo de Mando | Usabilidad | Práctica rápida de 5 minutos en celular | Yoodli | ✅ |
 | 5 | Montacargas | Medición | Métricas de seguridad: choques, velocidad en curva, carga caída, claxon, con reporte | Simuladores de montacargas comerciales | ✅ |
 | 6 | Montacargas | Funcionalidad | Inyección de fallas: frenos con retardo, deriva de dirección, alarma | Simuladores de montacargas comerciales | ✅ |
-| 7 | Nuevo simulador | Nuevo simulador | Recepción y decantado: verificar SKU, cantidades y daños antes de ubicar | Simuladores de procesos de almacén | ⬜ |
+| 7 | Nuevo simulador | Nuevo simulador | Recepción y decantado: verificar SKU, cantidades y daños antes de ubicar | Simuladores de procesos de almacén | ✅ |
 | 8 | Nuevo simulador | Nuevo simulador | Carga de tráiler: acomodo por peso y secuencia de entrega | Simuladores de carga | ⬜ |
 | 9 | Nuevo simulador | Nuevo simulador | Patio y andenes: asignar citas y andenes, evitar colas | Simuladores de yard management | ⬜ |
 | 10 | Dojo de Mando | Funcionalidad | Editor de situaciones (formulario → JSON) para RH/Operaciones | — | ⬜ |
@@ -57,3 +57,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-16 02:39 UTC | 4 | Práctica rápida de 5 minutos: situación al azar (prioriza no practicadas), cronómetro y cierre automático (v18.9) | 17/17 IA · validar.js 103/103 (+2 nuevas; pruebas del Dojo aisladas en contexto limpio para evitar falsos negativos) · consola limpia · 1280/390 px revisadas · privacidad OK | #119 | ✅ |
 | 2026-11-16 04:39 UTC | 5 | Montacargas: tablero de métricas de seguridad en el resumen (índice, choques, velocidad y curvas, carga, claxon y peatones, usos de claxon, vel. máx. y en curva; se guarda en el historial) (v19.0) | 17/17 IA · validar.js 104/104 (+1 nueva) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #120 | ✅ |
 | 2026-11-16 06:40 UTC | 6 | Montacargas: inyección de fallas (frenos con retardo, deriva de dirección, alarma) en niveles intermedio y certificación; detener y reportar en ≤12 s o falta de 15 pts (v19.1) | 17/17 IA · validar.js 105/105 (+1 nueva) · consola limpia · 1280/390 px revisadas · privacidad OK | #121 | ✅ |
+| 2026-11-16 08:39 UTC | 7 | Nuevo simulador Recepción y Decantado: 8 tarimas contra ASN (SKU, cantidad, caducidad, daño), recibir/diferencia/rechazar con motivo y ubicación seco/frío; en el catálogo (v19.2) | 17/17 IA · validar.js 111/111 (+3 nuevas y carga en escritorio/celular) · consola limpia · 1280/390 px revisadas · privacidad OK (mismo esquema de resultados que los demás cursos) | #121 | ✅ |
