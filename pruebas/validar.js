@@ -159,6 +159,18 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Patio y andenes', 'sin asignar andenes no aprueba', !idle.r.ok && idle.r.end, idle.r.score + '/100');
     ok('Patio y andenes', 'atender sin cita antes que con cita penaliza', pr.r.pen === 5, JSON.stringify(pr.r));
     ok('Patio y andenes', 'sin errores de ejecución', !g.e.length && !idle.e.length && !pr.e.length, g.e[0] || idle.e[0] || pr.e[0] || ''); }
+  // Editor de situaciones: valida, guarda en el equipo y la situación aparece en el Dojo (etiquetada) y arranca; datos inválidos se ignoran
+  { const ctx = await b.newContext({ viewport: { width: 1000, height: 800 } }), q = await ctx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); let r = {};
+    try { await q.goto(url('juegos/dojo-editor.html')); await q.waitForTimeout(300); await q.click('#saveBtn'); r.valida = /título/i.test(await q.textContent('#err'));
+      await q.selectOption('#nivel', 'jefe'); await q.fill('#t', 'Montacarguista sin cinturón'); await q.fill('#name', 'Marco'); await q.fill('#role', 'Operador');
+      await q.fill('#intro', 'Turno nocturno. En la ronda viste a Marco operando sin cinturón por tercera vez esta semana.'); await q.fill('#open', 'Jefe, ya sé a qué viene, es nomás un ratito.'); await q.fill('#goal', 'Que se comprometa a usar el cinturón siempre y acuerden seguimiento.'); await q.fill('#fb', 'Siempre lo he hecho así.\n¿Por qué nomás a mí?\nEstá bien.');
+      await q.click('#saveBtn'); r.guarda = /Guardada/.test(await q.textContent('#err'));
+      await q.evaluate(() => { const L = JSON.parse(localStorage.getItem('dicka_dojo_custom')); L.push({ nivel: 'jefe', id: 'x"><img src=x onerror=alert(1)>', t: 'Mala', intro: 'x'.repeat(50), open: 'hola hola', goal: 'objetivo objetivo objetivo' }); localStorage.setItem('dicka_dojo_custom', JSON.stringify(L)); });
+      await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000);
+      Object.assign(r, await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = 'Jefe de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await w(500);
+        const bt = document.getElementById('sc_cx_montacarguista_sin_cinturon'); const o = { menu: !!bt && /Personalizada/.test(bt.innerText), invalida: SCEN.jefe.filter(x => x.custom).length === 1 }; if (bt) { bt.click(); await w(1500); o.arranca = document.getElementById('talk').innerText.includes('ya sé a qué viene'); } return o; })); } catch (x) { e.push(x.message); }
+    ok('Dojo de Mando', 'editor de situaciones: valida, guarda y aparece en el Dojo', r.valida && r.guarda && r.menu && r.arranca && r.invalida, JSON.stringify(r));
+    ok('Dojo de Mando', 'editor sin errores', !e.length, e[0] || ''); await ctx.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
