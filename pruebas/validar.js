@@ -171,6 +171,16 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
         const bt = document.getElementById('sc_cx_montacarguista_sin_cinturon'); const o = { menu: !!bt && /Personalizada/.test(bt.innerText), invalida: SCEN.jefe.filter(x => x.custom).length === 1 }; if (bt) { bt.click(); await w(1500); o.arranca = document.getElementById('talk').innerText.includes('ya sé a qué viene'); } return o; })); } catch (x) { e.push(x.message); }
     ok('Dojo de Mando', 'editor de situaciones: valida, guarda y aparece en el Dojo', r.valida && r.guarda && r.menu && r.arranca && r.invalida, JSON.stringify(r));
     ok('Dojo de Mando', 'editor sin errores', !e.length, e[0] || ''); await ctx.close(); }
+  // Dojo de Mando: PDF real (archivo) para plan de desarrollo y guía del líder; canvas alto se corta en varias páginas
+  { const ctx = await b.newContext({ acceptDownloads: true, viewport: { width: 1000, height: 800 } }), q = await ctx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); let r = {};
+    try { await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000);
+      r = await q.evaluate(async () => { const txt = async bl => new TextDecoder('latin1').decode(new Uint8Array(await bl.arrayBuffer())); const c = document.createElement('canvas'); c.width = 1240; c.height = 4000; const g = c.getContext('2d'); g.fillStyle = '#123'; g.fillRect(0, 0, 1240, 4000);
+        const t = await txt(canvasToPDF(c)), pages = (t.match(/\/Type \/Page /g) || []).length; return { pdf: t.startsWith('%PDF-1.4'), eof: /%%EOF$/.test(t), pages, xref: /startxref\n\d+\n%%EOF$/.test(t) }; });
+      await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = 'Supervisor de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await w(400); document.getElementById('sc_chofer').click(); await w(1200); AI.off = true; CONV.push({ quien: 'Líder', texto: 'Gracias. ¿Qué pasó? Tú te encargas de registrar la cita; lo revisamos el viernes.' }); await endPractice(); });
+      const dl = async fn => { const [d] = await Promise.all([q.waitForEvent('download', { timeout: 15000 }), q.evaluate(fn)]); return d.suggestedFilename(); };
+      r.plan = await dl(() => planPDF()); r.guia = await dl(() => leaderGuide('pdf')); } catch (x) { e.push(x.message); }
+    ok('Dojo de Mando', 'PDF real: plan y guía del líder se descargan como .pdf; varias páginas', r.pdf && r.eof && r.xref && r.pages === 3 && /\.pdf$/.test(r.plan || '') && /\.pdf$/.test(r.guia || ''), JSON.stringify(r));
+    ok('Dojo de Mando', 'PDF sin errores', !e.length, e[0] || ''); await ctx.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

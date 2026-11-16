@@ -30,7 +30,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 8 | Nuevo simulador | Nuevo simulador | Carga de tráiler: acomodo por peso y secuencia de entrega | Simuladores de carga | ➖ ya cubierto por "Carga de Unidades" |
 | 9 | Nuevo simulador | Nuevo simulador | Patio y andenes: asignar citas y andenes, evitar colas | Simuladores de yard management | ✅ |
 | 10 | Dojo de Mando | Funcionalidad | Editor de situaciones (formulario → JSON) para RH/Operaciones | — | ✅ |
-| 11 | Todos | Usabilidad | Guía para el líder y plan en PDF real | — | ⬜ |
+| 11 | Todos | Usabilidad | Guía para el líder y plan en PDF real | — | ✅ |
 | 12 | Todos | Usabilidad | Modo accesible: texto grande, alto contraste, subtítulos | Attensi | ⬜ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
@@ -61,3 +61,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-16 10:40 UTC | 8 | Carga de tráiler: no se duplica, ya existe "Carga de Unidades" (secuencia de ruta, balance, peso) | — | — | ➖ |
 | 2026-11-16 10:40 UTC | 9 | Nuevo simulador Patio y Andenes: 12 unidades en turno de 4 h, 6 andenes (2 refrigerados), prioridad por cita, cadena de frío y colas; en el catálogo (v19.3) | 17/17 IA · validar.js 118/118 (+4 nuevas y carga en escritorio/celular) · consola limpia · 1280/390 px revisadas · privacidad OK | #121 | ✅ |
 | 2026-11-16 12:40 UTC | 10 | Editor de situaciones del Dojo (juegos/dojo-editor.html): formulario con vista previa, validación, guardar en el equipo, descargar/importar JSON; las situaciones aparecen en el menú del nivel como 🛠️ Personalizada (v19.4) | 17/17 IA · validar.js 123/123 (+2 nuevas, incluye datos inválidos/inyección ignorados) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #121 | ✅ |
+| 2026-11-16 14:39 UTC | 11 | PDF real: plan de desarrollo y guía del líder se descargan como archivo .pdf A4 (varias páginas si es necesario), sin ventana de impresión ni librerías; guía también en JPG (v19.5) | 17/17 IA · validar.js 125/125 (+2 nuevas) · PDF validado con pdfinfo y renderizado con pdftoppm · consola limpia · privacidad OK (se genera en el navegador) | #121 | ✅ |
