@@ -55,4 +55,5 @@ function render() { const R0 = ROWS.filter(r => (!$('fa').value || r.almacen ===
   $('par').innerHTML = `<table><tr><th>Participante</th><th>No. emp.</th><th>Nivel</th><th>Almacén</th><th>Pláticas</th><th>Promedio</th><th>Cambio vs. línea base</th><th>% habla</th><th>Objetivo más débil</th><th>Última</th></tr>${P.join('')}</table>`; }
 $('f').onchange = e => load([...e.target.files]); ['fa', 'fn'].forEach(i => $(i).onchange = render);
 const d = $('drop'); d.ondragover = e => { e.preventDefault(); d.style.borderColor = '#1D2586'; }; d.ondragleave = () => d.style.borderColor = ''; d.ondrop = e => { e.preventDefault(); d.style.borderColor = ''; load([...e.dataTransfer.files]); };
-</script></body></html>
+</script><script src="js/accesible.js"></script>
+</body></html>

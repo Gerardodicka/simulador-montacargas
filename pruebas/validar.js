@@ -181,6 +181,16 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       r.plan = await dl(() => planPDF()); r.guia = await dl(() => leaderGuide('pdf')); } catch (x) { e.push(x.message); }
     ok('Dojo de Mando', 'PDF real: plan y guía del líder se descargan como .pdf; varias páginas', r.pdf && r.eof && r.xref && r.pages === 3 && /\.pdf$/.test(r.plan || '') && /\.pdf$/.test(r.guia || ''), JSON.stringify(r));
     ok('Dojo de Mando', 'PDF sin errores', !e.length, e[0] || ''); await ctx.close(); }
+  // Modo accesible (todas las páginas): botón Aa, texto grande, alto contraste, subtítulos de la voz y preferencia guardada
+  { const ctx = await b.newContext({ viewport: { width: 390, height: 844 } }); const bad = [], e = [];
+    for (const f of pages) { const q = await ctx.newPage(); q.on('pageerror', x => e.push(f + ': ' + x.message)); await q.goto(url(f)); await q.waitForTimeout(500); if (!(await q.$('#a11yBtn'))) bad.push(f); await q.close(); }
+    const q = await ctx.newPage(); await q.goto(url('juegos/recepcion-decantado.html')); await q.waitForTimeout(400); await q.click('#a11yBtn');
+    for (const k of ['big', 'hc', 'subs']) await q.check(`#a11yPanel input[data-k="${k}"]`);
+    await q.evaluate(() => window.dickaSubtitle('Prueba de subtítulo')); const r = await q.evaluate(() => ({ big: document.documentElement.classList.contains('a11y-big'), hc: document.documentElement.classList.contains('a11y-hc'), sub: getComputedStyle(document.getElementById('a11ySubs')).display === 'block', hs: document.documentElement.scrollWidth > innerWidth + 2 }));
+    await q.goto(url('juegos/conteo-ciclico.html')); await q.waitForTimeout(400); r.persiste = await q.evaluate(() => document.documentElement.classList.contains('a11y-big') && document.documentElement.classList.contains('a11y-hc'));
+    ok('Accesibilidad', 'botón Aa en todas las páginas', !bad.length, bad.join(', '));
+    ok('Accesibilidad', 'texto grande, alto contraste, subtítulos y preferencia guardada', r.big && r.hc && r.sub && !r.hs && r.persiste, JSON.stringify(r));
+    ok('Accesibilidad', 'sin errores de ejecución', !e.length, e[0] || ''); await ctx.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

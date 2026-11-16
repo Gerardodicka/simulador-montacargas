@@ -60,4 +60,5 @@ function download() { const o = read(), e = check(o); $('err').textContent = e; 
 $('imp').onchange = async ev => { let n = 0, bad = 0; for (const f of ev.target.files) { try { let d = JSON.parse(await f.text()); d = Array.isArray(d) ? d : [d]; const L = get(); d.forEach(o => { if (!o || typeof o !== 'object') { bad++; return; } o.fb = Array.isArray(o.fb) ? o.fb : []; o.t = String(o.t || ''); o.id = slug(o.t); ['intro', 'open', 'goal', 'name'].forEach(k => o[k] = String(o[k] || '')); if (!NIV[o.nivel] || check(o)) { bad++; return; } const i = L.findIndex(x => x.id === o.id); if (i >= 0) L[i] = o; else L.push(o); n++; }); put(L); } catch (e) { bad++; } }
   $('err').textContent = `${n} situación(es) importada(s)${bad ? ` · ${bad} no válida(s)` : ''}`; list(); ev.target.value = ''; };
 F.forEach(f => $(f).addEventListener('input', preview)); preview(); list();
-</script></body></html>
+</script><script src="js/accesible.js"></script>
+</body></html>
