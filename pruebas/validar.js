@@ -132,6 +132,55 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
         const r = { ok: !!el && /Choques\s*1 falta/.test(t) && /Manejo de carga\s*1 falta/.test(t) && /Claxon y peatones\s*✓/.test(t) && /Claxon usado: 2/.test(t) && /curva: 7\.4/.test(t) && /\b55\b/.test(t), t: t.replace(/\s+/g, ' ').slice(0, 160) };
         const h = JSON.parse(localStorage.getItem('dicka_practicas') || '[]').pop(); r.saved = !!(h && h.seguridad && h.seguridad.honks === 2); document.getElementById('summary').classList.remove('show'); resetPractice(); return r; } catch (e) { return { ok: false, t: e.message }; } });
     ok('Montacargas', 'métricas de seguridad en el resumen (choques, curva, carga, claxon)', m.ok && m.saved, m.t); }
+  // Montacargas: inyección de fallas (frenos, dirección, alarma) — reportar detenido a tiempo es correcto; no reportar es falta
+  { const r = await p.evaluate(() => { try { resetPractice(); fallaTick(performance.now()); const out = {};
+        injectFalla('frenos'); const bn = document.getElementById('fallaBanner'); out.banner = !!bn && bn.style.display !== 'none' && /Frenos con retardo/.test(bn.innerText);
+        simSpeed = 5; reportFalla(); out.bloqueaEnMovimiento = FALLA.active === true; simSpeed = 0; velKmh = 0; reportFalla(); out.reportada = !FALLA.active && bn.style.display === 'none' && window._fallaLog.slice(-1)[0].aTiempo === true;
+        const n = faultLog.length; injectFalla('direccion'); FALLA.t0 = performance.now() - 13000; fallaTick(performance.now()); out.falta = faultLog.slice(n).some(f => f.code === 'fallaNoReportada');
+        reportFalla(); injectFalla('alarma'); out.alarma = /sobrecalentamiento/.test(document.getElementById('fallaBanner').innerText); reportFalla(); resetPractice(); return out; } catch (e) { return { err: e.message }; } });
+    ok('Montacargas', 'inyección de fallas: aviso, reporte detenido y falta si no se reporta', r.banner && r.bloqueaEnMovimiento && r.reportada && r.falta && r.alarma, JSON.stringify(r)); }
+  // Recepción y decantado: la ruta correcta da 120/120 y aprueba; recibir todo completo y dejarlo en piso no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/recepcion-decantado.html')); await q.waitForTimeout(400);
+      await q.fill('#pname', 'Prueba Recepción'); await q.click('#startBtn'); await q.waitForTimeout(200);
+      const r = await q.evaluate(async good => { const w = ms => new Promise(r => setTimeout(r, ms)); const kinds = new Set(P.map(x => x.k)); for (let i = 0; i < 8; i++) { const x = P[idx]; if (good) { document.querySelector(`[data-v="${x.dec}"]`).click(); await w(30); if (x.dec === 'rechazar') document.querySelector(`[data-m="${x.motivo}"]`).click(); else document.querySelector(`[data-z="${x.zona}"]`).click(); } else { document.querySelector('[data-v="completo"]').click(); await w(30); document.querySelector('[data-z="piso"]').click(); } await w(500); }
+        return { score, ok: score >= PASS, kinds: kinds.size, saved: JSON.parse(localStorage.getItem('dicka_console_results') || '[]').some(x => x.juego === 'Recepción y Decantado') }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Recepción y decantado', 'ruta correcta 120/120 aprueba y guarda el resultado', g.r.score === 120 && g.r.ok && g.r.saved && g.r.kinds >= 6, JSON.stringify(g.r));
+    ok('Recepción y decantado', 'recibir todo y dejar en piso no aprueba', !m.r.ok, m.r.score + '/120');
+    ok('Recepción y decantado', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // Patio y andenes: buena coordinación aprueba; no asignar andenes no aprueba; atender sin cita antes que con cita penaliza
+  { const run = async mode => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/patio-andenes.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Patio'); await q.click('#startBtn'); await q.waitForTimeout(150);
+      const r = await q.evaluate(mode => { if (mode === 'prio') { advance(); const W = waiting(), sin = W.find(t => !t.cita), con = W.find(t => t.cita && t.temp === 'seco'); const s0 = score; if (!sin || !con) return { err: 'sin escenario' }; assign(sin.id, D.find(d => fits(sin, d) && !d.cold).n); return { pen: s0 - score }; }
+        for (let s = 0; s < SLOTS; s++) { if (mode === 'good') { const W = waiting().sort((a, b) => (b.cita - a.cita) || ((b.temp === 'frio') - (a.temp === 'frio'))); for (const t of W) { const free = D.filter(d => fits(t, d)), fw = waiting().some(x => x.temp === 'frio' && x.id !== t.id); const d = t.temp === 'frio' ? free.find(d => d.cold) : (free.find(d => !d.cold) || (!fw && free.find(d => d.cold))); if (d) assign(t.id, d.n); } } advance(); }
+        return { score, ok: score >= PASS, end: !document.getElementById('end').classList.contains('hidden') }; }, mode); await q.close(); return { r, e }; };
+    const g = await run('good'), idle = await run('idle'), pr = await run('prio');
+    ok('Patio y andenes', 'coordinación correcta aprueba', g.r.ok && g.r.end, JSON.stringify(g.r));
+    ok('Patio y andenes', 'sin asignar andenes no aprueba', !idle.r.ok && idle.r.end, idle.r.score + '/100');
+    ok('Patio y andenes', 'atender sin cita antes que con cita penaliza', pr.r.pen === 5, JSON.stringify(pr.r));
+    ok('Patio y andenes', 'sin errores de ejecución', !g.e.length && !idle.e.length && !pr.e.length, g.e[0] || idle.e[0] || pr.e[0] || ''); }
+  // Editor de situaciones: valida, guarda en el equipo y la situación aparece en el Dojo (etiquetada) y arranca; datos inválidos se ignoran
+  { const ctx = await b.newContext({ viewport: { width: 1000, height: 800 } }), q = await ctx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); let r = {};
+    try { await q.goto(url('juegos/dojo-editor.html')); await q.waitForTimeout(300); await q.click('#saveBtn'); r.valida = /título/i.test(await q.textContent('#err'));
+      await q.selectOption('#nivel', 'jefe'); await q.fill('#t', 'Montacarguista sin cinturón'); await q.fill('#name', 'Marco'); await q.fill('#role', 'Operador');
+      await q.fill('#intro', 'Turno nocturno. En la ronda viste a Marco operando sin cinturón por tercera vez esta semana.'); await q.fill('#open', 'Jefe, ya sé a qué viene, es nomás un ratito.'); await q.fill('#goal', 'Que se comprometa a usar el cinturón siempre y acuerden seguimiento.'); await q.fill('#fb', 'Siempre lo he hecho así.\n¿Por qué nomás a mí?\nEstá bien.');
+      await q.click('#saveBtn'); r.guarda = /Guardada/.test(await q.textContent('#err'));
+      await q.evaluate(() => { const L = JSON.parse(localStorage.getItem('dicka_dojo_custom')); L.push({ nivel: 'jefe', id: 'x"><img src=x onerror=alert(1)>', t: 'Mala', intro: 'x'.repeat(50), open: 'hola hola', goal: 'objetivo objetivo objetivo' }); localStorage.setItem('dicka_dojo_custom', JSON.stringify(L)); });
+      await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000);
+      Object.assign(r, await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = 'Jefe de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await w(500);
+        const bt = document.getElementById('sc_cx_montacarguista_sin_cinturon'); const o = { menu: !!bt && /Personalizada/.test(bt.innerText), invalida: SCEN.jefe.filter(x => x.custom).length === 1 }; if (bt) { bt.click(); await w(1500); o.arranca = document.getElementById('talk').innerText.includes('ya sé a qué viene'); } return o; })); } catch (x) { e.push(x.message); }
+    ok('Dojo de Mando', 'editor de situaciones: valida, guarda y aparece en el Dojo', r.valida && r.guarda && r.menu && r.arranca && r.invalida, JSON.stringify(r));
+    ok('Dojo de Mando', 'editor sin errores', !e.length, e[0] || ''); await ctx.close(); }
+  // Dojo de Mando: PDF real (archivo) para plan de desarrollo y guía del líder; canvas alto se corta en varias páginas
+  { const ctx = await b.newContext({ acceptDownloads: true, viewport: { width: 1000, height: 800 } }), q = await ctx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); let r = {};
+    try { await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000);
+      r = await q.evaluate(async () => { const txt = async bl => new TextDecoder('latin1').decode(new Uint8Array(await bl.arrayBuffer())); const c = document.createElement('canvas'); c.width = 1240; c.height = 4000; const g = c.getContext('2d'); g.fillStyle = '#123'; g.fillRect(0, 0, 1240, 4000);
+        const t = await txt(canvasToPDF(c)), pages = (t.match(/\/Type \/Page /g) || []).length; return { pdf: t.startsWith('%PDF-1.4'), eof: /%%EOF$/.test(t), pages, xref: /startxref\n\d+\n%%EOF$/.test(t) }; });
+      await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = 'Supervisor de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await w(400); document.getElementById('sc_chofer').click(); await w(1200); AI.off = true; CONV.push({ quien: 'Líder', texto: 'Gracias. ¿Qué pasó? Tú te encargas de registrar la cita; lo revisamos el viernes.' }); await endPractice(); });
+      const dl = async fn => { const [d] = await Promise.all([q.waitForEvent('download', { timeout: 15000 }), q.evaluate(fn)]); return d.suggestedFilename(); };
+      r.plan = await dl(() => planPDF()); r.guia = await dl(() => leaderGuide('pdf')); } catch (x) { e.push(x.message); }
+    ok('Dojo de Mando', 'PDF real: plan y guía del líder se descargan como .pdf; varias páginas', r.pdf && r.eof && r.xref && r.pages === 3 && /\.pdf$/.test(r.plan || '') && /\.pdf$/.test(r.guia || ''), JSON.stringify(r));
+    ok('Dojo de Mando', 'PDF sin errores', !e.length, e[0] || ''); await ctx.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

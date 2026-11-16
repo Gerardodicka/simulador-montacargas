@@ -25,12 +25,12 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 3 | Dojo de Mando | Funcionalidad | "Repite lo que fallaste": reintento enfocado en el criterio más bajo con pista previa | FLIGBY | ✅ |
 | 4 | Dojo de Mando | Usabilidad | Práctica rápida de 5 minutos en celular | Yoodli | ✅ |
 | 5 | Montacargas | Medición | Métricas de seguridad: choques, velocidad en curva, carga caída, claxon, con reporte | Simuladores de montacargas comerciales | ✅ |
-| 6 | Montacargas | Funcionalidad | Inyección de fallas: frenos con retardo, deriva de dirección, alarma | Simuladores de montacargas comerciales | ⬜ |
-| 7 | Nuevo simulador | Nuevo simulador | Recepción y decantado: verificar SKU, cantidades y daños antes de ubicar | Simuladores de procesos de almacén | ⬜ |
-| 8 | Nuevo simulador | Nuevo simulador | Carga de tráiler: acomodo por peso y secuencia de entrega | Simuladores de carga | ⬜ |
-| 9 | Nuevo simulador | Nuevo simulador | Patio y andenes: asignar citas y andenes, evitar colas | Simuladores de yard management | ⬜ |
-| 10 | Dojo de Mando | Funcionalidad | Editor de situaciones (formulario → JSON) para RH/Operaciones | — | ⬜ |
-| 11 | Todos | Usabilidad | Guía para el líder y plan en PDF real | — | ⬜ |
+| 6 | Montacargas | Funcionalidad | Inyección de fallas: frenos con retardo, deriva de dirección, alarma | Simuladores de montacargas comerciales | ✅ |
+| 7 | Nuevo simulador | Nuevo simulador | Recepción y decantado: verificar SKU, cantidades y daños antes de ubicar | Simuladores de procesos de almacén | ✅ |
+| 8 | Nuevo simulador | Nuevo simulador | Carga de tráiler: acomodo por peso y secuencia de entrega | Simuladores de carga | ➖ ya cubierto por "Carga de Unidades" |
+| 9 | Nuevo simulador | Nuevo simulador | Patio y andenes: asignar citas y andenes, evitar colas | Simuladores de yard management | ✅ |
+| 10 | Dojo de Mando | Funcionalidad | Editor de situaciones (formulario → JSON) para RH/Operaciones | — | ✅ |
+| 11 | Todos | Usabilidad | Guía para el líder y plan en PDF real | — | ✅ |
 | 12 | Todos | Usabilidad | Modo accesible: texto grande, alto contraste, subtítulos | Attensi | ⬜ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
@@ -56,3 +56,9 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-16 00:39 UTC | 3 | Repite lo que fallaste: reintento en el criterio más bajo con pista y comparación antes/después (v18.8) | 17/17 IA · validar.js 101/101 (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK (solo sessionStorage) | #118 | ✅ |
 | 2026-11-16 02:39 UTC | 4 | Práctica rápida de 5 minutos: situación al azar (prioriza no practicadas), cronómetro y cierre automático (v18.9) | 17/17 IA · validar.js 103/103 (+2 nuevas; pruebas del Dojo aisladas en contexto limpio para evitar falsos negativos) · consola limpia · 1280/390 px revisadas · privacidad OK | #119 | ✅ |
 | 2026-11-16 04:39 UTC | 5 | Montacargas: tablero de métricas de seguridad en el resumen (índice, choques, velocidad y curvas, carga, claxon y peatones, usos de claxon, vel. máx. y en curva; se guarda en el historial) (v19.0) | 17/17 IA · validar.js 104/104 (+1 nueva) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #120 | ✅ |
+| 2026-11-16 06:40 UTC | 6 | Montacargas: inyección de fallas (frenos con retardo, deriva de dirección, alarma) en niveles intermedio y certificación; detener y reportar en ≤12 s o falta de 15 pts (v19.1) | 17/17 IA · validar.js 105/105 (+1 nueva) · consola limpia · 1280/390 px revisadas · privacidad OK | #121 | ✅ |
+| 2026-11-16 08:39 UTC | 7 | Nuevo simulador Recepción y Decantado: 8 tarimas contra ASN (SKU, cantidad, caducidad, daño), recibir/diferencia/rechazar con motivo y ubicación seco/frío; en el catálogo (v19.2) | 17/17 IA · validar.js 111/111 (+3 nuevas y carga en escritorio/celular) · consola limpia · 1280/390 px revisadas · privacidad OK (mismo esquema de resultados que los demás cursos) | #121 | ✅ |
+| 2026-11-16 10:40 UTC | 8 | Carga de tráiler: no se duplica, ya existe "Carga de Unidades" (secuencia de ruta, balance, peso) | — | — | ➖ |
+| 2026-11-16 10:40 UTC | 9 | Nuevo simulador Patio y Andenes: 12 unidades en turno de 4 h, 6 andenes (2 refrigerados), prioridad por cita, cadena de frío y colas; en el catálogo (v19.3) | 17/17 IA · validar.js 118/118 (+4 nuevas y carga en escritorio/celular) · consola limpia · 1280/390 px revisadas · privacidad OK | #121 | ✅ |
+| 2026-11-16 12:40 UTC | 10 | Editor de situaciones del Dojo (juegos/dojo-editor.html): formulario con vista previa, validación, guardar en el equipo, descargar/importar JSON; las situaciones aparecen en el menú del nivel como 🛠️ Personalizada (v19.4) | 17/17 IA · validar.js 123/123 (+2 nuevas, incluye datos inválidos/inyección ignorados) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #121 | ✅ |
+| 2026-11-16 14:39 UTC | 11 | PDF real: plan de desarrollo y guía del líder se descargan como archivo .pdf A4 (varias páginas si es necesario), sin ventana de impresión ni librerías; guía también en JPG (v19.5) | 17/17 IA · validar.js 125/125 (+2 nuevas) · PDF validado con pdfinfo y renderizado con pdftoppm · consola limpia · privacidad OK (se genera en el navegador) | #121 | ✅ |
