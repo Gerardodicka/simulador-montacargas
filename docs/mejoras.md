@@ -32,6 +32,12 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 10 | Dojo de Mando | Funcionalidad | Editor de situaciones (formulario → JSON) para RH/Operaciones | — | ✅ |
 | 11 | Todos | Usabilidad | Guía para el líder y plan en PDF real | — | ✅ |
 | 12 | Todos | Usabilidad | Modo accesible: texto grande, alto contraste, subtítulos | Attensi | ✅ |
+| 13 | Portal | Usabilidad | Insignias y racha diaria por colaborador ("Mis logros") | Gartner 2028 (gamificación), Attensi | ✅ |
+| 14 | Dojo de Mando | Funcionalidad | Repaso espaciado: recordatorio para repetir la situación más débil a los 7 días | Microaprendizaje con repetición espaciada | ⬜ |
+| 15 | Nuevo simulador | Nuevo simulador | Métodos de surtido: discreto vs. por lotes vs. por zonas, con tiempo y recorrido | WareMover (2024) | ⬜ |
+| 16 | Recepción y Decantado | Usabilidad | Escáner RF simulado: instrucciones y captura por "pistola" | WarehouseGame Training (Mecalux) | ⬜ |
+| 17 | Montacargas | Funcionalidad | Diagnóstico inicial que ajusta la dificultad sugerida | WarehouseGame Training (Mecalux) | ⬜ |
+| 18 | Portal | Medición | Tabla de líderes por almacén (en el equipo, opcional) | Gartner / Amazon, DHL | ⬜ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -63,3 +69,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-16 12:40 UTC | 10 | Editor de situaciones del Dojo (juegos/dojo-editor.html): formulario con vista previa, validación, guardar en el equipo, descargar/importar JSON; las situaciones aparecen en el menú del nivel como 🛠️ Personalizada (v19.4) | 17/17 IA · validar.js 123/123 (+2 nuevas, incluye datos inválidos/inyección ignorados) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #121 | ✅ |
 | 2026-11-16 14:39 UTC | 11 | PDF real: plan de desarrollo y guía del líder se descargan como archivo .pdf A4 (varias páginas si es necesario), sin ventana de impresión ni librerías; guía también en JPG (v19.5) | 17/17 IA · validar.js 125/125 (+2 nuevas) · PDF validado con pdfinfo y renderizado con pdftoppm · consola limpia · privacidad OK (se genera en el navegador) | #121 | ✅ |
 | 2026-11-16 16:39 UTC | 12 | Modo accesible en las 15 páginas (botón Aa): texto grande, alto contraste y subtítulos de todo lo narrado en voz; preferencia guardada en el equipo (v19.6) | 17/17 IA · validar.js 128/128 (+3 nuevas: botón en todas las páginas, opciones y persistencia) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #122 | ✅ |
+| 2026-11-16 18:40 UTC | 13 | Investigación de mercado (WarehouseGame/Mecalux, WareMover, Gartner, microaprendizaje) → 6 ideas nuevas en la cola. Implementada: "Mis logros" en el portal con 9 insignias y racha diaria por colaborador (v19.7) | 17/17 IA · validar.js 130/130 (+2 nuevas) · consola limpia · 1280/390 px revisadas · privacidad OK (solo datos del equipo) | #122 | ✅ |

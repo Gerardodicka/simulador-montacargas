@@ -191,6 +191,13 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Accesibilidad', 'botón Aa en todas las páginas', !bad.length, bad.join(', '));
     ok('Accesibilidad', 'texto grande, alto contraste, subtítulos y preferencia guardada', r.big && r.hc && r.sub && !r.hs && r.persiste, JSON.stringify(r));
     ok('Accesibilidad', 'sin errores de ejecución', !e.length, e[0] || ''); await ctx.close(); }
+  // Portal: Mis logros (insignias y racha diaria por colaborador)
+  { const ctx = await b.newContext({ viewport: { width: 390, height: 844 } }), q = await ctx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('index.html'));
+    await q.evaluate(() => { const d = n => new Date(Date.now() - n * 864e5).toISOString(); localStorage.setItem('dicka_console_results', JSON.stringify([{ juego: 'Recepción y Decantado', nombre: 'Ana Prueba', score: '120/120', aprobado: true, fecha: d(0) }, { juego: 'Patio y Andenes', nombre: 'Ana Prueba', score: '80/100', aprobado: true, fecha: d(1) }, { juego: 'Dojo de Mando · Cliente', nombre: 'Ana Prueba', score: '70/100', aprobado: true, fecha: d(2) }, { juego: 'Conteo Cíclico', nombre: 'Ana Prueba', score: '100/212', aprobado: false, fecha: d(2) }, { juego: 'Conteo Cíclico', nombre: 'Luis Otro', score: '160/212', aprobado: true, fecha: d(9) }])); });
+    await q.reload(); await q.waitForTimeout(600); await q.click('#btnLogros'); await q.waitForTimeout(200);
+    const r = await q.evaluate(() => { const a = { racha: streakOf(collectResults().filter(x => x.nombre === 'Ana Prueba')).cur, on: document.querySelectorAll('.badge-on').length }; document.getElementById('logrosWho').value = 'Luis Otro'; renderLogros(); a.luis = streakOf(collectResults().filter(x => x.nombre === 'Luis Otro')).cur; a.onLuis = document.querySelectorAll('.badge-on').length; return a; });
+    ok('Portal', 'Mis logros: racha e insignias por colaborador', r.racha === 3 && r.on === 6 && r.luis === 0 && r.onLuis === 2, JSON.stringify(r));
+    ok('Portal', 'Mis logros sin errores', !e.length, e[0] || ''); await ctx.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
