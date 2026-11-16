@@ -33,7 +33,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 11 | Todos | Usabilidad | Guía para el líder y plan en PDF real | — | ✅ |
 | 12 | Todos | Usabilidad | Modo accesible: texto grande, alto contraste, subtítulos | Attensi | ✅ |
 | 13 | Portal | Usabilidad | Insignias y racha diaria por colaborador ("Mis logros") | Gartner 2028 (gamificación), Attensi | ✅ |
-| 14 | Dojo de Mando | Funcionalidad | Repaso espaciado: recordatorio para repetir la situación más débil a los 7 días | Microaprendizaje con repetición espaciada | ⬜ |
+| 14 | Dojo de Mando | Funcionalidad | Repaso espaciado: recordatorio para repetir la situación más débil a los 7 días | Microaprendizaje con repetición espaciada | ✅ |
 | 15 | Nuevo simulador | Nuevo simulador | Métodos de surtido: discreto vs. por lotes vs. por zonas, con tiempo y recorrido | WareMover (2024) | ⬜ |
 | 16 | Recepción y Decantado | Usabilidad | Escáner RF simulado: instrucciones y captura por "pistola" | WarehouseGame Training (Mecalux) | ⬜ |
 | 17 | Montacargas | Funcionalidad | Diagnóstico inicial que ajusta la dificultad sugerida | WarehouseGame Training (Mecalux) | ⬜ |
@@ -70,3 +70,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-16 14:39 UTC | 11 | PDF real: plan de desarrollo y guía del líder se descargan como archivo .pdf A4 (varias páginas si es necesario), sin ventana de impresión ni librerías; guía también en JPG (v19.5) | 17/17 IA · validar.js 125/125 (+2 nuevas) · PDF validado con pdfinfo y renderizado con pdftoppm · consola limpia · privacidad OK (se genera en el navegador) | #121 | ✅ |
 | 2026-11-16 16:39 UTC | 12 | Modo accesible en las 15 páginas (botón Aa): texto grande, alto contraste y subtítulos de todo lo narrado en voz; preferencia guardada en el equipo (v19.6) | 17/17 IA · validar.js 128/128 (+3 nuevas: botón en todas las páginas, opciones y persistencia) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #122 | ✅ |
 | 2026-11-16 18:40 UTC | 13 | Investigación de mercado (WarehouseGame/Mecalux, WareMover, Gartner, microaprendizaje) → 6 ideas nuevas en la cola. Implementada: "Mis logros" en el portal con 9 insignias y racha diaria por colaborador (v19.7) | 17/17 IA · validar.js 130/130 (+2 nuevas) · consola limpia · 1280/390 px revisadas · privacidad OK (solo datos del equipo) | #122 | ✅ |
+| 2026-11-16 20:39 UTC | 14 | Repaso espaciado en el Dojo: cada situación se agenda (7 días si < 80, 21 si salió bien); al vencer aparece "📅 Toca repasar" con botón y etiqueta en el menú (v19.8) | 17/17 IA · validar.js 132/132 (+2 nuevas) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #122 | ✅ |
