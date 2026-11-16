@@ -206,6 +206,18 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       await reg(); Object.assign(r, await q.evaluate(async () => { const o = { box: !!document.getElementById('repasoBox'), tag: /Toca repasar/.test(document.getElementById('sc_chofer').innerText) }; document.getElementById('repasoBtn').click(); await new Promise(r => setTimeout(r, 1300)); o.arranca = document.getElementById('talk').innerText.includes('usted es el encargado'); return o; })); } catch (x) { e.push(x.message); }
     ok('Dojo de Mando', 'repaso espaciado: agenda, aviso al vencer y repaso', !r.box0 && r.next && r.box && r.tag && r.arranca, JSON.stringify(r));
     ok('Dojo de Mando', 'repaso sin errores', !e.length, e[0] || ''); await ctx.close(); }
+  // Métodos de surtido: respuestas y ruta óptima dan 100; métodos equivocados y ruta en zigzag no aprueban; recorridos calculados coherentes
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/metodos-surtido.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Surtido'); await q.click('#startBtn');
+      const r = await q.evaluate(good => { let c2 = 0, c3 = 0; for (let i = 0; i < 10; i++) { const a = metrics(SCN[1].gen(), 1); if (a.lot < a.disc) c2++; const z = metrics(SCN[2].gen(), 2); if (z.zon < z.disc && z.zon < z.lot) c3++; }
+        for (let i = 0; i < 4; i++) { const want = SCN[step].ok, m = good ? want : Object.keys(MET).find(k => k !== want); document.querySelector(`[data-m="${m}"]`).click(); next(); }
+        const idx = ROUTE_PTS.map((_, i) => i); const ord = good ? perm(idx).sort((x, y) => pathLen(x.map(i => ROUTE_PTS[i])) - pathLen(y.map(i => ROUTE_PTS[i])))[0] : idx.slice().sort((x, y) => (ROUTE_PTS[x].b % 2) - (ROUTE_PTS[y].b % 2) || ROUTE_PTS[y].a - ROUTE_PTS[x].a);
+        ord.forEach(i => document.querySelector(`.loc.pick[data-i="${i}"]`).click()); finish(); return { score, ok: score >= PASS, c2, c3 }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Métodos de surtido', 'respuestas correctas y ruta óptima: 100/100', g.r.score === 100 && g.r.ok, JSON.stringify(g.r));
+    ok('Métodos de surtido', 'métodos equivocados no aprueban', !m.r.ok, m.r.score + '/100');
+    ok('Métodos de surtido', 'recorridos calculados coherentes (lotes < discreto; zonas < resto)', g.r.c2 === 10 && g.r.c3 === 10, `${g.r.c2}/10 · ${g.r.c3}/10`);
+    ok('Métodos de surtido', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
