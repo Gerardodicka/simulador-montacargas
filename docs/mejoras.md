@@ -24,7 +24,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 2 | Dojo de Mando | Nuevo contenido | 5 casos de logística: auditoría del cliente, cambio de WMS, operador nuevo sin capacitar, robo hormiga reportado, chofer agresivo en andén | Attensi | ✅ |
 | 3 | Dojo de Mando | Funcionalidad | "Repite lo que fallaste": reintento enfocado en el criterio más bajo con pista previa | FLIGBY | ✅ |
 | 4 | Dojo de Mando | Usabilidad | Práctica rápida de 5 minutos en celular | Yoodli | ✅ |
-| 5 | Montacargas | Medición | Métricas de seguridad: choques, velocidad en curva, carga caída, claxon, con reporte | Simuladores de montacargas comerciales | ⬜ |
+| 5 | Montacargas | Medición | Métricas de seguridad: choques, velocidad en curva, carga caída, claxon, con reporte | Simuladores de montacargas comerciales | ✅ |
 | 6 | Montacargas | Funcionalidad | Inyección de fallas: frenos con retardo, deriva de dirección, alarma | Simuladores de montacargas comerciales | ⬜ |
 | 7 | Nuevo simulador | Nuevo simulador | Recepción y decantado: verificar SKU, cantidades y daños antes de ubicar | Simuladores de procesos de almacén | ⬜ |
 | 8 | Nuevo simulador | Nuevo simulador | Carga de tráiler: acomodo por peso y secuencia de entrega | Simuladores de carga | ⬜ |
@@ -55,3 +55,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-15 22:39 UTC | 2 | 5 casos de logística: chofer agresivo, operador nuevo sin DC-3, robo hormiga (Supervisor); cambio de WMS (Jefatura); auditoría del cliente (Gerencia) (v18.7) | 17/17 IA · validar.js 99/99 (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK | #117 | ✅ |
 | 2026-11-16 00:39 UTC | 3 | Repite lo que fallaste: reintento en el criterio más bajo con pista y comparación antes/después (v18.8) | 17/17 IA · validar.js 101/101 (+2 nuevas) · regresión OK · consola limpia · 1280/390 px revisadas · privacidad OK (solo sessionStorage) | #118 | ✅ |
 | 2026-11-16 02:39 UTC | 4 | Práctica rápida de 5 minutos: situación al azar (prioriza no practicadas), cronómetro y cierre automático (v18.9) | 17/17 IA · validar.js 103/103 (+2 nuevas; pruebas del Dojo aisladas en contexto limpio para evitar falsos negativos) · consola limpia · 1280/390 px revisadas · privacidad OK | #119 | ✅ |
+| 2026-11-16 04:39 UTC | 5 | Montacargas: tablero de métricas de seguridad en el resumen (índice, choques, velocidad y curvas, carga, claxon y peatones, usos de claxon, vel. máx. y en curva; se guarda en el historial) (v19.0) | 17/17 IA · validar.js 104/104 (+1 nueva) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | PENDIENTE | ✅ |
