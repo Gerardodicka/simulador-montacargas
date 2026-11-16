@@ -1,0 +1,28 @@
+// DICKA Play · Modo accesible: texto grande, alto contraste y subtítulos de todo lo que se narra en voz alta.
+// La preferencia se guarda solo en este equipo (localStorage) y aplica a todos los simuladores.
+(function () {
+  if (window.__dickaA11y) return; window.__dickaA11y = true;
+  const KEY = 'dicka_a11y'; let P = { big: false, hc: false, subs: false };
+  try { Object.assign(P, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { }
+  const css = document.createElement('style'); css.id = 'a11yCss';
+  css.textContent = 'html.a11y-big body{zoom:1.18}html.a11y-hc{filter:contrast(1.35) saturate(1.1)}html.a11y-hc body{text-shadow:none}html.a11y-hc a{text-decoration:underline}'
+    + '#a11yBtn{position:fixed;left:0;top:42%;z-index:2147483000;background:#1D2586;color:#fff;border:2px solid #fff;border-left:0;border-radius:0 10px 10px 0;padding:8px 7px;font:800 15px Arial;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35)}'
+    + '#a11yPanel{position:fixed;left:44px;top:calc(42% - 40px);z-index:2147483001;background:#fff;color:#1b2240;border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.35);font:600 15px Arial;display:none;min-width:220px}'
+    + '#a11yPanel.open{display:block}#a11yPanel b{display:block;color:#1D2586;margin-bottom:6px}#a11yPanel label{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer}#a11yPanel input{width:20px;height:20px}'
+    + '#a11ySubs{position:fixed;left:4vw;right:4vw;bottom:18px;margin:0 auto;z-index:2147482999;width:fit-content;max-width:min(92vw,820px);background:rgba(0,0,0,.86);color:#fff;font:600 20px/1.35 Arial;padding:10px 16px;border-radius:10px;text-align:center;display:none;pointer-events:none}';
+  document.head.appendChild(css);
+  function apply() { const h = document.documentElement; h.classList.toggle('a11y-big', !!P.big); h.classList.toggle('a11y-hc', !!P.hc); try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) { }
+    document.querySelectorAll('#a11yPanel input').forEach(i => i.checked = !!P[i.dataset.k]); if (!P.subs) hideSub(); }
+  let subT = null; const sub = () => document.getElementById('a11ySubs');
+  function showSub(t) { if (!P.subs || !sub()) return; const el = sub(); el.textContent = t; el.style.display = 'block'; clearTimeout(subT); subT = setTimeout(hideSub, Math.max(2500, t.length * 75)); }
+  function hideSub() { const el = sub(); if (el) el.style.display = 'none'; }
+  window.dickaSubtitle = showSub;
+  if (window.speechSynthesis && !speechSynthesis.__a11y) { const orig = speechSynthesis.speak.bind(speechSynthesis); speechSynthesis.speak = function (u) { try { if (u && u.text) { showSub(u.text); const oe = u.onend; u.addEventListener && u.addEventListener('end', () => { clearTimeout(subT); subT = setTimeout(hideSub, 600); }); } } catch (e) { } return orig(u); }; speechSynthesis.__a11y = true; }
+  function ui() { if (document.getElementById('a11yBtn')) return; const b = document.createElement('button'); b.id = 'a11yBtn'; b.type = 'button'; b.title = 'Accesibilidad'; b.setAttribute('aria-label', 'Opciones de accesibilidad'); b.textContent = 'Aa';
+    const p = document.createElement('div'); p.id = 'a11yPanel'; p.setAttribute('role', 'dialog'); p.innerHTML = '<b>♿ Accesibilidad</b><label><input type="checkbox" data-k="big"> 🔠 Texto grande</label><label><input type="checkbox" data-k="hc"> 🌓 Alto contraste</label><label><input type="checkbox" data-k="subs"> 💬 Subtítulos de la voz</label>';
+    const s = document.createElement('div'); s.id = 'a11ySubs'; s.setAttribute('aria-live', 'polite');
+    b.onclick = e => { e.stopPropagation(); p.classList.toggle('open'); }; p.onclick = e => e.stopPropagation(); document.addEventListener('click', () => p.classList.remove('open'));
+    p.querySelectorAll('input').forEach(i => i.onchange = () => { P[i.dataset.k] = i.checked; apply(); });
+    document.body.append(b, p, s); apply(); }
+  apply(); if (document.body) ui(); else document.addEventListener('DOMContentLoaded', ui);
+})();

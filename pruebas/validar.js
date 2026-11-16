@@ -181,6 +181,31 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       r.plan = await dl(() => planPDF()); r.guia = await dl(() => leaderGuide('pdf')); } catch (x) { e.push(x.message); }
     ok('Dojo de Mando', 'PDF real: plan y guía del líder se descargan como .pdf; varias páginas', r.pdf && r.eof && r.xref && r.pages === 3 && /\.pdf$/.test(r.plan || '') && /\.pdf$/.test(r.guia || ''), JSON.stringify(r));
     ok('Dojo de Mando', 'PDF sin errores', !e.length, e[0] || ''); await ctx.close(); }
+  // Modo accesible (todas las páginas): botón Aa, texto grande, alto contraste, subtítulos de la voz y preferencia guardada
+  { const ctx = await b.newContext({ viewport: { width: 390, height: 844 } }); const bad = [], e = [];
+    for (const f of pages) { const q = await ctx.newPage(); q.on('pageerror', x => e.push(f + ': ' + x.message)); await q.goto(url(f)); await q.waitForTimeout(500); if (!(await q.$('#a11yBtn'))) bad.push(f); await q.close(); }
+    const q = await ctx.newPage(); await q.goto(url('juegos/recepcion-decantado.html')); await q.waitForTimeout(400); await q.click('#a11yBtn');
+    for (const k of ['big', 'hc', 'subs']) await q.check(`#a11yPanel input[data-k="${k}"]`);
+    await q.evaluate(() => window.dickaSubtitle('Prueba de subtítulo')); const r = await q.evaluate(() => ({ big: document.documentElement.classList.contains('a11y-big'), hc: document.documentElement.classList.contains('a11y-hc'), sub: getComputedStyle(document.getElementById('a11ySubs')).display === 'block', hs: document.documentElement.scrollWidth > innerWidth + 2 }));
+    await q.goto(url('juegos/conteo-ciclico.html')); await q.waitForTimeout(400); r.persiste = await q.evaluate(() => document.documentElement.classList.contains('a11y-big') && document.documentElement.classList.contains('a11y-hc'));
+    ok('Accesibilidad', 'botón Aa en todas las páginas', !bad.length, bad.join(', '));
+    ok('Accesibilidad', 'texto grande, alto contraste, subtítulos y preferencia guardada', r.big && r.hc && r.sub && !r.hs && r.persiste, JSON.stringify(r));
+    ok('Accesibilidad', 'sin errores de ejecución', !e.length, e[0] || ''); await ctx.close(); }
+  // Portal: Mis logros (insignias y racha diaria por colaborador)
+  { const ctx = await b.newContext({ viewport: { width: 390, height: 844 } }), q = await ctx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('index.html'));
+    await q.evaluate(() => { const d = n => new Date(Date.now() - n * 864e5).toISOString(); localStorage.setItem('dicka_console_results', JSON.stringify([{ juego: 'Recepción y Decantado', nombre: 'Ana Prueba', score: '120/120', aprobado: true, fecha: d(0) }, { juego: 'Patio y Andenes', nombre: 'Ana Prueba', score: '80/100', aprobado: true, fecha: d(1) }, { juego: 'Dojo de Mando · Cliente', nombre: 'Ana Prueba', score: '70/100', aprobado: true, fecha: d(2) }, { juego: 'Conteo Cíclico', nombre: 'Ana Prueba', score: '100/212', aprobado: false, fecha: d(2) }, { juego: 'Conteo Cíclico', nombre: 'Luis Otro', score: '160/212', aprobado: true, fecha: d(9) }])); });
+    await q.reload(); await q.waitForTimeout(600); await q.click('#btnLogros'); await q.waitForTimeout(200);
+    const r = await q.evaluate(() => { const a = { racha: streakOf(collectResults().filter(x => x.nombre === 'Ana Prueba')).cur, on: document.querySelectorAll('.badge-on').length }; document.getElementById('logrosWho').value = 'Luis Otro'; renderLogros(); a.luis = streakOf(collectResults().filter(x => x.nombre === 'Luis Otro')).cur; a.onLuis = document.querySelectorAll('.badge-on').length; return a; });
+    ok('Portal', 'Mis logros: racha e insignias por colaborador', r.racha === 3 && r.on === 6 && r.luis === 0 && r.onLuis === 2, JSON.stringify(r));
+    ok('Portal', 'Mis logros sin errores', !e.length, e[0] || ''); await ctx.close(); }
+  // Dojo de Mando: repaso espaciado (se agenda al terminar; al vencer aparece "Toca repasar" y arranca la situación)
+  { const ctx = await b.newContext({ viewport: { width: 1000, height: 800 } }), q = await ctx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); let r = {};
+    const reg = async () => { await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000); await q.evaluate(async () => { const P = document.getElementById('ppuesto'); P.value = 'Supervisor de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await new Promise(r => setTimeout(r, 500)); }); };
+    try { await reg(); Object.assign(r, await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const box0 = !!document.getElementById('repasoBox'); document.getElementById('sc_chofer').click(); await w(1200); AI.off = true; CONV.push({ quien: 'Líder', texto: 'Gracias por esperar.' }); await endPractice(); return { box0, next: /en 7 días/.test((document.querySelector('.repasoNext') || {}).innerText || '') }; }));
+      await q.evaluate(() => { const o = JSON.parse(localStorage.getItem('dicka_dojo_repaso')); Object.values(o).forEach(x => { x.fecha -= 8 * 864e5; x.due -= 8 * 864e5; }); localStorage.setItem('dicka_dojo_repaso', JSON.stringify(o)); });
+      await reg(); Object.assign(r, await q.evaluate(async () => { const o = { box: !!document.getElementById('repasoBox'), tag: /Toca repasar/.test(document.getElementById('sc_chofer').innerText) }; document.getElementById('repasoBtn').click(); await new Promise(r => setTimeout(r, 1300)); o.arranca = document.getElementById('talk').innerText.includes('usted es el encargado'); return o; })); } catch (x) { e.push(x.message); }
+    ok('Dojo de Mando', 'repaso espaciado: agenda, aviso al vencer y repaso', !r.box0 && r.next && r.box && r.tag && r.arranca, JSON.stringify(r));
+    ok('Dojo de Mando', 'repaso sin errores', !e.length, e[0] || ''); await ctx.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
