@@ -275,6 +275,16 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Tablero del gerente', 'estrategia equilibrada aprueba (≥70) y guarda', g.r.score >= 70 && g.r.end && g.r.saved && g.r.acc === 0, JSON.stringify(g.r));
     ok('Tablero del gerente', 'solo tiempo extra y correctivo reprueba con accidentes', m.r.score < 70 && m.r.acc > 0, JSON.stringify(m.r));
     ok('Tablero del gerente', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // Cadena de frío: los registros generados cumplen su regla; decisiones correctas 100, liberar todo no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/cadena-frio.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Frío'); await q.click('#startBtn');
+      const r = await q.evaluate(good => { const bad = []; L.forEach(c => { const d = c.data.filter(v => v !== null), fr = c.tipo === 'frio', out = c.data.filter(v => v !== null && (fr ? (v > 8 || v < 2) : v > -18)).length, mx = Math.max(...d), mn = Math.min(...d), gap = c.data.includes(null);
+          const exp = gap ? 'retener' : out === 0 ? 'liberar' : (out > 2 || (fr ? (mx > 12 || mn < 0) : mx > -12)) ? 'rechazar' : 'retener'; if (exp !== c.ok) bad.push(c.prod + ' ' + exp + '≠' + c.ok); });
+        for (let i = 0; i < 8; i++) { document.querySelector(`[data-d="${good ? L[idx].ok : 'liberar'}"]`).click(); next(); } return { score, bad }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Cadena de frío', 'registros coherentes con las reglas y decisiones correctas 100/100', g.r.score === 100 && !g.r.bad.length, JSON.stringify(g.r));
+    ok('Cadena de frío', 'liberar todo no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('Cadena de frío', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

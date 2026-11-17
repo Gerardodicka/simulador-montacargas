@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadena de Frío | DICKA Logistics</title>
+<style>
+:root{--azul:#1D2586;--brillante:#2138D3;--marino:#011131;--gris:#838383;--amarillo:#f5c400;--verde:#2e9e5b;--rojo:#c62828}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,var(--azul) 0%,var(--marino) 100%);min-height:100vh;padding:1rem;color:#333}
+.wrap{max-width:820px;margin:0 auto}
+.head{text-align:center;color:#fff;margin-bottom:1rem}
+.head svg{width:200px;max-width:65%}
+.head h1{font-size:22px;font-weight:900;margin-top:.2rem}
+.head p{font-size:12px;color:#c5cdf5}
+.card{background:#fff;border-radius:16px;padding:1.4rem;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.hidden{display:none!important}
+.big{font-size:60px;text-align:center}
+.card h2{color:var(--azul);text-align:center;font-size:22px;margin:.3rem 0}
+.lead{text-align:center;color:#666;font-size:14px;line-height:1.6}
+.info{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.9rem 1.1rem;border-radius:8px;margin:1rem 0;font-size:13px;color:#444;line-height:1.9}
+.info b{color:var(--azul)}
+input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border-radius:8px;font-size:15px;margin-top:.4rem}
+.lbl{font-size:11px;font-weight:800;color:var(--azul);display:block;margin-top:.8rem;letter-spacing:1px}
+.btn{width:100%;padding:.85rem;border:none;border-radius:10px;background:linear-gradient(135deg,var(--azul),var(--brillante));color:#fff;font-weight:800;font-size:14px;cursor:pointer;letter-spacing:1px;margin-top:.8rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--brillante);border:2px solid var(--brillante)}
+.btn.warn{background:var(--amarillo);color:var(--marino)}
+.topbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--azul);margin-bottom:.6rem;flex-wrap:wrap;gap:6px}
+.timer{font-family:monospace;font-size:20px;color:var(--brillante)}
+.timer.low{color:var(--rojo)}
+.bar{height:8px;background:#e6e9f4;border-radius:4px;overflow:hidden;margin-bottom:1rem}
+.bar div{height:100%;background:linear-gradient(90deg,var(--azul),var(--brillante));transition:width .3s}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--rojo);color:#fff;padding:.6rem 1.2rem;border-radius:10px;font-weight:800;font-size:13px;z-index:50;opacity:0;transition:.25s;pointer-events:none;text-align:center;max-width:90%}
+.toast.show{opacity:1}
+.toast.good{background:var(--verde)}
+.score{font-size:60px;font-weight:900;color:var(--brillante);text-align:center;line-height:1}
+.badge{display:block;width:max-content;margin:.8rem auto;padding:.5rem 1.4rem;border-radius:30px;font-weight:800}
+.badge.ok{background:#d4edda;color:#155724}.badge.bad{background:#f8d7da;color:#721c24}
+.stats{background:#f7f8fc;border-radius:10px;padding:.8rem 1rem;font-size:13.5px}
+.stats div{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #e6e9f4}
+.stats div:last-child{border:0}.stats b{color:var(--brillante)}
+.code{background:var(--marino);color:#fff;font-family:monospace;font-size:11px;padding:.7rem;border-radius:8px;word-break:break-all;margin-top:.8rem}
+.err{background:#fff7e0;border-left:4px solid var(--amarillo);padding:.7rem 1rem;border-radius:8px;font-size:12.5px;margin-top:.8rem;line-height:1.7}
+
+.lot{background:var(--marino);color:#fff;border-radius:12px;padding:.7rem 1rem;margin-bottom:.6rem;font-size:13.5px;line-height:1.6}.lot .k{font-size:11px;color:#9fb0ff;letter-spacing:1px}
+.chart{width:100%;height:auto;background:#fff;border:1.5px solid #e1e5f2;border-radius:10px}
+.acts{display:grid;gap:8px;margin-top:.6rem}.acts button{padding:.85rem;border:2px solid #dfe3f0;background:#fff;border-radius:10px;font-weight:700;cursor:pointer;text-align:left;font-size:13.5px}.acts button:hover{border-color:var(--brillante)}.acts button:disabled{opacity:.6;cursor:default}
+.why{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.7rem 1rem;border-radius:8px;font-size:13px;margin-top:.6rem;line-height:1.6}
+.rules{font-size:12.5px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+  <div class="head">
+    <img src="data:image/png;base64,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" alt="DICKA Logistics" class="dicka-logo" style="height:60px;width:auto;display:block;margin:0 auto .6rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));">
+    <h1>Cadena de Frío</h1><p>8 lotes · lee el registro de temperatura y decide · aprueba con 75/100</p>
+  </div>
+  <div class="card" id="intro">
+    <div class="big">❄️</div><h2>Cadena de Frío</h2><p class="lead">Llegan lotes refrigerados y congelados con su registrador de temperatura. Revisa la gráfica y decide qué hacer con cada uno.</p>
+    <div class="info rules"><b>Refrigerado:</b> rango 2 a 8 °C · <b>Congelado:</b> −18 °C o menos<br>✅ <b>Liberar</b>: siempre dentro de rango<br>🟡 <b>Retener y escalar a Calidad</b>: excursión breve (hasta 30 min) sin pasar de 10 °C (refrigerado) o de −15 °C (congelado), o registro con un hueco de datos de más de 1 hora<br>❌ <b>Rechazar</b>: excursión de más de 30 min, refrigerado arriba de 12 °C o abajo de 0 °C (congelación), o congelado arriba de −12 °C<br>+12.5 por decisión correcta</div>
+    <label class="lbl">TU NOMBRE COMPLETO</label><input class="name" id="pname" placeholder="Nombre y apellido">
+    <label class="lbl">NÚMERO DE EMPLEADO</label><input class="name" id="pnum" inputmode="numeric" placeholder="Ej. 10457">
+    <label class="lbl">PUESTO</label><select class="name" id="ppuesto"><option>Aux de Almacén</option><option>Recibidor</option><option>Analista de Calidad</option><option>Supervisor de Operaciones</option><option>Jefe de Operaciones</option></select>
+    <label class="lbl">ALMACÉN</label><select class="name" id="pwh"><option>Agave 1</option><option>Agave 3</option><option>Mezquite 1</option><option>Mezquite 2</option><option>BIC</option><option>Celaya</option><option>Toluca</option><option>Escobedo</option></select>
+    <button class="btn" id="startBtn" onclick="start()">COMENZAR</button>
+  </div>
+  <div class="card hidden" id="game">
+    <div class="topbar"><span>Lote <span id="ln">1</span>/8</span><span>⭐ <span id="sc">0</span></span></div>
+    <div class="bar"><div id="bar" style="width:0"></div></div>
+    <div class="lot" id="lot"></div>
+    <canvas class="chart" id="chart" width="760" height="300"></canvas>
+    <div class="acts" id="acts"></div>
+    <div id="fb"></div>
+  </div>
+  <div class="card hidden" id="end">
+    <div class="big" id="eicon">🏆</div><h2 id="etitle"></h2>
+    <div class="score" id="escore">0</div><p class="lead">de 100 puntos · aprueba con 75</p>
+    <span class="badge" id="ebadge"></span>
+    <div class="stats" id="estats"></div>
+    <div class="err hidden" id="review"></div>
+    <div class="code" id="ecode"></div>
+    <button class="btn" onclick="share()">📲 ENVIAR RESULTADO POR WHATSAPP</button>
+    <button class="btn ghost" onclick="copyRes()">📋 COPIAR RESULTADO</button>
+    <button class="btn ghost" onclick="location.reload()">🔄 REPETIR</button>
+  </div>
+</div>
+<script>
+const GAME_ID='cadena-frio', GAME_NAME='Cadena de Frío', PASS=75, MAX=100, N=8, STEP=15;
+let who={}, t0, score=0, errors=[], REG='', idx=0, L=[], okN=0;
+const $=id=>document.getElementById(id);
+function toast(msg,good){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(good?' good':''); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1900); }
+function chk(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))>>>0; return h.toString(36).toUpperCase().slice(0,6); }
+const R=(a,b)=>a+Math.random()*(b-a);
+/* Registro de 12 horas cada 15 min (48 lecturas); null = hueco de datos */
+function serie(base,amp){ return Array.from({length:48},(_,i)=>+(base+Math.sin(i/5)*amp+R(-.3,.3)).toFixed(1)); }
+function exc(arr,start,len,peak){ for(let i=0;i<len;i++) arr[start+i]=+(peak-Math.abs(i-(len-1)/2)*.3+R(-.2,.2)).toFixed(1); return arr; }
+const PROD={frio:[['Yogur natural 1 L','SKU-51207'],['Queso panela 400 g','SKU-51840'],['Crema ácida 450 ml','SKU-52011'],['Vacuna veterinaria (caja 10)','SKU-60120']],cong:[['Helado de vainilla 1 L','SKU-70310'],['Pechuga de pollo IQF 2 kg','SKU-71102']]};
+const CASOS=[
+  {tipo:'frio',ok:'liberar',gen:()=>serie(5,1.4),why:'Todas las lecturas están entre 2 y 8 °C: el lote se libera y se guarda el registro.'},
+  {tipo:'frio',ok:'retener',gen:()=>exc(serie(5,1),20,2,9.6),why:'Excursión breve (30 min) sin pasar de 10 °C: no se libera ni se rechaza por tu cuenta; se retiene y Calidad evalúa la estabilidad del producto.'},
+  {tipo:'frio',ok:'rechazar',gen:()=>exc(serie(5,1),14,8,11.5),why:'La excursión duró 2 horas fuera de rango: excede los 30 min permitidos. Se rechaza y se documenta con el transportista.'},
+  {tipo:'frio',ok:'rechazar',gen:()=>exc(serie(4,1),30,2,13.4),why:'Aunque fue breve, llegó a más de 12 °C: el producto pudo perder su inocuidad. Se rechaza.'},
+  {tipo:'frio',ok:'rechazar',gen:()=>exc(serie(3,.6),24,4,-1.2),why:'Bajó de 0 °C: el producto se congeló (los lácteos y vacunas se dañan al congelarse). Se rechaza.'},
+  {tipo:'frio',ok:'retener',gen:()=>{ const a=serie(5,1); for(let i=18;i<24;i++) a[i]=null; return a; },why:'Hay un hueco de 1.5 horas sin datos: no puedes demostrar que se mantuvo en rango. Se retiene y se escala a Calidad.'},
+  {tipo:'cong',ok:'liberar',gen:()=>serie(-20,1),why:'Siempre en −18 °C o menos: se libera.'},
+  {tipo:'cong',ok:'rechazar',gen:()=>exc(serie(-20,1),10,6,-9.5),why:'El congelado subió arriba de −12 °C por 1.5 horas: posible descongelación y recongelación. Se rechaza.'}];
+function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now();
+  let fi=0, ci=0; L=CASOS.slice().sort(()=>Math.random()-.5).map(c=>{ const p=c.tipo==='frio'?PROD.frio[fi++%4]:PROD.cong[ci++%2]; return Object.assign({},c,{prod:p[0],sku:p[1],data:c.gen(),lote:'L'+(3000+Math.floor(Math.random()*900)),caja:'TR-'+(100+Math.floor(Math.random()*800))}); });
+  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); show(); }
+function draw(c){ const cv=$('chart'); if(innerWidth<520){ cv.width=420; cv.height=280; } else { cv.width=760; cv.height=300; } const g=cv.getContext('2d'), W=cv.width, H=cv.height, P={l:46,r:12,t:16,b:30}, lo=c.tipo==='frio'?-3:-24, hi=c.tipo==='frio'?15:-6, X=i=>P.l+i*(W-P.l-P.r)/47, Y=v=>P.t+(hi-v)*(H-P.t-P.b)/(hi-lo);
+  g.clearRect(0,0,W,H); g.fillStyle='#e9f7ef'; const a=c.tipo==='frio'?[8,2]:[-18,hi>-18?-24:-24]; if(c.tipo==='frio') g.fillRect(P.l,Y(8),W-P.l-P.r,Y(2)-Y(8)); else g.fillRect(P.l,Y(-18),W-P.l-P.r,Y(lo)-Y(-18));
+  g.strokeStyle='#e3e6f2'; g.fillStyle='#6b7390'; g.font='12px Arial'; for(let v=Math.ceil(lo/3)*3;v<=hi;v+=3){ g.beginPath(); g.moveTo(P.l,Y(v)); g.lineTo(W-P.r,Y(v)); g.stroke(); g.fillText(v+'°',8,Y(v)+4); }
+  for(let h=0;h<=12;h+=2){ g.fillText(String(h).padStart(2,'0')+':00',X(h*4)-16,H-8); }
+  g.strokeStyle='#2e9e5b'; g.setLineDash([6,4]); (c.tipo==='frio'?[2,8]:[-18]).forEach(v=>{ g.beginPath(); g.moveTo(P.l,Y(v)); g.lineTo(W-P.r,Y(v)); g.stroke(); }); g.setLineDash([]);
+  g.strokeStyle='#1D2586'; g.lineWidth=2.5; g.beginPath(); let pen=false; c.data.forEach((v,i)=>{ if(v===null){ pen=false; return; } const x=X(i), y=Y(v); if(pen) g.lineTo(x,y); else g.moveTo(x,y); pen=true; }); g.stroke(); g.lineWidth=1;
+  c.data.forEach((v,i)=>{ if(v===null) return; const out=c.tipo==='frio'?(v>8||v<2):v>-18; g.fillStyle=out?'#c62828':'#1D2586'; g.beginPath(); g.arc(X(i),Y(v),out?3.5:2,0,7); g.fill(); });
+  const gap=c.data.findIndex(v=>v===null); if(gap>=0){ g.fillStyle='rgba(245,184,0,.25)'; const e=c.data.lastIndexOf(null); g.fillRect(X(gap),P.t,X(e)-X(gap),H-P.t-P.b); g.fillStyle='#8a6d00'; g.fillText('sin datos',X(gap)+4,P.t+14); } }
+function show(){ const c=L[idx]; $('ln').textContent=idx+1; $('bar').style.width=(idx/N*100)+'%'; $('fb').innerHTML='';
+  $('lot').innerHTML=`<span class="k">LOTE ${idx+1} · REGISTRADOR DE TEMPERATURA (12 h, cada 15 min)</span><br><b>${c.prod}</b> · ${c.sku} · Lote ${c.lote} · Tráiler ${c.caja}<br>${c.tipo==='frio'?'❄️ Refrigerado · rango 2 a 8 °C':'🧊 Congelado · −18 °C o menos'}`;
+  draw(c); $('acts').innerHTML=[['liberar','✅ Liberar el lote'],['retener','🟡 Retener y escalar a Calidad'],['rechazar','❌ Rechazar el lote']].map(([k,t])=>`<button data-d="${k}" onclick="decide('${k}')">${t}</button>`).join(''); }
+function decide(k){ const c=L[idx], ok=k===c.ok; if(ok){ score+=12.5; okN++; toast('✓ Decisión correcta',true); } else { errors.push(c.prod+': '+({liberar:'liberó',retener:'retuvo',rechazar:'rechazó'}[k])+' cuando debía '+({liberar:'liberar',retener:'retener',rechazar:'rechazar'}[c.ok])); toast('✗ No era lo correcto'); } $('sc').textContent=Math.round(score);
+  document.querySelectorAll('#acts button').forEach(b=>b.disabled=true); $('fb').innerHTML=`<div class="why"><b>${ok?'✅ Correcto.':'❌ Lo correcto era: '+{liberar:'liberar',retener:'retener y escalar',rechazar:'rechazar'}[c.ok]+'.'}</b> ${c.why}</div><button class="btn" id="nextBtn" onclick="next()">SIGUIENTE →</button>`; }
+function next(){ idx++; if(idx<N) show(); else finish(); }
+function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
+  const ok=score>=PASS, date=new Date(); const base=`REG|${GAME_ID}|${who.name}${who.num?' #'+who.num:''}|${who.puesto}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');
+  $('eicon').textContent=ok?'🏆':'📚'; $('etitle').textContent=ok?'¡Aprobaste!':'Aún no apruebas'; $('escore').textContent=score; $('ebadge').textContent=ok?'✓ APROBADO':'✗ NO APROBADO'; $('ebadge').className='badge '+(ok?'ok':'bad');
+  $('estats').innerHTML=`<div><span>Colaborador</span><b>${who.name}</b></div>${who.num?`<div><span>No. empleado</span><b>${who.num}</b></div>`:''}<div><span>Almacén</span><b>${who.wh}</b></div><div><span>Decisiones correctas</span><b>${okN}/8</b></div><div><span>Tiempo</span><b>${Math.round((Date.now()-t0)/1000)} s</b></div>`;
+  if(errors.length){ $('review').classList.remove('hidden'); $('review').innerHTML='<b>Para repasar:</b><br>'+errors.map(e=>'• '+e).join('<br>'); }
+  $('ecode').textContent='Código de verificación: '+REG;
+  try{ const k='dicka_console_results', l=JSON.parse(localStorage.getItem(k)||'[]'); l.push({juego:GAME_NAME,nombre:who.name,num:who.num,puesto:who.puesto,area:'Calidad',almacen:who.wh,score:`${score}/${MAX}`,aprobado:ok,fecha:date.toISOString(),reg:REG}); localStorage.setItem(k,JSON.stringify(l)); }catch(e){}
+  try{ parent.postMessage({type:'dicka-result',juego:GAME_NAME,nombre:who.name,score:`${score}/${MAX}`,aprobado:ok},'*'); }catch(e){} }
+function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombre: ${who.name}${who.num?'\nNo. empleado: '+who.num:''}\nPuesto: ${who.puesto}\nAlmacén: ${who.wh}\nPuntaje: ${score}/${MAX}\nEstado: ${score>=PASS?'✓ APROBADO':'✗ NO APROBADO'}\n\n${REG}`; }
+function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
+function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
+</script>
+<script src="js/dicka-sync.js"></script>
+<script src="js/accesible.js"></script>
+</body>
+</html>
