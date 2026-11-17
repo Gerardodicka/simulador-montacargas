@@ -924,7 +924,7 @@
             <div class="reg-grid">
                 <div><label>PUESTO</label><select id="rPuesto"><option>Aux de Almacén</option><option>Surtidor</option><option>Verificador</option><option>Auxiliar de Inventarios</option><option>Mesa de Control</option><option>Operador de Montacargas</option><option>Supervisor de Operaciones</option><option>Jefe de Operaciones</option><option>Gerente de Operaciones</option><option>Distribución</option><option>Área Staff</option></select></div>
                 <div><label>ALMACÉN</label><select id="rWh"><option>Agave 1</option><option>Agave 3</option><option>Mezquite 1</option><option>Mezquite 2</option><option>BIC</option><option>Celaya</option><option>Toluca</option><option>Escobedo</option><option>Apodaca</option><option>Guadalajara</option><option>Villahermosa</option><option>Mérida</option></select></div>
-                <div style="grid-column:1/-1"><label>NIVEL DE PRÁCTICA</label><select id="rNivel" onchange="try{localStorage.setItem('dicka_nivel',this.value)}catch(e){}"><option value="principiante">🟢 Principiante · sin tráfico de montacargas ni eventos</option><option value="intermedio" selected>🟡 Intermedio · tráfico y eventos ocasionales</option><option value="certificacion">🔴 Certificación · tráfico, eventos seguros, 4 min por misión y sin pistas</option></select></div>
+                <div style="grid-column:1/-1"><label>NIVEL DE PRÁCTICA</label><select id="rNivel" onchange="try{localStorage.setItem('dicka_nivel',this.value)}catch(e){}"><option value="principiante">🟢 Principiante · sin tráfico de montacargas ni eventos</option><option value="intermedio" selected>🟡 Intermedio · tráfico y eventos ocasionales</option><option value="certificacion">🔴 Certificación · tráfico, eventos seguros, 4 min por misión y sin pistas</option></select></div><div style="grid-column:1/-1;text-align:right;margin-top:-4px"><a href="#" id="diagLink" onclick="openDiag();return false" style="font-size:12px;font-weight:700;color:#2138D3">🧭 ¿No sabes tu nivel? Diagnóstico de 1 minuto</a></div>
             </div>
             <div class="reg-err" id="regErr"></div>
                 <div id="joinBox" style="display:none;margin-top:.8rem;text-align:center;border-top:1px solid #e5e8f2;padding-top:.7rem"><div style="font-size:12px;color:#555;margin-bottom:.3rem">📱 ¿Vas a usar este celular como visor de la cabina? Escribe el código de la laptop</div><div style="display:flex;gap:6px;justify-content:center"><input id="joinCode" maxlength="4" inputmode="numeric" placeholder="0000" style="width:110px;text-align:center;font-size:22px;letter-spacing:6px;padding:.3rem;border:2px solid #2138D3;border-radius:8px"><button class="btn" style="background:#7a2bd9;color:#fff;border:none;border-radius:8px;padding:.4rem .9rem;font-weight:800;cursor:pointer" onclick="const c=document.getElementById('joinCode').value.trim(); if(c.length===4){ const u=new URL(location.href); u.search=''; u.searchParams.set('screen','vr'); u.searchParams.set('room',c); location.href=u.toString(); }">Conectar</button></div></div>
@@ -2394,7 +2394,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v19.8 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v20.1 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3624,6 +3624,31 @@
         }
     </script>
 <script src="js/dicka-sync.js"></script>
+<div id="diagModal" style="position:fixed;inset:0;background:rgba(1,17,49,.8);z-index:99990;display:none;align-items:center;justify-content:center;padding:14px">
+ <div style="background:#fff;color:#1b2240;border-radius:16px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:18px;font-family:inherit">
+  <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0;color:#1D2586">🧭 Diagnóstico inicial</h3><button onclick="closeDiag()" style="border:0;background:#eef;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:800">✕</button></div>
+  <p style="font-size:13px;color:#555;margin:6px 0 10px">5 preguntas para sugerirte el nivel de práctica adecuado.</p><div id="diagQs"></div>
+  <div id="diagRes" style="display:none;margin-top:10px;border-radius:12px;padding:12px;background:#eef2ff"></div>
+  <button id="diagBtn" onclick="evalDiag()" style="width:100%;margin-top:10px;padding:12px;border:0;border-radius:10px;background:#1D2586;color:#fff;font-weight:800;cursor:pointer">VER MI NIVEL SUGERIDO</button>
+ </div></div>
+<script>
+/* Diagnóstico inicial (inspirado en WarehouseGame de Mecalux): experiencia + 3 preguntas técnicas → nivel sugerido */
+const DIAG = [
+  { q: '¿Cuánta experiencia tienes operando montacargas?', o: [['Ninguna o menos de 3 meses', 0], ['De 3 meses a 2 años', 1], ['Más de 2 años', 2]] },
+  { q: '¿Tienes tu constancia DC-3 de operador de montacargas vigente?', o: [['No', 0], ['Sí', 1]] },
+  { q: 'Al trasladar una carga, ¿a qué altura llevas las horquillas?', o: [['A la altura del pecho para ver mejor', 0], ['A 15–20 cm del piso con el mástil inclinado hacia atrás', 1], ['Lo más alto posible para librar obstáculos', 0]] },
+  { q: 'Llegas al cruce al final de un pasillo. ¿Qué haces?', o: [['Paso rápido para no estorbar', 0], ['Alto total, claxon, reviso el espejo y paso a vuelta de rueda', 1], ['Solo toco el claxon y sigo', 0]] },
+  { q: 'En la inspección encuentras una fuga de aceite hidráulico. ¿Qué haces?', o: [['Lo opero con cuidado y aviso al final del turno', 0], ['Lo reporto, lo bloqueo y no lo opero', 1], ['Limpio la fuga y lo opero', 0]] }];
+function openDiag() { document.getElementById('diagQs').innerHTML = DIAG.map((d, i) => `<div style="margin:8px 0"><b style="font-size:14px">${i + 1}. ${d.q}</b>${d.o.map((o, j) => `<label style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;margin-top:4px;border:1.5px solid #e1e5f2;border-radius:8px;font-size:13.5px;cursor:pointer"><input type="radio" name="dg${i}" value="${j}"> ${o[0]}</label>`).join('')}</div>`).join(''); document.getElementById('diagRes').style.display = 'none'; document.getElementById('diagModal').style.display = 'flex'; }
+function closeDiag() { document.getElementById('diagModal').style.display = 'none'; }
+function diagLevel(ans) { const exp = DIAG[0].o[ans[0]][1], dc3 = DIAG[1].o[ans[1]][1], tec = [2, 3, 4].reduce((a, i) => a + DIAG[i].o[ans[i]][1], 0);
+  if (tec < 2 || exp === 0) return 'principiante'; if (exp === 2 && dc3 && tec === 3) return 'certificacion'; return 'intermedio'; }
+function evalDiag() { const ans = DIAG.map((_, i) => { const r = document.querySelector(`input[name=dg${i}]:checked`); return r ? +r.value : null; }); if (ans.some(a => a === null)) { alert('Contesta las 5 preguntas'); return; }
+  const lv = diagLevel(ans), N = { principiante: ['🟢 Principiante', 'Empieza sin tráfico ni eventos para dominar los controles y la inspección.'], intermedio: ['🟡 Intermedio', 'Practica con tráfico y eventos ocasionales, incluida una falla del equipo que debes reportar.'], certificacion: ['🔴 Certificación', 'Estás listo para el nivel más exigente: 4 minutos por misión y sin pistas.'] }[lv];
+  const sel = document.getElementById('rNivel'); if (sel) { sel.value = lv; try { localStorage.setItem('dicka_nivel', lv); localStorage.setItem('dicka_diag', JSON.stringify({ nivel: lv, fecha: new Date().toISOString() })); } catch (e) { } }
+  const tecMal = [2, 3, 4].filter(i => !DIAG[i].o[ans[i]][1]).map(i => DIAG[i].q);
+  const r = document.getElementById('diagRes'); r.style.display = 'block'; r.innerHTML = `<b>Nivel sugerido: ${N[0]}</b><br><span style="font-size:13.5px">${N[1]}</span>${tecMal.length ? `<div style="font-size:12.5px;margin-top:6px;color:#a11">Repasa: ${tecMal.join(' · ')}</div>` : ''}<div style="font-size:12px;color:#555;margin-top:6px">Ya lo seleccioné en tu registro; puedes cambiarlo si tu supervisor indica otro.</div>`; r.scrollIntoView({ block: 'nearest' }); }
+</script>
 <script src="js/accesible.js"></script>
 </body>
 </html>

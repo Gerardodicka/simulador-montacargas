@@ -34,9 +34,9 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 12 | Todos | Usabilidad | Modo accesible: texto grande, alto contraste, subtítulos | Attensi | ✅ |
 | 13 | Portal | Usabilidad | Insignias y racha diaria por colaborador ("Mis logros") | Gartner 2028 (gamificación), Attensi | ✅ |
 | 14 | Dojo de Mando | Funcionalidad | Repaso espaciado: recordatorio para repetir la situación más débil a los 7 días | Microaprendizaje con repetición espaciada | ✅ |
-| 15 | Nuevo simulador | Nuevo simulador | Métodos de surtido: discreto vs. por lotes vs. por zonas, con tiempo y recorrido | WareMover (2024) | ⬜ |
-| 16 | Recepción y Decantado | Usabilidad | Escáner RF simulado: instrucciones y captura por "pistola" | WarehouseGame Training (Mecalux) | ⬜ |
-| 17 | Montacargas | Funcionalidad | Diagnóstico inicial que ajusta la dificultad sugerida | WarehouseGame Training (Mecalux) | ⬜ |
+| 15 | Nuevo simulador | Nuevo simulador | Métodos de surtido: discreto vs. por lotes vs. por zonas, con tiempo y recorrido | WareMover (2024) | ✅ |
+| 16 | Recepción y Decantado | Usabilidad | Escáner RF simulado: instrucciones y captura por "pistola" | WarehouseGame Training (Mecalux) | ✅ |
+| 17 | Montacargas | Funcionalidad | Diagnóstico inicial que ajusta la dificultad sugerida | WarehouseGame Training (Mecalux) | ✅ |
 | 18 | Portal | Medición | Tabla de líderes por almacén (en el equipo, opcional) | Gartner / Amazon, DHL | ⬜ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
@@ -71,3 +71,6 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-16 16:39 UTC | 12 | Modo accesible en las 15 páginas (botón Aa): texto grande, alto contraste y subtítulos de todo lo narrado en voz; preferencia guardada en el equipo (v19.6) | 17/17 IA · validar.js 128/128 (+3 nuevas: botón en todas las páginas, opciones y persistencia) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #122 | ✅ |
 | 2026-11-16 18:40 UTC | 13 | Investigación de mercado (WarehouseGame/Mecalux, WareMover, Gartner, microaprendizaje) → 6 ideas nuevas en la cola. Implementada: "Mis logros" en el portal con 9 insignias y racha diaria por colaborador (v19.7) | 17/17 IA · validar.js 130/130 (+2 nuevas) · consola limpia · 1280/390 px revisadas · privacidad OK (solo datos del equipo) | #122 | ✅ |
 | 2026-11-16 20:39 UTC | 14 | Repaso espaciado en el Dojo: cada situación se agenda (7 días si < 80, 21 si salió bien); al vencer aparece "📅 Toca repasar" con botón y etiqueta en el menú (v19.8) | 17/17 IA · validar.js 132/132 (+2 nuevas) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #122 | ✅ |
+| 2026-11-16 22:39 UTC | 15 | Nuevo simulador Métodos de Surtido: 4 escenarios (discreto, lotes, zonas, oleadas) con recorrido calculado y ruta óptima de un lote de 8 ubicaciones; en el catálogo (v19.9) | 17/17 IA · validar.js 139/139 (+4 nuevas y carga en escritorio/celular) · consola limpia · 1280/390 px revisadas · privacidad OK | #123 | ✅ |
+| 2026-11-17 00:39 UTC | 16 | Recepción: escáner RF simulado — pantalla RF con instrucciones, hay que escanear la LPN para ver la etiqueta y decidir; el RF alerta SKU, cantidad, vida útil y empaque (v20.0) | 17/17 IA · validar.js 141/141 (+2 nuevas; prueba existente actualizada para escanear) · consola limpia · 1280/390 px revisadas · privacidad OK | #123 | ✅ |
+| 2026-11-17 02:39 UTC | 17 | Montacargas: diagnóstico inicial de 5 preguntas (experiencia, DC-3, 3 técnicas) que sugiere y selecciona el nivel de práctica y señala qué repasar (v20.1) | 17/17 IA · validar.js 142/142 (+1 nueva; prueba de Métodos de Surtido aligerada tras un cuelgue) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #123 | ✅ |
