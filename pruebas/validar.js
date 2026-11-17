@@ -294,6 +294,14 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Inspección de tráiler', 'inspección completa y decisiones correctas aprueban', g.r.score >= 95 && g.r.dec === 'aceptar,detener,detener', JSON.stringify(g.r));
     ok('Inspección de tráiler', 'aceptar todo sin revisar no aprueba', m.r.score < 75, m.r.score + '/100');
     ok('Inspección de tráiler', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // Devoluciones: los 8 casos cubren los 5 destinos; destinos correctos 100, reintegrar todo no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/devoluciones.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Devoluciones'); await q.click('#startBtn');
+      const r = await q.evaluate(good => { const kinds = new Set(L.map(c => c.ok)).size, sinRma = L.every(c => c.rma === 'ok' || c.ok === 'retener'); for (let i = 0; i < 8; i++) { document.querySelector(`[data-d="${good ? L[idx].ok : 'reintegrar'}"]`).click(); next(); } return { score, kinds, sinRma }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Devoluciones', 'cubre los 5 destinos, sin RMA siempre se retiene y destinos correctos dan 100', g.r.score === 100 && g.r.kinds === 5 && g.r.sinRma, JSON.stringify(g.r));
+    ok('Devoluciones', 'reintegrar todo no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('Devoluciones', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
