@@ -266,6 +266,15 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       set(O.plan); runWeek(); return { score, opt: { s: o.opt.service, c: o.opt.cost === O.cost, l: o.opt.legal }, none: o.none.service, otLegal: o.ot.legal, cpc: /\$\d+\.\d{2}/.test(document.getElementById('estats').innerText) }; });
     ok('Planeación de personal', 'plan óptimo 100/100; sin eventuales falta servicio; >9 h extra ilegal', r.score === 100 && r.opt.s === 1 && r.opt.c && r.opt.l && r.none < .9 && r.otLegal === false && r.cpc, JSON.stringify(r));
     ok('Planeación de personal', 'sin errores de ejecución', !e.length, e[0] || ''); }
+  // Tablero del gerente: estrategia equilibrada aprueba; solo tiempo extra sin mantenimiento ni personal reprueba con accidentes
+  { const run = async plan => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Tablero'); await q.click('#startBtn');
+      for (let i = 0; i < 4; i++) { const d = plan(i); await q.selectOption('#dExtra', String(d.extra)); await q.selectOption('#dOT', String(d.ot)); await q.selectOption('#dMant', String(d.mant)); await q.selectOption('#dCap', String(d.cap)); await q.click('#runBtn'); }
+      const r = await q.evaluate(() => ({ score, acc: H.reduce((a, h) => a + h.acc, 0), end: !document.getElementById('end').classList.contains('hidden'), saved: JSON.parse(localStorage.getItem('dicka_console_results') || '[]').some(x => x.juego === 'Tablero del Gerente') })); await q.close(); return { r, e }; };
+    const g = await run(i => ({ extra: i < 2 ? 6 : 9, ot: 0, mant: 1, cap: 1 })), m = await run(() => ({ extra: 0, ot: 1, mant: 0, cap: 0 }));
+    ok('Tablero del gerente', 'estrategia equilibrada aprueba (≥70) y guarda', g.r.score >= 70 && g.r.end && g.r.saved && g.r.acc === 0, JSON.stringify(g.r));
+    ok('Tablero del gerente', 'solo tiempo extra y correctivo reprueba con accidentes', m.r.score < 70 && m.r.acc > 0, JSON.stringify(m.r));
+    ok('Tablero del gerente', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
