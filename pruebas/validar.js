@@ -302,6 +302,14 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Devoluciones', 'cubre los 5 destinos, sin RMA siempre se retiene y destinos correctos dan 100', g.r.score === 100 && g.r.kinds === 5 && g.r.sinRma, JSON.stringify(g.r));
     ok('Devoluciones', 'reintegrar todo no aprueba', m.r.score < 75, m.r.score + '/100');
     ok('Devoluciones', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // 5S: cada recorrido cubre las 5 S y un área sin hallazgo; respuestas correctas 100, marcar todo "está bien" no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/5s-almacen.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Cinco S'); await q.click('#startBtn');
+      const r = await q.evaluate(good => { const kinds = new Set(L.map(c => c.ok)).size, n = L.length; for (let i = 0; i < 10; i++) { document.querySelector(`[data-d="${good ? L[idx].ok : 'ok'}"]`).click(); next(); } return { score, kinds, n }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('5S en el almacén', '10 hallazgos que cubren las 5 S y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10, JSON.stringify(g.r));
+    ok('5S en el almacén', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('5S en el almacén', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
