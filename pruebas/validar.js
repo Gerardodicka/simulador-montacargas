@@ -211,7 +211,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       await q.fill('#pname', 'Prueba Surtido'); await q.click('#startBtn');
       const r = await q.evaluate(good => { let c2 = 0, c3 = 0; for (let i = 0; i < 10; i++) { const a = metrics(SCN[1].gen(), 1); if (a.lot < a.disc) c2++; const z = metrics(SCN[2].gen(), 2); if (z.zon < z.disc && z.zon < z.lot) c3++; }
         for (let i = 0; i < 4; i++) { const want = SCN[step].ok, m = good ? want : Object.keys(MET).find(k => k !== want); document.querySelector(`[data-m="${m}"]`).click(); next(); }
-        const idx = ROUTE_PTS.map((_, i) => i); const ord = good ? perm(idx).sort((x, y) => pathLen(x.map(i => ROUTE_PTS[i])) - pathLen(y.map(i => ROUTE_PTS[i])))[0] : idx.slice().sort((x, y) => (ROUTE_PTS[x].b % 2) - (ROUTE_PTS[y].b % 2) || ROUTE_PTS[y].a - ROUTE_PTS[x].a);
+        const idx = ROUTE_PTS.map((_, i) => i); const ord = good ? perm(idx).reduce((bst, o) => { const L = pathLen(o.map(i => ROUTE_PTS[i])); return L < bst[0] ? [L, o] : bst; }, [1e9, null])[1] : idx.slice().sort((x, y) => (ROUTE_PTS[x].b % 2) - (ROUTE_PTS[y].b % 2) || ROUTE_PTS[y].a - ROUTE_PTS[x].a);
         ord.forEach(i => document.querySelector(`.loc.pick[data-i="${i}"]`).click()); finish(); return { score, ok: score >= PASS, c2, c3 }; }, good); await q.close(); return { r, e }; };
     const g = await run(true), m = await run(false);
     ok('Métodos de surtido', 'respuestas correctas y ruta óptima: 100/100', g.r.score === 100 && g.r.ok, JSON.stringify(g.r));
@@ -225,6 +225,10 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       o.alertas = alertas; o.limpias = limpias; o.score = score; return o; });
     ok('Recepción y decantado', 'escáner RF: bloquea sin escanear, alerta diferencias', r.bloqueado && r.pide && r.alertas === 4 && r.limpias === 4 && r.score === 120, JSON.stringify(r));
     ok('Recepción y decantado', 'escáner RF sin errores', !e.length, e[0] || ''); }
+  // Montacargas: diagnóstico inicial sugiere el nivel (principiante / intermedio / certificación) y lo selecciona
+  { const lv = await p.evaluate(() => { const set = a => { openDiag(); a.forEach((v, i) => document.querySelector(`input[name=dg${i}][value="${v}"]`).checked = true); evalDiag(); const r = document.getElementById('rNivel').value; closeDiag(); return r; };
+      return [set([0, 0, 0, 0, 1]), set([1, 1, 1, 0, 1]), set([2, 1, 1, 1, 1]), set([2, 0, 1, 1, 1])]; });
+    ok('Montacargas', 'diagnóstico inicial sugiere nivel', lv.join() === 'principiante,intermedio,certificacion,intermedio', lv.join()); await p.evaluate(() => { document.getElementById('rNivel').value = 'intermedio'; }); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
