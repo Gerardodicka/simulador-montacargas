@@ -251,6 +251,13 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       return bad; });
     ok('Dojo de Mando', '10 situaciones gerenciales nuevas en escenarios variados', !r.length, r.join(' · '));
     ok('Dojo de Mando', 'situaciones gerenciales sin errores', !e.length, e[0] || ''); await q.close(); }
+  // Portal: tabla de líderes por almacén (orden por puntos, filtro de almacén y periodo, nombres abreviados por defecto)
+  { const ctx = await b.newContext({ viewport: { width: 390, height: 844 } }), q = await ctx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('index.html'));
+    await q.evaluate(() => { const d = n => new Date(Date.now() - n * 864e5).toISOString(), R = []; [['Ana Pérez', 'Agave 1', 4], ['Luis Gómez', 'Agave 1', 2], ['Rosa Díaz', 'Celaya', 3]].forEach(([n, w, k]) => { for (let i = 0; i < k; i++) R.push({ juego: 'Curso ' + i, nombre: n, almacen: w, score: '90/100', aprobado: i % 3 !== 2, fecha: d(i) }); }); R.push({ juego: 'Viejo', nombre: 'Viejo Uno', almacen: 'Agave 1', aprobado: true, score: '1/1', fecha: d(60) }); localStorage.setItem('dicka_console_results', JSON.stringify(R)); });
+    await q.reload(); await q.waitForTimeout(500); await q.click('#btnLideres'); await q.waitForTimeout(150);
+    const r = await q.evaluate(() => { const names = () => [...document.querySelectorAll('.ld-row')].map(t => t.children[1].textContent); const o = { todos: names().join() }; document.getElementById('ldWh').value = 'Agave 1'; renderLideres(); o.agave = names().join(); document.getElementById('ldPer').value = '0'; renderLideres(); o.todo = names().length; document.getElementById('ldFull').checked = true; renderLideres(); o.full = names()[0]; o.hs = document.documentElement.scrollWidth > innerWidth + 2; return o; });
+    ok('Portal', 'tabla de líderes por almacén', r.todos === 'Ana P.,Rosa D.,Luis G.' && r.agave === 'Ana P.,Luis G.' && r.todo === 3 && r.full === 'Ana Pérez' && !r.hs, JSON.stringify(r));
+    ok('Portal', 'tabla de líderes sin errores', !e.length, e[0] || ''); await ctx.close(); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

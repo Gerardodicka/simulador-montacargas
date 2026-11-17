@@ -37,7 +37,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 15 | Nuevo simulador | Nuevo simulador | Métodos de surtido: discreto vs. por lotes vs. por zonas, con tiempo y recorrido | WareMover (2024) | ✅ |
 | 16 | Recepción y Decantado | Usabilidad | Escáner RF simulado: instrucciones y captura por "pistola" | WarehouseGame Training (Mecalux) | ✅ |
 | 17 | Montacargas | Funcionalidad | Diagnóstico inicial que ajusta la dificultad sugerida | WarehouseGame Training (Mecalux) | ✅ |
-| 18 | Portal | Medición | Tabla de líderes por almacén (en el equipo, opcional) | Gartner / Amazon, DHL | ⬜ |
+| 18 | Portal | Medición | Tabla de líderes por almacén (en el equipo, opcional) | Gartner / Amazon, DHL | ✅ |
 | 19 | Dojo de Mando | Nuevo contenido | 10 situaciones de liderazgo gerencial en 3 escenarios nuevos (sala de juntas, andén, comedor) | Pedido del usuario | ✅ |
 | 20 | Nuevo simulador | Nuevo simulador | Planeación de personal: plantilla por turno según pronóstico de volumen, ausentismo y costo de tiempo extra | Simuladores de workforce planning | ⬜ |
 | 21 | Nuevo simulador | Nuevo simulador | Tablero del gerente: decisiones mensuales (personal, mantenimiento, tiempo extra) y su efecto en OTIF y costo por caja | Juegos de negocio (business games) | ⬜ |
@@ -86,3 +86,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-17 02:39 UTC | 17 | Montacargas: diagnóstico inicial de 5 preguntas (experiencia, DC-3, 3 técnicas) que sugiere y selecciona el nivel de práctica y señala qué repasar (v20.1) | 17/17 IA · validar.js 142/142 (+1 nueva; prueba de Métodos de Surtido aligerada tras un cuelgue) · consola limpia · 1280/390 px revisadas · privacidad OK (solo localStorage) | #123 | ✅ |
 | 2026-11-17 (a pedido) | — | Micrófono del Dojo más robusto: abre aunque Edge deje la voz "atorada", avisa si falla el dictado por red, si no hay micrófono o si está bloqueado, ofrece escribir y muestra un medidor de nivel (v20.2) | validar.js 149/149 (3 nuevas con micrófono y voz simulados en navegador aislado) | #124 | ✅ |
 | 2026-11-17 (a pedido) | 19 | 10 situaciones de liderazgo gerencial (presupuesto, jefe bajo meta, sucesión, automatización, crisis en andén, ética con proveedor, conflicto entre áreas, revisión salarial, cultura de seguridad, delegar) en 3 escenarios 3D nuevos: sala de juntas, andén y comedor (v20.2) | validar.js 149/149 (2 nuevas) · capturas de sala, andén y comedor revisadas | #124 | ✅ |
+| 2026-11-17 08:39 UTC | 18 | Portal: tabla de líderes (top 10) por almacén y periodo, con puntos por aprobados, intentos y racha; nombres abreviados por defecto (v20.3) | validar.js 151/151 (+2 nuevas) · consola limpia · 1280/390 px revisadas · privacidad OK (solo datos del equipo, nombres abreviados) | #124 | ✅ |
