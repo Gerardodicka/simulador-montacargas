@@ -56,6 +56,11 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .acts button{padding:.85rem;border:2px solid #dfe3f0;background:#fff;border-radius:10px;font-weight:700;cursor:pointer;text-align:left;font-size:13.5px}
 .acts button:hover{border-color:var(--brillante)}
 .step{font-size:12px;font-weight:800;color:var(--brillante);letter-spacing:1px;margin-top:.4rem}
+.rf{background:#1f2a1f;border:6px solid #2b2b2b;border-radius:16px;padding:10px 12px;margin:.2rem 0 .8rem;font:700 13px/1.5 'Courier New',monospace;color:#9dff9d;box-shadow:inset 0 0 12px rgba(0,0,0,.6)}
+.rf .hd{display:flex;justify-content:space-between;color:#d9ffd9;border-bottom:1px dashed #4b6b4b;margin-bottom:4px}.rf .blink{animation:bl 1s steps(2) infinite}@keyframes bl{50%{opacity:0}}
+.scanBtn{width:100%;padding:.8rem;border:0;border-radius:10px;background:#2b2b2b;color:#9dff9d;font:800 14px 'Courier New',monospace;cursor:pointer;margin-bottom:.6rem}
+.phy.locked{filter:blur(4px);pointer-events:none;user-select:none}
+.acts button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:480px){.cmp{grid-template-columns:1fr}}
 </style>
 </head>
@@ -80,7 +85,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
     <div class="bar"><div id="bar" style="width:0"></div></div>
     <div class="asn"><span class="k">AVISO DE EMBARQUE (ASN)</span><br>Proveedor <b>Alimentos del Bajío</b> · OC <b id="oc"></b> · Andén <b>R2</b></div>
     <div class="pallet" id="pallet"></div>
-    <div class="cmp"><div class="doc"><h4>📄 LO QUE DICE EL ASN</h4><div id="doc"></div></div><div class="phy"><h4>🔍 LO QUE LLEGÓ (ETIQUETA Y CONTEO)</h4><div id="phy"></div></div></div>
+    <div class="rf" id="rf"></div><button class="scanBtn" id="scanBtn" onclick="scan()">📟 ESCANEAR ETIQUETA (LPN)</button><div class="cmp"><div class="doc"><h4>📄 LO QUE DICE EL ASN</h4><div id="doc"></div></div><div class="phy" id="phyBox"><h4>🔍 LO QUE LLEGÓ (ETIQUETA Y CONTEO)</h4><div id="phy"></div></div></div>
     <div class="step" id="stepLbl">1 · ¿QUÉ HACES CON ESTA TARIMA?</div>
     <div class="acts" id="acts"></div>
   </div>
@@ -125,7 +130,12 @@ function show(){ const p=P[idx], dias=Math.round((p.cad-Date.now())/864e5); $('l
   $('phy').innerHTML=`<b>${p.skuReal}</b><br>${p.descReal}<br>Contaste: <b>${p.real}</b> cajas<br>Lote ${p.lote} · Cad. <b>${dstr(p.cad)}</b> (${dias} días)<br>Condición: <b>${p.dano?'⚠️ Emplaye roto, cajas aplastadas':'✓ Íntegra'}</b>`;
   $('stepLbl').textContent='1 · ¿QUÉ HACES CON ESTA TARIMA?';
   const A=[['completo','✅ Recibir completo'],['diferencia','📋 Recibir con diferencia (registrar la cantidad real y avisar a Mesa de Control)'],['rechazar','❌ Rechazar la tarima']];
-  $('acts').innerHTML=A.map(([v,t])=>`<button data-v="${v}" onclick="decide('${v}')">${t}</button>`).join(''); }
+  $('acts').innerHTML=A.map(([v,t])=>`<button data-v="${v}" onclick="decide('${v}')" disabled>${t}</button>`).join(''); scanned=false; $('phyBox').classList.add('locked'); $('scanBtn').style.display=''; rfMsg(['ORDEN '+$('oc').textContent+' · ANDÉN R2','TARIMA '+(idx+1)+' DE 8','&gt; ESCANEE LPN DE LA TARIMA<span class="blink">_</span>']); }
+let scanned=false; const LPN=()=>'LPN'+String(70000+idx*137).padStart(6,'0');
+function rfMsg(L){ $('rf').innerHTML=`<div class="hd"><span>📟 RF-01 · RECIBO</span><span>${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</span></div>`+L.map(x=>`<div>${x}</div>`).join(''); }
+function scan(){ if(scanned) return; scanned=true; const p=P[idx], dias=Math.round((p.cad-Date.now())/864e5); try{ navigator.vibrate&&navigator.vibrate(40); }catch(e){} $('phyBox').classList.remove('locked'); $('scanBtn').style.display='none'; document.querySelectorAll('#acts button').forEach(b=>b.disabled=false);
+  const alerts=[]; if(p.skuReal!==p.sku) alerts.push('⚠ SKU NO COINCIDE CON ASN'); if(p.real!==p.qty) alerts.push('⚠ CANT '+p.real+' ≠ ASN '+p.qty); if(dias<VIDA_MIN) alerts.push('⚠ VIDA ÚTIL '+dias+' D &lt; '+VIDA_MIN); if(p.dano) alerts.push('⚠ REVISE EMPAQUE');
+  rfMsg([LPN()+' ✓ LEÍDO','SKU '+p.skuReal+' · LOTE '+p.lote,'CANT '+p.real+' CJ · CAD '+dias+' D'].concat(alerts.length?alerts:['✓ SIN ALERTAS']).concat(['&gt; ELIJA ACCIÓN<span class="blink">_</span>'])); }
 function decide(v){ const p=P[idx]; if(v===p.dec){ score+=10; okDec++; toast('✓ Decisión correcta',true); } else { errors.push(v==='completo'&&p.dec!=='completo'?'Recibió completo algo con problema':v==='rechazar'?'Rechazó una tarima que se debía recibir':'Decisión incorrecta en recepción'); toast('✗ Lo correcto era: '+{completo:'recibir completo',diferencia:'recibir con diferencia',rechazar:'rechazar'}[p.dec]); }
   $('sc').textContent=score; if(v==='rechazar'){ $('stepLbl').textContent='2 · ¿CUÁL ES EL MOTIVO DEL RECHAZO?'; $('acts').innerHTML=[['dano','📦 Producto dañado'],['sku','🔀 El SKU no corresponde al ASN'],['cad','⏳ Caducidad menor a la vida mínima'],['cant','🔢 Faltan cajas']].map(([m,t])=>`<button data-m="${m}" onclick="motivo('${m}')">${t}</button>`).join(''); }
   else { $('stepLbl').textContent='2 · ¿DÓNDE LA DECANTAS Y UBICAS?'; $('acts').innerHTML=[['rack','🏬 Rack de producto seco'],['fria','❄️ Cámara fría (2–6 °C)'],['piso','⬜ Dejarla en piso del andén para después']].map(([z,t])=>`<button data-z="${z}" onclick="zona('${z}')">${t}</button>`).join(''); } }
