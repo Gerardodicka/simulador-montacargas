@@ -56,6 +56,10 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:.6rem 0}.chips button{width:38px;height:38px;border-radius:50%;border:2px solid #dfe3f0;background:#fff;font-weight:800;cursor:pointer;color:var(--azul)}.chips button.okk{background:#e9f7ef;border-color:var(--verde)}.chips button.bad{background:#fdecec;border-color:var(--rojo)}
 .panel{position:absolute;left:0;right:0;bottom:0;max-height:92%;overflow:auto;background:#fff;border-radius:14px 14px 0 0;padding:.8rem 1rem;box-shadow:0 -6px 24px rgba(0,0,0,.25)}.panel.hidden{display:none}
 .panel .acts{grid-template-columns:1fr 1fr}.panel .acts button{padding:.6rem;font-size:13px}@media(max-width:520px){.panel .acts{grid-template-columns:1fr}}
+@media(min-width:900px){.v3d{height:70vh}.panel{left:auto;top:0;bottom:0;width:46%;max-height:none;border-radius:0 12px 12px 0;box-shadow:-6px 0 24px rgba(0,0,0,.25)}.panel .acts{grid-template-columns:1fr}}
+.acts button small{display:block;font-weight:500;color:#5b6478;font-size:12px;margin-top:2px;line-height:1.35}
+.tuto{position:absolute;inset:0;background:rgba(1,17,49,.82);display:flex;align-items:center;justify-content:center;z-index:5;padding:14px}.tuto>div{background:#fff;border-radius:14px;padding:16px 18px;max-width:420px;font-size:14px;line-height:1.5}.tuto h3{margin:0 0 8px;color:var(--azul)}.tuto ol{margin:0 0 12px 18px;padding:0}.tuto li{margin-bottom:6px}
+.salidas{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:4px 12px;background:#f4f6fb;border-radius:10px;padding:8px 12px;margin:.6rem 0;font-size:13px}.salidas>b{grid-column:1/-1;color:var(--azul)}
 </style>
 </head>
 <body>
@@ -66,8 +70,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
     <h1>Cross-Docking</h1><p>Recibo → andén de salida sin almacenar · Recorrido 3D · 10 tarimas · aprueba con 75/100</p>
   </div>
   <div class="card" id="intro">
-    <div class="big">🔁</div><h2>Cross-Docking</h2><p class="lead">Llegan tarimas al andén de recibo. Recorre el cross-dock en 3D, toca las 10 tarimas marcadas y decide a dónde va cada una sin almacenarla si no es necesario.</p>
-    <div class="info"><b>1 · Cross-dock directo:</b> tiene salida hoy, se lleva directo a su andén de salida<br><b>2 · Almacenar:</b> no tiene embarque programado hoy<br><b>3 · Consolidar:</b> se junta con otras del mismo destino para llenar el camión<br><b>4 · Retener:</b> daño, faltante o etiqueta que no coincide con el aviso (ASN)<br><b>5 · Urgente primero:</b> su camión sale antes que los demás<br>Cada tarima vale 10 puntos</div>
+    <div class="big">🔁</div><h2>Cross-Docking</h2><p class="lead"><b>Cross-docking</b> = pasar la tarima del andén de <b>recibo</b> directo al camión de <b>salida</b>, sin guardarla en el rack. Revisa a qué destino va cada tarima, compárala con el tablero de <b>Salidas de hoy</b> y decide qué hacer.</p>
+    <div class="info"><b>1 · Cross-dock directo:</b> su camión sale hoy y hay tiempo de sobra: se lleva directo a su andén de salida<br><b>2 · Almacenar:</b> su destino no tiene camión hoy, se guarda en rack<br><b>3 · Consolidar:</b> es media tarima o cajas sueltas: se junta con las de su mismo destino antes de cargar<br><b>4 · Retener y reportar:</b> viene dañada o no coincide con el aviso de embarque (ASN)<br><b>5 · Urgente, mover primero:</b> su camión sale en menos de 1 hora<br>Cada tarima vale 10 puntos</div>
     <label class="lbl">TU NOMBRE COMPLETO</label><input class="name" id="pname" placeholder="Nombre y apellido">
     <label class="lbl">NÚMERO DE EMPLEADO</label><input class="name" id="pnum" inputmode="numeric" placeholder="Ej. 10457">
     <label class="lbl">PUESTO</label><select class="name" id="ppuesto"><option>Aux de Almacén</option><option>Embarcador</option><option>Recibidor</option><option>Auxiliar de Cross-Dock</option><option>Montacarguista</option><option>Supervisor de Andén</option><option>Supervisor de Operaciones</option></select>
@@ -77,7 +81,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   <div class="card hidden" id="game">
     <div class="topbar"><span>Punto <span id="ln">1</span>/10</span><span>⭐ <span id="sc">0</span></span></div>
     <div class="bar"><div id="bar" style="width:0"></div></div>
-    <div class="v3d" id="v3d"><div class="hint" id="hint">Arrastra para girar · rueda o pellizco para acercar · toca los objetos marcados</div><div class="panel hidden" id="stage"></div></div><div class="chips" id="chips"></div>
+    <div class="v3d" id="v3d"><div class="hint" id="hint">Arrastra para girar · rueda o pellizco para acercar · toca los objetos marcados</div><div class="panel hidden" id="stage"></div></div><div class="salidas" id="salidas"><b>📋 Salidas de hoy · son las 13:20</b><div>🔴 Andén 9 · <b>TOLUCA</b> · 14:00</div><div>🔴 Andén 10 · <b>PACHUCA</b> · 14:10</div><div>Andén 5 · <b>GUADALAJARA</b> · 15:30</div><div>Andén 6 · <b>LEÓN</b> · 16:30</div><div>Andén 8 · <b>QUERÉTARO</b> · 17:00</div><div>Andén 7 · <b>MONTERREY</b> · 18:00</div><div style="color:#888">Sin salida hoy: Mérida y otros destinos</div></div><div class="chips" id="chips"></div>
   </div>
   <div class="card hidden" id="end">
     <div class="big" id="eicon">🏆</div><h2 id="etitle"></h2>
@@ -100,24 +104,28 @@ function chk(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))>>>0; return
 const D={s1:'1 · Cross-dock directo a su andén',s2:'2 · Almacenar',s3:'3 · Consolidar por destino',s4:'4 · Retener y reportar',s5:'5 · Urgente: mover primero',ok:'✅ Ya está donde debe'};
 /* zona, hallazgo, S correcta, explicación */
 const H=[
- ['Andén de recibo 1','Tarima para Tienda Monterrey; el camión a Monterrey sale hoy a las 18:00','s1','Tiene salida hoy: va directo al andén de salida de Monterrey, sin pasar por rack.','s1a'],
- ['Andén de recibo 2','Tarima completa de un solo cliente con cita de entrega hoy','s1','Tarima completa con salida hoy: cross-dock directo.','s1b'],
- ['Andén de recibo 3','Tarima para un cliente que no tiene embarque hasta el lunes','s2','Sin salida programada no se deja en piso de cross-dock: se almacena.','s2a'],
- ['Andén de recibo 1','Producto de reabasto para el inventario del almacén, no para un pedido','s2','No pertenece a ningún embarque: va a almacenaje.','s2b'],
- ['Zona de clasificación','Media tarima para Querétaro; hay otras 3 medias del mismo destino','s3','Se consolidan por destino para llenar el camión y no mandar espacio vacío.','s3a'],
- ['Zona de clasificación','Cajas sueltas para la ruta Bajío que llegan de 3 proveedores','s3','Se arman tarimas por ruta antes de cargar.','s3b'],
- ['Andén de recibo 4','La tarima viene con cajas aplastadas y el ASN dice 40 cajas pero hay 36','s4','Daño y faltante: se retiene, se documenta y se reporta antes de embarcar.','s4a'],
- ['Andén de recibo 2','La etiqueta de la tarima dice Puebla pero el ASN la asigna a Toluca','s4','Información que no coincide: se retiene hasta confirmar el destino correcto.','s4b'],
- ['Andén de recibo 3','Tarima para el camión de las 14:00; ya son las 13:20','s5','Su camión sale antes que todos: se mueve primero.','s5a'],
- ['Andén de recibo 4','Pedido de un cliente con penalización por llegar tarde, sale en el primer camión','s5','Prioridad por hora de salida y nivel de servicio: va primero.','s5b'],
- ['Andén de salida 5','Tarima de Guadalajara ya en el andén de Guadalajara, escaneada y emplayada','ok','Está en el andén correcto: no se mueve.','oka'],
- ['Andén de salida 6','Tarimas consolidadas de León listas junto a su camión','ok','Todo listo para cargar: no requiere acción.','okb']];
+ ['Andén de recibo 1','Tarima completa para MONTERREY, en buen estado y coincide con el ASN','s1','Monterrey sale a las 18:00 y son las 13:20: hay tiempo. Va directo a su andén de salida (7) sin guardarla.','s1a'],
+ ['Andén de recibo 2','Tarima completa para GUADALAJARA, en buen estado y coincide con el ASN','s1','Guadalajara sale a las 15:30: hay tiempo suficiente. Cross-dock directo al andén 5.','s1b'],
+ ['Andén de recibo 3','Tarima completa para MÉRIDA, en buen estado','s2','En el tablero no hay camión a Mérida hoy: no se deja en el piso del cross-dock, se almacena.','s2a'],
+ ['Andén de recibo 1','Producto de reabasto para el inventario del almacén (no tiene destino de cliente)','s2','No va en ningún camión: se almacena en rack.','s2b'],
+ ['Zona de clasificación','MEDIA tarima para QUERÉTARO; hay otras 3 medias tarimas de Querétaro','s3','Se consolidan las medias tarimas del mismo destino para llenar el camión de Querétaro.','s3a'],
+ ['Zona de clasificación','12 cajas sueltas para LEÓN que llegaron de 3 proveedores','s3','Las cajas sueltas se arman en tarimas por destino (León) antes de cargar.','s3b'],
+ ['Andén de recibo 4','Tarima para LEÓN con cajas aplastadas; el ASN dice 40 cajas y llegaron 36','s4','Daño y faltante: se retiene, se documenta y se reporta. No se embarca así.','s4a'],
+ ['Andén de recibo 2','La etiqueta dice PUEBLA, pero el ASN la asigna a TOLUCA','s4','No coincide con el aviso de embarque: se retiene hasta confirmar el destino correcto.','s4b'],
+ ['Andén de recibo 3','Tarima completa para TOLUCA, en buen estado','s5','Toluca sale a las 14:00 y son las 13:20: quedan 40 minutos. Se mueve primero que todas.','s5a'],
+ ['Andén de recibo 4','Tarima completa para PACHUCA, en buen estado','s5','Pachuca sale a las 14:10: menos de 1 hora. Es urgente, se mueve primero.','s5b'],
+ ['Andén de salida 5','Tarima de GUADALAJARA ya junto al camión de Guadalajara, escaneada y emplayada','ok','Está en su andén correcto: no se mueve.','oka'],
+ ['Andén de salida 6','Tarimas de LEÓN ya consolidadas junto a su camión','ok','Todo listo para cargar en su andén: no requiere acción.','okb']];
 function build(){ const by=k=>H.filter(h=>h[2]===k).sort(()=>Math.random()-.5); let a=['s1','s2','s3','s4','s5','ok'].map(k=>by(k)[0]); const rest=H.filter(h=>!a.includes(h)).sort(()=>Math.random()-.5); a=a.concat(rest.slice(0,4)).sort(()=>Math.random()-.5);
   return a.map(h=>({zona:h[0],txt:h[1],ok:h[2],why:h[3],key:h[4]})); }
 function debil(){ const k=Object.keys(fall).sort((x,y)=>fall[y]-fall[x])[0]; return k?D[k].replace(/^\d · /,''):'Ninguna'; }
 let done=new Set(), cur=-1, R3={};
+
+let HINT={}; (function(){ const inf=document.querySelector('#intro .info'); if(!inf) return; inf.innerHTML.split(/<br\s*\/?>/i).forEach(l=>{ const m=l.match(/<b>\s*(\d)\s*·[^<]*<\/b>\s*(.*)/); if(m) HINT['s'+m[1]]=m[2].replace(/<[^>]+>/g,'').replace(/^[:\s]+/,'').trim(); }); if(!HINT.ok) HINT.ok='Todo está bien: no hay nada que corregir.'; })();
+function tuto(){ const v=$('v3d'); if(!v||$('tuto')) return; const d=document.createElement('div'); d.className='tuto'; d.id='tuto';
+  const ld=document.querySelector('#intro .lead'); d.innerHTML=`<div><h3>¿Cómo se juega?</h3>${ld?`<p id="tutoLead" style="margin:0 0 8px;color:#333">${ld.innerHTML}</p>`:''}<ol><li>Toca un <b>número azul</b> en la escena (o los botones 1–10 de abajo).</li><li>Lee la <b>situación</b> de ese punto.</li><li>Elige <b>qué hacer</b>: cada opción explica cuándo aplica.</li><li>Lee la <b>explicación</b> y sigue con el siguiente número. Al completar los 10 ves tu resultado.</li></ol><button class="btn" id="tutoOk" onclick="$('tuto').remove()">Entendido, empezar</button></div>`; v.appendChild(d); }
 function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); L=build();
-  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); $('chips').innerHTML=L.map((c,i)=>`<button data-c="${i}" onclick="openH(${i})">${i+1}</button>`).join(''); $('ln').textContent=0; try{ init3d(); }catch(e){ $('hint').textContent='Tu equipo no muestra 3D: usa los botones numerados de abajo.'; } }
+  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); $('chips').innerHTML=L.map((c,i)=>`<button data-c="${i}" onclick="openH(${i})">${i+1}</button>`).join(''); $('ln').textContent=0; try{ init3d(); tuto(); }catch(e){ $('hint').textContent='Tu equipo no muestra 3D: usa los botones numerados de abajo.'; } }
 /* ---------- escena 3D ---------- */
 const SPOTS=[[-14,-7],[-7,-7],[0,-7],[7,-7],[14,-7],[-14,6],[-7,6],[0,6],[7,6],[14,6]];
 function M(c,o){ return new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o||{})); }
@@ -164,17 +172,23 @@ function init3d(){ const el=$('v3d'); const rn=new THREE.WebGLRenderer({antialia
   cv.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,e); if(ptrs.size===2){ const [a,b]=[...ptrs.values()], d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY); if(pin) rad*=pin/d; pin=d; moved=99; upd(); return; } if(!drag) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; moved+=Math.abs(dx)+Math.abs(dy); th-=dx*.006; ph-=dy*.005; drag={x:e.clientX,y:e.clientY}; upd(); });
   cv.addEventListener('pointerup',e=>{ ptrs.delete(e.pointerId); pin=null; if(moved<8&&ptrs.size===0){ const r=cv.getBoundingClientRect(), v=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1), rc=new THREE.Raycaster(); rc.setFromCamera(v,cam); const h=rc.intersectObjects(picks)[0]; if(h) openH(h.object.userData.i); } drag=null; });
   cv.addEventListener('wheel',e=>{ e.preventDefault(); rad*=e.deltaY>0?1.1:.9; upd(); },{passive:false});
-  R3.focus=i=>{ const [x,z]=SPOTS[i]; tgt.set(x*.5,0,z*.5); upd(); };
+  R3.focus=i=>{ const [x,z]=SPOTS[i]; tgt.set(x+(innerWidth>=900?(z<0?4.5:-4.5):0),0,z); rad=Math.min(rad,innerWidth<520?20:15); ph=Math.min(ph,.9); th=z<0?0:Math.PI; upd(); };
   const loop=t=>{ R3.marks.forEach((m,i)=>{ if(!done.has(i)) m.position.y=4.8+Math.sin(t/300+i)*.2; }); rn.render(sc,cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
 function mark(i,good){ const b=document.querySelector(`[data-c="${i}"]`); if(b) b.classList.add(good?'okk':'bad'); if(R3.marks&&R3.marks[i]){ const o=R3.marks[i], n=label(good?'✓':'✗',good?'#1f9d55':'#d11'); n.position.copy(o.position); R3.sc.remove(o); R3.sc.add(n); R3.marks[i]=n; } }
 function openH(i){ if(done.has(i)) return; idx=i; show(); if(R3.focus) R3.focus(i); }
 function show(){ const c=L[idx]; $('stage').classList.remove('hidden');
   $('stage').innerHTML=`<div class="unit"><span class="k">HALLAZGO ${idx+1} · ${c.zona.toUpperCase()}</span><br><b>📍 ${c.txt}</b></div>
-  <div class="step">¿A DÓNDE VA ESTA TARIMA?</div><div class="acts">${Object.keys(D).map(k=>`<button data-d="${k}" onclick="decide('${k}')">${D[k]}</button>`).join('')}</div><div id="fb"></div><button class="btn ghost" id="closeBtn" onclick="$('stage').classList.add('hidden')" style="margin-top:.4rem">Cerrar y seguir recorriendo</button>`; }
+  <div style="font-size:12px;color:#555;margin:.4rem 0">⏰ 13:20 · Toluca 14:00 · Pachuca 14:10 · Guadalajara 15:30 · León 16:30 · Querétaro 17:00 · Monterrey 18:00 · Mérida: sin salida hoy</div><div class="step">¿A DÓNDE VA ESTA TARIMA?</div><div class="acts">${Object.keys(D).map(k=>`<button data-d="${k}" onclick="decide('${k}')">${D[k]}${HINT[k]?`<small>${HINT[k]}</small>`:''}</button>`).join('')}</div><div id="fb"></div><button class="btn ghost" id="closeBtn" onclick="$('stage').classList.add('hidden')" style="margin-top:.4rem">Cerrar y seguir recorriendo</button>`; }
+function lim(k){ return D[k].replace(/^\d · /,'').replace(/^✅ /,''); }
+function expl(c,d,g){ const H2=k=>HINT[k]?`<div style="font-size:12.5px;color:#555;margin-top:2px">Aplica cuando: ${HINT[k]}</div>`:'';
+  return `<div class="why" style="border-left-color:${g?'#2e7d32':'#d32f2f'}"><div style="font-size:15px;font-weight:800;margin-bottom:6px">${g?'✅ ¡Correcto!':'❌ No es la mejor opción'}</div>
+  <div style="margin-bottom:6px"><b>✔ Lo correcto:</b> ${lim(c.ok)}${H2(c.ok)}</div>
+  <div style="margin-bottom:6px"><b>💡 Por qué, en este caso:</b> ${c.why}</div>
+  ${g?'':`<div><b>✖ Tu respuesta:</b> ${lim(d)}${H2(d)}<div style="font-size:12.5px;color:#a33;margin-top:2px">Aquí no corresponde porque la situación no cumple esa condición.</div></div>`}</div>`; }
 function decide(d){ const c=L[idx]; document.querySelectorAll('.acts button').forEach(b=>b.disabled=true); done.add(idx); const g=d===c.ok;
   if(g){ score+=10; decOk++; } else { fall[c.ok]=(fall[c.ok]||0)+1; errors.push(c.zona+': era '+D[c.ok].replace(/^\d · /,'')+', elegiste '+D[d].replace(/^\d · /,'')); }
   $('sc').textContent=score; $('ln').textContent=done.size; $('bar').style.width=(done.size*10)+'%'; mark(idx,g); const cb=$('closeBtn'); if(cb) cb.remove();
-  $('fb').innerHTML=`<div class="why"><b>${g?'✅ Correcto.':'❌ Lo correcto era: '+D[c.ok]+'.'}</b> ${c.why}</div><button class="btn" id="nextBtn" onclick="next()">${done.size<10?'SEGUIR RECORRIENDO →':'VER RESULTADO →'}</button>`; }
+  $('fb').innerHTML=`${expl(c,d,g)}<button class="btn" id="nextBtn" onclick="next()">${done.size<10?'SEGUIR RECORRIENDO →':'VER RESULTADO →'}</button>`; /*fbTop*/ { const st=$('stage'), fb=$('fb'); st.querySelectorAll('.acts,.step').forEach(x=>x.style.display='none'); [...st.children].forEach(x=>{ if(x!==fb&&!x.classList.contains('unit')&&x.id!=='closeBtn'&&x.tagName==='DIV'&&!x.querySelector('.why')&&x!==st.firstElementChild) x.style.display='none'; }); st.insertBefore(fb, st.firstElementChild.nextSibling); st.scrollTop=0; } }
 function next(){ $('stage').classList.add('hidden'); if(done.size>=10) finish(); }
 function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
   const ok=score>=PASS, date=new Date(); const base=`REG|${GAME_ID}|${who.name}${who.num?' #'+who.num:''}|${who.puesto}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');

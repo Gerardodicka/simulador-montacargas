@@ -38,6 +38,12 @@
     d.querySelector('b').textContent = (p.nombre + ' ' + (p.apellidos || '')).trim() + (p.num ? ' · #' + p.num : '') + (p.puesto ? ' · ' + p.puesto : '');
     if (lab !== ref && lab.tagName === 'DIV' && parseFloat(getComputedStyle(lab).paddingLeft) > 8) lab.insertBefore(d, lab.firstChild); else lab.parentNode.insertBefore(d, lab);
     $('perfilGo').onclick = function () { b.click(); };
+    var chip = document.createElement('div'); chip.id = 'perfilChip';
+    chip.style.cssText = 'position:fixed;right:10px;top:10px;z-index:9999;background:#fff;color:#1b3a1e;border:2px solid #43a047;border-radius:10px;padding:6px 10px;font:700 12px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.25);max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    chip.innerHTML = '👤 <span></span> · <a href="#" style="color:#c62828">No soy yo</a>'; chip.querySelector('span').textContent = p.nombre;
+    chip.querySelector('a').onclick = function (ev) { ev.preventDefault(); try { localStorage.removeItem(KEY); } catch (e) { } location.href = location.pathname; };
+    document.body.appendChild(chip);
+    if (!/[?&]perfil=cambiar/.test(location.search)) setTimeout(function () { var reg = $('intro') || $('regScreen'); var antes = reg ? getComputedStyle(reg).display : ''; b.click(); setTimeout(function () { if (reg && getComputedStyle(reg).display !== 'none' && !reg.classList.contains('hidden')) d.scrollIntoView({ block: 'center' }); }, 300); }, 200);
     $('perfilCambiar').onclick = function () { try { localStorage.removeItem(KEY); } catch (e) { } [c.nom, c.ape, c.full, c.num].forEach(function (e) { if (e) e.value = ''; }); d.remove(); (c.nom || c.full).focus(); };
   }
   window.dickaPerfil = { leer: leer, guardar: guardar };

@@ -454,10 +454,10 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await q.fill('#pname', 'Ana Torres Ruiz'); await q.fill('#pnum', '10457'); await q.click('#startBtn'); await q.waitForTimeout(200); await q.close();
     const res = []; for (const f of ['5s-almacen.html', 'recepcion-decantado.html', 'dojo-de-mando.html', 'simulador-montacarga.html']) { const p2 = await cx1.newPage(); const e = []; p2.on('pageerror', x => e.push(x.message)); await p2.goto(url('juegos/' + f)); await p2.waitForTimeout(400);
       const r = await p2.evaluate(() => { const g = id => document.getElementById(id); return { banner: !!g('dickaPerfil'), num: (g('pnum') || g('rNum') || {}).value }; }); let av = false;
-      if (r.banner) { await p2.click('#perfilGo'); await p2.waitForTimeout(400); av = await p2.evaluate(() => { const i = document.getElementById('intro') || document.getElementById('regScreen'); return !!i && (i.classList.contains('hidden') || getComputedStyle(i).display === 'none'); }); }
+      if (r.banner) { await p2.waitForTimeout(600); av = await p2.evaluate(() => { const i = document.getElementById('intro') || document.getElementById('regScreen'); return !!i && (i.classList.contains('hidden') || getComputedStyle(i).display === 'none'); }); }
       res.push(f + ':' + (r.banner && r.num === '10457' && av && !e.length ? 'ok' : JSON.stringify(r) + av + (e[0] || ''))); await p2.close(); }
     const perf = await (async () => { const p3 = await cx1.newPage(); await p3.goto(url('juegos/5s-almacen.html')); const v = await p3.evaluate(() => JSON.parse(localStorage.getItem('dicka_perfil') || '{}')); await p3.close(); return v; })(); await cx1.close();
-    ok('Acceso único', 'registrarse una vez llena los datos y deja continuar en otros juegos', res.every(x => x.endsWith(':ok')), res.join(' | '));
+    ok('Acceso único', 'registrarse una vez: los demás juegos se saltan el registro y entran directo', res.every(x => x.endsWith(':ok')), res.join(' | '));
     ok('Acceso único', 'el puesto guardado no se pierde al pasar por juegos con otra lista de puestos', perf.puesto === 'Gerente de Operaciones', JSON.stringify(perf)); }
   // Perfiles (RH): rutas por puesto, avance por colaborador y edición que se guarda
   { const q = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); const e = []; q.on('pageerror', x => e.push(x.message));
@@ -469,6 +469,12 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       return { av, guardado: JSON.parse(localStorage.getItem('dicka_puestos')).Montacarguista.includes('matpel'), tabs }; }); await q.close();
     ok('Perfiles RH', 'cada colaborador muestra el avance de la ruta de su puesto', /1\/\d+ aprobados/.test(r.av), r.av);
     ok('Perfiles RH', 'editar la ruta de un puesto se guarda y las pestañas caben en celular', r.guardado && r.tabs && !e.length, JSON.stringify(r) + (e[0] || '')); }
+  // Recorridos 3D: guía «¿Cómo se juega?», cada opción explica cuándo aplica y la retroalimentación dice qué era lo correcto y por qué
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/cross-docking.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Claridad'); await q.click('#startBtn'); await q.waitForTimeout(1200);
+    const r = await q.evaluate(() => { const tuto = !!document.getElementById('tuto'); document.getElementById('tutoOk').click(); const i = L.findIndex(c => c.ok === 's5'); openH(i); const hints = document.querySelectorAll('#stage .acts button small').length; const w = Object.keys(D).find(k => k !== L[idx].ok); document.querySelector(`[data-d="${w}"]`).click(); const fb = document.getElementById('fb').textContent; return { tuto, hints, fb: /Lo correcto/.test(fb) && /Por qué/.test(fb) && /Tu respuesta/.test(fb), opciones: getComputedStyle(document.querySelector('#stage .acts')).display === 'none', salidas: !!document.getElementById('salidas') }; });
+    await b3.close();
+    ok('Recorridos 3D', 'guía al iniciar, cada opción con su explicación y retroalimentación con lo correcto, el porqué y por qué no tu respuesta', r.tuto && r.hints === 6 && r.fb && r.opciones && r.salidas && !e.length, JSON.stringify(r) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
