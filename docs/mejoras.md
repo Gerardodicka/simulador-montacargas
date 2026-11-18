@@ -47,7 +47,10 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 25 | Nuevo simulador | Nuevo simulador | 5S en el almacén: encuentra y corrige desorden, riesgos y faltantes en la escena | Lean / 5S | ✅ |
 | 26 | Nuevo simulador | Nuevo simulador | Materiales peligrosos: identificación, etiquetado y segregación | NOM-018-STPS | ✅ |
 | 27 | Nuevo simulador | Nuevo simulador | Ergonomía en manejo manual de cargas: técnica, peso máximo y ayudas mecánicas | NOM-036-1-STPS | ✅ |
-| 28 | Nuevo simulador | Nuevo simulador | Emergencias: evacuación, punto de reunión y brigadas | Protección civil | ⬜ |
+| 28 | Nuevo simulador | Nuevo simulador | Emergencias: evacuación, punto de reunión y brigadas | Protección civil | ✅ |
+| 29 | Nuevo simulador | Nuevo simulador | Bloqueo y etiquetado de energías (LOTO) en 3D | NOM-004-STPS | ✅ |
+| 30 | Nuevo simulador | Nuevo simulador | Trabajo en alturas en 3D | NOM-009-STPS | ✅ |
+| 31 | Nuevo simulador | Nuevo simulador | Señalización y colores de seguridad en 3D | NOM-026-STPS | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -96,3 +99,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-17 20:39 UTC | 25 | Nuevo simulador 5S en el Almacén en 3D (escena navegable con racks; girar, acercar y tocar objetos): recorrido de 10 hallazgos en distintas zonas (andén, taller, pasillos, carga de baterías) para identificar Seiri, Seiton, Seiso, Seiketsu, Shitsuke o área correcta; muestra la S más débil; en el catálogo (Operaciones) (v20.9) | validar.js 100 % (+3 nuevas, incluye cobertura de las 5 S) · dojo-ia 100 % · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
 | 2026-11-17 22:39 UTC | 26 | Nuevo simulador Materiales Peligrosos NOM-018 en 3D: recorrido por el almacén de químicos con 10 hallazgos (etiquetado SGA, incompatibles, derrames y contención secundaria, Hojas de Datos de Seguridad, EPP); en el catálogo (Seguridad) (v21.0) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
 | 2026-11-17 23:00 UTC | 27 | Nuevo simulador Ergonomía NOM-036 en 3D: 10 hallazgos de manejo manual de cargas (límites de peso por sexo, técnica, ayuda mecánica, altura/alcance, pausas y rotación); en el catálogo (Seguridad) (v21.1) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
+| 2026-11-18 00:00 UTC | 28–31 | Paquete de 4 simuladores 3D (mismo motor que 5S): Emergencias en el Almacén (NOM-002/030), Bloqueo y Etiquetado LOTO (NOM-004), Trabajo en Alturas (NOM-009) y Señalización y Colores (NOM-026); 10 situaciones cada uno; en el catálogo (Seguridad) (v21.2) | validar.js 100 % (+12 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
