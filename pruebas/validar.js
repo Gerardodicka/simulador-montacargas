@@ -419,9 +419,9 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       await q.fill('#pname', 'Prueba Conteo'); await q.click('#startBtn');
       const r = await q.evaluate(good => { const kinds = new Set(L.map(c => c.ok)).size, n = L.length, c3d = !!document.querySelector('#v3d canvas'); for (let i = 0; i < 10; i++) { document.querySelector(`[data-c="${i}"]`).click(); document.querySelector(`[data-d="${good ? L[idx].ok : 'ok'}"]`).click(); next(); } return { score, kinds, n, c3d }; }, good); await b3.close(); return { r, e }; };
     const g = await run(true), m = await run(false);
-    ok('Conteo Cíclico', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
-    ok('Conteo Cíclico', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
-    ok('Conteo Cíclico', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+    ok('Conteo Cíclico ABC', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
+    ok('Conteo Cíclico ABC', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('Conteo Cíclico ABC', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // Recepción y decantado en 3D: la escena se dibuja y tocar la tarima escanea
   { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message));
     await q.goto(url('juegos/recepcion-decantado.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Recepcion 3D'); await q.click('#startBtn'); await q.waitForTimeout(1500);
@@ -459,6 +459,16 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     const perf = await (async () => { const p3 = await cx1.newPage(); await p3.goto(url('juegos/5s-almacen.html')); const v = await p3.evaluate(() => JSON.parse(localStorage.getItem('dicka_perfil') || '{}')); await p3.close(); return v; })(); await cx1.close();
     ok('Acceso único', 'registrarse una vez llena los datos y deja continuar en otros juegos', res.every(x => x.endsWith(':ok')), res.join(' | '));
     ok('Acceso único', 'el puesto guardado no se pierde al pasar por juegos con otra lista de puestos', perf.puesto === 'Gerente de Operaciones', JSON.stringify(perf)); }
+  // Perfiles (RH): rutas por puesto, avance por colaborador y edición que se guarda
+  { const q = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.addInitScript(() => { const d = new Date().toISOString(); localStorage.setItem('dicka_console_results', JSON.stringify([{ juego: '5S en el Almacén', nombre: 'Prueba Perfil', num: '99001', puesto: 'Montacarguista', almacen: 'Agave 1', score: '90/100', aprobado: true, fecha: d }])); });
+    await q.goto(url('index.html')); await q.waitForTimeout(500);
+    const r = await q.evaluate(() => { openDash(); dashTab('prf'); const fila = [...document.querySelectorAll('#prfTabla tbody tr')].find(tr => tr.textContent.includes('Prueba Perfil')); const av = fila ? fila.children[2].textContent : '';
+      prfToggle('Montacarguista'); const cb = document.querySelector('input[data-pu="Montacarguista"][data-g="matpel"]'); cb.checked = true; prfCheck(cb);
+      const tabs = ['tabRes', 'tabPrf', 'tabSeg'].every(i => document.getElementById(i).getBoundingClientRect().right <= innerWidth);
+      return { av, guardado: JSON.parse(localStorage.getItem('dicka_puestos')).Montacarguista.includes('matpel'), tabs }; }); await q.close();
+    ok('Perfiles RH', 'cada colaborador muestra el avance de la ruta de su puesto', /1\/\d+ aprobados/.test(r.av), r.av);
+    ok('Perfiles RH', 'editar la ruta de un puesto se guarda y las pestañas caben en celular', r.guardado && r.tabs && !e.length, JSON.stringify(r) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
