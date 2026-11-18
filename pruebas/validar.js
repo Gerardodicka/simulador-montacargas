@@ -18,6 +18,8 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
 (async () => {
   const { chromium } = require('playwright');
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] });
+  { const skip = () => { try { sessionStorage.setItem('dicka_id_skip', '1'); } catch (e) { } }; const nc = b.newContext.bind(b), np = b.newPage.bind(b);
+    b.newContext = async (o) => { const id = o && o.conId; if (o) { o = { ...o }; delete o.conId; } const c = await nc(o); if (!id) await c.addInitScript(skip); return c; }; b.newPage = async (o) => { const c = await b.newContext(o); const pg = await c.newPage(); return pg; }; }
   const url = f => 'file://' + path.join(ROOT, f);
 
   // 2 · Carga de cada página
@@ -476,7 +478,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await b3.close();
     ok('Recorridos 3D', 'guía al iniciar, cada opción con su explicación y retroalimentación con lo correcto, el porqué y por qué no tu respuesta', r.tuto && r.hints === 6 && r.fb && r.opciones && r.salidas && !e.length, JSON.stringify(r) + (e[0] || '')); }
   // Portal: pide nombre, número, puesto y almacén una vez; ordena el catálogo por la ruta del puesto y los juegos entran directo
-  { const cx2 = await b.newContext({ viewport: { width: 390, height: 844 } }); const q = await cx2.newPage(); const e = []; q.on('pageerror', x => e.push(x.message));
+  { const cx2 = await b.newContext({ viewport: { width: 390, height: 844 }, conId: true }); const q = await cx2.newPage(); const e = []; q.on('pageerror', x => e.push(x.message));
     await q.goto(url('index.html')); await q.waitForTimeout(600); const pide = await q.isVisible('#idModal');
     await q.fill('#idNom', 'Ana'); await q.fill('#idApe', 'Torres Ruiz'); await q.fill('#idNum', '10457'); await q.selectOption('#idPuesto', 'Montacarguista'); await q.click('#idOk'); await q.waitForTimeout(300);
     const r = await q.evaluate(() => ({ modal: getComputedStyle(document.getElementById('idModal')).display, primero: document.querySelector('#grid .card h3').textContent, tags: document.querySelectorAll('.rutaTag').length }));
