@@ -95,6 +95,9 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   </div>
 </div>
 <script src="js/three.min.js"></script>
+<script src="js/GLTFLoader.js"></script>
+<script src="js/SkeletonUtils.js"></script>
+<script src="js/dicka-avatar.js"></script>
 <script>
 const GAME_ID='conteo-ciclico', GAME_NAME='Conteo Cíclico ABC', PASS=75, MAX=100;
 let who={}, t0, score=0, errors=[], REG='', idx=0, L=[], decOk=0, fall={};
@@ -124,7 +127,7 @@ let HINT={}; (function(){ const inf=document.querySelector('#intro .info'); if(!
 function tuto(){ const v=$('v3d'); if(!v||$('tuto')) return; const d=document.createElement('div'); d.className='tuto'; d.id='tuto';
   const ld=document.querySelector('#intro .lead'); d.innerHTML=`<div><h3>¿Cómo se juega?</h3>${ld?`<p id="tutoLead" style="margin:0 0 8px;color:#333">${ld.innerHTML}</p>`:''}<ol><li>Toca un <b>número azul</b> en la escena (o los botones 1–10 de abajo).</li><li>Lee la <b>situación</b> de ese punto.</li><li>Elige <b>qué hacer</b>: cada opción explica cuándo aplica.</li><li>Lee la <b>explicación</b> y sigue con el siguiente número. Al completar los 10 ves tu resultado.</li></ol><button class="btn" id="tutoOk" onclick="$('tuto').remove()">Entendido, empezar</button></div>`; v.appendChild(d); }
 function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); L=build();
-  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); $('chips').innerHTML=L.map((c,i)=>`<button data-c="${i}" onclick="openH(${i})">${i+1}</button>`).join(''); $('ln').textContent=0; try{ init3d(); tuto(); }catch(e){ $('hint').textContent='Tu equipo no muestra 3D: usa los botones numerados de abajo.'; } }
+  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); $('chips').innerHTML=L.map((c,i)=>`<button data-c="${i}" onclick="openH(${i})">${i+1}</button>`).join(''); $('ln').textContent=0; try{ init3d(); tuto(); setTimeout(avatares3d,50); }catch(e){ $('hint').textContent='Tu equipo no muestra 3D: usa los botones numerados de abajo.'; } }
 /* ---------- escena 3D ---------- */
 const SPOTS=[[-14,-7],[-7,-7],[0,-7],[7,-7],[14,-7],[-14,6],[-7,6],[0,6],[7,6],[14,6]];
 function M(c,o){ return new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o||{})); }
@@ -132,7 +135,14 @@ function bx(w,h,d,c,x,y,z,g,ry){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,
 function cy(r,h,c,x,y,z,g){ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,16),M(c)); m.position.set(x,y,z); m.castShadow=true; g.add(m); return m; }
 function label(t,col){ const c=document.createElement('canvas'); c.width=128; c.height=128; const g=c.getContext('2d'); g.fillStyle=col||'#2238d3'; g.beginPath(); g.arc(64,64,58,0,7); g.fill(); g.lineWidth=8; g.strokeStyle='#fff'; g.stroke(); g.fillStyle='#fff'; g.font='bold 64px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(t,64,68); const tx=new THREE.CanvasTexture(c); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,depthTest:false})); sp.scale.set(1.3,1.3,1); return sp; }
 function rack(g,x,z,neat){ const blue=M('#2a4bd7',{metalness:.4}), org=M('#e8730c'); [[-1.3],[1.3]].forEach(([dx])=>{ bx(.1,4,.1,blue,x+dx,2,z-.5,g); bx(.1,4,.1,blue,x+dx,2,z+.5,g); }); [1,2.3,3.6].forEach((y,k)=>{ bx(2.7,.1,1.1,org,x,y,z,g); for(let i=0;i<3;i++) if(neat||Math.random()<.8) bx(.7,.7,.8,['#c9a875','#bfa070','#d3b283'][(i+k)%3],x-.85+i*.85,y+.4,z,g, neat?0:(Math.random()-.5)*.4); }); }
-function per(g,x,z,c,bend){ const t=cy(.22,1.0,c||'#2238d3',x,bend?.8:1.0,z,g); if(bend){ t.rotation.x=1.0; t.position.z+=.35; } const h=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),M('#c68a5a')); h.position.set(x,bend?1.15:1.7,bend?z+.75:z); g.add(h); cy(.08,.9,'#1b2340',x-.1,.45,z,g); cy(.08,.9,'#1b2340',x+.1,.45,z,g); return t; }
+function per(g,x,z,c,bend){ const t=cy(.22,1.0,c||'#2238d3',x,bend?.8:1.0,z,g); if(bend){ t.rotation.x=1.0; t.position.z+=.35; } const h=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),M('#c68a5a')); h.position.set(x,bend?1.15:1.7,bend?z+.75:z); g.add(h); const l1=cy(.08,.9,'#1b2340',x-.1,.45,z,g), l2=cy(.08,.9,'#1b2340',x+.1,.45,z,g); (window.AVQ=window.AVQ||[]).push({g,ms:[t,h,l1,l2],x,z,bend,t,c}); return t; }
+function avatares3d(){ if(!window.AVQ||!AVQ.length||!THREE.GLTFLoader||!THREE.SkeletonUtils) return; const L=new THREE.GLTFLoader(), src={};
+  const prep=(file)=>new Promise(res=>L.load('assets/models/'+file,gl=>{ try{ hardHat(gl.scene); workGloves(gl.scene); }catch(e){} Promise.resolve(typeof dickaVest==='function'?dickaVest(gl.scene):0).then(()=>{ gl.scene.updateMatrixWorld(true); let hb=null,fb=null; gl.scene.traverse(o=>{ if(o.isBone){ if(/Head$/.test(o.name)) hb=o; if(/LeftFoot$/.test(o.name)) fb=o; } }); let hgt=1.8; if(hb&&fb){ const a=new THREE.Vector3(),b=new THREE.Vector3(); hb.getWorldPosition(a); fb.getWorldPosition(b); hgt=a.y-Math.min(b.y,0)+.13; } res({scene:gl.scene,h:hgt}); }).catch(()=>res(null)); },undefined,()=>res(null)));
+  Promise.all([prep('operario_lod.glb')]).then(([m1,m2])=>{ const mods=[m1,m2].filter(Boolean); if(!mods.length) return;
+    AVQ.forEach((q,i)=>{ try{ const m=mods[i%mods.length], obj=THREE.SkeletonUtils.clone(m.scene); obj.scale.setScalar(1.74/m.h); obj.traverse(o=>{ if(o.isMesh){ o.frustumCulled=false; o.castShadow=true; if(o.material&&o.material.map) o.material.map.encoding=THREE.sRGBEncoding; } });
+      const base=q.t.position.y-(q.bend?.8:1.0); obj.position.set(q.x,base,q.z); q.g.add(obj); const av={obj,procedural:true}; gltfPrepareBones(av); gltfWalkPose(av,false,0,performance.now(),false,i*.7);
+      if(q.bend&&av.bones.spine){ setBoneWorld(av,'spine',.55*((av.calib&&av.calib.swing)||1),0,0); if(av.bones.spine2) setBoneWorld(av,'spine2',.35*((av.calib&&av.calib.swing)||1),0,0); }
+      q.ms.forEach(mm=>mm.visible=false); }catch(e){} }); }); }
 function rk(g,fill){ const blue=M('#2a4bd7',{metalness:.4}), org=M('#e8730c'); [-1.3,1.3].forEach(dx=>{ bx(.1,3,.1,blue,dx,1.5,-.5,g); bx(.1,3,.1,blue,dx,1.5,.5,g); }); [.4,1.5,2.6].forEach((y,k)=>{ bx(2.7,.08,1.1,org,0,y,0,g); if(fill) fill(y,k); }); }
 function cx(g,x,y,c,o){ return bx(.7,.6,.8,c||'#c9a875',x,y+.34,0,g,(o||0)); }
 function tag(g,x,y,c){ bx(.35,.14,.02,c||'#fff',x,y-.02,.56,g); }
