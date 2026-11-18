@@ -422,6 +422,15 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Conteo Cíclico', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
     ok('Conteo Cíclico', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
     ok('Conteo Cíclico', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // Recepción y decantado en 3D: la escena se dibuja y tocar la tarima escanea
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/recepcion-decantado.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Recepcion 3D'); await q.click('#startBtn'); await q.waitForTimeout(1500);
+    const pt = await q.evaluate(() => { const c = document.querySelector('#v3dR canvas').getBoundingClientRect(); return { x: c.left + c.width / 2, y: c.top + c.height * .55, ok: E3.ok }; });
+    await q.mouse.click(pt.x, pt.y); await q.waitForTimeout(300);
+    const r = await q.evaluate(() => ({ scanned, act: !document.querySelector('#acts button').disabled }));
+    await b3.close();
+    ok('Recepción y decantado 3D', 'la escena 3D se dibuja y tocar la tarima la escanea', pt.ok && r.scanned && r.act, JSON.stringify(r));
+    ok('Recepción y decantado 3D', 'sin errores de ejecución', !e.length, e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
