@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Armado de Embarques | DICKA Logistics</title>
+<style>
+:root{--azul:#1D2586;--brillante:#2138D3;--marino:#011131;--gris:#838383;--amarillo:#f5c400;--verde:#2e9e5b;--rojo:#c62828}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,var(--azul) 0%,var(--marino) 100%);min-height:100vh;padding:1rem;color:#333}
+.wrap{max-width:820px;margin:0 auto}
+.head{text-align:center;color:#fff;margin-bottom:1rem}
+.head svg{width:200px;max-width:65%}
+.head h1{font-size:22px;font-weight:900;margin-top:.2rem}
+.head p{font-size:12px;color:#c5cdf5}
+.card{background:#fff;border-radius:16px;padding:1.4rem;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.hidden{display:none!important}
+.big{font-size:60px;text-align:center}
+.card h2{color:var(--azul);text-align:center;font-size:22px;margin:.3rem 0}
+.lead{text-align:center;color:#666;font-size:14px;line-height:1.6}
+.info{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.9rem 1.1rem;border-radius:8px;margin:1rem 0;font-size:13px;color:#444;line-height:1.9}
+.info b{color:var(--azul)}
+input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border-radius:8px;font-size:15px;margin-top:.4rem}
+.lbl{font-size:11px;font-weight:800;color:var(--azul);display:block;margin-top:.8rem;letter-spacing:1px}
+.btn{width:100%;padding:.85rem;border:none;border-radius:10px;background:linear-gradient(135deg,var(--azul),var(--brillante));color:#fff;font-weight:800;font-size:14px;cursor:pointer;letter-spacing:1px;margin-top:.8rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--brillante);border:2px solid var(--brillante)}
+.btn.warn{background:var(--amarillo);color:var(--marino)}
+.topbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--azul);margin-bottom:.6rem;flex-wrap:wrap;gap:6px}
+.timer{font-family:monospace;font-size:20px;color:var(--brillante)}
+.timer.low{color:var(--rojo)}
+.bar{height:8px;background:#e6e9f4;border-radius:4px;overflow:hidden;margin-bottom:1rem}
+.bar div{height:100%;background:linear-gradient(90deg,var(--azul),var(--brillante));transition:width .3s}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--rojo);color:#fff;padding:.6rem 1.2rem;border-radius:10px;font-weight:800;font-size:13px;z-index:50;opacity:0;transition:.25s;pointer-events:none;text-align:center;max-width:90%}
+.toast.show{opacity:1}
+.toast.good{background:var(--verde)}
+.score{font-size:60px;font-weight:900;color:var(--brillante);text-align:center;line-height:1}
+.badge{display:block;width:max-content;margin:.8rem auto;padding:.5rem 1.4rem;border-radius:30px;font-weight:800}
+.badge.ok{background:#d4edda;color:#155724}.badge.bad{background:#f8d7da;color:#721c24}
+.stats{background:#f7f8fc;border-radius:10px;padding:.8rem 1rem;font-size:13.5px}
+.stats div{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #e6e9f4}
+.stats div:last-child{border:0}.stats b{color:var(--brillante)}
+.code{background:var(--marino);color:#fff;font-family:monospace;font-size:11px;padding:.7rem;border-radius:8px;word-break:break-all;margin-top:.8rem}
+.err{background:#fff7e0;border-left:4px solid var(--amarillo);padding:.7rem 1rem;border-radius:8px;font-size:12.5px;margin-top:.8rem;line-height:1.7}
+
+.unit{background:var(--marino);color:#fff;border-radius:12px;padding:.7rem 1rem;margin-bottom:.6rem;font-size:13.5px;line-height:1.6}.unit .k{font-size:11px;color:#9fb0ff;letter-spacing:1px}
+.pts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;margin:.4rem 0}
+.pt{border:2px solid #e1e5f2;border-radius:10px;padding:7px 9px;font-size:12.5px;cursor:pointer;background:#fff;line-height:1.45;text-align:left}.pt b{color:var(--azul);font-size:12px}.pt.sel{border-color:var(--rojo);background:#fdecec}
+.pt.hit{border-color:var(--verde);background:#e9f7ef}.pt.miss{border-color:#e8a400;background:#fff7e0}
+.step{font-size:12px;font-weight:800;color:var(--brillante);letter-spacing:1px;margin-top:.6rem}
+.seal{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:.4rem 0}.seal div{background:#f4f6fb;border-radius:10px;padding:8px 10px;font-size:13px}.seal b{font-family:monospace;font-size:16px;color:var(--azul)}
+.vv{display:flex;flex-wrap:wrap;gap:6px;margin:.3rem 0}.vv label{border:2px solid #e1e5f2;border-radius:8px;padding:6px 9px;font-size:13px;cursor:pointer}.vv input{margin-right:4px}
+.acts{display:grid;gap:8px;margin-top:.6rem}.acts button{padding:.85rem;border:2px solid #dfe3f0;background:#fff;border-radius:10px;font-weight:700;cursor:pointer;text-align:left;font-size:13.5px}.acts button:hover{border-color:var(--brillante)}
+.why{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.7rem 1rem;border-radius:8px;font-size:13px;margin-top:.6rem;line-height:1.6}
+.v3d{position:relative;height:62vh;min-height:360px;border-radius:12px;overflow:hidden;background:#cfd6e4;touch-action:none}.v3d canvas{display:block;width:100%;height:100%}
+.hint{position:absolute;left:8px;top:8px;background:rgba(1,17,49,.78);color:#fff;font-size:12px;padding:5px 9px;border-radius:8px;pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:.6rem 0}.chips button{width:38px;height:38px;border-radius:50%;border:2px solid #dfe3f0;background:#fff;font-weight:800;cursor:pointer;color:var(--azul)}.chips button.okk{background:#e9f7ef;border-color:var(--verde)}.chips button.bad{background:#fdecec;border-color:var(--rojo)}
+.panel{position:absolute;left:0;right:0;bottom:0;max-height:92%;overflow:auto;background:#fff;border-radius:14px 14px 0 0;padding:.8rem 1rem;box-shadow:0 -6px 24px rgba(0,0,0,.25)}.panel.hidden{display:none}
+.panel .acts{grid-template-columns:1fr 1fr}.panel .acts button{padding:.6rem;font-size:13px}@media(max-width:520px){.panel .acts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+  <div class="head">
+    <img src="data:image/png;base64,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" alt="DICKA Logistics" class="dicka-logo" style="height:60px;width:auto;display:block;margin:0 auto .6rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));">
+    <h1>Armado de Embarques</h1><p>Carga de unidades con varias paradas · Recorrido 3D · 10 andenes · aprueba con 75/100</p>
+  </div>
+  <div class="card" id="intro">
+    <div class="big">🚚</div><h2>Armado de Embarques</h2><p class="lead">Se están cargando camiones con varias entregas. Recorre los andenes en 3D, toca los 10 puntos marcados y decide qué corregir antes de que salga la unidad.</p>
+    <div class="info"><b>1 · Orden de carga LIFO:</b> la última entrega va al fondo y la primera junto a la puerta<br><b>2 · Peso por ejes:</b> lo pesado sobre los ejes y repartido, sin exceder el peso por eje<br><b>3 · Asegurar la carga:</b> barras, cinchos o bolsas de aire para que no se mueva<br><b>4 · Verificar contra la lista:</b> escanear y cotejar tarimas y cajas con el pedido<br><b>5 · Sellar y documentar:</b> sello, número en la carta porte y evidencia antes de salir<br>Cada punto vale 10 puntos</div>
+    <label class="lbl">TU NOMBRE COMPLETO</label><input class="name" id="pname" placeholder="Nombre y apellido">
+    <label class="lbl">NÚMERO DE EMPLEADO</label><input class="name" id="pnum" inputmode="numeric" placeholder="Ej. 10457">
+    <label class="lbl">PUESTO</label><select class="name" id="ppuesto"><option>Aux de Almacén</option><option>Embarcador</option><option>Recibidor</option><option>Embarcador</option><option>Montacarguista</option><option>Supervisor de Embarques</option><option>Supervisor de Operaciones</option></select>
+    <label class="lbl">ALMACÉN</label><select class="name" id="pwh"><option>Agave 1</option><option>Agave 3</option><option>Mezquite 1</option><option>Mezquite 2</option><option>BIC</option><option>Celaya</option><option>Toluca</option><option>Escobedo</option></select>
+    <button class="btn" id="startBtn" onclick="start()">COMENZAR</button>
+  </div>
+  <div class="card hidden" id="game">
+    <div class="topbar"><span>Punto <span id="ln">1</span>/10</span><span>⭐ <span id="sc">0</span></span></div>
+    <div class="bar"><div id="bar" style="width:0"></div></div>
+    <div class="v3d" id="v3d"><div class="hint" id="hint">Arrastra para girar · rueda o pellizco para acercar · toca los objetos marcados</div><div class="panel hidden" id="stage"></div></div><div class="chips" id="chips"></div>
+  </div>
+  <div class="card hidden" id="end">
+    <div class="big" id="eicon">🏆</div><h2 id="etitle"></h2>
+    <div class="score" id="escore">0</div><p class="lead">de 100 puntos · aprueba con 75</p>
+    <span class="badge" id="ebadge"></span>
+    <div class="stats" id="estats"></div>
+    <div class="err hidden" id="review"></div>
+    <div class="code" id="ecode"></div>
+    <button class="btn" onclick="share()">📲 ENVIAR RESULTADO POR WHATSAPP</button>
+    <button class="btn ghost" onclick="copyRes()">📋 COPIAR RESULTADO</button>
+    <button class="btn ghost" onclick="location.reload()">🔄 REPETIR</button>
+  </div>
+</div>
+<script src="js/three.min.js"></script>
+<script>
+const GAME_ID='armado-embarques', GAME_NAME='Armado de Embarques', PASS=75, MAX=100;
+let who={}, t0, score=0, errors=[], REG='', idx=0, L=[], decOk=0, fall={};
+const $=id=>document.getElementById(id);
+function chk(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))>>>0; return h.toString(36).toUpperCase().slice(0,6); }
+const D={s1:'1 · Reordenar carga (LIFO)',s2:'2 · Repartir el peso por ejes',s3:'3 · Asegurar la carga',s4:'4 · Verificar contra la lista',s5:'5 · Sellar y documentar',ok:'✅ Lista para salir'};
+/* zona, hallazgo, S correcta, explicación */
+const H=[
+ ['Andén 1','Ruta de 3 paradas: la mercancía de la primera parada quedó hasta el fondo de la caja','s1','LIFO: la primera entrega va junto a la puerta; si no, en cada parada hay que descargar todo.','s1a'],
+ ['Andén 2','Se cargó en el orden en que se surtió, sin ver la secuencia de la ruta','s1','Se carga en orden inverso a la ruta para descargar sin mover lo demás.','s1b'],
+ ['Andén 3','Todas las tarimas pesadas están atrás, junto a la puerta','s2','El peso concentrado atrás sobrecarga el eje trasero: se reparte a lo largo de la caja.','s2a'],
+ ['Andén 4','Tarimas de 1.2 t cargadas de un solo lado de la caja','s2','Peso desbalanceado lateralmente: riesgo de volcadura en curvas; se distribuye al centro.','s2b'],
+ ['Andén 5','Media caja vacía al fondo y las tarimas sueltas sin barras','s3','Con espacios vacíos la carga se corre al frenar: barras de carga o bolsas de aire.','s3a'],
+ ['Andén 6','Tarimas de diferente altura sin cinchos, apiladas en dos niveles','s3','Carga apilada se asegura con cinchos y separadores para que no se caiga.','s3b'],
+ ['Andén 7','La lista de empaque dice 18 tarimas y en la caja hay 17','s4','Se coteja antes de cerrar: falta una tarima, se busca antes de que salga.','s4a'],
+ ['Andén 8','Se cargaron tarimas sin escanear porque "ya iban contadas"','s4','Todo se escanea al cargar para confirmar el pedido correcto y evitar errores de entrega.','s4b'],
+ ['Andén 9','La unidad está por salir sin sello en las puertas','s5','Sin sello no hay control de la carga en tránsito: se coloca y se registra.','s5a'],
+ ['Andén 10','El número del sello no quedó anotado en la carta porte ni hay foto de la carga','s5','Se documenta número de sello, fotos y firma del operador antes de liberar la unidad.','s5b'],
+ ['Andén 11','Carga en orden de ruta, peso repartido, barras puestas, escaneada y sellada','ok','Todo correcto: la unidad puede salir.','oka'],
+ ['Andén 12','Caja completa de una sola entrega, bien estibada, sellada y documentada','ok','Lista para salir.','okb']];
+function build(){ const by=k=>H.filter(h=>h[2]===k).sort(()=>Math.random()-.5); let a=['s1','s2','s3','s4','s5','ok'].map(k=>by(k)[0]); const rest=H.filter(h=>!a.includes(h)).sort(()=>Math.random()-.5); a=a.concat(rest.slice(0,4)).sort(()=>Math.random()-.5);
+  return a.map(h=>({zona:h[0],txt:h[1],ok:h[2],why:h[3],key:h[4]})); }
+function debil(){ const k=Object.keys(fall).sort((x,y)=>fall[y]-fall[x])[0]; return k?D[k].replace(/^\d · /,''):'Ninguna'; }
+let done=new Set(), cur=-1, R3={};
+function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); L=build();
+  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); $('chips').innerHTML=L.map((c,i)=>`<button data-c="${i}" onclick="openH(${i})">${i+1}</button>`).join(''); $('ln').textContent=0; try{ init3d(); }catch(e){ $('hint').textContent='Tu equipo no muestra 3D: usa los botones numerados de abajo.'; } }
+/* ---------- escena 3D ---------- */
+const SPOTS=[[-14,-7],[-7,-7],[0,-7],[7,-7],[14,-7],[-14,6],[-7,6],[0,6],[7,6],[14,6]];
+function M(c,o){ return new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o||{})); }
+function bx(w,h,d,c,x,y,z,g,ry){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof c==='object'?c:M(c)); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=m.receiveShadow=true; g.add(m); return m; }
+function cy(r,h,c,x,y,z,g){ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,16),M(c)); m.position.set(x,y,z); m.castShadow=true; g.add(m); return m; }
+function label(t,col){ const c=document.createElement('canvas'); c.width=128; c.height=128; const g=c.getContext('2d'); g.fillStyle=col||'#2238d3'; g.beginPath(); g.arc(64,64,58,0,7); g.fill(); g.lineWidth=8; g.strokeStyle='#fff'; g.stroke(); g.fillStyle='#fff'; g.font='bold 64px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(t,64,68); const tx=new THREE.CanvasTexture(c); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,depthTest:false})); sp.scale.set(1.3,1.3,1); return sp; }
+function rack(g,x,z,neat){ const blue=M('#2a4bd7',{metalness:.4}), org=M('#e8730c'); [[-1.3],[1.3]].forEach(([dx])=>{ bx(.1,4,.1,blue,x+dx,2,z-.5,g); bx(.1,4,.1,blue,x+dx,2,z+.5,g); }); [1,2.3,3.6].forEach((y,k)=>{ bx(2.7,.1,1.1,org,x,y,z,g); for(let i=0;i<3;i++) if(neat||Math.random()<.8) bx(.7,.7,.8,['#c9a875','#bfa070','#d3b283'][(i+k)%3],x-.85+i*.85,y+.4,z,g, neat?0:(Math.random()-.5)*.4); }); }
+function per(g,x,z,c,bend){ const t=cy(.22,1.0,c||'#2238d3',x,bend?.8:1.0,z,g); if(bend){ t.rotation.x=1.0; t.position.z+=.35; } const h=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),M('#c68a5a')); h.position.set(x,bend?1.15:1.7,bend?z+.75:z); g.add(h); cy(.08,.9,'#1b2340',x-.1,.45,z,g); cy(.08,.9,'#1b2340',x+.1,.45,z,g); return t; }
+function rk(g,fill){ const blue=M('#2a4bd7',{metalness:.4}), org=M('#e8730c'); [-1.3,1.3].forEach(dx=>{ bx(.1,3,.1,blue,dx,1.5,-.5,g); bx(.1,3,.1,blue,dx,1.5,.5,g); }); [.4,1.5,2.6].forEach((y,k)=>{ bx(2.7,.08,1.1,org,0,y,0,g); if(fill) fill(y,k); }); }
+function cx(g,x,y,c,o){ return bx(.7,.6,.8,c||'#c9a875',x,y+.34,0,g,(o||0)); }
+function tag(g,x,y,c){ bx(.35,.14,.02,c||'#fff',x,y-.02,.56,g); }
+function stack(g,x,z,n){ const p=makePal(); p.position.set(x,0,z); p.scale.set(.8,.6,.8); g.add(p); }
+function trk(g,c){ bx(2,2.2,4,c||'#eceff1',0,1.6,-2.4,g); }
+function caja(g){ bx(2.4,.1,6,'#9e9e9e',0,1,-2.5,g); bx(.08,2.4,6,'#cfd8dc',-1.2,2.2,-2.5,g); bx(.08,2.4,6,'#cfd8dc',1.2,2.2,-2.5,g); bx(2.4,2.4,.08,'#cfd8dc',0,2.2,-5.5,g); }
+function tp(g,x,z,c,h){ bx(1,h||.9,1,c||'#c9a875',x,1.05+(h||.9)/2,z,g); }
+const PROP={
+ s1a:g=>{ caja(g); tp(g,-.55,-5,'#ef5350'); tp(g,.55,-5,'#ef5350'); tp(g,-.55,-1,'#42a5f5'); tp(g,.55,-1,'#66bb6a'); },
+ s1b:g=>{ caja(g); [-5,-3.8,-2.6,-1.4].forEach((z,i)=>{ tp(g,-.55,z,['#66bb6a','#ef5350','#42a5f5','#ef5350'][i]); tp(g,.55,z,['#42a5f5','#66bb6a','#ef5350','#42a5f5'][i]); }); },
+ s2a:g=>{ caja(g); tp(g,-.55,-.6,'#5d4037',1.3); tp(g,.55,-.6,'#5d4037',1.3); tp(g,-.55,-4.8); },
+ s2b:g=>{ caja(g); [-4.8,-3.4,-2,-.6].forEach(z=>tp(g,-.55,z,'#5d4037',1.2)); },
+ s3a:g=>{ caja(g); tp(g,-.55,-1.2); tp(g,.55,-1.2); tp(g,-.55,-2.4); },
+ s3b:g=>{ caja(g); tp(g,-.55,-2,'#c9a875',.7); tp(g,.55,-2,'#c9a875',.7); bx(.9,.6,.9,'#bfa070',-.4,2.15,-2,g,.3); },
+ s4a:g=>{ caja(g); for(let i=0;i<4;i++) tp(g,i%2?.55:-.55,-4.8+Math.floor(i/2)*1.2); bx(.4,.5,.02,'#fff',1.6,1.6,.4,g); per(g,1.6,.8); },
+ s4b:g=>{ caja(g); tp(g,-.55,-1); per(g,.6,.6); },
+ s5a:g=>{ caja(g); bx(2.4,2.4,.08,'#b0bec5',0,2.2,.5,g); },
+ s5b:g=>{ caja(g); bx(2.4,2.4,.08,'#b0bec5',0,2.2,.5,g); bx(.1,.15,.05,'#d50000',.1,2,.56,g); },
+ oka:g=>{ caja(g); for(let i=0;i<8;i++) tp(g,i%2?.55:-.55,-5+Math.floor(i/2)*1.2,['#66bb6a','#42a5f5','#ef5350','#ffca28'][Math.floor(i/2)]); bx(2.2,.08,.08,'#ffd600',0,2,-.3,g); },
+ okb:g=>{ caja(g); bx(2.4,2.4,.08,'#b0bec5',0,2.2,.5,g); bx(.1,.15,.05,'#d50000',.1,2,.56,g); bx(.6,.4,.02,'#00a650',1.6,2.6,.5,g); }};
+function makePal(){ const g=new THREE.Group(); for(let i=0;i<3;i++) bx(1.2,.12,.2,'#8b5a2b',0,.06,-.4+i*.4,g); for(let r=0;r<3;r++) bx(1.1,.45,1,'#c9a875',0,.35+r*.46,0,g); return g; }
+const KEY=['s1a','s1b','s2a','s2b','s3a','s3b','s4a','s4b','s5a','s5b','oka','okb'];
+function init3d(){ const el=$('v3d'); const rn=new THREE.WebGLRenderer({antialias:true}); rn.setPixelRatio(Math.min(2,devicePixelRatio)); rn.shadowMap.enabled=true; el.insertBefore(rn.domElement,el.firstChild);
+  const sc=new THREE.Scene(); sc.background=new THREE.Color('#cfd6e4'); sc.fog=new THREE.Fog('#cfd6e4',45,90); const cam=new THREE.PerspectiveCamera(55,1,.1,200);
+  sc.add(new THREE.HemisphereLight('#ffffff','#667',.75)); const dl=new THREE.DirectionalLight('#fff',.7); dl.position.set(10,25,8); dl.castShadow=true; dl.shadow.mapSize.set(1024,1024); Object.assign(dl.shadow.camera,{left:-25,right:25,top:20,bottom:-20}); sc.add(dl);
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(44,30),M('#9a9a96')); fl.rotation.x=-Math.PI/2; fl.receiveShadow=true; sc.add(fl);
+  const W=new THREE.Group(); sc.add(W); bx(44,6,.3,'#e6e8ee',0,3,-15,W); bx(.3,6,30,'#e6e8ee',-22,3,0,W); bx(.3,6,30,'#e6e8ee',22,3,0,W); [-18,-9,0,9,18].forEach(x=>bx(5,4.5,.2,'#8d98ad',x,2.25,-14.8,W));
+  bx(44,.03,.15,'#ffd400',0,.02,-.6,W); bx(44,.03,.15,'#ffd400',0,.02,.6,W);
+  [-18,-10.5,-3.5,3.5,10.5,18].forEach(x=>{ rack(W,x,-12.5,true); rack(W,x,12.5,true); });
+  const picks=[]; R3={sc,cam,rn,picks,marks:[]};
+  L.forEach((c,i)=>{ const g=new THREE.Group(); const [x,z]=SPOTS[i]; g.position.set(x,0,z); g.rotation.y=z<0?0:Math.PI; (PROP[c.key]||PROP.oka)(g); sc.add(g); const mk=label(String(i+1)); mk.position.set(x,4.8,z); sc.add(mk); R3.marks.push(mk);
+    const hit=new THREE.Mesh(new THREE.BoxGeometry(3.2,5,3.2),new THREE.MeshBasicMaterial({visible:false})); hit.position.set(x,2.5,z); hit.userData.i=i; sc.add(hit); picks.push(hit); });
+  let th=.0, ph=.95, rad=30, drag=null, moved=0, pin=null; const tgt=new THREE.Vector3(0,0,0);
+  const upd=()=>{ ph=Math.max(.35,Math.min(1.35,ph)); rad=Math.max(8,Math.min(42,rad)); cam.position.set(tgt.x+rad*Math.sin(th)*Math.sin(ph),rad*Math.cos(ph)+1,tgt.z+rad*Math.cos(th)*Math.sin(ph)); cam.lookAt(tgt); };
+  const fit=()=>{ const w=el.clientWidth,h=el.clientHeight; rn.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); if(w<520&&rad===30) rad=40; upd(); }; addEventListener('resize',fit); fit();
+  const cv=rn.domElement, ptrs=new Map();
+  cv.addEventListener('pointerdown',e=>{ ptrs.set(e.pointerId,e); cv.setPointerCapture(e.pointerId); drag={x:e.clientX,y:e.clientY}; moved=0; });
+  cv.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,e); if(ptrs.size===2){ const [a,b]=[...ptrs.values()], d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY); if(pin) rad*=pin/d; pin=d; moved=99; upd(); return; } if(!drag) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; moved+=Math.abs(dx)+Math.abs(dy); th-=dx*.006; ph-=dy*.005; drag={x:e.clientX,y:e.clientY}; upd(); });
+  cv.addEventListener('pointerup',e=>{ ptrs.delete(e.pointerId); pin=null; if(moved<8&&ptrs.size===0){ const r=cv.getBoundingClientRect(), v=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1), rc=new THREE.Raycaster(); rc.setFromCamera(v,cam); const h=rc.intersectObjects(picks)[0]; if(h) openH(h.object.userData.i); } drag=null; });
+  cv.addEventListener('wheel',e=>{ e.preventDefault(); rad*=e.deltaY>0?1.1:.9; upd(); },{passive:false});
+  R3.focus=i=>{ const [x,z]=SPOTS[i]; tgt.set(x*.5,0,z*.5); upd(); };
+  const loop=t=>{ R3.marks.forEach((m,i)=>{ if(!done.has(i)) m.position.y=4.8+Math.sin(t/300+i)*.2; }); rn.render(sc,cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+function mark(i,good){ const b=document.querySelector(`[data-c="${i}"]`); if(b) b.classList.add(good?'okk':'bad'); if(R3.marks&&R3.marks[i]){ const o=R3.marks[i], n=label(good?'✓':'✗',good?'#1f9d55':'#d11'); n.position.copy(o.position); R3.sc.remove(o); R3.sc.add(n); R3.marks[i]=n; } }
+function openH(i){ if(done.has(i)) return; idx=i; show(); if(R3.focus) R3.focus(i); }
+function show(){ const c=L[idx]; $('stage').classList.remove('hidden');
+  $('stage').innerHTML=`<div class="unit"><span class="k">HALLAZGO ${idx+1} · ${c.zona.toUpperCase()}</span><br><b>📍 ${c.txt}</b></div>
+  <div class="step">¿QUÉ HAY QUE CORREGIR?</div><div class="acts">${Object.keys(D).map(k=>`<button data-d="${k}" onclick="decide('${k}')">${D[k]}</button>`).join('')}</div><div id="fb"></div><button class="btn ghost" id="closeBtn" onclick="$('stage').classList.add('hidden')" style="margin-top:.4rem">Cerrar y seguir recorriendo</button>`; }
+function decide(d){ const c=L[idx]; document.querySelectorAll('.acts button').forEach(b=>b.disabled=true); done.add(idx); const g=d===c.ok;
+  if(g){ score+=10; decOk++; } else { fall[c.ok]=(fall[c.ok]||0)+1; errors.push(c.zona+': era '+D[c.ok].replace(/^\d · /,'')+', elegiste '+D[d].replace(/^\d · /,'')); }
+  $('sc').textContent=score; $('ln').textContent=done.size; $('bar').style.width=(done.size*10)+'%'; mark(idx,g); const cb=$('closeBtn'); if(cb) cb.remove();
+  $('fb').innerHTML=`<div class="why"><b>${g?'✅ Correcto.':'❌ Lo correcto era: '+D[c.ok]+'.'}</b> ${c.why}</div><button class="btn" id="nextBtn" onclick="next()">${done.size<10?'SEGUIR RECORRIENDO →':'VER RESULTADO →'}</button>`; }
+function next(){ $('stage').classList.add('hidden'); if(done.size>=10) finish(); }
+function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
+  const ok=score>=PASS, date=new Date(); const base=`REG|${GAME_ID}|${who.name}${who.num?' #'+who.num:''}|${who.puesto}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');
+  $('eicon').textContent=ok?'🏆':'📚'; $('etitle').textContent=ok?'¡Aprobaste!':'Aún no apruebas'; $('escore').textContent=score; $('ebadge').textContent=ok?'✓ APROBADO':'✗ NO APROBADO'; $('ebadge').className='badge '+(ok?'ok':'bad');
+  $('estats').innerHTML=`<div><span>Auditor</span><b>${who.name}</b></div>${who.num?`<div><span>No. empleado</span><b>${who.num}</b></div>`:''}<div><span>Almacén</span><b>${who.wh}</b></div><div><span>Hallazgos correctos</span><b>${decOk}/10</b></div><div><span>Medida más débil</span><b>${debil()}</b></div><div><span>Tiempo</span><b>${Math.round((Date.now()-t0)/1000)} s</b></div>`;
+  if(errors.length){ $('review').classList.remove('hidden'); $('review').innerHTML='<b>Para repasar:</b><br>'+errors.map(e=>'• '+e).join('<br>'); }
+  $('ecode').textContent='Código de verificación: '+REG;
+  try{ const k='dicka_console_results', l=JSON.parse(localStorage.getItem(k)||'[]'); l.push({juego:GAME_NAME,nombre:who.name,num:who.num,puesto:who.puesto,area:'Operaciones',almacen:who.wh,score:`${score}/${MAX}`,aprobado:ok,fecha:date.toISOString(),reg:REG}); localStorage.setItem(k,JSON.stringify(l)); }catch(e){}
+  try{ parent.postMessage({type:'dicka-result',juego:GAME_NAME,nombre:who.name,score:`${score}/${MAX}`,aprobado:ok},'*'); }catch(e){} }
+function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombre: ${who.name}${who.num?'\nNo. empleado: '+who.num:''}\nPuesto: ${who.puesto}\nAlmacén: ${who.wh}\nPuntaje: ${score}/${MAX}\nEstado: ${score>=PASS?'✓ APROBADO':'✗ NO APROBADO'}\n\n${REG}`; }
+function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
+function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
+</script>
+<script src="js/dicka-sync.js"></script>
+<script src="js/accesible.js"></script>
+</body>
+</html>

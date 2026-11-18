@@ -4,6 +4,8 @@ Una mejora cada 2 horas, tomada de lo que ofrecen simuladores del mercado (Mursi
 
 Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 
+> **Regla del usuario (2026-11-18):** todo simulador debe ser 3D o usar los avatares existentes. Los nuevos se hacen así y los 2D se convierten (C1–C11, prioridad sobre el resto de la cola).
+
 ## Hechas antes de la bitácora
 
 | Fecha | Simulador | Tipo | Mejora | Inspirada en | Estado |
@@ -54,7 +56,24 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 32 | Nuevo simulador | Nuevo simulador | Andenes, rampas y placas niveladoras en 3D (calzas, sujetador, semáforo, revisión de la caja) | Juego de seguridad de montacargas NSC (bridgeplates y rampas) | ✅ |
 | 33 | Nuevo simulador | Nuevo simulador | Cargas no estándar: tarimas dañadas, cargas largas, centro de gravedad alto | NSC forklift game / OSHA 1910.178 | ✅ |
 | 34 | Nuevo simulador | Nuevo simulador | Excepciones de surtido y reabasto: ubicación vacía, producto dañado, conteo que no cuadra | Fraunhofer LiftNick (escenarios de excepción) | ✅ |
-| 35 | Nuevo simulador | Nuevo simulador | Flujo de materiales: detectar cuellos de botella entre recibo, almacenaje y embarque | KION City of Goods / Mecalux WarehouseGame | ⬜ |
+| 35 | Nuevo simulador | Nuevo simulador | Flujo de materiales: detectar cuellos de botella entre recibo, almacenaje y embarque | KION City of Goods / Mecalux WarehouseGame | ✅ |
+| 36 | Nuevo simulador | Nuevo simulador | Cross-docking: asignar tarimas entrantes a andenes de salida sin almacenar, respetando horarios de salida | Procesos de almacén (cross-dock) | ✅ |
+| 37 | Nuevo simulador | Nuevo simulador | Slotting: reubicar SKUs por rotación ABC para reducir recorridos de surtido | Mecalux WarehouseGame (ubicación) | ✅ |
+| 38 | Nuevo simulador | Nuevo simulador | Armado de embarques y ruteo: secuencia de carga LIFO por parada y peso por eje | Procesos de distribución | ✅ |
+| 39 | Nuevo simulador | Nuevo simulador | Conteo cíclico e inventario: planear conteos ABC, investigar diferencias y ajustar | Control de inventarios | ✅ |
+| C1 | Conversión 3D | Prioridad del usuario | Recepción y Decantado: escena 3D de andén de recibo con escáner RF | Todos los juegos en 3D o con avatares | ⬜ |
+| C2 | Conversión 3D | Prioridad del usuario | Patio de Andenes: patio 3D con tráileres y andenes | Todos los juegos en 3D o con avatares | ⬜ |
+| C3 | Conversión 3D | Prioridad del usuario | Métodos de Surtido: ruta de surtido animada en racks 3D | Todos los juegos en 3D o con avatares | ⬜ |
+| C4 | Conversión 3D | Prioridad del usuario | Cadena de Frío: cámara fría 3D con registrador | Todos los juegos en 3D o con avatares | ⬜ |
+| C5 | Conversión 3D | Prioridad del usuario | Inspección de Tráiler y Sellos: tráiler 3D con los 17 puntos tocables | Todos los juegos en 3D o con avatares | ⬜ |
+| C6 | Conversión 3D | Prioridad del usuario | Devoluciones: zona de devoluciones 3D con producto | Todos los juegos en 3D o con avatares | ⬜ |
+| C7 | Conversión 3D | Prioridad del usuario | Carga de Unidades: caja de tráiler 3D | Todos los juegos en 3D o con avatares | ⬜ |
+| C8 | Conversión 3D | Prioridad del usuario | Surtido Express: racks 3D para surtir | Todos los juegos en 3D o con avatares | ⬜ |
+| C9 | Conversión 3D | Prioridad del usuario | Turno Seguro: unificar con la versión 3D existente | Todos los juegos en 3D o con avatares | ⬜ |
+| C10 | Conversión 3D | Prioridad del usuario | Planeación de Personal: avatar gerente que presenta el reto y comenta resultados | Todos los juegos en 3D o con avatares | ⬜ |
+| C11 | Conversión 3D | Prioridad del usuario | Tablero del Gerente: avatar gerente en oficina 3D que comenta cada decisión | Todos los juegos en 3D o con avatares | ⬜ |
+| 40 | Nuevo simulador | Nuevo simulador | Kitting y valor agregado: armar kits, etiquetar y empacar según la orden del cliente | Servicios de valor agregado 3PL | ⬜ |
+| 41 | Nuevo simulador | Nuevo simulador | Indicadores del almacén (OTIF, exactitud de inventario, productividad): leer el tablero y decidir acciones | KPIs logísticos | ⬜ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -107,3 +126,8 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-18 00:40 UTC | 32 | Cola agotada: investigación de mercado (Mecalux WarehouseGame, Fraunhofer LiftNick, KION City of Goods, juego NSC) y 4 mejoras nuevas (#32–#35). Nuevo simulador Andenes y Rampas en 3D: 10 situaciones (calzas, gatos de apoyo, placa niveladora y su capacidad, piso de la caja, carga corrida, semáforo, chofer, bordes del andén, rampa mojada); en el catálogo (Seguridad) (v21.3) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
 | 2026-11-18 02:39 UTC | 33 | Nuevo simulador Cargas No Estándar en 3D: 10 cargas (tarimas dañadas, carga suelta, sobrepeso y centro de carga, cargas largas o que tapan la vista, centro de gravedad alto y líquidos); en el catálogo (Seguridad) (v21.4) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
 | 2026-11-18 04:39 UTC | 34 | Nuevo simulador Excepciones de Surtido en 3D: 10 ubicaciones con excepciones (vacía o bajo mínimo, dañado o con fuga, faltantes y sobrantes, SKU equivocado, lotes mezclados, FEFO al surtir y al reabastecer); en el catálogo (Operaciones) (v21.5) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
+| 2026-11-18 06:39 UTC | 35 | Nuevo simulador Flujo de Materiales en 3D: 10 puntos de recibo a embarque para encontrar el cuello de botella (personal desbalanceado, prioridad por hora de salida, WIP y staging llenos, equipo descompuesto, información que no cuadra); en el catálogo (Operaciones) (v21.6) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
+| 2026-11-18 08:39 UTC | 36 | Nuevo simulador Cross-Docking en 3D: 10 tarimas en recibo para decidir cross-dock directo, almacenar, consolidar por destino, retener por daño o diferencia con el ASN, o mover primero por hora de salida; en el catálogo (Operaciones) (v21.7) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
+| 2026-11-18 10:39 UTC | 37 | Nuevo simulador Slotting ABC en 3D: 10 ubicaciones para reubicar SKUs (acercar A a la zona dorada, alejar C, juntar por afinidad, pesado abajo, separar SKUs parecidos); en el catálogo (Operaciones) (v21.8) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
+| 2026-11-18 12:40 UTC | 38 | Nuevo simulador Armado de Embarques en 3D: 10 cajas de tráiler en carga (orden LIFO por parada, peso por ejes y lateral, barras y cinchos, cotejo y escaneo contra la lista, sello y documentación); en el catálogo (Operaciones) (v21.9) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
+| 2026-11-18 14:40 UTC | 39 | Nuevo simulador Conteo Cíclico en 3D: 10 conteos (frecuencia por ABC, recuento antes de ajustar, investigar transacciones pendientes y mala ubicación, congelar la ubicación, ajuste con autorización); en el catálogo (Operaciones) (v22.0) | validar.js 100 % (+3 nuevas) · dojo-ia 100 % · clic real en escena · consola limpia · 1280/390 px revisadas · privacidad OK | PENDIENTE | ✅ |
