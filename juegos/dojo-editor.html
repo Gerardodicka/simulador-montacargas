@@ -61,4 +61,5 @@ $('imp').onchange = async ev => { let n = 0, bad = 0; for (const f of ev.target.
   $('err').textContent = `${n} situación(es) importada(s)${bad ? ` · ${bad} no válida(s)` : ''}`; list(); ev.target.value = ''; };
 F.forEach(f => $(f).addEventListener('input', preview)); preview(); list();
 </script><script src="js/accesible.js"></script>
+<script src="js/inicio.js"></script>
 </body></html>

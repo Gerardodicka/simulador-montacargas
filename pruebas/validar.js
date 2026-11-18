@@ -444,6 +444,11 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await b3.close();
     ok('Patio de andenes 3D', 'escena 3D dibujada; tocar tráiler y andén lo asigna', r.ok && r.sel && r.asignado && r.canvas, JSON.stringify(r));
     ok('Patio de andenes 3D', 'sin errores de ejecución', !e.length, e[0] || ''); }
+  // Todos los juegos tienen botón «← Inicio» visible y que no queda tapado
+  { const fs = require('fs'); const files = fs.readdirSync('juegos').filter(f => f.endsWith('.html')); const bad = [];
+    for (const f of files) { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); await q.goto(url('juegos/' + f)); await q.waitForTimeout(250);
+      const v = await q.evaluate(() => { const x = document.getElementById('dickaInicio'); if (!x) return 'no'; const r = x.getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === x ? 'ok' : 'tapado'; }); if (v !== 'ok') bad.push(f + ':' + v); await q.close(); }
+    ok('Navegación', 'los ' + files.length + ' juegos tienen botón «← Inicio» visible', !bad.length, bad.join(', ')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

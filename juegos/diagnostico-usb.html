@@ -56,4 +56,5 @@ function tick(){ const pads=(navigator.getGamepads?Array.from(navigator.getGamep
     return `<div class="dev"><b>${g.id}</b>${role}<br><small>índice ${g.index} · mapping "${g.mapping||'(ninguno)'}"</small><div style="margin-top:.4rem;font-size:11px">Ejes:</div>${g.axes.map((a,i)=>`<div style="display:grid;grid-template-columns:40px 1fr 50px;gap:6px;font-size:11px;align-items:center"><span>eje ${i}</span><div class=bar><i style="width:${Math.max(0,Math.min(100,(a+1)/2*100))}%"></i></div><span>${a.toFixed(2)}</span></div>`).join('')}<div style="margin-top:.4rem;font-size:11px">Botones:</div>${g.buttons.map((b,i)=>`<span class="b ${b.pressed?'on':''}">${i}</span>`).join('')}</div>`; }).join('');
   requestAnimationFrame(tick); } tick(); log('página cargada · conecta joystick y volante y presiona un botón de cada uno');
 </script><script src="js/accesible.js"></script>
+<script src="js/inicio.js"></script>
 </body></html>
