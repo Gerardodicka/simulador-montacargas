@@ -449,6 +449,16 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     for (const f of files) { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); await q.goto(url('juegos/' + f)); await q.waitForTimeout(250);
       const v = await q.evaluate(() => { const x = document.getElementById('dickaInicio'); if (!x) return 'no'; const r = x.getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === x ? 'ok' : 'tapado'; }); if (v !== 'ok') bad.push(f + ':' + v); await q.close(); }
     ok('Navegación', 'los ' + files.length + ' juegos tienen botón «← Inicio» visible', !bad.length, bad.join(', ')); }
+  // Acceso único: registrarse en un juego llena y deja continuar en los demás sin volver a capturar
+  { const cx1 = await b.newContext({ viewport: { width: 390, height: 844 } }); const q = await cx1.newPage(); await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300);
+    await q.fill('#pname', 'Ana Torres Ruiz'); await q.fill('#pnum', '10457'); await q.click('#startBtn'); await q.waitForTimeout(200); await q.close();
+    const res = []; for (const f of ['5s-almacen.html', 'recepcion-decantado.html', 'dojo-de-mando.html', 'simulador-montacarga.html']) { const p2 = await cx1.newPage(); const e = []; p2.on('pageerror', x => e.push(x.message)); await p2.goto(url('juegos/' + f)); await p2.waitForTimeout(400);
+      const r = await p2.evaluate(() => { const g = id => document.getElementById(id); return { banner: !!g('dickaPerfil'), num: (g('pnum') || g('rNum') || {}).value }; }); let av = false;
+      if (r.banner) { await p2.click('#perfilGo'); await p2.waitForTimeout(400); av = await p2.evaluate(() => { const i = document.getElementById('intro') || document.getElementById('regScreen'); return !!i && (i.classList.contains('hidden') || getComputedStyle(i).display === 'none'); }); }
+      res.push(f + ':' + (r.banner && r.num === '10457' && av && !e.length ? 'ok' : JSON.stringify(r) + av + (e[0] || ''))); await p2.close(); }
+    const perf = await (async () => { const p3 = await cx1.newPage(); await p3.goto(url('juegos/5s-almacen.html')); const v = await p3.evaluate(() => JSON.parse(localStorage.getItem('dicka_perfil') || '{}')); await p3.close(); return v; })(); await cx1.close();
+    ok('Acceso único', 'registrarse una vez llena los datos y deja continuar en otros juegos', res.every(x => x.endsWith(':ok')), res.join(' | '));
+    ok('Acceso único', 'el puesto guardado no se pierde al pasar por juegos con otra lista de puestos', perf.puesto === 'Gerente de Operaciones', JSON.stringify(perf)); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
