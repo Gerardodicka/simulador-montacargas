@@ -687,7 +687,7 @@ function exportCSV(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`resultados-dojo-virtual-${new Date().toISOString().slice(0,10)}.csv`; a.click();
 }
 // Los juegos embebidos pueden reportar: parent.postMessage({type:'dicka-result', juego, nombre, score, aprobado}, '*')
-window.addEventListener('message',e=>{ const d=e.data; if(d&&d.type==='dicka-result'){ const l=JSON.parse(localStorage.getItem('dicka_console_results')||'[]'); l.push({juego:d.juego,nombre:d.nombre,num:d.num||'',puesto:d.puesto||'',area:d.area||'',almacen:d.almacen||'',score:d.score,aprobado:!!d.aprobado,fecha:new Date().toISOString(),reg:d.reg||'',tipo_sesion:'oficial'}); localStorage.setItem('dicka_console_results',JSON.stringify(l)); render(); cloudSync(true); }});
+window.addEventListener('message',e=>{ const d=e.data; if(d&&d.type==='dicka-close'){ closePlayer(); return; } if(d&&d.type==='dicka-result'){ const l=JSON.parse(localStorage.getItem('dicka_console_results')||'[]'); l.push({juego:d.juego,nombre:d.nombre,num:d.num||'',puesto:d.puesto||'',area:d.area||'',almacen:d.almacen||'',score:d.score,aprobado:!!d.aprobado,fecha:new Date().toISOString(),reg:d.reg||'',tipo_sesion:'oficial'}); localStorage.setItem('dicka_console_results',JSON.stringify(l)); render(); cloudSync(true); }});
 render();
 </script>
 <!-- Herramientas de accesibilidad y uso sin conexión -->

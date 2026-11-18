@@ -431,6 +431,12 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await b3.close();
     ok('Recepción y decantado 3D', 'la escena 3D se dibuja y tocar la tarima la escanea', pt.ok && r.scanned && r.act, JSON.stringify(r));
     ok('Recepción y decantado 3D', 'sin errores de ejecución', !e.length, e[0] || ''); }
+  // Dojo: la pantalla de situaciones tiene botón de regreso al registro
+  { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.addInitScript(() => { window.TEST_MODE = true; window.STORY_SEEN = true; });
+    await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(400); await q.evaluate(() => { $('pname').value = 'Prueba Regreso'; if ($('pnom')) $('pnom').value = ''; $('pnum').value = 'T123'; goBrief(); }); await q.waitForTimeout(300);
+    const vis = await q.isVisible('#backReg'); await q.click('#backReg'); await q.waitForTimeout(200);
+    const r = await q.evaluate(() => ({ intro: !$('intro').classList.contains('hidden'), scen: $('scen').classList.contains('hidden') })); await q.close();
+    ok('Dojo de Mando', 'botón Regresar en la lista de situaciones vuelve al registro', vis && r.intro && r.scen, JSON.stringify(r)); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
