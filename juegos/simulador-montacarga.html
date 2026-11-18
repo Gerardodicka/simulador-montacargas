@@ -2394,7 +2394,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v22.1 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v22.6 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3650,5 +3650,7 @@ function evalDiag() { const ans = DIAG.map((_, i) => { const r = document.queryS
   const r = document.getElementById('diagRes'); r.style.display = 'block'; r.innerHTML = `<b>Nivel sugerido: ${N[0]}</b><br><span style="font-size:13.5px">${N[1]}</span>${tecMal.length ? `<div style="font-size:12.5px;margin-top:6px;color:#a11">Repasa: ${tecMal.join(' · ')}</div>` : ''}<div style="font-size:12px;color:#555;margin-top:6px">Ya lo seleccioné en tu registro; puedes cambiarlo si tu supervisor indica otro.</div>`; r.scrollIntoView({ block: 'nearest' }); }
 </script>
 <script src="js/accesible.js"></script>
+<script src="js/perfil.js"></script>
+<script src="js/inicio.js"></script>
 </body>
 </html>

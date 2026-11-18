@@ -111,7 +111,7 @@
   .dash.open { display:flex; }
   .dbar { display:flex; justify-content:space-between; align-items:center; padding:.7rem 1.2rem; background:linear-gradient(135deg,var(--azul),var(--brillante)); color:#fff; flex-wrap:wrap; gap:8px; }
   .dbar b { font-size:15px; }
-  .dtabs { display:flex; gap:6px; }
+  .dtabs { display:flex; gap:6px; flex-wrap:wrap; }
   .dtab { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.4); color:#fff; padding:.45rem .9rem; border-radius:20px; cursor:pointer; font-size:12px; font-weight:800; }
   .dtab.on { background:#fff; color:var(--azul); }
   .dbody { flex:1; overflow:auto; background:#f2f4fa; padding:1.2rem; }
@@ -249,7 +249,7 @@
 <div class="dash" id="dash">
   <div class="dbar">
     <b style="font-family:'Poppins',sans-serif;font-weight:600">📊 Dojo Virtual · Dashboard de Capacitación DICKA</b>
-    <div class="dtabs"><button class="dtab on" id="tabRes" onclick="dashTab('res')">Resumen</button><button class="dtab" id="tabRank" onclick="dashTab('rank')">Ranking</button><button class="dtab" id="tabPer" onclick="dashTab('per')">Por colaborador</button><button class="dtab" id="tabSeg" onclick="dashTab('seg')">Seguridad</button></div>
+    <div class="dtabs"><button class="dtab on" id="tabRes" onclick="dashTab('res')">Resumen</button><button class="dtab" id="tabRank" onclick="dashTab('rank')">Ranking</button><button class="dtab" id="tabPer" onclick="dashTab('per')">Por colaborador</button><button class="dtab" id="tabPrf" onclick="dashTab('prf')">👥 Perfiles</button><button class="dtab" id="tabSeg" onclick="dashTab('seg')">Seguridad</button></div>
     <div><button class="hbtn" onclick="toggleKiosk()" title="Pantalla completa para TV, se actualiza sola">📺 Modo TV</button> <button class="hbtn" onclick="cloudSync(false)" title="Sincronizar con la base compartida">☁️ Sincronizar</button> <button class="hbtn" onclick="restoreReport()" title="Dry run + conciliación del CSV restaurado">🗄️ Restauración</button> <button class="hbtn" onclick="exportBackup()">💾 Respaldar base</button> <button class="hbtn" onclick="document.getElementById('impFile').click()">⬆ Importar / restaurar</button> <button class="hbtn" onclick="exportCSV()">⬇ CSV</button> <button class="hbtn" onclick="window.print()">🖨 PDF</button> <button class="hbtn" onclick="closeDash()">✕ Cerrar</button></div>
     <input type="file" id="impFile" accept=".json,.csv,.txt" multiple style="display:none" onchange="importFiles(this.files)">
   </div>
@@ -330,7 +330,7 @@ const BASE_GAMES = [
   { id:'crossdock', name:'Cross-Docking', icon:'🔁', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Recorrido 3D por el cross-dock: decide si cada tarima va directo a su andén de salida, se almacena, se consolida por destino, se retiene o sale primero.', url:'juegos/cross-docking.html' },
   { id:'slotting', name:'Slotting ABC', icon:'🗺️', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Recorrido 3D por los racks: reubica SKUs por rotación ABC (zona dorada, baja rotación, afinidad, pesado abajo y separar parecidos) para reducir caminatas y errores.', url:'juegos/slotting.html' },
   { id:'embarques', name:'Armado de Embarques', icon:'🚚', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Recorrido 3D por los andenes: orden de carga LIFO por parada, peso por ejes, asegurar la carga, verificar contra la lista y sellar y documentar antes de salir.', url:'juegos/armado-embarques.html' },
-  { id:'conteo', name:'Conteo Cíclico', icon:'🔢', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Recorrido 3D por los racks: frecuencia de conteo por ABC, recuento, investigar la causa de diferencias, congelar la ubicación y ajustar con autorización.', url:'juegos/conteo-ciclico.html' },
+  { id:'conteo', name:'Conteo Cíclico ABC', icon:'🔢', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Recorrido 3D por los racks: frecuencia de conteo por ABC, recuento, investigar la causa de diferencias, congelar la ubicación y ajustar con autorización.', url:'juegos/conteo-ciclico.html' },
   { id:'inventario', name:'Conteo Cíclico', icon:'🔢', cat:'Inventarios', status:'activo', time:'10 min', pass:'150/212', desc:'Cuenta cajas reales en el anaquel (con distractores y dañadas), compara con sistema y decide con Mesa de Control.', url:'juegos/conteo-ciclico.html' },
   { id:'dojo-de-mando', name:'Dojo de Mando · Liderazgo', icon:'🥋', cat:'Liderazgo', status:'activo', time:'25 min', pass:'62/100',
     desc:'Simulador de liderazgo para jefes de turno, gerentes y directores. Escenario piloto "El mejor operador": conversación difícil con un supervisor de alto desempeño que se salta la seguridad, una auxiliar que teme hablar y un director que pide no hacer ruido. Cada decisión mueve 5 indicadores (confianza, claridad, ejecución, clima y cumplimiento) y la actitud de los personajes; cierra con debrief del mentor, puntaje por competencia y plan de práctica.', url:'juegos/dojo-de-mando.html' },
@@ -523,7 +523,7 @@ function renderSeg(body,rows){ const esc=t=>String(t==null?'':t).replace(/[&<>]/
   body.innerHTML=tools()+`<div class="dcard" style="margin-top:12px"><h3 style="margin:0 0 8px">⚠️ Faltas más frecuentes</h3>${top.length?top.map(([k,n])=>`<div style="display:flex;align-items:center;gap:8px;margin:5px 0"><div style="flex:0 0 38%;font-size:13px">${esc(k)}</div><div style="flex:1;background:#eef0f6;border-radius:6px;height:16px"><div style="width:${n/mx*100}%;height:100%;background:#c8102e;border-radius:6px"></div></div><b style="width:44px;text-align:right">${n}</b><small style="width:110px;color:#666">${who[k].size} colaborador(es)</small></div>`).join(''):'<p>Sin faltas registradas con los filtros actuales.</p>'}</div>
   <div class="dcard" style="margin-top:12px"><h3 style="margin:0 0 8px">🪪 Autorizaciones de operador de montacargas <small style="font-weight:400;color:#666">(vigencia 1 año desde la última práctica aprobada)</small></h3>${auth.length?`<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="text-align:left;background:#f2f4fa"><th style="padding:6px">Colaborador</th><th>No.</th><th>Almacén</th><th>Equipo</th><th>Aprobó</th><th>Vence</th><th>Estado</th></tr>${auth.map(a=>`<tr style="border-top:1px solid #e3e6ef"><td style="padding:6px">${esc(a.r.nombre)}</td><td>${esc(a.r.num)}</td><td>${esc(a.r.almacen)}</td><td>${esc(a.r.equipo||'')}</td><td>${new Date(a.r.fecha).toLocaleDateString('es-MX')}</td><td>${a.v.toLocaleDateString('es-MX')}</td><td><b style="color:${col[a.st]}">${a.st}${a.st!=='VIGENTE'?' · '+(a.d<0?-a.d+' días':a.d+' días'):''}</b></td></tr>`).join('')}</table>`:'<p>Aún no hay prácticas de montacargas aprobadas.</p>'}</div>`; }
 
-function dashTab(v){ dashView=v; if(v!=='per') dashPerson=null; ['res','rank','per','seg'].forEach(k=>document.getElementById({res:'tabRes',rank:'tabRank',per:'tabPer',seg:'tabSeg'}[k]).classList.toggle('on',k===v)); renderDash(); }
+function dashTab(v){ dashView=v; if(v!=='per') dashPerson=null; ['res','rank','per','seg','prf'].forEach(k=>document.getElementById({res:'tabRes',rank:'tabRank',per:'tabPer',seg:'tabSeg',prf:'tabPrf'}[k]).classList.toggle('on',k===v)); renderDash(); }
 function tools(){ const all=collectResults(); const whs=[...new Set(all.map(r=>r.almacen).filter(Boolean))].sort(); const cs=[...new Set(all.map(r=>r.juego))].sort();
   return `<div class="dtools"><input placeholder="🔍 Nombre o No. empleado" value="${dashFilter.q}" oninput="dashFilter.q=this.value;renderDash()">
    <select onchange="dashFilter.wh=this.value;renderDash()"><option value="">Todos los almacenes</option>${whs.map(w=>`<option ${w===dashFilter.wh?'selected':''}>${w}</option>`).join('')}</select>
@@ -532,10 +532,57 @@ function tools(){ const all=collectResults(); const whs=[...new Set(all.map(r=>r
    <label style="font-size:11px;color:#838383;display:flex;align-items:center;gap:4px"><input type="checkbox" ${dashFilter.pruebas?'checked':''} onchange="dashFilter.pruebas=this.checked;renderDash()"> Incluir sesiones de prueba (${all.filter(esPrueba).length})</label>
    <button class="dbtn" onclick="dashFilter={wh:'',curso:'',q:'',pruebas:false,desde:'',hasta:''};renderDash()">Limpiar</button></div>`; }
 function medal(i){ return i===0?'🥇':i===1?'🥈':i===2?'🥉':`<b style="color:#838383">${i+1}</b>`; }
+
+/* ===== Perfiles de puesto y de persona (RH / Capacitación) ===== */
+const PRF_KEY='dicka_puestos';
+const PRF_BASE=['turno-seguro-3d','examen-seguridad','extintores-3d','5s','ergonomia','emergencias','senalizacion'];
+const PRF_DEF={
+  'Montacarguista':[...PRF_BASE,'montacarga','andenes','cargas','loto'],
+  'Aux de Almacén':[...PRF_BASE,'surtido','metodos','excepciones','conteo'],
+  'Surtidor':[...PRF_BASE,'surtido','metodos','excepciones','slotting'],
+  'Recibidor':[...PRF_BASE,'recepcion','sellos','devoluciones','frio'],
+  'Embarcador':[...PRF_BASE,'embarques','patio','carga','sellos'],
+  'Supervisor de Operaciones':[...PRF_BASE,'flujo','crossdock','conteo','loto','matpel','dojo-de-mando'],
+  'Jefe de Turno':[...PRF_BASE,'flujo','patio','embarques','dojo-de-mando'],
+  'Gerente de Operaciones':['tablero','planeacion','dojo-de-mando','flujo','slotting','crossdock','emergencias']};
+function prfLoad(){ try{ return Object.assign({},PRF_DEF,JSON.parse(localStorage.getItem(PRF_KEY)||'{}')); }catch(e){ return {...PRF_DEF}; } }
+function prfSave(m){ try{ localStorage.setItem(PRF_KEY,JSON.stringify(m)); }catch(e){} }
+function prfRuta(m,puesto){ if(m[puesto]) return m[puesto]; const p=(puesto||'').toLowerCase(); const k=Object.keys(m).find(x=>p&&(p.includes(x.toLowerCase())||x.toLowerCase().includes(p))); if(k) return m[k];
+  if(/montacarg/.test(p)) return m['Montacarguista']; if(/gerent/.test(p)) return m['Gerente de Operaciones']; if(/supervis|jef|lider|líder/.test(p)) return m['Supervisor de Operaciones']; if(/recib/.test(p)) return m['Recibidor']; if(/embarc/.test(p)) return m['Embarcador']; return PRF_BASE; }
+let prfEdit=null;
+function renderPerfiles(body,rows){ const m=prfLoad(), G=allGames(), byId=Object.fromEntries(G.map(g=>[g.id,g])), byName=Object.fromEntries(G.map(g=>[g.name,g]));
+  const people=buildPeople(rows); people.forEach(pp=>{ if(pp.puesto&&!m[pp.puesto]) m[pp.puesto]=prfRuta(m,pp.puesto).slice(); });
+  const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const puestos=Object.keys(m).sort();
+  const cards=puestos.map(pu=>{ const ids=m[pu]||[]; const ed=prfEdit===pu;
+    return `<div class="panel" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>${esc(pu)}</b><span style="font-size:12px;color:#6b7390">${ids.length} simuladores en su ruta</span><button class="dbtn" data-pu="${esc(pu)}" onclick="prfToggle(this.dataset.pu)">${ed?'✓ Listo':'✏️ Editar ruta'}</button></div>
+      ${ed?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px;margin-top:8px">${G.map(g=>`<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" data-pu="${esc(pu)}" data-g="${g.id}" ${ids.includes(g.id)?'checked':''} onchange="prfCheck(this)"> ${esc(g.name)} <small style="color:#999">${esc(g.cat||'')}</small></label>`).join('')}</div>`
+        :`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${ids.map(id=>byId[id]?`<span style="background:#eef1fb;border-radius:20px;padding:3px 9px;font-size:12px">${esc(byId[id].name)}</span>`:'').join('')}</div>`}</div>`; }).join('');
+  const cats=['Seguridad','Operaciones','Liderazgo','Calidad','Distribución','Inventarios'];
+  const filas=people.map(pp=>{ const ruta=prfRuta(m,pp.puesto).filter(id=>byId[id]); const best={}; pp.rows.forEach(r=>{ const g=byName[r.juego]; if(!g) return; const v=pct(r); if(!best[g.id]||v>best[g.id].v) best[g.id]={v,ap:!!r.aprobado}; });
+    const hechos=ruta.filter(id=>best[id]&&best[id].ap), pend=ruta.filter(id=>!(best[id]&&best[id].ap)), av=ruta.length?Math.round(hechos.length/ruta.length*100):0;
+    const comp=cats.map(c=>{ const v=Object.entries(best).filter(([id])=>byId[id]&&byId[id].cat===c).map(([,x])=>x.v); return v.length?`<span title="${c}" style="display:inline-block;margin:1px 3px 1px 0;font-size:11px;padding:2px 6px;border-radius:10px;background:${Math.round(v.reduce((a,b)=>a+b,0)/v.length)>=75?'#e9f7ef':'#fff3e0'}">${c.slice(0,4)}. ${Math.round(v.reduce((a,b)=>a+b,0)/v.length)}</span>`:''; }).join('');
+    return `<tr><td><a href="#" data-k="${esc(pp.key)}" onclick="dashPerson=this.dataset.k;dashTab('per');dashPerson=this.dataset.k;renderDash();return false">${esc(pp.nombre)}</a><br><small>${esc(pp.num?'#'+pp.num:'')} ${esc(pp.almacen||'')}</small></td><td>${esc(pp.puesto||'—')}</td>
+      <td style="min-width:120px"><div style="background:#eee;border-radius:6px;height:10px;overflow:hidden"><div style="width:${av}%;height:100%;background:${av>=100?'#2e7d32':'#2238d3'}"></div></div><small>${hechos.length}/${ruta.length} aprobados · ${av}%</small></td>
+      <td style="font-size:12px">${pend.length?pend.map(id=>esc(byId[id].name)).join(', '):'<b style="color:#2e7d32">Ruta completa ✓</b>'}</td><td>${comp||'<small>Sin datos</small>'}</td></tr>`; }).join('');
+  body.innerHTML=`<div class="panel" style="margin-bottom:12px"><h3>👥 Perfiles de puesto <small>qué simuladores debe aprobar cada puesto</small></h3>
+     <p style="font-size:13px;color:#555;margin-bottom:8px">Define la ruta de capacitación de cada puesto. Se guarda en este equipo; usa Exportar/Importar para compartirla con otros CEDIS.</p>
+     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><input id="prfNuevo" placeholder="Nuevo puesto (ej. Inventarista)" style="flex:1;min-width:180px;padding:8px;border:1px solid #ccd;border-radius:8px"><button class="dbtn p" onclick="prfAdd()">➕ Agregar puesto</button><button class="dbtn" onclick="prfExport()">⬇️ Exportar</button><button class="dbtn" onclick="document.getElementById('prfFile').click()">⬆️ Importar</button><button class="dbtn" onclick="prfReset()">↺ Valores sugeridos</button><input type="file" id="prfFile" accept=".json" style="display:none" onchange="prfImport(this.files[0])"></div>
+     ${cards}</div>
+   <div class="panel"><h3>🧑‍🏭 Perfil de cada colaborador <small>avance de su ruta y competencias (mejor puntaje por simulador)</small></h3>
+     ${people.length?`<div style="overflow-x:auto"><table class="dtable" id="prfTabla"><thead><tr><th>Colaborador</th><th>Puesto</th><th>Avance de su ruta</th><th>Pendientes</th><th>Competencias</th></tr></thead><tbody>${filas}</tbody></table></div>`:'<div class="empty">Aún no hay resultados de colaboradores en este equipo.</div>'}</div>`; }
+function prfToggle(pu){ prfEdit=prfEdit===pu?null:pu; renderDash(); }
+function prfCheck(el){ const m=prfLoad(), pu=el.dataset.pu, id=el.dataset.g; const l=new Set(m[pu]||[]); el.checked?l.add(id):l.delete(id); m[pu]=[...l]; prfSave(m); }
+function prfAdd(){ const v=document.getElementById('prfNuevo').value.trim(); if(!v) return; const m=prfLoad(); if(!m[v]) m[v]=PRF_BASE.slice(); prfSave(m); prfEdit=v; renderDash(); }
+function prfReset(){ if(!confirm('¿Regresar las rutas a los valores sugeridos? Se pierden tus cambios.')) return; try{ localStorage.removeItem(PRF_KEY); }catch(e){} prfEdit=null; renderDash(); }
+function prfExport(){ const b=new Blob([JSON.stringify(prfLoad(),null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='dicka-perfiles-de-puesto.json'; a.click(); }
+function prfImport(f){ if(!f) return; f.text().then(t=>{ const o=JSON.parse(t); if(typeof o!=='object'||Array.isArray(o)) throw 0; prfSave(o); prfEdit=null; renderDash(); alert('Rutas de puesto importadas ✓'); }).catch(()=>alert('El archivo no es válido')); }
 function renderDash(){ const body=document.getElementById('dbody'); const rows=filtered();
+  if(dashView==='prf') return renderPerfiles(body,filtered());
   if(!collectResults().length){ body.innerHTML='<div class="empty">Aún no hay resultados registrados en este dispositivo.<br><br>Los puntajes se guardan cuando los colaboradores terminan un simulador desde este mismo Dojo Virtual (mismo navegador / misma liga).<br><br><button class="dbtn p" onclick="document.getElementById(\'impFile\').click()">⬆ Importar un respaldo o CSV anterior</button></div>'; return; }
   if(dashView==='per' && dashPerson) return renderPerson(body,dashPerson);
   if(dashView==='seg') return renderSeg(body,rows);
+  if(dashView==='prf') return renderPerfiles(body,rows);
   const people=buildPeople(rows);
   if(dashView==='res'){
     const apr=rows.filter(r=>r.aprobado).length, avg=rows.length?Math.round(rows.map(pct).reduce((a,b)=>a+b,0)/rows.length):0;
@@ -687,7 +734,7 @@ function exportCSV(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`resultados-dojo-virtual-${new Date().toISOString().slice(0,10)}.csv`; a.click();
 }
 // Los juegos embebidos pueden reportar: parent.postMessage({type:'dicka-result', juego, nombre, score, aprobado}, '*')
-window.addEventListener('message',e=>{ const d=e.data; if(d&&d.type==='dicka-result'){ const l=JSON.parse(localStorage.getItem('dicka_console_results')||'[]'); l.push({juego:d.juego,nombre:d.nombre,num:d.num||'',puesto:d.puesto||'',area:d.area||'',almacen:d.almacen||'',score:d.score,aprobado:!!d.aprobado,fecha:new Date().toISOString(),reg:d.reg||'',tipo_sesion:'oficial'}); localStorage.setItem('dicka_console_results',JSON.stringify(l)); render(); cloudSync(true); }});
+window.addEventListener('message',e=>{ const d=e.data; if(d&&d.type==='dicka-close'){ closePlayer(); return; } if(d&&d.type==='dicka-result'){ const l=JSON.parse(localStorage.getItem('dicka_console_results')||'[]'); l.push({juego:d.juego,nombre:d.nombre,num:d.num||'',puesto:d.puesto||'',area:d.area||'',almacen:d.almacen||'',score:d.score,aprobado:!!d.aprobado,fecha:new Date().toISOString(),reg:d.reg||'',tipo_sesion:'oficial'}); localStorage.setItem('dicka_console_results',JSON.stringify(l)); render(); cloudSync(true); }});
 render();
 </script>
 <!-- Herramientas de accesibilidad y uso sin conexión -->

@@ -419,9 +419,9 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       await q.fill('#pname', 'Prueba Conteo'); await q.click('#startBtn');
       const r = await q.evaluate(good => { const kinds = new Set(L.map(c => c.ok)).size, n = L.length, c3d = !!document.querySelector('#v3d canvas'); for (let i = 0; i < 10; i++) { document.querySelector(`[data-c="${i}"]`).click(); document.querySelector(`[data-d="${good ? L[idx].ok : 'ok'}"]`).click(); next(); } return { score, kinds, n, c3d }; }, good); await b3.close(); return { r, e }; };
     const g = await run(true), m = await run(false);
-    ok('Conteo Cíclico', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
-    ok('Conteo Cíclico', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
-    ok('Conteo Cíclico', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+    ok('Conteo Cíclico ABC', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
+    ok('Conteo Cíclico ABC', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('Conteo Cíclico ABC', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // Recepción y decantado en 3D: la escena se dibuja y tocar la tarima escanea
   { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message));
     await q.goto(url('juegos/recepcion-decantado.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Recepcion 3D'); await q.click('#startBtn'); await q.waitForTimeout(1500);
@@ -431,6 +431,44 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await b3.close();
     ok('Recepción y decantado 3D', 'la escena 3D se dibuja y tocar la tarima la escanea', pt.ok && r.scanned && r.act, JSON.stringify(r));
     ok('Recepción y decantado 3D', 'sin errores de ejecución', !e.length, e[0] || ''); }
+  // Dojo: la pantalla de situaciones tiene botón de regreso al registro
+  { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.addInitScript(() => { window.TEST_MODE = true; window.STORY_SEEN = true; });
+    await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(400); await q.evaluate(() => { $('pname').value = 'Prueba Regreso'; if ($('pnom')) $('pnom').value = ''; $('pnum').value = 'T123'; goBrief(); }); await q.waitForTimeout(300);
+    const vis = await q.isVisible('#backReg'); await q.click('#backReg'); await q.waitForTimeout(200);
+    const r = await q.evaluate(() => ({ intro: !$('intro').classList.contains('hidden'), scen: $('scen').classList.contains('hidden') })); await q.close();
+    ok('Dojo de Mando', 'botón Regresar en la lista de situaciones vuelve al registro', vis && r.intro && r.scen, JSON.stringify(r)); }
+  // Patio de andenes en 3D: tocar un tráiler y luego un andén lo asigna
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 1280, height: 900 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/patio-andenes.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Patio 3D'); await q.click('#startBtn'); await q.waitForTimeout(1200);
+    const r = await q.evaluate(() => { let W = waiting(); let k = 0; while (!W.length && k++ < 4) { advance(); W = waiting(); } const t = W.find(x => D.some(d => fits(x, d) && d.t === null)) || W[0]; const d = D.find(dd => fits(t, dd) && dd.t === null); pick3d({ tipo: 'truck', id: t.id }); const sel = SEL === t.id; pick3d({ tipo: 'dock', n: d.n }); return { ok: E3.ok, sel, asignado: d.t === t.id, canvas: !!document.querySelector('#v3dP canvas') }; });
+    await b3.close();
+    ok('Patio de andenes 3D', 'escena 3D dibujada; tocar tráiler y andén lo asigna', r.ok && r.sel && r.asignado && r.canvas, JSON.stringify(r));
+    ok('Patio de andenes 3D', 'sin errores de ejecución', !e.length, e[0] || ''); }
+  // Todos los juegos tienen botón «← Inicio» visible y que no queda tapado
+  { const fs = require('fs'); const files = fs.readdirSync('juegos').filter(f => f.endsWith('.html')); const bad = [];
+    for (const f of files) { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); await q.goto(url('juegos/' + f)); await q.waitForTimeout(250);
+      const v = await q.evaluate(() => { const x = document.getElementById('dickaInicio'); if (!x) return 'no'; const r = x.getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === x ? 'ok' : 'tapado'; }); if (v !== 'ok') bad.push(f + ':' + v); await q.close(); }
+    ok('Navegación', 'los ' + files.length + ' juegos tienen botón «← Inicio» visible', !bad.length, bad.join(', ')); }
+  // Acceso único: registrarse en un juego llena y deja continuar en los demás sin volver a capturar
+  { const cx1 = await b.newContext({ viewport: { width: 390, height: 844 } }); const q = await cx1.newPage(); await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300);
+    await q.fill('#pname', 'Ana Torres Ruiz'); await q.fill('#pnum', '10457'); await q.click('#startBtn'); await q.waitForTimeout(200); await q.close();
+    const res = []; for (const f of ['5s-almacen.html', 'recepcion-decantado.html', 'dojo-de-mando.html', 'simulador-montacarga.html']) { const p2 = await cx1.newPage(); const e = []; p2.on('pageerror', x => e.push(x.message)); await p2.goto(url('juegos/' + f)); await p2.waitForTimeout(400);
+      const r = await p2.evaluate(() => { const g = id => document.getElementById(id); return { banner: !!g('dickaPerfil'), num: (g('pnum') || g('rNum') || {}).value }; }); let av = false;
+      if (r.banner) { await p2.click('#perfilGo'); await p2.waitForTimeout(400); av = await p2.evaluate(() => { const i = document.getElementById('intro') || document.getElementById('regScreen'); return !!i && (i.classList.contains('hidden') || getComputedStyle(i).display === 'none'); }); }
+      res.push(f + ':' + (r.banner && r.num === '10457' && av && !e.length ? 'ok' : JSON.stringify(r) + av + (e[0] || ''))); await p2.close(); }
+    const perf = await (async () => { const p3 = await cx1.newPage(); await p3.goto(url('juegos/5s-almacen.html')); const v = await p3.evaluate(() => JSON.parse(localStorage.getItem('dicka_perfil') || '{}')); await p3.close(); return v; })(); await cx1.close();
+    ok('Acceso único', 'registrarse una vez llena los datos y deja continuar en otros juegos', res.every(x => x.endsWith(':ok')), res.join(' | '));
+    ok('Acceso único', 'el puesto guardado no se pierde al pasar por juegos con otra lista de puestos', perf.puesto === 'Gerente de Operaciones', JSON.stringify(perf)); }
+  // Perfiles (RH): rutas por puesto, avance por colaborador y edición que se guarda
+  { const q = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.addInitScript(() => { const d = new Date().toISOString(); localStorage.setItem('dicka_console_results', JSON.stringify([{ juego: '5S en el Almacén', nombre: 'Prueba Perfil', num: '99001', puesto: 'Montacarguista', almacen: 'Agave 1', score: '90/100', aprobado: true, fecha: d }])); });
+    await q.goto(url('index.html')); await q.waitForTimeout(500);
+    const r = await q.evaluate(() => { openDash(); dashTab('prf'); const fila = [...document.querySelectorAll('#prfTabla tbody tr')].find(tr => tr.textContent.includes('Prueba Perfil')); const av = fila ? fila.children[2].textContent : '';
+      prfToggle('Montacarguista'); const cb = document.querySelector('input[data-pu="Montacarguista"][data-g="matpel"]'); cb.checked = true; prfCheck(cb);
+      const tabs = ['tabRes', 'tabPrf', 'tabSeg'].every(i => document.getElementById(i).getBoundingClientRect().right <= innerWidth);
+      return { av, guardado: JSON.parse(localStorage.getItem('dicka_puestos')).Montacarguista.includes('matpel'), tabs }; }); await q.close();
+    ok('Perfiles RH', 'cada colaborador muestra el avance de la ruta de su puesto', /1\/\d+ aprobados/.test(r.av), r.av);
+    ok('Perfiles RH', 'editar la ruta de un puesto se guarda y las pestañas caben en celular', r.guardado && r.tabs && !e.length, JSON.stringify(r) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

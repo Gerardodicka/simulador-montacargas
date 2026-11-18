@@ -16,22 +16,21 @@
       const fria = opts.escena === 'camara';
       const sc = new THREE.Scene(); sc.background = new THREE.Color(fria ? '#d6e6f2' : '#cfd6e4'); const cam = new THREE.PerspectiveCamera(50, 1, .1, 120);
       sc.add(new THREE.HemisphereLight('#fff', '#667', .8)); const dl = new THREE.DirectionalLight('#fff', .7); dl.position.set(6, 14, 8); dl.castShadow = true; dl.shadow.mapSize.set(1024, 1024); Object.assign(dl.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12 }); sc.add(dl);
-      const fl = new THREE.Mesh(new THREE.PlaneGeometry(30, 22), M(fria ? '#b8c7d3' : '#9a9a96')); fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; sc.add(fl);
+      const fl = new THREE.Mesh(new THREE.PlaneGeometry(30, 34), M(fria ? '#b8c7d3' : '#9a9a96')); fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; sc.add(fl);
       const W = new THREE.Group(); sc.add(W);
       bx(W, 30, 6, .3, fria ? '#eef5fb' : '#e6e8ee', 0, 3, -8);
-      if (opts.escena === 'patio') { for (let i = -2; i <= 2; i++) { bx(W, 2.6, 2.8, 7, '#eceff1', i * 4, 2, -3.5); bx(W, 2.6, 2.4, 2, '#c62828', i * 4, 1.6, .6); } }
-      else { bx(W, 4, 4, .2, '#8d98ad', 0, 2, -7.8); bx(W, 3, 2.8, 8, '#eceff1', 0, 2.2, -12.2); bx(W, 30, .03, .15, '#ffd400', 0, .02, 2.5); }
+      if (opts.escena !== 'patio') { bx(W, 4, 4, .2, '#8d98ad', 0, 2, -7.8); bx(W, 3, 2.8, 8, '#eceff1', 0, 2.2, -12.2); bx(W, 30, .03, .15, '#ffd400', 0, .02, 2.5); }
       if (fria) { bx(W, 2, .6, .6, '#cfd8dc', -6, 4.6, -7.6); bx(W, 2, .6, .6, '#cfd8dc', 6, 4.6, -7.6); }
-      [-9, -5.5].forEach(x => rack(W, x, -4)); [5.5, 9].forEach(x => rack(W, x, -4));
-      persona(W, 2.4, 1.2, '#f2b705');
+      if (opts.escena !== 'patio') { [-9, -5.5].forEach(x => rack(W, x, -4)); [5.5, 9].forEach(x => rack(W, x, -4)); }
+      if (opts.escena !== 'patio') persona(W, 2.4, 1.2, '#f2b705');
       const T = new THREE.Group(); sc.add(T); let pick = [];
-      let th = .35, ph = 1.1, rad = 6.5, drag = null, moved = 0;
-      const upd = () => { ph = Math.max(.45, Math.min(1.35, ph)); rad = Math.max(3.5, Math.min(20, rad)); cam.position.set(rad * Math.sin(th) * Math.sin(ph), rad * Math.cos(ph) + 1, rad * Math.cos(th) * Math.sin(ph)); cam.lookAt(0, .8, 0); };
-      const fit = () => { const w = el.clientWidth, h = el.clientHeight; rn.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); upd(); }; addEventListener('resize', fit); fit();
+      let th = opts.escena === 'patio' ? 0 : .35, ph = opts.escena === 'patio' ? .75 : 1.1, rad = opts.escena === 'patio' ? 24 : 6.5, drag = null, moved = 0;
+      const upd = () => { ph = Math.max(.45, Math.min(1.35, ph)); rad = Math.max(3.5, Math.min(34, rad)); cam.position.set(rad * Math.sin(th) * Math.sin(ph), rad * Math.cos(ph) + 1, rad * Math.cos(th) * Math.sin(ph)); cam.lookAt(0, .8, opts.escena === 'patio' ? 1 : 0); };
+      const fit = () => { const w = el.clientWidth, h = el.clientHeight; rn.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); if (opts.escena === 'patio' && !fit.done) { rad = w / h < 1 ? 46 : 26; fit.done = 1; } upd(); }; addEventListener('resize', fit); fit();
       const cv = rn.domElement;
       cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; moved = 0; cv.setPointerCapture(e.pointerId); });
       cv.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; moved += Math.abs(dx) + Math.abs(dy); th -= dx * .007; ph -= dy * .005; drag = { x: e.clientX, y: e.clientY }; upd(); });
-      cv.addEventListener('pointerup', e => { if (moved < 8 && opts.onPick) { const r = cv.getBoundingClientRect(), v = new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), rc = new THREE.Raycaster(); rc.setFromCamera(v, cam); if (rc.intersectObjects(pick, true)[0]) opts.onPick(); } drag = null; });
+      cv.addEventListener('pointerup', e => { if (moved < 8 && opts.onPick) { const r = cv.getBoundingClientRect(), v = new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), rc = new THREE.Raycaster(); rc.setFromCamera(v, cam); const h = rc.intersectObjects(pick, true)[0]; if (h) { let o = h.object; while (o && !o.userData.pick && o.parent) o = o.parent; opts.onPick(o && o.userData.pick); } } drag = null; });
       cv.addEventListener('wheel', e => { e.preventDefault(); rad *= e.deltaY > 0 ? 1.1 : .9; upd(); }, { passive: false });
       let anillo = null;
       const api = {
@@ -47,6 +46,20 @@
           if (o.frio) { const n2 = new THREE.Mesh(new THREE.SphereGeometry(.9, 10, 8), M('#e3f2fd', { transparent: true, opacity: .25 })); n2.position.y = 1.2; T.add(n2); }
           anillo = new THREE.Mesh(new THREE.RingGeometry(.95, 1.1, 40), new THREE.MeshBasicMaterial({ color: o.anillo || '#2238d3', side: THREE.DoubleSide })); anillo.rotation.x = -Math.PI / 2; anillo.position.y = .02; T.add(anillo);
           pick = [T];
+        },
+        setPatio(st) {
+          while (T.children.length) T.remove(T.children[0]); pick = [];
+          const lbl = (t, c) => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 96; const x = cv.getContext('2d'); x.fillStyle = c; x.fillRect(0, 0, 256, 96); x.fillStyle = '#fff'; x.font = 'bold 54px sans-serif'; x.textAlign = 'center'; x.fillText(t, 128, 66); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); sp.scale.set(1.8, .68, 1); return sp; };
+          const trailer = (g, cold, color) => { bx(g, 2.4, 2.6, 6, cold ? '#e3f2fd' : '#eceff1', 0, 2.1, 0); if (cold) bx(g, 1.6, .9, .5, '#90a4ae', 0, 2.6, -3.2); bx(g, 2.4, 2.4, 2, color || '#c62828', 0, 1.6, -4.1); [-.9, .9].forEach(x => [1.8, 2.6, -3.8].forEach(z => { const w = cy(g, .45, .35, '#111', x, .45, z); w.rotation.z = Math.PI / 2; })); };
+          st.docks.forEach((d, i) => { const x = (i - (st.docks.length - 1) / 2) * 4, g = new THREE.Group(); g.position.set(x, 0, -7.6); T.add(g);
+            bx(g, 3, 3.2, .3, d.cold ? '#64b5f6' : '#90a4ae', 0, 1.6, 0); bx(g, 3.2, .3, .6, '#ffd600', 0, 3.3, .2); const l = lbl(d.n, d.cold ? '#1565c0' : '#37474f'); l.position.set(0, 4, .3); g.add(l);
+            const hit = bx(g, 3.4, 3.6, 1.2, new THREE.MeshBasicMaterial({ visible: false }), 0, 1.8, .5); hit.userData.pick = { tipo: 'dock', n: d.n }; pick.push(hit);
+            if (d.eco) { const tg = new THREE.Group(); tg.position.set(0, 0, 3.3); g.add(tg); trailer(tg, d.cold, '#455a64'); const e = lbl(d.eco, '#455a64'); e.position.set(0, 4, 3.3); e.scale.set(1.5, .56, 1); g.add(e); } });
+          const nW = st.waiting.length, cols = Math.min(nW, 7), px = i => (i % 7 - (cols - 1) / 2) * 3.4, pz = i => 6 + Math.floor(i / 7) * 6.5;
+          st.waiting.forEach((t, i) => { const g = new THREE.Group(); g.position.set(px(i), 0, pz(i)); g.scale.set(1, 1, .75); T.add(g); trailer(g, t.cold, t.cita ? '#2e7d32' : '#c62828');
+            const e = lbl(t.eco, t.sel ? '#ff6d00' : (t.cita ? '#2e7d32' : '#c62828')); e.position.set(px(i), 4.2, pz(i) - 1); T.add(e);
+            const hit = bx(g, 3, 3.4, 8, new THREE.MeshBasicMaterial({ visible: false }), 0, 1.7, 0); hit.userData.pick = { tipo: 'truck', id: t.id }; pick.push(hit);
+            if (t.sel) { const r = new THREE.Mesh(new THREE.RingGeometry(3.3, 3.6, 40), new THREE.MeshBasicMaterial({ color: '#ff6d00', side: THREE.DoubleSide })); r.rotation.x = -Math.PI / 2; r.position.set(px(i), .03, pz(i)); T.add(r); } });
         },
         marcar(ok) { if (anillo) anillo.material.color.set(ok === false ? '#d11' : '#1f9d55'); },
         render() { rn.render(sc, cam); }

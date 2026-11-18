@@ -56,4 +56,5 @@ function render() { const R0 = ROWS.filter(r => (!$('fa').value || r.almacen ===
 $('f').onchange = e => load([...e.target.files]); ['fa', 'fn'].forEach(i => $(i).onchange = render);
 const d = $('drop'); d.ondragover = e => { e.preventDefault(); d.style.borderColor = '#1D2586'; }; d.ondragleave = () => d.style.borderColor = ''; d.ondrop = e => { e.preventDefault(); d.style.borderColor = ''; load([...e.dataTransfer.files]); };
 </script><script src="js/accesible.js"></script>
+<script src="js/inicio.js"></script>
 </body></html>

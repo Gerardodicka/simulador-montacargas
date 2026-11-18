@@ -56,6 +56,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .empty{color:#888;font-size:13px;text-align:center;padding:.6rem}
 .sect{font-size:12px;font-weight:800;color:var(--brillante);letter-spacing:1px;margin-top:.6rem}
 @media(max-width:480px){.docks{grid-template-columns:repeat(2,1fr)}}
+.v3dbox{position:relative;height:340px;border-radius:12px;overflow:hidden;margin:.4rem 0 .6rem;touch-action:none;background:#cfd6e4}.v3dbox canvas{display:block;width:100%;height:100%}.v3dhint{position:absolute;left:8px;top:8px;right:8px;background:rgba(1,17,49,.78);color:#fff;font-size:12px;padding:4px 8px;border-radius:8px;pointer-events:none}
 </style>
 </head>
 <body>
@@ -77,7 +78,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   <div class="card hidden" id="game">
     <div class="topbar"><span>🕖 <span id="clock">07:00</span></span><span>Bloque <span id="sl">1</span>/8</span><span>⭐ <span id="sc">100</span></span></div>
     <div class="bar"><div id="bar" style="width:0"></div></div>
-    <div class="sect">ANDENES</div><div class="docks" id="docks"></div>
+    <div class="v3dbox" id="v3dP"><div class="v3dhint" id="v3dHint">Toca un tráiler del patio y luego el andén donde lo quieres · verde = con cita, rojo = sin cita, azul = refrigerado</div></div><div class="sect">ANDENES</div><div class="docks" id="docks"></div>
     <div class="sect">PATIO · UNIDADES ESPERANDO</div><div class="yard" id="yard"></div>
     <button class="btn" id="advBtn" onclick="advance()">⏩ AVANZAR 30 MIN</button>
   </div>
@@ -95,7 +96,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 </div>
 <script>
 const GAME_ID='patio-andenes', GAME_NAME='Patio y Andenes', PASS=75, MAX=100, SLOTS=8;
-let who={}, t0, score=MAX, errors=[], REG='', slot=0, T=[], D=[];
+let SEL=null; let who={}, t0, score=MAX, errors=[], REG='', slot=0, T=[], D=[];
 const $=id=>document.getElementById(id);
 function toast(msg,good){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(good?' good':''); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1900); if(!good&&navigator.vibrate) navigator.vibrate(80); }
 function chk(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))>>>0; return h.toString(36).toUpperCase().slice(0,6); }
@@ -104,14 +105,16 @@ const hhmm=s=>{ const m=7*60+s*30; return String(Math.floor(m/60)).padStart(2,'0
 const PLAN=[[0,'seco',1,2,'Recepción'],[0,'frio',1,2,'Recepción'],[0,'seco',1,1,'Embarque'],[1,'seco',0,1,'Recepción'],[1,'frio',1,1,'Embarque'],[2,'seco',1,3,'Recepción'],[2,'seco',1,2,'Embarque'],[2,'frio',0,2,'Recepción'],[3,'seco',1,1,'Embarque'],[3,'frio',1,2,'Recepción'],[3,'seco',0,2,'Embarque'],[4,'seco',1,1,'Recepción']];
 const LINEAS=['Transportes del Norte','Fletes Bajío','TransRefri','Autolíneas MX','Carga Express','FríoRuta'];
 function setup(){ D=['A1','A2','A3','A4','R1','R2'].map(n=>({n,cold:n[0]==='R',t:null,left:0})); T=PLAN.map((p,i)=>({id:i,llega:p[0],temp:p[1],cita:!!p[2],dur:p[3],tipo:p[4],linea:LINEAS[i%LINEAS.length],eco:'ECO-'+(300+Math.floor(Math.random()*600)),dock:null,espera:0,atendida:false,salio:false})); }
-function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); setup(); $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); render(); }
+function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); setup(); if(!window.E3){ $('game').classList.remove('hidden'); window.E3=window.Escena3D?Escena3D.montar($('v3dP'),{escena:'patio',onPick:pick3d}):{ok:false}; if(!E3.ok) $('v3dP').style.display='none'; } $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); render(); }
 const waiting=()=>T.filter(t=>t.llega<=slot&&t.dock===null&&!t.salio);
 const fits=(t,d)=>!d.t&&(d.cold||t.temp==='seco');
+function pick3d(o){ if(!o) return; if(o.tipo==='truck'){ SEL=o.id; render(); return; } if(o.tipo==='dock'){ if(SEL===null){ toast('Primero toca un tráiler del patio'); return; } const id=SEL; SEL=null; assign(id,o.n); } }
+function draw3d(){ if(!window.E3||!E3.ok) return; const W=waiting().sort((a,b)=>(b.cita-a.cita)||(a.llega-b.llega)); if(SEL!==null&&!W.some(t=>t.id===SEL)) SEL=null; E3.setPatio({docks:D.map(d=>({n:d.n,cold:d.cold,eco:d.t!==null?T[d.t].eco:null})),waiting:W.map(t=>({id:t.id,eco:t.eco,cold:t.temp==='frio',cita:t.cita,sel:SEL===t.id}))}); }
 function render(){ $('clock').textContent=hhmm(slot); $('sl').textContent=slot+1; $('bar').style.width=(slot/SLOTS*100)+'%'; $('sc').textContent=Math.max(0,score);
   $('docks').innerHTML=D.map(d=>{ const t=d.t!==null?T[d.t]:null; return `<div class="dock ${d.cold?'cold':''} ${t?'busy':''}" data-d="${d.n}"><h4>${d.cold?'❄️':'🏬'} ${d.n}</h4>${t?`${t.eco} · ${t.tipo}<br><small>Libera en ${d.left*30} min</small>`:'<small>Libre</small>'}</div>`; }).join('');
   const W=waiting().sort((a,b)=>(b.cita-a.cita)||(a.llega-b.llega));
   $('yard').innerHTML=W.length?W.map(t=>{ const free=D.filter(d=>fits(t,d)); return `<div class="truck ${t.temp==='frio'?'cold':''}" data-t="${t.id}"><div class="tt"><b>🚛 ${t.eco} · ${t.linea}</b><span><span class="chip ${t.temp==='frio'?'c':''}">${t.temp==='frio'?'❄️ Refrigerado':'Seco'}</span> <span class="chip ${t.cita?'':'nc'}">${t.cita?'Con cita':'Sin cita'}</span></span></div><small>${t.tipo} · maniobra ${t.dur*30} min · esperando ${t.espera*30} min</small><div class="bts">${free.length?free.map(d=>`<button data-a="${t.id}-${d.n}" onclick="assign(${t.id},'${d.n}')">→ ${d.n}</button>`).join(''):'<small style="color:#a11">Sin andén compatible libre</small>'}</div></div>`; }).join(''):'<div class="empty">Sin unidades en patio</div>';
-  $('advBtn').textContent=slot>=SLOTS-1?'🏁 CERRAR TURNO':'⏩ AVANZAR 30 MIN'; }
+  $('advBtn').textContent=slot>=SLOTS-1?'🏁 CERRAR TURNO':'⏩ AVANZAR 30 MIN'; draw3d(); }
 function assign(id,dn){ const t=T[id], d=D.find(x=>x.n===dn); if(!fits(t,d)){ score-=4; errors.push('Intentó asignar un andén incompatible'); toast('✗ Ese andén no es compatible'); render(); return; }
   const W=waiting().filter(x=>x.id!==id);
   if(!t.cita&&W.some(x=>x.cita&&D.some(dd=>fits(x,dd)))) { score-=5; errors.push('Atendió sin cita antes que con cita'); toast('⚠️ Había una unidad con cita esperando: tiene prioridad'); }
@@ -134,7 +137,11 @@ function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombr
 function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
 function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
 </script>
+<script src="js/three.min.js"></script>
+<script src="js/escena3d.js"></script>
 <script src="js/dicka-sync.js"></script>
 <script src="js/accesible.js"></script>
+<script src="js/perfil.js"></script>
+<script src="js/inicio.js"></script>
 </body>
 </html>
