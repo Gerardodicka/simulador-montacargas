@@ -437,6 +437,13 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     const vis = await q.isVisible('#backReg'); await q.click('#backReg'); await q.waitForTimeout(200);
     const r = await q.evaluate(() => ({ intro: !$('intro').classList.contains('hidden'), scen: $('scen').classList.contains('hidden') })); await q.close();
     ok('Dojo de Mando', 'botón Regresar en la lista de situaciones vuelve al registro', vis && r.intro && r.scen, JSON.stringify(r)); }
+  // Patio de andenes en 3D: tocar un tráiler y luego un andén lo asigna
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 1280, height: 900 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/patio-andenes.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Patio 3D'); await q.click('#startBtn'); await q.waitForTimeout(1200);
+    const r = await q.evaluate(() => { let W = waiting(); let k = 0; while (!W.length && k++ < 4) { advance(); W = waiting(); } const t = W.find(x => D.some(d => fits(x, d) && d.t === null)) || W[0]; const d = D.find(dd => fits(t, dd) && dd.t === null); pick3d({ tipo: 'truck', id: t.id }); const sel = SEL === t.id; pick3d({ tipo: 'dock', n: d.n }); return { ok: E3.ok, sel, asignado: d.t === t.id, canvas: !!document.querySelector('#v3dP canvas') }; });
+    await b3.close();
+    ok('Patio de andenes 3D', 'escena 3D dibujada; tocar tráiler y andén lo asigna', r.ok && r.sel && r.asignado && r.canvas, JSON.stringify(r));
+    ok('Patio de andenes 3D', 'sin errores de ejecución', !e.length, e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
