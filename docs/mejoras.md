@@ -55,6 +55,12 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 33 | Nuevo simulador | Nuevo simulador | Cargas no estándar: tarimas dañadas, cargas largas, centro de gravedad alto | NSC forklift game / OSHA 1910.178 | ✅ |
 | 34 | Nuevo simulador | Nuevo simulador | Excepciones de surtido y reabasto: ubicación vacía, producto dañado, conteo que no cuadra | Fraunhofer LiftNick (escenarios de excepción) | ✅ |
 | 35 | Nuevo simulador | Nuevo simulador | Flujo de materiales: detectar cuellos de botella entre recibo, almacenaje y embarque | KION City of Goods / Mecalux WarehouseGame | ⬜ |
+| 36 | Nuevo simulador | Nuevo simulador | Cross-docking: asignar tarimas entrantes a andenes de salida sin almacenar, respetando horarios de salida | Procesos de almacén (cross-dock) | ⬜ |
+| 37 | Nuevo simulador | Nuevo simulador | Slotting: reubicar SKUs por rotación ABC para reducir recorridos de surtido | Mecalux WarehouseGame (ubicación) | ⬜ |
+| 38 | Nuevo simulador | Nuevo simulador | Armado de embarques y ruteo: secuencia de carga LIFO por parada y peso por eje | Procesos de distribución | ⬜ |
+| 39 | Nuevo simulador | Nuevo simulador | Conteo cíclico e inventario: planear conteos ABC, investigar diferencias y ajustar | Control de inventarios | ⬜ |
+| 40 | Nuevo simulador | Nuevo simulador | Kitting y valor agregado: armar kits, etiquetar y empacar según la orden del cliente | Servicios de valor agregado 3PL | ⬜ |
+| 41 | Nuevo simulador | Nuevo simulador | Indicadores del almacén (OTIF, exactitud de inventario, productividad): leer el tablero y decidir acciones | KPIs logísticos | ⬜ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
