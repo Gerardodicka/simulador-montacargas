@@ -326,6 +326,38 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Ergonomía NOM-036', 'escena 3D con 10 hallazgos que cubren las 5 medidas NOM-036 y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
     ok('Ergonomía NOM-036', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
     ok('Ergonomía NOM-036', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // Emergencias: cada recorrido cubre las 5 categorías y un área sin hallazgo; respuestas correctas 100, marcar todo "está bien" no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/emergencias.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Emergencias'); await q.click('#startBtn');
+      const r = await q.evaluate(good => { const kinds = new Set(L.map(c => c.ok)).size, n = L.length, c3d = !!document.querySelector('#v3d canvas'); for (let i = 0; i < 10; i++) { document.querySelector(`[data-c="${i}"]`).click(); document.querySelector(`[data-d="${good ? L[idx].ok : 'ok'}"]`).click(); next(); } return { score, kinds, n, c3d }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Emergencias en el Almacén', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
+    ok('Emergencias en el Almacén', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('Emergencias en el Almacén', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // LOTO: cada recorrido cubre las 5 categorías y un área sin hallazgo; respuestas correctas 100, marcar todo "está bien" no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/loto.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba LOTO'); await q.click('#startBtn');
+      const r = await q.evaluate(good => { const kinds = new Set(L.map(c => c.ok)).size, n = L.length, c3d = !!document.querySelector('#v3d canvas'); for (let i = 0; i < 10; i++) { document.querySelector(`[data-c="${i}"]`).click(); document.querySelector(`[data-d="${good ? L[idx].ok : 'ok'}"]`).click(); next(); } return { score, kinds, n, c3d }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Bloqueo y Etiquetado (LOTO)', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
+    ok('Bloqueo y Etiquetado (LOTO)', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('Bloqueo y Etiquetado (LOTO)', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // Alturas: cada recorrido cubre las 5 categorías y un área sin hallazgo; respuestas correctas 100, marcar todo "está bien" no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/alturas.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Alturas'); await q.click('#startBtn');
+      const r = await q.evaluate(good => { const kinds = new Set(L.map(c => c.ok)).size, n = L.length, c3d = !!document.querySelector('#v3d canvas'); for (let i = 0; i < 10; i++) { document.querySelector(`[data-c="${i}"]`).click(); document.querySelector(`[data-d="${good ? L[idx].ok : 'ok'}"]`).click(); next(); } return { score, kinds, n, c3d }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Trabajo en Alturas', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
+    ok('Trabajo en Alturas', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('Trabajo en Alturas', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
+  // Señalización: cada recorrido cubre las 5 categorías y un área sin hallazgo; respuestas correctas 100, marcar todo "está bien" no aprueba
+  { const run = async good => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/senalizacion.html')); await q.waitForTimeout(300);
+      await q.fill('#pname', 'Prueba Senalización'); await q.click('#startBtn');
+      const r = await q.evaluate(good => { const kinds = new Set(L.map(c => c.ok)).size, n = L.length, c3d = !!document.querySelector('#v3d canvas'); for (let i = 0; i < 10; i++) { document.querySelector(`[data-c="${i}"]`).click(); document.querySelector(`[data-d="${good ? L[idx].ok : 'ok'}"]`).click(); next(); } return { score, kinds, n, c3d }; }, good); await q.close(); return { r, e }; };
+    const g = await run(true), m = await run(false);
+    ok('Señalización y Colores', 'escena 3D con 10 hallazgos que cubren las 5 categorías y un área correcta; respuestas correctas 100', g.r.score === 100 && g.r.kinds === 6 && g.r.n === 10 && g.r.c3d, JSON.stringify(g.r));
+    ok('Señalización y Colores', 'marcar todo "está bien" no aprueba', m.r.score < 75, m.r.score + '/100');
+    ok('Señalización y Colores', 'sin errores de ejecución', !g.e.length && !m.e.length, g.e[0] || m.e[0] || ''); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
