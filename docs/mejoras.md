@@ -4,6 +4,8 @@ Una mejora cada 2 horas, tomada de lo que ofrecen simuladores del mercado (Mursi
 
 Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 
+> **Regla del usuario (2026-11-18):** todo simulador debe ser 3D o usar los avatares existentes. Los nuevos se hacen así y los 2D se convierten (C1–C11, prioridad sobre el resto de la cola).
+
 ## Hechas antes de la bitácora
 
 | Fecha | Simulador | Tipo | Mejora | Inspirada en | Estado |
@@ -59,6 +61,17 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 37 | Nuevo simulador | Nuevo simulador | Slotting: reubicar SKUs por rotación ABC para reducir recorridos de surtido | Mecalux WarehouseGame (ubicación) | ✅ |
 | 38 | Nuevo simulador | Nuevo simulador | Armado de embarques y ruteo: secuencia de carga LIFO por parada y peso por eje | Procesos de distribución | ✅ |
 | 39 | Nuevo simulador | Nuevo simulador | Conteo cíclico e inventario: planear conteos ABC, investigar diferencias y ajustar | Control de inventarios | ✅ |
+| C1 | Conversión 3D | Prioridad del usuario | Recepción y Decantado: escena 3D de andén de recibo con escáner RF | Todos los juegos en 3D o con avatares | ⬜ |
+| C2 | Conversión 3D | Prioridad del usuario | Patio de Andenes: patio 3D con tráileres y andenes | Todos los juegos en 3D o con avatares | ⬜ |
+| C3 | Conversión 3D | Prioridad del usuario | Métodos de Surtido: ruta de surtido animada en racks 3D | Todos los juegos en 3D o con avatares | ⬜ |
+| C4 | Conversión 3D | Prioridad del usuario | Cadena de Frío: cámara fría 3D con registrador | Todos los juegos en 3D o con avatares | ⬜ |
+| C5 | Conversión 3D | Prioridad del usuario | Inspección de Tráiler y Sellos: tráiler 3D con los 17 puntos tocables | Todos los juegos en 3D o con avatares | ⬜ |
+| C6 | Conversión 3D | Prioridad del usuario | Devoluciones: zona de devoluciones 3D con producto | Todos los juegos en 3D o con avatares | ⬜ |
+| C7 | Conversión 3D | Prioridad del usuario | Carga de Unidades: caja de tráiler 3D | Todos los juegos en 3D o con avatares | ⬜ |
+| C8 | Conversión 3D | Prioridad del usuario | Surtido Express: racks 3D para surtir | Todos los juegos en 3D o con avatares | ⬜ |
+| C9 | Conversión 3D | Prioridad del usuario | Turno Seguro: unificar con la versión 3D existente | Todos los juegos en 3D o con avatares | ⬜ |
+| C10 | Conversión 3D | Prioridad del usuario | Planeación de Personal: avatar gerente que presenta el reto y comenta resultados | Todos los juegos en 3D o con avatares | ⬜ |
+| C11 | Conversión 3D | Prioridad del usuario | Tablero del Gerente: avatar gerente en oficina 3D que comenta cada decisión | Todos los juegos en 3D o con avatares | ⬜ |
 | 40 | Nuevo simulador | Nuevo simulador | Kitting y valor agregado: armar kits, etiquetar y empacar según la orden del cliente | Servicios de valor agregado 3PL | ⬜ |
 | 41 | Nuevo simulador | Nuevo simulador | Indicadores del almacén (OTIF, exactitud de inventario, productividad): leer el tablero y decidir acciones | KPIs logísticos | ⬜ |
 
