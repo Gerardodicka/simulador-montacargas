@@ -201,6 +201,10 @@
   @media print { header, .hbtns, .dbar .dtabs, .dtools, .dbtn { display:none !important; } .dash { position:static; } .dbody { overflow:visible; background:#fff; } }
   footer { text-align:center; color:#8fa0e0; font-size:11px; padding:1.5rem; }
   @media (max-width:640px){ header{padding:0.9rem 1rem} .hero h1{font-size:24px} .brand .tag{display:none} }
+.rutaBar{color:#fff;font-size:14px;margin:0 0 10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.card.enRuta{outline:3px solid #ffd600;position:relative}.rutaTag{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:2;background:#ffd600;color:#1a237e;font:800 11px Poppins,sans-serif;padding:3px 10px;border-radius:20px;letter-spacing:.5px}
+.rutaSep{grid-column:1/-1;color:#fff;font:700 15px Poppins,sans-serif;margin:8px 0 -4px;opacity:.85}
+.idl{display:flex;flex-direction:column;font-size:12px;font-weight:700;color:#1D2586;gap:3px}.idl input,.idl select{width:100%;box-sizing:border-box;min-width:0;padding:9px;border:1.5px solid #d6dbea;border-radius:9px;font-size:15px;font-weight:500;color:#222}
 </style>
 </head>
 <body>
@@ -237,7 +241,7 @@
   <div class="catalogo hidden" id="catalogo">
   <div class="sechead" id="simuladores">
     <div><h2>Simuladores disponibles</h2><small>Selecciona un curso · los resultados se registran automáticamente</small></div>
-    <div class="filters" id="filters"></div>
+    <div class="rutaBar" id="rutaBar"></div><div class="filters" id="filters"></div>
   </div>
   <div class="grid" id="grid"></div>
   </div>
@@ -245,6 +249,25 @@
 
 <footer>DICKA Logistics · Simulador de Operaciones · Dojo Virtual · Departamento de Capacitación · Para agregar un simulador usa ⚙️ Administrar</footer>
 
+
+<!-- Identificación única del colaborador -->
+<div id="idModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(1,17,49,.88);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:20px 20px 16px;max-height:92vh;overflow:auto;font-family:system-ui,sans-serif">
+    <h2 style="margin:0 0 4px;color:#1D2586;font-family:Poppins,sans-serif">👤 ¿Quién eres?</h2>
+    <p style="margin:0 0 12px;color:#555;font-size:14px">Llénalo una sola vez. Con tu puesto te mostramos primero los simuladores que te tocan y ningún juego te los vuelve a pedir.</p>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
+      <label class="idl">Nombre(s)<input id="idNom" autocomplete="given-name"></label><label class="idl">Apellidos<input id="idApe" autocomplete="family-name"></label>
+      <label class="idl" style="grid-column:1/-1">Número de empleado<input id="idNum" inputmode="numeric" placeholder="Ej. 10457"></label>
+      <label class="idl" style="grid-column:1/-1">Puesto<select id="idPuesto"></select></label>
+      <label class="idl" style="grid-column:1/-1">Almacén<select id="idWh"><option>Agave 1</option><option>Agave 3</option><option>Mezquite 1</option><option>Mezquite 2</option><option>BIC</option><option>Celaya</option><option>Toluca</option><option>Escobedo</option></select></label>
+    </div>
+    <div id="idErr" style="color:#c62828;font-size:13px;min-height:18px;margin:6px 0"></div>
+    <button id="idOk" onclick="idGuardar()" style="width:100%;padding:12px;border:0;border-radius:10px;background:#1D2586;color:#fff;font-weight:800;font-size:15px;cursor:pointer">Entrar →</button>
+    <button id="idSkip" onclick="idCerrar()" style="width:100%;margin-top:6px;padding:8px;border:0;background:none;color:#666;cursor:pointer;font-size:13px">Solo quiero ver el catálogo</button>
+    <p style="font-size:11.5px;color:#888;margin:8px 0 0">Tus datos se guardan solo en este equipo y aparecen en tus resultados.</p>
+  </div>
+</div>
+<div id="idChip" style="display:none;position:fixed;right:10px;top:70px;z-index:9000;background:#fff;color:#1D2586;border-radius:20px;padding:7px 12px;font:700 12.5px system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3)"></div>
 <!-- Dashboard de resultados -->
 <div class="dash" id="dash">
   <div class="dbar">
@@ -295,6 +318,17 @@
 
 <script>
 // ====== CATÁLOGO BASE (edita aquí para agregar juegos fijos) ======
+const PRF_KEY='dicka_puestos';
+const PRF_BASE=['turno-seguro-3d','examen-seguridad','extintores-3d','5s','ergonomia','emergencias','senalizacion'];
+const PRF_DEF={
+  'Montacarguista':['montacarga','andenes','cargas','loto',...PRF_BASE],
+  'Aux de Almacén':['surtido','metodos','excepciones','conteo',...PRF_BASE],
+  'Surtidor':['surtido','metodos','excepciones','slotting',...PRF_BASE],
+  'Recibidor':['recepcion','sellos','devoluciones','frio',...PRF_BASE],
+  'Embarcador':['embarques','patio','carga','sellos',...PRF_BASE],
+  'Supervisor de Operaciones':['flujo','crossdock','conteo','loto','matpel','dojo-de-mando',...PRF_BASE],
+  'Jefe de Turno':['flujo','patio','embarques','dojo-de-mando',...PRF_BASE],
+  'Gerente de Operaciones':['tablero','planeacion','dojo-de-mando','flujo','slotting','crossdock','emergencias']};
 const BASE_GAMES = [
   { id:'diag', name:'Validación de joystick y volante USB', icon:'🔌', cat:'Herramientas', status:'activo', time:'2 min', pass:'—', desc:'Comprueba que el navegador detecta el Logitech Extreme 3D Pro y el volante G920, con prueba funcional guiada de ejes y botones y guía de solución.', url:'juegos/diagnostico-usb.html', hideFromCount:true, hiddenCard:true },
   { id:'montacarga', name:'Simulador de Montacarga', icon:"<svg viewBox='0 0 120 80' width='96' height='64' xmlns='http://www.w3.org/2000/svg'><rect x='14' y='34' width='46' height='22' rx='3' fill='#c8102e'/><rect x='40' y='16' width='20' height='20' rx='2' fill='#c8102e'/><rect x='44' y='19' width='12' height='11' fill='#dfe7ff' opacity='.85'/><rect x='18' y='10' width='40' height='3' fill='#1a1a1a'/><rect x='20' y='13' width='3' height='22' fill='#1a1a1a'/><rect x='55' y='13' width='3' height='22' fill='#1a1a1a'/><rect x='8' y='30' width='8' height='26' rx='2' fill='#1a1a1a'/><rect x='62' y='6' width='4' height='52' fill='#9a9a9a'/><rect x='68' y='6' width='4' height='52' fill='#9a9a9a'/><rect x='60' y='38' width='14' height='10' fill='#1a1a1a'/><rect x='72' y='56' width='40' height='4' fill='#1a1a1a'/><rect x='72' y='44' width='4' height='16' fill='#1a1a1a'/><rect x='78' y='40' width='28' height='16' fill='#c9a875' stroke='#8a6a40'/><rect x='80' y='42' width='24' height='3' fill='#2138D3'/><circle cx='24' cy='60' r='9' fill='#111'/><circle cx='24' cy='60' r='4' fill='#888'/><circle cx='54' cy='60' r='9' fill='#111'/><circle cx='54' cy='60' r='4' fill='#888'/><circle cx='50' cy='8' r='3' fill='#ff9900'/><text x='27' y='49' font-family='Arial Black,Arial' font-weight='900' font-size='7' fill='#fff'>RAYMOND</text></svg>", cat:'Equipo', status:'activo', time:'20 min', pass:'160/200 · 80/100',
@@ -342,16 +376,37 @@ function cfg(){ try{return JSON.parse(localStorage.getItem(LS_CFG)||'{}')}catch(
 function allGames(){ const c=cfg(); return [...BASE_GAMES.map(g=>({...g,...(c[g.id]||{})})), ...customGames()].filter(g=>!g.hidden); }
 let filter='Todos', current=null;
 
+
+function idLeer(){ try{ return JSON.parse(localStorage.getItem('dicka_perfil')||'null'); }catch(e){ return null; } }
+function idAbrir(){ const p=idLeer()||{}, m=prfLoad(); const sel=document.getElementById('idPuesto'); sel.innerHTML='<option value="">Elige tu puesto…</option>'+Object.keys(m).sort().map(x=>`<option>${x.replace(/</g,'&lt;')}</option>`).join('')+'<option value="__otro">Otro…</option>';
+  document.getElementById('idNom').value=p.nombre||''; document.getElementById('idApe').value=p.apellidos||''; document.getElementById('idNum').value=p.num||''; if(p.puesto){ if(!m[p.puesto]) sel.insertAdjacentHTML('beforeend',`<option>${p.puesto.replace(/</g,'&lt;')}</option>`); sel.value=p.puesto; } if(p.wh) document.getElementById('idWh').value=p.wh;
+  document.getElementById('idErr').textContent=''; document.getElementById('idModal').style.display='flex'; setTimeout(()=>document.getElementById('idNom').focus(),50); }
+function idCerrar(){ try{ sessionStorage.setItem('dicka_id_skip','1'); }catch(e){} document.getElementById('idModal').style.display='none'; }
+function idGuardar(){ const v=id=>document.getElementById(id).value.trim(); let pu=document.getElementById('idPuesto').value; const err=t=>{ document.getElementById('idErr').textContent=t; };
+  if(v('idNom').length<2) return err('Escribe tu nombre'); if(v('idApe').length<2) return err('Escribe tus apellidos'); if(!/^[A-Za-z0-9-]{3,15}$/.test(v('idNum'))) return err('Escribe tu número de empleado (3 a 15 caracteres, sin espacios)');
+  if(pu==='__otro'){ pu=(prompt('¿Cuál es tu puesto?')||'').trim(); } if(!pu) return err('Elige tu puesto');
+  try{ localStorage.setItem('dicka_perfil',JSON.stringify({nombre:v('idNom'),apellidos:v('idApe'),num:v('idNum'),puesto:pu,wh:document.getElementById('idWh').value})); localStorage.removeItem('dicka_ver_puesto'); }catch(e){}
+  document.getElementById('idModal').style.display='none'; idChip(); render(); }
+function idChip(){ const p=idLeer(), c=document.getElementById('idChip'); if(!p){ c.style.display='none'; return; } c.innerHTML=`👤 ${(p.nombre+' '+(p.apellidos||'')).replace(/</g,'&lt;')} · ${(p.puesto||'').replace(/</g,'&lt;')} · <a href="#" onclick="idAbrir();return false" style="color:#c62828">Cambiar</a>`; c.style.display='block'; }
+document.addEventListener('DOMContentLoaded',()=>{ idChip(); let skip=false; try{ skip=sessionStorage.getItem('dicka_id_skip')==='1'; }catch(e){} if(!idLeer()&&!skip&&!/[?&](tv|kiosk)/.test(location.search)) idAbrir(); });
+function verPuesto(){ try{ const v=localStorage.getItem('dicka_ver_puesto'); if(v!==null) return v; const p=JSON.parse(localStorage.getItem('dicka_perfil')||'null'); return p&&p.puesto||''; }catch(e){ return ''; } }
+function setVerPuesto(v){ try{ localStorage.setItem('dicka_ver_puesto',v); }catch(e){} render(); }
 function render(){
   const games=allGames().filter(g=>!g.hiddenCard);   // la validación USB vive en el menú principal y dentro del simulador, no en el catálogo
   const cats=['Todos',...new Set(games.map(g=>g.cat))];
   document.getElementById('filters').innerHTML=cats.map(c=>`<button class="chip ${c===filter?'active':''}" onclick="filter='${c}';render()">${c}</button>`).join('');
-  const list=games.filter(g=>filter==='Todos'||g.cat===filter);
-  document.getElementById('grid').innerHTML=list.map(g=>`
-    <div class="card">
+  let list=games.filter(g=>filter==='Todos'||g.cat===filter);
+  const pm=prfLoad(), pu=verPuesto(), ruta=pu?prfRuta(pm,pu).filter(id=>games.some(g=>g.id===id)):[];
+  const yo=(()=>{ try{ return JSON.parse(localStorage.getItem('dicka_perfil')||'null'); }catch(e){ return null; } })();
+  const apr=new Set(collectResults().filter(r=>r.aprobado&&yo&&((yo.num&&String(r.num)===String(yo.num))||(r.nombre||'').toLowerCase().startsWith((yo.nombre||'').toLowerCase()+' '))).map(r=>r.juego));
+  if(ruta.length) list=[...ruta.map(id=>list.find(g=>g.id===id)).filter(Boolean),...list.filter(g=>!ruta.includes(g.id))];
+  const nR=list.filter(g=>ruta.includes(g.id)).length, nA=list.filter(g=>ruta.includes(g.id)&&apr.has(g.name)).length;
+  document.getElementById('rutaBar').innerHTML=`<label style="font-weight:700">🧭 Ver simuladores para el puesto:</label> <select id="rutaSel" onchange="setVerPuesto(this.value)" style="padding:7px 10px;border-radius:9px;border:0;font-weight:700"><option value="">Todos los puestos (sin orden)</option>${Object.keys(pm).sort().map(p=>`<option ${p===pu?'selected':''}>${p.replace(/</g,'&lt;')}</option>`).join('')}${pu&&!pm[pu]?`<option selected>${pu.replace(/</g,'&lt;')}</option>`:''}</select>${ruta.length?` <span style="margin-left:6px">Tu ruta: <b>${nR}</b> simuladores${yo?` · <b>${nA}</b> aprobados`:''}</span>`:''}`;
+  document.getElementById('grid').innerHTML=list.map((g,i)=>`${ruta.length&&i===nR&&i<list.length?'<div class="rutaSep">Otros simuladores</div>':''}
+    <div class="card${ruta.includes(g.id)?' enRuta':''}">${ruta.includes(g.id)?`<span class="rutaTag">${apr.has(g.name)?'✓ APROBADO':'TU RUTA · '+(ruta.indexOf(g.id)+1)}</span>`:''}
       <div class="cover">${g.icon}<span class="cat">${g.cat.toUpperCase()}</span><span class="status ${g.status}">${g.status==='activo'?'ACTIVO':g.status==='beta'?'BETA':'PRÓXIMAMENTE'}</span></div>
       <div class="body">
-        <h3><span style="color:var(--brillante)">${String(list.indexOf(g)+1).padStart(2,'0')}</span> · ${g.name}</h3><p>${g.desc||''}</p>
+        <h3><span style="color:var(--brillante)">${String(i+1).padStart(2,'0')}</span> · ${g.name}</h3><p>${g.desc||''}</p>
         <div class="meta"><span>${g.time||'—'}</span><span>Aprueba: ${g.pass||'—'}</span></div>
         <button class="play" ${(!g.url||g.status==='proximo')?'disabled':''} onclick="play('${g.id}')">${!g.url?'SIN LIGA CONFIGURADA':g.status==='proximo'?'EN DESARROLLO':'▶ JUGAR'}</button>
         <button class="del" onclick="removeGame('${g.id}')">quitar</button>
@@ -534,17 +589,6 @@ function tools(){ const all=collectResults(); const whs=[...new Set(all.map(r=>r
 function medal(i){ return i===0?'🥇':i===1?'🥈':i===2?'🥉':`<b style="color:#838383">${i+1}</b>`; }
 
 /* ===== Perfiles de puesto y de persona (RH / Capacitación) ===== */
-const PRF_KEY='dicka_puestos';
-const PRF_BASE=['turno-seguro-3d','examen-seguridad','extintores-3d','5s','ergonomia','emergencias','senalizacion'];
-const PRF_DEF={
-  'Montacarguista':[...PRF_BASE,'montacarga','andenes','cargas','loto'],
-  'Aux de Almacén':[...PRF_BASE,'surtido','metodos','excepciones','conteo'],
-  'Surtidor':[...PRF_BASE,'surtido','metodos','excepciones','slotting'],
-  'Recibidor':[...PRF_BASE,'recepcion','sellos','devoluciones','frio'],
-  'Embarcador':[...PRF_BASE,'embarques','patio','carga','sellos'],
-  'Supervisor de Operaciones':[...PRF_BASE,'flujo','crossdock','conteo','loto','matpel','dojo-de-mando'],
-  'Jefe de Turno':[...PRF_BASE,'flujo','patio','embarques','dojo-de-mando'],
-  'Gerente de Operaciones':['tablero','planeacion','dojo-de-mando','flujo','slotting','crossdock','emergencias']};
 function prfLoad(){ try{ return Object.assign({},PRF_DEF,JSON.parse(localStorage.getItem(PRF_KEY)||'{}')); }catch(e){ return {...PRF_DEF}; } }
 function prfSave(m){ try{ localStorage.setItem(PRF_KEY,JSON.stringify(m)); }catch(e){} }
 function prfRuta(m,puesto){ if(m[puesto]) return m[puesto]; const p=(puesto||'').toLowerCase(); const k=Object.keys(m).find(x=>p&&(p.includes(x.toLowerCase())||x.toLowerCase().includes(p))); if(k) return m[k];
