@@ -115,6 +115,27 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
         bt.click(); await w(1500); return document.getElementById('talk').innerText.includes(S.open.slice(0, 25)) ? '' : 'no arranca la plática'; }, [pu, id]); if (r) bad.push(id + ': ' + r); await q.close(); }
     ok('Dojo de Mando', '5 casos nuevos de logística en su nivel y arrancan', !bad.length, bad.join(' · '));
     ok('Dojo de Mando', 'casos nuevos sin errores', !e.length, e[0] || ''); }
+  // Dojo de Mando · correcciones del piloto (7 puntos): micrófono que no transcribe, mover a la oficina, acuerdos, límite de turnos, estilo autocrático reprobado y todos los participantes
+  { const q = await (await b.newContext()).newPage({ viewport: { width: 1000, height: 800 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000); let R = {};
+    try { R = await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = 'Jefe de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await w(500);
+        const o = {}; document.getElementById('sc_antidoping').click(); await w(1500); AI.off = true;
+        o.drop = document.querySelectorAll('#ownTo option').length - 1;
+        await handleSpeech(['Vamos a mi oficina para hablar en privado']); await w(200); o.lugar = LUGAR; o.moved = !!document.querySelector('.moved');
+        await handleSpeech(['Acordamos que el viernes revisamos la prueba confirmatoria y queda por escrito']); o.acu = ACUERDOS.length;
+        const M = { acc: '', interim: '', got: false, t0: Date.now() - 13000, peak: 0, rst: 0 }; MIC = M; LISTEN = true; window.MIC_PEAK = 30; micWatch(M); for (let i = 0; i < 20 && !M.got; i++) await w(500); o.micMsg = !!document.querySelector('.micfail') && window.MIC_FAILS === 1; o.type = !document.getElementById('typeBox').classList.contains('hidden'); MIC = null; LISTEN = false; window.MIC_PEAK = 0;
+        for (let i = 0; i < 3; i++) CONV.push({ quien: 'Líder', texto: '¡¡ESTO ES INACEPTABLE!! Haz lo que te digo o te corro' });
+        o.auto = autoCount(); await endPractice(); await w(300); const rp = document.getElementById('report').innerText; o.estilo = /Estilo observado: Autocr/.test(rp); o.score = +document.querySelector('#report .big').textContent; o.retry = /Intentar de nuevo/.test(rp);
+        return o; }); } catch (x) { e.push(x.message); }
+    ok('Dojo de Mando', 'piloto: mover a la oficina, guardar acuerdos y hablar con los 3 participantes', R.lugar === 'oficina' && R.moved && R.acu === 1 && R.drop === 3, JSON.stringify(R));
+    ok('Dojo de Mando', 'piloto: si el micrófono oye pero no transcribe, avisa y abre escribir', R.micMsg && R.type, JSON.stringify(R));
+    ok('Dojo de Mando', 'piloto: estilo autocrático reprueba (≤55), se nombra y ofrece reintento', R.auto === 3 && R.estilo && R.score <= 55 && R.retry, JSON.stringify(R));
+    ok('Dojo de Mando', 'piloto sin errores', !e.length, e[0] || ''); await q.close(); }
+  // Dojo de Mando · límite de intervenciones: la práctica se cierra sola al llegar a 14
+  { const q = await (await b.newContext()).newPage({ viewport: { width: 1000, height: 800 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000); let R = {};
+    try { R = await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = 'Jefe de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await w(500);
+        document.getElementById('sc_faltante').click(); await w(1500); AI.off = true; for (let i = 0; i < 13; i++) CONV.push({ quien: 'Líder', texto: '¿Qué pasó con el conteo?' });
+        await handleSpeech(['¿Me ayudas a entender qué pasó esa noche?']); await w(3500); return { report: !document.getElementById('report').classList.contains('hidden'), aviso: window.PX_END === 'limite' }; }); } catch (x) { e.push(x.message); }
+    ok('Dojo de Mando', 'piloto: la práctica cierra sola en 14 intervenciones', R.report && R.aviso && !e.length, JSON.stringify(R) + (e[0] || '')); await q.close(); }
   // Dojo de Mando: "Repite lo que fallaste" ofrece reintento en el criterio más bajo, muestra la pista y compara antes/después
   { const q = await (await b.newContext()).newPage({ viewport: { width: 1000, height: 700 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(1000); let R = { b: null, tip: null, res: null };
     try { R.b = await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); const P = document.getElementById('ppuesto'); P.value = 'Supervisor de Operaciones'; P.dispatchEvent(new Event('change')); pnom.value = 'Prueba'; pape.value = 'Dojo'; pnum.value = '12345'; goBtn.click(); await w(400); document.getElementById('sc_chofer').click(); await w(1200); AI.off = true; CONV.push({ quien: 'Líder', texto: 'Gracias por esperar. Le pido calma.' }); await endPractice(); const b = document.getElementById('retryFocus'); return b ? b.textContent : null; });

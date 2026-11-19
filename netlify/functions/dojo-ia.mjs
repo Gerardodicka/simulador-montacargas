@@ -29,6 +29,12 @@ Clasificación ("tipo"):
 - "pregunta": pregunta sobre el juego o pide ayuda; responde en "mentor" y deja "respuesta" vacía.
 - "continuar": pide avanzar ("continuar", "siguiente").
 - "otro": no se entiende; el personaje lo dice de forma natural en "respuesta".
+Continuidad y acuerdos (MUY IMPORTANTE):
+- Recuerdas TODA la plática. Si ya se acordó algo (aparece en "Acuerdos ya alcanzados" o en la plática), el personaje lo da por hecho y AVANZA: no vuelve a plantear el problema inicial ni repite frases que ya dijo.
+- Si el líder pide fecha compromiso, registro, minuta o acuerdo específico, el personaje responde con un compromiso CONCRETO: qué hará, quién, y una fecha o día específico (por ejemplo "el viernes 22 a las 9" o "en una semana, el lunes"), y confirma que queda por escrito. No contestes con evasivas ni repitas respuestas anteriores.
+- Si el líder propone una acción correctiva, el personaje reacciona a ESA acción (la acepta, pide un detalle o pone una condición razonable) y la conversación sigue hacia el cierre.
+- Si el líder pide moverse a la oficina o a un lugar privado, el personaje acepta en una frase ("Sí, jefe, vamos") y continúa allá.
+Trato del líder: si el líder grita, amenaza, insulta o impone sin escuchar (estilo autocrático), el personaje se cierra, se pone a la defensiva o se intimida, y "mentor" lo señala en una frase. Nunca premies ese estilo.
 "mentor": una línea breve (máx. 20 palabras) de qué está haciendo bien o qué le falta al líder; vacía si no aplica.
 Responde SOLO un objeto JSON válido, sin texto adicional:
 {"tipo":"…","opcion":"A|B|C|null","confianza":0.0,"respuesta":"…","mentor":"…"}`;
@@ -82,7 +88,7 @@ export default async (req) => {
 {"puntaje":0-100,"objetivos":{"metas":bool,"necesidades":bool,"retro":bool,"delegar":bool},"sbi":{"situacion":bool,"conducta":bool,"impacto":bool},"grow":{"meta":bool,"realidad":bool,"opciones":bool,"voluntad":bool},"fortaleza":"máx. 18 palabras","mejora":"máx. 25 palabras, acción concreta","resumen":"2 frases: qué logró y qué haría distinto la próxima vez","reformula":{"original":"la frase más débil que dijo el líder, textual","mejor":"cómo decirla mejor, natural y breve"},"criterios":{"escucha":{"puntaje":0-100,"turno":n,"cita":"…"},"meta":{…},"preguntas":{…},"delegacion":{…},"tono":{…}}}
 Criterios (cada uno con puntaje 0-100, el número [n] del turno del LÍDER que mejor lo sustenta y la cita textual breve de ese turno; si no hay evidencia, turno -1 y cita vacía con puntaje bajo): escucha = escucha activa y empatía; meta = claridad de la meta o acuerdo; preguntas = uso de preguntas abiertas; delegacion = asigna responsable y seguimiento; tono = respeto y firmeza adecuados.
 SBI: describió la situación concreta, la conducta observable y el impacto. GROW: acordó meta, exploró la realidad con preguntas, pidió opciones al otro y cerró compromiso (voluntad) con fecha.
-metas = acordó qué, cuánto y para cuándo; necesidades = preguntó y escuchó; retro = dio retroalimentación con hechos, conducta e impacto; delegar = asignó responsable y seguimiento. Sé exigente: sin acuerdos concretos el puntaje no pasa de 60. Si hay áreas a desarrollar según su evaluación psicométrica, enfoca la "mejora" y el "resumen" en esas áreas (sin mencionar las pruebas).`;
+metas = acordó qué, cuánto y para cuándo; necesidades = preguntó y escuchó; retro = dio retroalimentación con hechos, conducta e impacto; delegar = asignó responsable y seguimiento. Sé exigente: sin acuerdos concretos el puntaje no pasa de 60. Estilo autocrático (gritar, amenazar, insultar, exigir sin escuchar, imponer sin preguntar): tono y escucha no pasan de 30 y el puntaje total NO pasa de 55, aunque haya logrado acuerdos; dilo claramente en "mejora" y "resumen". El liderazgo efectivo (situacional, con escucha, hechos y acuerdos) es el que obtiene puntaje alto. Si hay áreas a desarrollar según su evaluación psicométrica, enfoca la "mejora" y el "resumen" en esas áreas (sin mencionar las pruebas).`;
       const r = await claude(key, sys, [{ role: "user", content: `Situación: ${clip(b.contexto, 800)}\nObjetivo del líder: ${clip(b.objetivo, 300)}\nÁreas a desarrollar según su evaluación psicométrica: ${Array.isArray(b.enfoque) && b.enfoque.length ? b.enfoque.slice(0, 4).map(x => clip(x, 60)).join(", ") : "(no disponible)"}\nPersonaje: ${clip(b.personaje, 40)}\nPlática:\n${hist}` }], 1200, { model: EVAL_MODEL, effort: "medium", schema: S_EVAL });
       if (r.error) return json(200, { ok: false, motivo: r.error, detalle: r.det });
       let o = null; try { o = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [""])[0]); } catch { }
@@ -98,7 +104,7 @@ metas = acordó qué, cuánto y para cuándo; necesidades = preguntó y escuchó
       return json(200, { ok: true, turnos: o.turnos.slice(0, 12).map(t => ({ quien: clip(t.quien, 40), texto: clip(t.texto, 400) })), explicacion: (o.explicacion || []).slice(0, 6).map(e => ({ modelo: e.modelo === "GROW" ? "GROW" : "SBI", parte: clip(e.parte, 30), texto: clip(e.texto, 220) })) });
     }
     const opciones = Array.isArray(b.opciones) ? b.opciones.slice(0, 4).map(o => `${clip(o.k, 2)}) ${clip(o.t, 400)}`).join("\n") : "";
-    const hist = Array.isArray(b.historial) ? b.historial.slice(-8).map(h => `${clip(h.quien, 30)}: ${clip(h.texto, 300)}`).join("\n") : "";
+    const hist = Array.isArray(b.historial) ? b.historial.slice(-24).map(h => `${clip(h.quien, 30)}: ${clip(h.texto, 300)}`).join("\n") : "";
     const user = `Nivel del líder: ${clip(b.nivel, 60)}
 Escena: ${clip(b.contexto, 1600)}
 Decisión actual: ${clip(b.pregunta, 300)}
@@ -107,6 +113,8 @@ ${opciones || "(ninguna en pantalla)"}
 Presión: ${clip(b.presion || "media", 10)}
 Cerrar: ${b.cerrar ? "sí" : "no"}
 Práctica: ${b.practica ? "sí" : "no"}
+Acuerdos ya alcanzados: ${Array.isArray(b.acuerdos) && b.acuerdos.length ? b.acuerdos.slice(-6).map(x => "- " + clip(x, 200)).join("\n") : "(ninguno aún)"}
+Lugar: ${clip(b.lugar || "el piso del almacén", 60)}
 Personaje con quien habla: ${clip(b.personaje || "Ricardo", 40)} (estado: ${clip(b.animo, 60)}, confianza ${Number(b.confianzaPersonaje) || 50}/100)
 Plática hasta ahora:
 ${hist || "(inicio)"}
