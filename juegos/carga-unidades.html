@@ -60,6 +60,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .rules{font-size:12px;color:#444;background:#f0f4f8;border-radius:8px;padding:.6rem .9rem;line-height:1.7;margin-bottom:.4rem}
 .bal{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--azul);margin-top:.4rem}
 
+.c3d{position:relative;height:320px;border-radius:12px;overflow:hidden;margin:.4rem 0 .6rem;touch-action:none;background:#dfe5ee}.c3d canvas{display:block;width:100%;height:100%}.c3hint{position:absolute;left:8px;top:8px;right:8px;background:rgba(1,17,49,.78);color:#fff;font-size:13px;padding:5px 9px;border-radius:8px;pointer-events:none}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
 </style>
 </head>
 <body>
@@ -81,7 +83,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   <div class="card hidden" id="game">
 <div class="topbar"><span>Unidad <span id="un">1</span>/2 · Ruta <span id="rt"></span></span><span class="timer" id="tm">0:00</span><span>⭐ <span id="sc">0</span></span></div>
 <div class="rules">📍 <b>Secuencia:</b> lo de la <b>última parada</b> va al fondo (junto a cabina); <b>parada 1</b> junto a la puerta.<br>⚖️ <b>Balance:</b> peso izquierda/derecha con diferencia ≤ 15%. ⬆️ <b>Pesadas</b> al fondo, <b>frágiles 🥚</b> nunca en la fila de la puerta.</div>
-<div class="truck"><div class="cab">CABINA</div><div class="box" id="box"></div></div>
+<div class="objbox"><div>🎯 <b>Objetivo:</b> cargar un camión con 3 entregas para que cada parada se descargue rápido y el viaje sea seguro.</div><div>✅ <b>Qué debes hacer:</b> toca una tarima de la lista y luego el lugar de la caja (en 3D o en el plano): la <b>última parada va al fondo</b> y la <b>primera junto a la puerta</b>, reparte el peso entre izquierda y derecha y no pongas lo frágil junto a la puerta.</div><div>📊 <b>Cómo se califica:</b> secuencia de paradas, balance de peso, frágiles y peso abajo; apruebas con 150 de 200.</div></div><div class="c3d" id="c3d"><div class="c3hint">Caja del tráiler en 3D · el fondo está junto a la cabina, la puerta al frente · toca un lugar para colocar la tarima elegida</div></div><div class="truck"><div class="cab">CABINA</div><div class="box" id="box"></div></div>
 <div class="bal"><span>⬅ Lado izq: <span id="wl">0</span> kg</span><span>Lado der: <span id="wr">0</span> kg ➡</span></div>
 <div class="hint" style="font-size:12px;color:var(--gris);text-align:center;margin-top:.4rem">1) Toca una tarima  2) Toca la posición en la caja. Toca una tarima ya cargada para regresarla.</div>
 <div class="pool" id="pool"></div>
@@ -128,12 +130,40 @@ function gameStart(){ tick=setInterval(()=>{secs++;$('tm').textContent=fmt(secs)
 function newUnit(){ route=[...STOPS].sort(()=>Math.random()-.5).slice(0,3); $('un').textContent=unit; $('rt').textContent=route.map((r,i)=>`${i+1}·${r}`).join(' → ');
   tarimas=[]; for(let i=0;i<12;i++){ const stop=(i%3)+1; tarimas.push({id:i,stop,w:[900,650,420,1100,300,780,520,950,380,700,600,450][i]+Math.floor(Math.random()*80),frag:i%5===0,pos:null}); }
   tarimas.sort(()=>Math.random()-.5); grid=Array(12).fill(null); sel=null; draw(); }
+
+/* ===== Caja de tráiler 3D con las 12 posiciones ===== */
+let C3=null; const SCOL={1:'#2e9e5b',2:'#f5a300',3:'#c62828'};
+function c3init(){ if(C3||!window.THREE) return; try{ const el=$('c3d'), rn=new THREE.WebGLRenderer({antialias:true}); rn.setPixelRatio(Math.min(2,devicePixelRatio)); rn.shadowMap.enabled=true; el.insertBefore(rn.domElement,el.firstChild);
+  const sc=new THREE.Scene(); sc.background=new THREE.Color('#dfe5ee'); const cam=new THREE.PerspectiveCamera(45,1,.1,100); sc.add(new THREE.HemisphereLight('#fff','#8a8f99',.85)); const dl=new THREE.DirectionalLight('#fff4e0',.8); dl.position.set(4,12,6); dl.castShadow=true; dl.shadow.mapSize.set(1024,1024); sc.add(dl);
+  const TL=new THREE.TextureLoader(), tx=(f,x,y)=>{ const t=TL.load('assets/textures/'+f); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(x,y); return t; };
+  const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6},o||{})), box=(w,h,d,m,x,y,z,g)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof m==='string'?M(m):m); b.position.set(x,y,z); b.castShadow=b.receiveShadow=true; (g||sc).add(b); return b; };
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(30,20),new THREE.MeshStandardMaterial({map:tx('piso.jpg',6,4)})); fl.rotation.x=-Math.PI/2; fl.receiveShadow=true; sc.add(fl);
+  // caja abierta: piso, pared izquierda, pared derecha baja, frente (cabina)
+  const CX=c=>-4.5+c*1.5, RZ=r=>r===0?-.65:.65, Y0=1.1;
+  box(9.4,.15,2.8,new THREE.MeshStandardMaterial({map:tx('madera.jpg',4,1),color:'#d7b98a'}),-.75,Y0-.08,0); box(9.4,2.4,.08,new THREE.MeshStandardMaterial({map:tx('lamina.jpg',5,1),color:'#eceff1'}),-.75,Y0+1.2,-1.42); box(9.4,.5,.08,'#b0bec5',-.75,Y0+.25,1.42); box(.1,2.4,2.8,'#cfd8dc',-5.45,Y0+1.2,0);
+  box(2.2,2.3,2.6,'#c62828',-6.7,1.6,0); [[-6.7,1.2],[-6.7,-1.2],[-3,1.2],[-3,-1.2],[2,1.2],[2,-1.2],[3.2,1.2],[3.2,-1.2]].forEach(([x,z])=>{ const w=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.35,16),M('#111')); w.rotation.x=Math.PI/2; w.position.set(x,.45,z); sc.add(w); });
+  const lbl=(t,col,w)=>{ const c=document.createElement('canvas'); c.width=256; c.height=72; const g=c.getContext('2d'); g.fillStyle=col; g.fillRect(0,0,256,72); g.fillStyle='#fff'; g.font='bold 40px sans-serif'; g.textAlign='center'; g.fillText(t,128,50); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false})); sp.scale.set(w||1.6,(w||1.6)*.28,1); return sp; };
+  const f1=lbl('FONDO','#455a64',1.4); f1.position.set(CX(0),Y0+2.9,0); sc.add(f1); const f2=lbl('PUERTA','#1D2586',1.4); f2.position.set(CX(5)+.6,Y0+2.9,0); sc.add(f2);
+  const G=new THREE.Group(); sc.add(G); let picks=[];
+  let th=.35, ph=.75, rad=11, drag=null, moved=0; const tgt=new THREE.Vector3(-.6,Y0,0); const upd=()=>{ ph=Math.max(.25,Math.min(1.35,ph)); rad=Math.max(5,Math.min(24,rad)); cam.position.set(tgt.x+rad*Math.sin(th)*Math.sin(ph),tgt.y+rad*Math.cos(ph),tgt.z+rad*Math.cos(th)*Math.sin(ph)); cam.lookAt(tgt); };
+  const fit=()=>{ const w=el.clientWidth,h=el.clientHeight; rn.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); if(!fit.d){ rad=w/h<1?17:10.5; fit.d=1; } upd(); }; addEventListener('resize',fit); fit();
+  const cv=rn.domElement; cv.addEventListener('pointerdown',e=>{ drag={x:e.clientX,y:e.clientY}; moved=0; cv.setPointerCapture(e.pointerId); }); cv.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-drag.x,dy=e.clientY-drag.y; moved+=Math.abs(dx)+Math.abs(dy); th-=dx*.007; ph-=dy*.005; drag={x:e.clientX,y:e.clientY}; upd(); });
+  cv.addEventListener('pointerup',e=>{ if(moved<8){ const r=cv.getBoundingClientRect(), v=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1), rc=new THREE.Raycaster(); rc.setFromCamera(v,cam); const h=rc.intersectObjects(picks)[0]; if(h) place(h.object.userData.i); } drag=null; });
+  cv.addEventListener('wheel',e=>{ e.preventDefault(); rad*=e.deltaY>0?1.1:.9; upd(); },{passive:false});
+  C3={ draw(){ while(G.children.length) G.remove(G.children[0]); picks=[];
+      for(let i=0;i<12;i++){ const r=Math.floor(i/6), c=i%6, t=grid[i], x=CX(c), z=RZ(r);
+        const pad=box(1.35,.04,1.2,new THREE.MeshBasicMaterial({color:t?'#9e9e9e':(sel!==null?'#ffd600':'#c5cae9'),transparent:true,opacity:t?.0:.6}),x,Y0+.02,z,G); pad.userData.i=i; picks.push(pad);
+        if(t){ box(1.25,.14,1.1,'#8b5a2b',x,Y0+.09,z,G); const h=.5+Math.min(1.1,t.w/1000); const bb=box(1.2,h,1.05,new THREE.MeshStandardMaterial({map:tx('carton.jpg',1,1),color:new THREE.Color(SCOL[t.stop]).lerp(new THREE.Color('#ffffff'),.35)}),x,Y0+.16+h/2,z,G); bb.userData.i=i; picks.push(bb);
+          const tag=lbl('P'+t.stop+' · '+t.w+'kg',SCOL[t.stop],1.15); tag.position.set(x,Y0+.25+h+.3,z); G.add(tag); if(t.frag){ const fr=lbl('FRÁGIL','#6a1b9a',.8); fr.position.set(x,Y0+.25+h+.65,z); G.add(fr); } } } },
+    screen(i){ const r=Math.floor(i/6), c=i%6, v=new THREE.Vector3(CX(c),Y0+.05,RZ(r)).project(cam), b=cv.getBoundingClientRect(); return {x:b.left+(v.x+1)/2*b.width,y:b.top+(1-v.y)/2*b.height}; }, ok:true };
+  const loop=()=>{ rn.render(sc,cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  }catch(e){ $('c3d').style.display='none'; } }
 function draw(){ // grid: col 0 = junto a cabina (fondo) ... col 5 = puerta ; row 0 = izq, row 1 = der
   let h=''; for(let r=0;r<2;r++) for(let c=0;c<6;c++){ const i=r*6+c, t=grid[i]; h+=`<div class="pos ${t?'filled s'+t.stop:''} ${t&&t.frag?'frag':''} ${sel!==null&&!t?'hl':''}" onclick="place(${i})">${t?`P${t.stop}<br>${t.w}kg`:(c===0?'FONDO':c===5?'PUERTA':'&nbsp;')}</div>`; }
   $('box').innerHTML=h;
   $('pool').innerHTML=tarimas.map(t=>`<div class="tar ${sel===t.id?'sel':''} ${t.pos!==null?'done':''}" onclick="selT(${t.id})"><span class="stop s${t.stop}">Parada ${t.stop} · ${route[t.stop-1]}</span><b>${t.w} kg ${t.frag?'🥚 FRÁGIL':''}</b>Tarima #${t.id+1}</div>`).join('');
   const wl=grid.slice(0,6).reduce((a,t)=>a+(t?t.w:0),0), wr=grid.slice(6).reduce((a,t)=>a+(t?t.w:0),0); $('wl').textContent=wl; $('wr').textContent=wr;
-  $('go').disabled=grid.some(x=>!x); }
+  $('go').disabled=grid.some(x=>!x); if(!C3) c3init(); if(C3) C3.draw(); }
 function selT(id){ sel=sel===id?null:id; draw(); }
 function place(i){ if(grid[i]){ const t=grid[i]; t.pos=null; grid[i]=null; sel=null; draw(); return; } if(sel===null){toast('Primero toca una tarima');return;} const t=tarimas.find(x=>x.id===sel); t.pos=i; grid[i]=t; sel=null;
   const col=i%6; if(t.frag&&col===5){ toast('⚠️ Frágil en fila de puerta: se golpea al abrir'); } if(t.stop===1&&col<=1){ toast('⚠️ Parada 1 al fondo: tendrás que descargar todo en la primera entrega'); } draw(); }
@@ -150,6 +180,7 @@ function evaluate(){ let pts=0, notes=[];
   if(unit<2){ unit++; setTimeout(newUnit,1400); } else { clearInterval(tick); setTimeout(()=>finish(`<div><span>Tarimas en secuencia</span><b>${stats.seq}/24</b></div><div><span>Unidades balanceadas</span><b>${stats.bal}/2</b></div><div><span>Frágiles protegidas</span><b>${stats.frag}/2</b></div><div><span>Peso bien distribuido</span><b>${stats.heavy}/2</b></div>`),1400); } }
 
 </script>
+<script src="js/three.min.js"></script>
 <script src="js/dicka-sync.js"></script>
 <script src="js/accesible.js"></script>
 <script src="js/perfil.js"></script>
