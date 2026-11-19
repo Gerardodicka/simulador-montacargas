@@ -524,6 +524,12 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await q.goto(url('juegos/carga-unidades.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Carga 3D'); await q.evaluate(() => start()); await q.waitForTimeout(1200); let hits = 0;
     for (let k = 0; k < 4; k++) { await q.evaluate(() => { selT(tarimas.find(t => t.pos === null).id); document.getElementById('c3d').scrollIntoView({ block: 'center' }); }); const pt = await q.evaluate(k => C3.screen(k), k); await q.mouse.click(pt.x, pt.y); await q.waitForTimeout(120); if (await q.evaluate(k => !!grid[k], k)) hits++; }
     await b3.close(); ok('Carga de unidades 3D', 'tocar la caja del tráiler 3D coloca las tarimas', hits === 4 && !e.length, hits + '/4' + (e[0] || '')); }
+  // Surtido express en 3D: tocar en el rack 3D la caja de la ubicación correcta cuenta como acierto
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 1280, height: 900 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/surtido-express.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Surtido 3D'); await q.evaluate(() => start()); await q.waitForTimeout(1200);
+    const k = await q.evaluate(() => { aisle = cur.loc[0]; drawAisles(); drawRack(); document.getElementById('s3d').scrollIntoView({ block: 'center' }); return cur.loc; }); await q.waitForTimeout(300);
+    const pt = await q.evaluate(k => S3.screen(k), k); const c0 = await q.evaluate(() => correct); await q.mouse.click(pt.x, pt.y); await q.waitForTimeout(400); const c1 = await q.evaluate(() => correct); await b3.close();
+    ok('Surtido express 3D', 'tocar la caja correcta en el rack 3D cuenta como ubicación correcta', c1 > c0 && !e.length, k + ' ' + c0 + '→' + c1 + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
