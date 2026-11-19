@@ -53,6 +53,19 @@
           anillo = new THREE.Mesh(new THREE.RingGeometry(.95, 1.1, 40), new THREE.MeshBasicMaterial({ color: o.anillo || '#2238d3', side: THREE.DoubleSide })); anillo.rotation.x = -Math.PI / 2; anillo.position.y = .02; T.add(anillo);
           pick = [T];
         },
+        setKit(o) {
+          o = o || {}; while (T.children.length) T.remove(T.children[0]); if (!api.kitCam) { api.kitCam = 1; th = .12; ph = .82; rad = el.clientWidth / el.clientHeight < 1 ? 4.6 : 3.6; upd(); }
+          const txt = (t, bg, fg, w, h) => { const c = document.createElement('canvas'); c.width = 256; c.height = 96; const x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, 256, 96); x.fillStyle = fg || '#111'; x.font = 'bold 40px sans-serif'; x.textAlign = 'center'; x.fillText(String(t).slice(0, 12), 128, 62); return new THREE.Mesh(new THREE.PlaneGeometry(w || .34, h || .13), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) })); };
+          bx(T, 2.4, .08, 1.2, '#9e9e9e', 0, .9, 0); [[-1.1, -.5], [1.1, -.5], [-1.1, .5], [1.1, .5]].forEach(([x, z]) => bx(T, .07, .9, .07, '#616161', x, .45, z));
+          const emp = o.empaque || 'caja', cajaC = emp === 'bolsa' ? '#cfd8dc' : '#c9a875';
+          if (emp === 'bolsa') { const b = new THREE.Mesh(new THREE.BoxGeometry(1.1, .5, .7), M('#e3f2fd', { transparent: true, opacity: .55 })); b.position.set(-.4, 1.19, 0); T.add(b); }
+          else { bx(T, 1.1, .04, .7, cajaC, -.4, .96, 0); bx(T, 1.1, .45, .04, cajaC, -.4, 1.17, -.35); bx(T, 1.1, .45, .04, cajaC, -.4, 1.17, .35); bx(T, .04, .45, .7, cajaC, -.95, 1.17, 0); bx(T, .04, .45, .7, cajaC, .15, 1.17, 0); const tapa = bx(T, 1.1, .03, .7, cajaC, -.4, 1.55, -.55); tapa.rotation.x = -1.1;
+            if (emp === 'burbuja') { const w = new THREE.Mesh(new THREE.BoxGeometry(1.0, .3, .6), M('#e1f5fe', { transparent: true, opacity: .5 })); w.position.set(-.4, 1.12, 0); T.add(w); } }
+          (o.items || []).forEach((it, i) => { const col = i % 4, row = Math.floor(i / 4), x = -.8 + col * .27, z = -.17 + row * .3; const h = .14 + (it.h || .1); const m = bx(T, .22, h, .22, it.c || '#1e88e5', x, .98 + h / 2, z); const l = txt(it.n, '#ffffff', '#1a1f36', .22, .085); l.position.set(x, .98 + h + .002, z); l.rotation.x = -Math.PI / 2; T.add(l); });
+          (o.sobra || []).forEach((it, i) => { const h = .14 + (it.h || .1); bx(T, .22, h, .22, it.c || '#8e24aa', .55 + i * .28, .94 + h / 2, .3); const l = txt(it.n, '#ffffff', '#1a1f36', .22, .085); l.position.set(.55 + i * .28, .94 + h + .002, .3); l.rotation.x = -Math.PI / 2; T.add(l); });
+          const lab = new THREE.Mesh(new THREE.PlaneGeometry(.5, .25), new THREE.MeshBasicMaterial({ map: etiquetaTex(o.etiqueta, o.etiquetaColor) })); lab.position.set(-.4, 1.17, .375); T.add(lab);
+          anillo = new THREE.Mesh(new THREE.RingGeometry(1.45, 1.6, 48), new THREE.MeshBasicMaterial({ color: '#2238d3', side: THREE.DoubleSide })); anillo.rotation.x = -Math.PI / 2; anillo.position.y = .02; T.add(anillo); pick = [T];
+        },
         setPatio(st) {
           while (T.children.length) T.remove(T.children[0]); pick = [];
           const lbl = (t, c) => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 96; const x = cv.getContext('2d'); x.fillStyle = c; x.fillRect(0, 0, 256, 96); x.fillStyle = '#fff'; x.font = 'bold 54px sans-serif'; x.textAlign = 'center'; x.fillText(t, 128, 66); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); sp.scale.set(1.8, .68, 1); return sp; };
@@ -80,7 +93,7 @@
       };
       const loop = t => { if (anillo) anillo.scale.setScalar(1 + Math.sin(t / 250) * .04); rn.render(sc, cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
       return api;
-    } catch (e) { return { ok: false, setTarima() {}, marcar() {} }; }
+    } catch (e) { return { ok: false, setTarima() {}, setKit() {}, marcar() {} }; }
   }
   window.Escena3D = { montar };
 })();
