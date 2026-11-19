@@ -51,6 +51,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .vv{display:flex;flex-wrap:wrap;gap:6px;margin:.3rem 0}.vv label{border:2px solid #e1e5f2;border-radius:8px;padding:6px 9px;font-size:13px;cursor:pointer}.vv input{margin-right:4px}
 .acts{display:grid;gap:8px;margin-top:.6rem}.acts button{padding:.85rem;border:2px solid #dfe3f0;background:#fff;border-radius:10px;font-weight:700;cursor:pointer;text-align:left;font-size:13.5px}.acts button:hover{border-color:var(--brillante)}
 .why{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.7rem 1rem;border-radius:8px;font-size:13px;margin-top:.6rem;line-height:1.6}
+.v3dbox{position:relative;height:300px;border-radius:12px;overflow:hidden;margin:.4rem 0 .6rem;touch-action:none;background:#cfd6e4}.v3dbox canvas{display:block;width:100%;height:100%}.v3dhint{position:absolute;left:8px;top:8px;right:8px;background:rgba(1,17,49,.78);color:#fff;font-size:13px;padding:4px 8px;border-radius:8px;pointer-events:none}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
 </style>
 </head>
 <body>
@@ -72,7 +74,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   <div class="card hidden" id="game">
     <div class="topbar"><span>Devolución <span id="ln">1</span>/8</span><span>⭐ <span id="sc">0</span></span></div>
     <div class="bar"><div id="bar" style="width:0"></div></div>
-    <div id="stage"></div>
+    <div class="objbox"><div>🎯 <b>Objetivo:</b> decidir el destino correcto de cada devolución para recuperar valor y no meter producto malo al inventario.</div><div>✅ <b>Qué debes hacer:</b> en cada una de las 8 devoluciones revisa la autorización (RMA), el empaque, el estado y la caducidad (la tarima 3D muestra si viene dañada) y elige: reintegrar, reacondicionar, regresar al proveedor, merma o retener.</div><div>📊 <b>Cómo se califica:</b> cada devolución correcta vale 12.5 puntos; apruebas con 75 de 100.</div></div><div class="v3dbox" id="v3dD"><div class="v3dhint">Zona de devoluciones · la tarima muestra el estado del producto · arrastra para girar</div></div><div id="stage"></div>
   </div>
   <div class="card hidden" id="end">
     <div class="big" id="eicon">🏆</div><h2 id="etitle"></h2>
@@ -107,13 +109,13 @@ const CASOS=[
 function build(){ const a=CASOS.slice().sort(()=>Math.random()-.5).slice(0,8); ['retener','merma','proveedor','reacondicionar','reintegrar'].forEach(d=>{ if(!a.some(c=>c[6]===d)){ const c=CASOS.find(x=>x[6]===d&&!a.includes(x)); const j=a.findIndex(x=>a.filter(y=>y[6]===x[6]).length>1); a[j]=c; } });
   return a.map(c=>({prod:c[0],mot:c[1],rma:c[2],emp:c[3],est:c[4],cad:c[5],ok:c[6],why:c[7],folio:'DEV-'+(10000+Math.floor(Math.random()*89999)),pzs:1+Math.floor(Math.random()*30)})); }
 function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); L=build();
-  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); show(); }
-function show(){ const c=L[idx]; $('ln').textContent=idx+1; $('bar').style.width=(idx/8*100)+'%';
+  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); if(!window.E3){ window.E3=window.Escena3D?Escena3D.montar($('v3dD'),{escena:'anden'}):{ok:false}; if(!E3.ok) $('v3dD').style.display='none'; } show(); }
+function show(){ const c=L[idx]; if(window.E3&&E3.ok){ const dan=/dañ|rot|aplast|defect|usad|fuga|calient|cadena/i.test(c.est+' '+c.emp+' '+c.mot); E3.setTarima({cajas:Math.max(2,Math.min(9,Math.ceil(c.pzs/4))),dano:dan,frio:/yogurt|frío|frio/i.test(c.prod+c.mot),etiqueta:c.folio,etiquetaColor:c.rma==='ok'?'#ffffff':c.rma==='no'?'#ffcdd2':'#fff3c4'}); } $('ln').textContent=idx+1; $('bar').style.width=(idx/8*100)+'%';
   const rma=c.rma==='ok'?'✓ RMA-'+c.folio.slice(4)+' autorizada':c.rma==='no'?'✗ Sin RMA':'⚠ RMA-'+c.folio.slice(4)+' vencida';
   $('stage').innerHTML=`<div class="unit"><span class="k">DEVOLUCIÓN ${idx+1} DE 8 · ${c.folio}</span><br><b>${c.prod}</b> · ${c.pzs} pz(s)<br>Motivo: ${c.mot}</div>
   <div class="seal"><div>Autorización<br><b style="font-size:13px">${rma}</b></div><div>Empaque<br><b style="font-size:13px">${c.emp}</b></div><div>Estado del producto<br><b style="font-size:13px">${c.est}</b></div><div>Caducidad<br><b style="font-size:13px">${c.cad}</b></div></div>
   <div class="step">DESTINO</div><div class="acts">${Object.keys(D).map(k=>`<button data-d="${k}" onclick="decide('${k}')">${D[k]}</button>`).join('')}</div><div id="fb"></div>`; }
-function decide(d){ const c=L[idx]; document.querySelectorAll('.acts button').forEach(b=>b.disabled=true);
+function decide(d){ const c=L[idx]; if(window.E3&&E3.ok) E3.marcar(d===c.ok); document.querySelectorAll('.acts button').forEach(b=>b.disabled=true);
   if(d===c.ok){ score+=12.5; decOk++; if(d==='reintegrar') reint+=c.pzs; } else errors.push(c.prod+': '+D[d].slice(2)+' → lo correcto era '+D[c.ok].slice(2).toLowerCase());
   $('sc').textContent=Math.round(score);
   $('fb').innerHTML=`<div class="why"><b>${d===c.ok?'✅ Destino correcto.':'❌ Lo correcto era: '+D[c.ok].slice(2).toLowerCase()+'.'}</b> ${c.why}</div><button class="btn" id="nextBtn" onclick="next()">SIGUIENTE →</button>`; $('fb').scrollIntoView({block:'nearest'}); }
@@ -130,6 +132,8 @@ function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombr
 function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
 function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
 </script>
+<script src="js/three.min.js"></script>
+<script src="js/escena3d.js"></script>
 <script src="js/dicka-sync.js"></script>
 <script src="js/accesible.js"></script>
 <script src="js/perfil.js"></script>
