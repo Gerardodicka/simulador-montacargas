@@ -74,6 +74,12 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | C11 | Conversión 3D | Prioridad del usuario | Tablero del Gerente: avatar gerente en oficina 3D que comenta cada decisión | Todos los juegos en 3D o con avatares | ✅ |
 | 40 | Nuevo simulador | Nuevo simulador | Kitting y valor agregado: armar kits, etiquetar y empacar según la orden del cliente | Servicios de valor agregado 3PL | ✅ |
 | 41 | Nuevo simulador | Nuevo simulador | Indicadores del almacén (OTIF, exactitud de inventario, productividad): leer el tablero y decidir acciones | KPIs logísticos | ✅ |
+| 42 | Nuevo simulador | Investigación 2026-11-19 (WarehouseGame Training de Mecalux, Visual Picking) | Picking guiado en 3D (pick-to-light / visual picking): el surtidor sigue la luz o la indicación de la ubicación, confirma cantidad y corrige errores de surtido | Surtido guiado por luz/pantalla, más productividad y exactitud | ⬜ |
+| 43 | Nuevo simulador | Investigación 2026-11-19 (WarehouseGame Training: recibo y almacenamiento) | Recepción y acomodo (put-away) en 3D: recibir la tarima, validar contra la orden de compra y acomodar en la ubicación sugerida por capacidad y rotación | Recibo y acomodo correcto en ubicaciones | ⬜ |
+| 44 | Nuevo escenario | Investigación 2026-11-19 (juego serio Fraunhofer IML/DEKRA: el operario reporta un error al supervisor) | Dojo de Mando: escenario en el que un operario reporta un error de surtido o un daño y el supervisor decide el siguiente paso con el avatar | Liderazgo: respuesta del supervisor ante errores reportados | ⬜ |
+| 45 | Mejora de simulador | Investigación 2026-11-19 (PlayWerk: primer simulador VR de montacargas retráctil) | Simulador de montacargas: actividad con montacargas retráctil (reach truck) en pasillo angosto y estiba en altura | Montacargas retráctil en pasillos angostos | ⬜ |
+| 46 | Nuevo simulador | Investigación 2026-11-19 (WarehouseGame Training: zonas de clasificación) | Clasificación y consolidación por ruta en 3D: separar cajas del sorter por ruta y parada antes de cargar | Clasificación por ruta para embarque | ⬜ |
+| 47 | Mejora del portal | Investigación 2026-11-19 (gamificación con resumen y explicación al final de cada reto) | Insignias por puesto y progreso de la ruta de capacitación en el perfil (solo en el dispositivo) | Motivación y avance visible por puesto | ⬜ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
