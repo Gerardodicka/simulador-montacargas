@@ -514,6 +514,11 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await q.evaluate(() => { const i = U.findIndex(u => u.anom.length); const t = U[0]; U[0] = U[i]; U[i] = t; show(); document.getElementById('t3d').scrollIntoView({ block: 'center' }); }); await q.waitForTimeout(400);
     const an = await q.evaluate(() => U[idx].anom); let hits = 0; for (const i of an) { const pt = await q.evaluate(i => T3.screen(i), i); await q.mouse.click(pt.x, pt.y); await q.waitForTimeout(120); if (await q.evaluate(i => SEL.has(i), i)) hits++; } await b3.close();
     ok('Inspección de tráiler 3D', 'tocar los puntos del tráiler 3D marca las anomalías', an.length > 0 && hits === an.length && !e.length, hits + '/' + an.length + (e[0] || '')); }
+  // Devoluciones en 3D: tarima de la devolución en la escena y objetivo visible
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/devoluciones.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Devol 3D'); await q.click('#startBtn'); await q.waitForTimeout(1500);
+    const r = await q.evaluate(() => ({ ok: E3.ok, canvas: !!document.querySelector('#v3dD canvas'), obj: !!document.querySelector('.objbox') })); await b3.close();
+    ok('Devoluciones 3D', 'zona de devoluciones 3D con la tarima del caso y objetivo visible', r.ok && r.canvas && r.obj && !e.length, JSON.stringify(r) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
