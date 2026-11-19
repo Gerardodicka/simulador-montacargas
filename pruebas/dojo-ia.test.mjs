@@ -25,5 +25,12 @@ r = await (await fn(req({ evaluar: true, historial: [{ quien: "Raúl", texto: "h
 t("criterio con evidencia válida", r.criterios.escucha.turno === 1); t("evidencia de un turno que no es del líder o no existe → sin evidencia", r.criterios.meta.turno === -1 && r.criterios.preguntas.turno === -1);
 deps.fetch = reply('{"turnos":[{"quien":"Líder","texto":"Hola"},{"quien":"Raúl","texto":"¿Qué pasó?"}],"explicacion":[{"modelo":"GROW","parte":"Realidad","texto":"Pregunta primero"}]}'); r = await (await fn(req({ modelo: true, contexto: "x", objetivo: "y" }))).json();
 t("modo modelo devuelve plática y explicación", r.ok && r.turnos.length === 2 && r.explicacion[0].modelo === "GROW");
+{ let sent = null; deps.fetch = async (u, o) => { sent = JSON.parse(o.body); return new Response(JSON.stringify({ content: [{ type: "text", text: '{"tipo":"conversa","opcion":null,"confianza":0,"respuesta":"Sí, el viernes a las 9 lo dejo por escrito.","mentor":""}' }] }), { status: 200 }); };
+  const hist = Array.from({ length: 30 }, (_, i) => ({ quien: i % 2 ? "Raúl" : "Líder", texto: "turno " + i }));
+  r = await (await fn(req({ ...body, historial: hist, acuerdos: ["Revisamos el conteo el viernes"], lugar: "la oficina, en privado" }))).json(); const u = sent.messages[0].content, sys = sent.system[0].text;
+  t("piloto: la IA recibe acuerdos, lugar y 24 turnos de memoria", r.ok && /Revisamos el conteo el viernes/.test(u) && /la oficina, en privado/.test(u) && /turno 6\b/.test(u) && !/turno 5\b/.test(u));
+  t("piloto: reglas de continuidad, compromiso con fecha y trato autocrático", /no vuelve a plantear el problema inicial/.test(sys) && /fecha o día específico/.test(sys) && /Nunca premies ese estilo/.test(sys));
+  deps.fetch = async (u, o) => { sent = JSON.parse(o.body); return new Response(JSON.stringify({ content: [{ type: "text", text: '{"puntaje":50}' }] }), { status: 200 }); }; await fn(req({ evaluar: true, historial: hist, contexto: "x", objetivo: "y" }));
+  t("piloto: la evaluación limita a 55 el estilo autocrático", /NO pasa de 55/.test(sent.system[0].text)); }
 r = await (await fn(new Request("http://x", { method: "GET" }))).json(); t("solo POST", r.ok === false);
 console.log(`Dojo IA: ${ok}/${ok + bad} pruebas correctas`); process.exit(bad ? 1 : 0);
