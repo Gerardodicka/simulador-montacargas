@@ -66,6 +66,20 @@
           const lab = new THREE.Mesh(new THREE.PlaneGeometry(.5, .25), new THREE.MeshBasicMaterial({ map: etiquetaTex(o.etiqueta, o.etiquetaColor) })); lab.position.set(-.4, 1.17, .375); T.add(lab);
           anillo = new THREE.Mesh(new THREE.RingGeometry(1.45, 1.6, 48), new THREE.MeshBasicMaterial({ color: '#2238d3', side: THREE.DoubleSide })); anillo.rotation.x = -Math.PI / 2; anillo.position.y = .02; T.add(anillo); pick = [T];
         },
+        setPTL(o) {
+          o = o || {}; while (T.children.length) T.remove(T.children[0]); pick = []; if (!api.ptlCam) { api.ptlCam = 1; th = 0; ph = 1.32; rad = el.clientWidth / el.clientHeight < 1 ? 7.2 : 4.4; upd(); }
+          const CX = c => (c - 3.5) * .95, LY = l => .1 + (l - 1) * 1.0, Z = -.6, blue = M('#2a4bd7', { metalness: .4 }), org = M('#e8730c');
+          for (let c = 0; c <= 6; c++) { bx(T, .08, 3.2, .08, blue, CX(c + .5) - .95, 1.6, Z - .4); bx(T, .08, 3.2, .08, blue, CX(c + .5) - .95, 1.6, Z + .4); }
+          for (let l = 1; l <= 3; l++) bx(T, 6 * .95 + .1, .06, .9, org, 0, LY(l), Z);
+          const txt = (t, bg, fg, w, h, fs) => { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, 256, 128); x.fillStyle = fg; x.font = 'bold ' + (fs || 64) + 'px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, 128, 68); return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) })); };
+          (o.slots || []).forEach(sl => { const x = CX(sl.col), y = LY(sl.lvl);
+            const n = Math.min(4, sl.stock); for (let i = 0; i < n; i++) bx(T, .34, .3, .55, '#c9a875', x - .2 + (i % 2) * .4, y + .18 + Math.floor(i / 2) * .32, Z);
+            const tag = txt(sl.code, '#ffffff', '#1D2586', .62, .16, 46); tag.position.set(x, y - .04, Z + .46); T.add(tag);
+            const mod = bx(T, .5, .2, .06, sl.lit ? M('#00e676', { emissive: '#00c853', emissiveIntensity: .9 }) : M('#37474f'), x, y + .9, Z + .46);
+            if (sl.lit) { const d = txt(String(sl.qty), '#00c853', '#ffffff', .44, .17, 90); d.position.set(x, y + .9, Z + .495); T.add(d); }
+            const hit = bx(T, .9, .95, .9, new THREE.MeshBasicMaterial({ visible: false }), x, y + .48, Z); hit.userData.pick = { tipo: 'slot', k: sl.code }; pick.push(hit); });
+        },
+        screenSlot(col, lvl) { const v = new THREE.Vector3((col - 3.5) * .95, .1 + (lvl - 1) + .48, -.6 + .46).project(cam), r = rn.domElement.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; },
         setPatio(st) {
           while (T.children.length) T.remove(T.children[0]); pick = [];
           const lbl = (t, c) => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 96; const x = cv.getContext('2d'); x.fillStyle = c; x.fillRect(0, 0, 256, 96); x.fillStyle = '#fff'; x.font = 'bold 54px sans-serif'; x.textAlign = 'center'; x.fillText(t, 128, 66); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); sp.scale.set(1.8, .68, 1); return sp; };
@@ -93,7 +107,7 @@
       };
       const loop = t => { if (anillo) anillo.scale.setScalar(1 + Math.sin(t / 250) * .04); rn.render(sc, cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
       return api;
-    } catch (e) { return { ok: false, setTarima() {}, setKit() {}, marcar() {} }; }
+    } catch (e) { return { ok: false, setTarima() {}, setKit() {}, setPTL() {}, marcar() {} }; }
   }
   window.Escena3D = { montar };
 })();
