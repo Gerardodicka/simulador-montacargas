@@ -47,6 +47,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .ok{color:var(--verde);font-weight:800}.no{color:var(--rojo);font-weight:800}
 .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6rem 0}.sum div{background:#f4f6fb;border-radius:10px;padding:8px;text-align:center;font-size:12px}.sum b{display:block;font-size:18px;color:var(--azul)}
 .tw{overflow-x:auto}.hint{font-size:12px;color:#666;margin-top:.4rem;line-height:1.6}
+.ger{position:relative;height:300px;border-radius:12px;overflow:hidden;margin:.4rem 0 .7rem;background:#cfd8e3}.ger canvas{display:block;width:100%;height:100%}.gbub{position:absolute;right:10px;top:10px;max-width:58%;background:#fff;color:#1a1f36;border:2px solid #1D2586;border-radius:14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 4px 14px rgba(0,0,0,.18)}.gbub b{color:#1D2586}.gname{position:absolute;left:10px;bottom:10px;background:rgba(1,17,49,.8);color:#fff;font-size:13px;padding:4px 9px;border-radius:8px}@media(max-width:600px){.ger{height:340px}.gbub{left:10px;right:10px;max-width:none;font-size:14px}}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
 </style>
 </head>
 <body>
@@ -66,7 +68,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
     <button class="btn" id="startBtn" onclick="start()">COMENZAR</button>
   </div>
   <div class="card hidden" id="game">
-    <div class="topbar"><span>Semana de temporada</span><span>📦 <span id="totVol"></span> cajas</span></div>
+    <div class="objbox"><div>🎯 <b>Objetivo:</b> sacar todo el volumen de la semana a tiempo, al menor costo y sin pasarte del tiempo extra que permite la ley.</div><div>✅ <b>Qué debes hacer:</b> para cada día elige cuántos <b>eventuales</b> contratas y cuántas <b>horas extra</b> pide tu plantilla; la columna Capacidad se pone verde cuando alcanza el volumen. Luego toca “Ejecutar la semana”.</div><div>📊 <b>Cómo se califica:</b> servicio a tiempo 50 + costo frente al plan óptimo 40 + legalidad 10; apruebas con 75 de 100.</div></div><div class="ger" id="ger"><div class="gbub" id="gbub">Cargando a tu gerente…</div><div class="gname">👔 Lic. Ramírez · Gerente de Operaciones</div></div><div class="topbar"><span>Semana de temporada</span><span>📦 <span id="totVol"></span> cajas</span></div>
     <div class="tw"><table class="plan" id="plan"></table></div>
     <div class="sum" id="sum"></div>
     <div class="hint">💡 Compara: una hora extra cuesta $150 por 15 cajas ($10 por caja); un eventual cuesta $750 por 120 cajas ($6.25 por caja). Considera el ausentismo esperado de cada día.</div>
@@ -100,12 +102,44 @@ function simulate(plan){ let back=0, cost=0, served=0, ontime=0, otWeek=0; const
 function optimum(){ let best=null; const rec=(i,back,ot,acc,plan)=>{ if(i===D.length){ if(back<=0&&(!best||acc<best.cost)) best={cost:acc,plan:plan.slice()}; return; } const x=D[i], pr=present(x);
     for(let o=0;o<=Math.min(OT_DAY,OT_WEEK-ot);o++) for(let e=0;e<=20;e++){ const cap=(pr+e)*PROD+pr*o*PH, need=x.vol+back; if(cap<need) continue; const c=BASE*C_BASE+e*C_EV+pr*o*C_OT; if(best&&acc+c>=best.cost) continue; plan.push({ev:e,ot:o}); rec(i+1,0,ot+o,acc+c,plan); plan.pop(); break; } };
   rec(0,0,0,0,[]); return best; }
+
+/* ===== Oficina 3D con avatar gerente que presenta el reto y comenta ===== */
+let G3=null;
+function gerSay(h){ const b=$('gbub'); if(b) b.innerHTML=h; if(G3) G3.talk=1.6; }
+function g3init(){ if(G3||!window.THREE) return; try{ const el=$('ger'), rn=new THREE.WebGLRenderer({antialias:true}); rn.setPixelRatio(Math.min(2,devicePixelRatio)); rn.shadowMap.enabled=true; el.insertBefore(rn.domElement,el.firstChild);
+  const sc=new THREE.Scene(); sc.background=new THREE.Color('#cfd8e3'); const cam=new THREE.PerspectiveCamera(40,1,.1,60); sc.add(new THREE.HemisphereLight('#ffffff','#7d8590',.95)); const dl=new THREE.DirectionalLight('#fff4e0',.7); dl.position.set(-3,6,5); dl.castShadow=true; sc.add(dl);
+  const TL=new THREE.TextureLoader(), tx=(f,x,y)=>{ const t=TL.load('assets/textures/'+f); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(x,y); return t; };
+  const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.65},o||{})), box=(w,h,d,m,x,y,z)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof m==='string'?M(m):m); b.position.set(x,y,z); b.castShadow=b.receiveShadow=true; sc.add(b); return b; };
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(12,8),new THREE.MeshStandardMaterial({map:tx('madera.jpg',4,3),color:'#c9a77c'})); fl.rotation.x=-Math.PI/2; fl.receiveShadow=true; sc.add(fl);
+  box(12,4,.1,'#eef1f5',0,2,-2.2); box(.1,4,8,'#e3e8ef',-4,2,1.8);
+  // ventana al almacén
+  box(2.6,1.5,.06,'#9fc3e6',1.6,2.3,-2.13); box(2.7,.08,.1,'#90a4ae',1.6,1.53,-2.1); box(2.7,.08,.1,'#90a4ae',1.6,3.07,-2.1);
+  [0.6,1.6,2.6].forEach(x=>{ box(.06,1.1,.05,'#2a4bd7',x,2.1,-2.08); box(.7,.3,.05,'#c8a26b',x+.35,1.85,-2.07); });
+  // pizarrón con la semana
+  const pc=document.createElement('canvas'); pc.width=512; pc.height=300; const pg=pc.getContext('2d'); pg.fillStyle='#fff'; pg.fillRect(0,0,512,300); pg.fillStyle='#1D2586'; pg.fillRect(0,0,512,56); pg.fillStyle='#fff'; pg.font='bold 34px sans-serif'; pg.fillText('PLAN SEMANAL',20,40); pg.font='bold 26px sans-serif';
+  D.forEach((x,i)=>{ const h=Math.round(x.vol/3600*180); pg.fillStyle='#f5a300'; pg.fillRect(30+i*95,280-h,60,h); pg.fillStyle='#1a1f36'; pg.fillText(x.d.slice(0,3),30+i*95,276-h-8); });
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.12),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(pc)})); board.position.set(-2.1,2.3,-2.13); sc.add(board);
+  // escritorio, monitor y silla
+  box(2.2,.08,1,'#5d4037',.3,.78,.2); [[-.7,-.2],[1.3,-.2],[-.7,.6],[1.3,.6]].forEach(([x,z])=>box(.06,.76,.06,'#3e2723',x,.38,z)); box(.7,.45,.04,'#212121',.9,1.12,0); box(.08,.25,.08,'#424242',.9,.9,0); box(.62,.38,.01,'#2a4bd7',.9,1.12,.025);
+  box(.55,.08,.55,'#37474f',-.6,.5,-.75); box(.55,.7,.07,'#37474f',-.6,.9,-1.03);
+  const cv=rn.domElement; const fit=()=>{ const w=el.clientWidth,h=el.clientHeight; if(!w||!h) return; rn.setSize(w,h,false); cam.aspect=w/h; cam.fov=w/h<1?62:40; cam.updateProjectionMatrix(); const nar=w/h<1; cam.position.set(nar?-.4:.2,1.75,nar?4.6:4.2); cam.lookAt(nar?-.5:.1,1.3,-.6); }; addEventListener('resize',fit); fit();
+  G3={talk:0,av:null,head:null,fit}; let man=null;
+  const put=(scene,hgt)=>{ const obj=THREE.SkeletonUtils.clone(scene); obj.scale.setScalar(1.78/hgt); obj.position.set(-.55,0,-.35); obj.rotation.y=.25; obj.traverse(o=>{ if(o.isMesh){ o.frustumCulled=false; o.castShadow=true; } }); sc.add(obj); obj.traverse(o=>{ if(o.isBone) o.name=o.name.replace(/^mixamorig:?/,''); }); const av={obj,procedural:true}; try{ gltfPrepareBones(av); gltfWalkPose(av,false,0,performance.now(),false,0); }catch(e){ console.warn("pose",e.message); } G3.av=av; obj.traverse(o=>{ if(o.isBone&&/Head$/.test(o.name)) G3.head=o; }); man=obj; };
+  const L=THREE.GLTFLoader?new THREE.GLTFLoader():null, ld=(f,cb,fail)=>L.load('assets/models/'+f,gl=>{ gl.scene.updateMatrixWorld(true); let hb=null,fb=null; gl.scene.traverse(o=>{ if(o.isBone){ if(/Head$/.test(o.name)) hb=o; if(/LeftFoot$/.test(o.name)) fb=o; } }); let h=1.8; if(hb&&fb){ const a=new THREE.Vector3(),b=new THREE.Vector3(); hb.getWorldPosition(a); fb.getWorldPosition(b); h=a.y-Math.min(b.y,0)+.13; } cb(gl.scene,h); },undefined,fail);
+  if(L&&THREE.SkeletonUtils) ld('oficina_hombre.glb',put,()=>ld('operario_lod.glb',put,()=>{}));
+  let t0=performance.now(); const loop=now=>{ const t=(now-t0)/1000; if(G3.talk>0) G3.talk-=1/60; if(G3.head){ G3.head.rotation.y=Math.sin(t*.7)*.12; G3.head.rotation.z=G3.talk>0?Math.sin(t*8)*.05:0; } rn.render(sc,cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  }catch(e){ $('ger').style.display='none'; G3=null; } }
+let gerT=null;
+function gerComenta(R){ if(!G3.n){ G3.n=1; return; } clearTimeout(gerT); gerT=setTimeout(()=>{ const short=R.days.map((d,i)=>({i,f:d.need-d.cap})).filter(x=>x.f>0).sort((a,b)=>b.f-a.f);
+  if(!R.legal) gerSay('⚠️ <b>Cuidado:</b> te pasaste del tiempo extra legal (3 h al día, 9 a la semana). Cubre ese hueco con <b>eventuales</b>.');
+  else if(short.length) gerSay(`El <b>${DAYS[short[0].i]}</b> te faltan <b>${short[0].f.toLocaleString('es-MX')} cajas</b>. Súbele eventuales u horas extra ese día; lo que no sale se acumula al siguiente.`);
+  else gerSay(`✅ Ya cubres todo el volumen. Ahora <b>baja costo</b>: la hora extra ($150) sale más barata que un eventual cuando faltan pocas cajas. Costo actual: <b>${money(R.cost)}</b>.`); },350); }
 function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); D=genWeek();
   $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); $('totVol').textContent=D.reduce((a,x)=>a+x.vol,0).toLocaleString('es-MX'); drawPlan(); }
 function readPlan(){ return D.map((_,i)=>({ev:Math.max(0,Math.min(15,+($('ev'+i).value)||0)),ot:+$('ot'+i).value})); }
-function drawPlan(){ $('plan').innerHTML=`<tr><th>Día</th><th>Volumen</th><th>Ausentismo<br><small>(presentes)</small></th><th>Eventuales</th><th>H. extra</th><th>Capacidad</th></tr>`+D.map((x,i)=>`<tr><td><b>${x.d}</b></td><td>${x.vol.toLocaleString('es-MX')}</td><td>${x.aus}% <small>(${present(x)})</small></td><td><input id="ev${i}" type="number" min="0" max="15" value="0" oninput="preview()"></td><td><select id="ot${i}" onchange="preview()">${[0,1,2,3].map(h=>`<option>${h}</option>`).join('')}</select></td><td id="cap${i}"></td></tr>`).join(''); preview(); }
+function drawPlan(){ if(!G3){ g3init(); const vt=D.reduce((a,x)=>a+x.vol,0), mx=D.reduce((a,x)=>x.vol>a.vol?x:a); gerSay(`Hola <b>${(who&&who.name||'').split(' ')[0]}</b>, esta semana entran <b>${vt.toLocaleString('es-MX')} cajas</b>. El día más pesado es el <b>${mx.d}</b>. Programa eventuales y horas extra para sacarlo todo a tiempo y barato.`); } $('plan').innerHTML=`<tr><th>Día</th><th>Volumen</th><th>Ausentismo<br><small>(presentes)</small></th><th>Eventuales</th><th>H. extra</th><th>Capacidad</th></tr>`+D.map((x,i)=>`<tr><td><b>${x.d}</b></td><td>${x.vol.toLocaleString('es-MX')}</td><td>${x.aus}% <small>(${present(x)})</small></td><td><input id="ev${i}" type="number" min="0" max="15" value="0" oninput="preview()"></td><td><select id="ot${i}" onchange="preview()">${[0,1,2,3].map(h=>`<option>${h}</option>`).join('')}</select></td><td id="cap${i}"></td></tr>`).join(''); preview(); }
 function preview(){ const P=readPlan(), R=simulate(P); R.days.forEach((d,i)=>{ $('cap'+i).innerHTML=`<span class="${d.cap>=d.need?'ok':'no'}">${d.cap.toLocaleString('es-MX')}</span>`; });
-  $('sum').innerHTML=`<div><b>${Math.round(R.service*100)}%</b>servicio a tiempo</div><div><b>${money(R.cost)}</b>costo de la semana</div><div><b class="${R.legal?'ok':'no'}">${R.otWeek} h</b>extra por persona (máx. 9)</div>`; }
+  $('sum').innerHTML=`<div><b>${Math.round(R.service*100)}%</b>servicio a tiempo</div><div><b>${money(R.cost)}</b>costo de la semana</div><div><b class="${R.legal?'ok':'no'}">${R.otWeek} h</b>extra por persona (máx. 9)</div>`;  if(G3) gerComenta(R); }
 function runWeek(){ const P=readPlan(), R=simulate(P), O=optimum(); const sv=Math.round(50*R.service), cs=R.service<.999?Math.round(40*R.service*Math.min(1,O.cost/R.cost)):Math.round(40*Math.min(1,O.cost/R.cost)), lg=R.legal?10:0; score=sv+cs+lg; RES={R,O,sv,cs,lg,P}; finish(); }
 function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden'); const {R,O,sv,cs,lg}=RES;
   const ok=score>=PASS, date=new Date(); const base=`REG|${GAME_ID}|${who.name}${who.num?' #'+who.num:''}|${who.puesto}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');
@@ -114,12 +148,17 @@ function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').
   const tips=[]; if(R.service<.999) tips.push(`${Math.round((1-R.service)*100)}% del volumen salió tarde o no salió: programa más capacidad los días con más volumen y ausentismo.`); if(!R.legal) tips.push('Te pasaste del límite de horas extra (3 al día y 9 a la semana): usa eventuales.'); if(R.cost>O.cost*1.05) tips.push('Tu costo quedó arriba del mínimo: el eventual sale más barato por caja que la hora extra; usa la hora extra solo para ajustes finos.');
   if(tips.length){ $('review').classList.remove('hidden'); $('review').innerHTML='<b>Para mejorar:</b><br>'+tips.map(t=>'• '+t).join('<br>')+`<br><small>Plan óptimo: ${O.plan.map((p,i)=>`${DAYS[i]} ${p.ev} ev.${p.ot?' + '+p.ot+' h':''}`).join(' · ')}</small>`; }
   $('ecode').textContent='Código de verificación: '+REG;
+  if(G3){ const g=$('ger'); $('estats').before(g); G3.fit(); gerSay(ok?`🏆 <b>Buen plan, ${who.name.split(' ')[0]}.</b> Servicio ${Math.round(R.service*100)}% con costo de ${money(R.cost)} contra ${money(O.cost)} del óptimo.`:`📚 <b>Revisemos juntos:</b> ${R.service<.999?'quedó volumen sin salir a tiempo; ':''}${!R.legal?'te pasaste del tiempo extra legal; ':''}${R.cost>O.cost*1.05?'gastaste más que el plan óptimo; ':''}abajo te dejo el plan óptimo para compararlo.`); }
   try{ const k='dicka_console_results', l=JSON.parse(localStorage.getItem(k)||'[]'); l.push({juego:GAME_NAME,nombre:who.name,num:who.num,puesto:who.puesto,area:'Operaciones',almacen:who.wh,score:`${score}/${MAX}`,aprobado:ok,fecha:date.toISOString(),reg:REG}); localStorage.setItem(k,JSON.stringify(l)); }catch(e){}
   try{ parent.postMessage({type:'dicka-result',juego:GAME_NAME,nombre:who.name,score:`${score}/${MAX}`,aprobado:ok},'*'); }catch(e){} }
 function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombre: ${who.name}${who.num?'\nNo. empleado: '+who.num:''}\nPuesto: ${who.puesto}\nAlmacén: ${who.wh}\nPuntaje: ${score}/${MAX}\nEstado: ${score>=PASS?'✓ APROBADO':'✗ NO APROBADO'}\n\n${REG}`; }
 function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
 function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
 </script>
+<script src="js/three.min.js"></script>
+<script src="js/GLTFLoader.js"></script>
+<script src="js/SkeletonUtils.js"></script>
+<script src="js/dicka-avatar.js"></script>
 <script src="js/dicka-sync.js"></script>
 <script src="js/accesible.js"></script>
 <script src="js/perfil.js"></script>
