@@ -452,7 +452,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       const v = await q.evaluate(() => { const x = document.getElementById('dickaInicio'); if (!x) return 'no'; const r = x.getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === x ? 'ok' : 'tapado'; }); if (v !== 'ok') bad.push(f + ':' + v); await q.close(); }
     ok('Navegación', 'los ' + files.length + ' juegos tienen botón «← Inicio» visible', !bad.length, bad.join(', ')); }
   // Acceso único: registrarse en un juego llena y deja continuar en los demás sin volver a capturar
-  { const cx1 = await b.newContext({ viewport: { width: 390, height: 844 } }); const q = await cx1.newPage(); await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300);
+  { const cx1 = await b.newContext({ viewport: { width: 390, height: 844 } }); const q = await cx1.newPage(); await q.route(/(three\.min|GLTFLoader|SkeletonUtils|dicka-avatar)\.js/, r => r.abort()); await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300);
     await q.fill('#pname', 'Ana Torres Ruiz'); await q.fill('#pnum', '10457'); await q.click('#startBtn'); await q.waitForTimeout(200); await q.close();
     const res = []; for (const f of ['5s-almacen.html', 'recepcion-decantado.html', 'dojo-de-mando.html', 'simulador-montacarga.html']) { const p2 = await cx1.newPage(); const e = []; p2.on('pageerror', x => e.push(x.message)); await p2.goto(url('juegos/' + f)); await p2.waitForTimeout(400);
       const r = await p2.evaluate(() => { const g = id => document.getElementById(id); return { banner: !!g('dickaPerfil'), num: (g('pnum') || g('rNum') || {}).value }; }); let av = false;
