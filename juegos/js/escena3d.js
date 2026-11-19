@@ -61,6 +61,14 @@
             const hit = bx(g, 3, 3.4, 8, new THREE.MeshBasicMaterial({ visible: false }), 0, 1.7, 0); hit.userData.pick = { tipo: 'truck', id: t.id }; pick.push(hit);
             if (t.sel) { const r = new THREE.Mesh(new THREE.RingGeometry(3.3, 3.6, 40), new THREE.MeshBasicMaterial({ color: '#ff6d00', side: THREE.DoubleSide })); r.rotation.x = -Math.PI / 2; r.position.set(px(i), .03, pz(i)); T.add(r); } });
         },
+        setPantalla(canvas, titulo) {
+          if (!api._pant) { const g = new THREE.Group(); g.position.set(1.7, 0, .2); g.rotation.y = -.5; T.parent.add(g);
+            bx(g, .08, 1.5, .08, '#607d8b', 0, .75, 0); bx(g, 2.1, 1.05, .08, '#263238', 0, 1.95, 0);
+            const tex = new THREE.CanvasTexture(canvas); const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.95, .9), new THREE.MeshBasicMaterial({ map: tex })); scr.position.set(0, 1.95, .045); g.add(scr);
+            const lc = document.createElement('canvas'); lc.width = 512; lc.height = 64; const lg = lc.getContext('2d'); lg.fillStyle = '#1D2586'; lg.fillRect(0, 0, 512, 64); lg.fillStyle = '#fff'; lg.font = 'bold 25px sans-serif'; lg.textAlign = 'center'; lg.fillText(titulo || 'REGISTRADOR DE TEMPERATURA', 256, 41);
+            const lb = new THREE.Mesh(new THREE.PlaneGeometry(2.1, .26), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(lc) })); lb.position.set(0, 2.62, .045); g.add(lb); api._pant = { tex, scr }; }
+          api._pant.tex.image = canvas; api._pant.tex.needsUpdate = true;
+        },
         marcar(ok) { if (anillo) anillo.material.color.set(ok === false ? '#d11' : '#1f9d55'); },
         render() { rn.render(sc, cam); }
       };
