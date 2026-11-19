@@ -541,6 +541,12 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await q.fill('#ev0', '15'); await q.dispatchEvent('#ev0', 'input'); await q.waitForTimeout(700); const t1 = await q.textContent('#gbub');
     await q.evaluate(() => runWeek()); await q.waitForTimeout(300); const r = await q.evaluate(() => ({ ok: !!G3, enEnd: !!document.querySelector('#end #ger'), fin: document.getElementById('gbub').textContent })); await b3.close();
     ok('Planeación de Personal 3D', 'el gerente 3D presenta el reto, comenta el plan y retroalimenta al final', r.ok && /cajas/.test(t0) && t1 !== t0 && r.enEnd && r.fin !== t1 && !e.length, JSON.stringify({ t0: t0.slice(0, 30), t1: t1.slice(0, 30), ...r }).slice(0, 200) + (e[0] || '')); }
+  // Tablero del Gerente: el director 3D presenta las metas, comenta cada cierre de mes y el resultado final
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 1280, height: 900 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Director'); await q.evaluate(() => start()); await q.waitForTimeout(800); const t0 = await q.textContent('#gbub');
+    await q.selectOption('#dOT', '1'); await q.evaluate(() => month()); const t1 = await q.textContent('#gbub');
+    await q.evaluate(() => { month(); month(); month(); }); await q.waitForTimeout(300); const r = await q.evaluate(() => ({ ok: !!G3, enEnd: !!document.querySelector('#end #ger'), fin: document.getElementById('gbub').textContent })); await b3.close();
+    ok('Tablero del Gerente 3D', 'el director 3D presenta metas, comenta cada mes y el trimestre', r.ok && /OTIF 97/.test(t0) && /OTIF de/.test(t1) && /tiempo extra/.test(t1) && r.enEnd && /trimestre/.test(r.fin) && !e.length, JSON.stringify({ t0: t0.slice(0, 30), t1: t1.slice(0, 60), ...r }).slice(0, 220) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
