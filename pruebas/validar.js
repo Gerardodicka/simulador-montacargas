@@ -261,7 +261,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Portal', 'tabla de líderes por almacén', r.todos === 'Ana P.,Rosa D.,Luis G.' && r.agave === 'Ana P.,Luis G.' && r.todo === 3 && r.full === 'Ana Pérez' && !r.hs, JSON.stringify(r));
     ok('Portal', 'tabla de líderes sin errores', !e.length, e[0] || ''); await ctx.close(); }
   // Planeación de personal: el plan óptimo da 100; sin eventuales no aprueba; pasar el límite legal de horas extra pierde cumplimiento
-  { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.route('**/three.min.js', r => r.abort()); await q.goto(url('juegos/planeacion-personal.html')); await q.waitForTimeout(300);
+  { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.route(/(three\.min|GLTFLoader|SkeletonUtils|dicka-avatar)\.js/, r => r.abort()); await q.goto(url('juegos/planeacion-personal.html')); await q.waitForTimeout(300);
     await q.fill('#pname', 'Prueba Plan'); await q.click('#startBtn');
     const r = await q.evaluate(() => { const set = P => P.forEach((x, i) => { document.getElementById('ev' + i).value = x.ev; document.getElementById('ot' + i).value = x.ot; }); const O = optimum(); const o = {};
       set(O.plan); o.opt = simulate(readPlan()); set(D.map(() => ({ ev: 0, ot: 0 }))); o.none = simulate(readPlan()); set(D.map(() => ({ ev: 0, ot: 3 }))); o.ot = simulate(readPlan());
@@ -269,7 +269,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     ok('Planeación de personal', 'plan óptimo 100/100; sin eventuales falta servicio; >9 h extra ilegal', r.score === 100 && r.opt.s === 1 && r.opt.c && r.opt.l && r.none < .9 && r.otLegal === false && r.cpc, JSON.stringify(r));
     ok('Planeación de personal', 'sin errores de ejecución', !e.length, e[0] || ''); await q.close(); }
   // Tablero del gerente: estrategia equilibrada aprueba; solo tiempo extra sin mantenimiento ni personal reprueba con accidentes
-  { const run = async plan => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.route('**/three.min.js', r => r.abort()); await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300);
+  { const run = async plan => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.route(/(three\.min|GLTFLoader|SkeletonUtils|dicka-avatar)\.js/, r => r.abort()); await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300);
       await q.fill('#pname', 'Prueba Tablero'); await q.click('#startBtn');
       for (let i = 0; i < 4; i++) { const d = plan(i); await q.selectOption('#dExtra', String(d.extra)); await q.selectOption('#dOT', String(d.ot)); await q.selectOption('#dMant', String(d.mant)); await q.selectOption('#dCap', String(d.cap)); await q.click('#runBtn'); }
       const r = await q.evaluate(() => ({ score, acc: H.reduce((a, h) => a + h.acc, 0), end: !document.getElementById('end').classList.contains('hidden'), saved: JSON.parse(localStorage.getItem('dicka_console_results') || '[]').some(x => x.juego === 'Tablero del Gerente') })); await q.close(); return { r, e }; };
