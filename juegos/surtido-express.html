@@ -65,6 +65,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .qtyrow button:hover{border-color:var(--brillante)}
 .hint{font-size:12px;color:var(--gris);text-align:center;margin-top:.3rem}
 
+.s3d{position:relative;height:330px;border-radius:12px;overflow:hidden;margin:.4rem 0 .6rem;touch-action:none;background:#dfe5ee}.s3d canvas{display:block;width:100%;height:100%}.s3hint{position:absolute;left:8px;top:8px;right:8px;background:rgba(1,17,49,.78);color:#fff;font-size:13px;padding:5px 9px;border-radius:8px;pointer-events:none}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
 </style>
 </head>
 <body>
@@ -83,13 +85,13 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
     <label class="lbl">ALMACÉN</label><select class="name" id="pwh"><option>Agave 1</option><option>Agave 3</option><option>Mezquite 1</option><option>Mezquite 2</option><option>BIC</option><option>Celaya</option><option>Toluca</option><option>Escobedo</option><option>Apodaca</option><option>Guadalajara</option><option>Villahermosa</option><option>Mérida</option></select>
     <button class="btn" onclick="start()">COMENZAR</button>
   </div>
-  <div class="card hidden" id="game">
+  <div class="card hidden" id="game"><div class="objbox"><div>🎯 <b>Objetivo:</b> surtir rápido y sin errores leyendo bien la ubicación Pasillo-Columna-Nivel.</div><div>✅ <b>Qué debes hacer:</b> en cada línea del pedido elige el pasillo, toca en el rack 3D la caja de la ubicación indicada (ej. B-04-2 = pasillo B, columna 04, nivel 2) y luego elige la cantidad exacta.</div><div>📊 <b>Cómo se califica:</b> +5 por ubicación y +5 por cantidad correctas, menos puntos por errores; apruebas con 160 de 270.</div></div>
 <div class="topbar"><span>Pedido <span id="ord">1</span>/3 · Línea <span id="ln">1</span>/7</span><span class="timer" id="tm">4:00</span><span>⭐ <span id="sc">0</span></span></div>
 <div class="bar"><div id="bar" style="width:0"></div></div>
 <div class="pick"><div class="sku" id="psku">SKU</div><div class="name" id="pname2">Producto</div><div class="loc" id="ploc">A-01-1</div><div class="qty">Surtir: <b id="pqty">0</b> cajas</div></div>
 <div id="step1">
   <div class="aisle" id="aisles"></div>
-  <div class="rack" id="rack"></div>
+  <div class="s3d" id="s3d"><div class="s3hint" id="s3hint">Rack del pasillo en 3D · columna 01–06 de izquierda a derecha, nivel 1 abajo · toca la caja correcta</div></div><div class="rack" id="rack"></div>
   <div class="hint">Toca la ubicación correcta en el rack. Formato: <b>Pasillo-Columna-Nivel</b></div>
 </div>
 <div id="step2" class="hidden">
@@ -144,8 +146,33 @@ function nextOrder(reset){ gen(); line=1; if(reset){ timeLeft=240; tick=setInter
 function showLine(){ cur=picks[line-1]; $('ln').textContent=line; $('psku').textContent=cur.p[0]; $('pname2').textContent=cur.p[2]+' '+cur.p[1]; $('ploc').textContent=cur.loc; $('pqty').textContent=cur.qty;
   $('bar').style.width=(((order-1)*7+line-1)/21*100)+'%'; $('step1').classList.remove('hidden'); $('step2').classList.add('hidden');
   aisle='A'; drawAisles(); drawRack(); }
+
+/* ===== Rack 3D del pasillo actual ===== */
+let S3=null;
+function s3init(){ if(S3||!window.THREE) return; try{ const el=$('s3d'), rn=new THREE.WebGLRenderer({antialias:true}); rn.setPixelRatio(Math.min(2,devicePixelRatio)); rn.shadowMap.enabled=true; el.insertBefore(rn.domElement,el.firstChild);
+  const sc=new THREE.Scene(); sc.background=new THREE.Color('#dfe5ee'); const cam=new THREE.PerspectiveCamera(45,1,.1,100); sc.add(new THREE.HemisphereLight('#fff','#8a8f99',.9)); const dl=new THREE.DirectionalLight('#fff4e0',.7); dl.position.set(3,9,8); dl.castShadow=true; sc.add(dl);
+  const TL=new THREE.TextureLoader(), tx=(f,x,y)=>{ const t=TL.load('assets/textures/'+f); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(x,y); return t; };
+  const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6},o||{})), box=(w,h,d,m,x,y,z,g)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof m==='string'?M(m):m); b.position.set(x,y,z); b.castShadow=b.receiveShadow=true; (g||sc).add(b); return b; };
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(30,16),new THREE.MeshStandardMaterial({map:tx('piso.jpg',6,3)})); fl.rotation.x=-Math.PI/2; fl.receiveShadow=true; sc.add(fl);
+  const CX=c=>(c-3.5)*1.35, LY=l=>.15+(l-1)*1.15, blue=M('#2a4bd7',{metalness:.4}), org=M('#e8730c'), cart=new THREE.MeshStandardMaterial({map:tx('carton.jpg',1,1),color:'#e8d2a8'});
+  for(let c=0;c<=COLS;c++){ const x=CX(c+.5); box(.1,3.6,.1,blue,x,1.8,-.45); box(.1,3.6,.1,blue,x,1.8,.45); }
+  for(let l=1;l<=LVL;l++) box(COLS*1.35+.2,.08,1.0,org,0,LY(l),0);
+  const G=new THREE.Group(); sc.add(G); let picks=[];
+  const lbl=(t,col,fg,w)=>{ const c=document.createElement('canvas'); c.width=192; c.height=64; const g=c.getContext('2d'); g.fillStyle=col; g.fillRect(0,0,192,64); g.fillStyle=fg||'#111'; g.font='bold 34px sans-serif'; g.textAlign='center'; g.fillText(t,96,44); const m=new THREE.Mesh(new THREE.PlaneGeometry(w||.9,(w||.9)/3),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)})); return m; };
+  const sign=document.createElement('canvas'); sign.width=256; sign.height=96; const sg=sign.getContext('2d'); const signT=new THREE.CanvasTexture(sign); const sm=new THREE.Mesh(new THREE.PlaneGeometry(1.8,.68),new THREE.MeshBasicMaterial({map:signT})); sm.position.set(0,3.95,.05); sc.add(sm);
+  const cam0=()=>{ const m=cam.aspect<1; cam.position.set(0,m?2.2:2.0,m?9.5:6.6); cam.lookAt(0,m?1.9:1.7,0); };
+  const fit=()=>{ const w=el.clientWidth,h=el.clientHeight; rn.setSize(w,h,false); cam.aspect=w/h; cam.fov=w/h<1?60:45; cam.updateProjectionMatrix(); cam0(); }; addEventListener('resize',fit); fit();
+  const cv=rn.domElement; cv.addEventListener('click',e=>{ const r=cv.getBoundingClientRect(), v=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1), rc=new THREE.Raycaster(); rc.setFromCamera(v,cam); const h=rc.intersectObjects(picks)[0]; if(h){ const k=h.object.userData.k, slots=[...document.querySelectorAll('#rack .slot')], el2=slots.find(s=>(s.getAttribute('onclick')||'').includes("'"+k+"'")); if(el2) el2.click(); } });
+  S3={ draw(){ while(G.children.length) G.remove(G.children[0]); picks=[]; sg.fillStyle='#1D2586'; sg.fillRect(0,0,256,96); sg.fillStyle='#fff'; sg.font='bold 56px sans-serif'; sg.textAlign='center'; sg.fillText('PASILLO '+aisle,128,68); signT.needsUpdate=true;
+      for(let l=1;l<=LVL;l++) for(let c=1;c<=COLS;c++){ const k=aisle+'-'+String(c).padStart(2,'0')+'-'+l, p=layout[k], x=CX(c), y=LY(l);
+        const tag=lbl(String(c).padStart(2,'0')+'-'+l,'#ffffff','#1D2586',.62); tag.position.set(x,y-.02,.52); G.add(tag);
+        if(p){ const b=box(1.05,.8,.8,cart,x,y+.44,0,G); b.userData.k=k; picks.push(b); const n=lbl(p[2]+' '+String(p[0]).slice(4),'#fff8e1','#3e2f00',.95); n.position.set(x,y+.5,.41); G.add(n); }
+        else { const e=box(1.05,.8,.8,new THREE.MeshBasicMaterial({visible:false}),x,y+.44,0,G); e.userData.k=k; picks.push(e); } } },
+    screen(k){ const [a,c,l]=k.split('-'); const v=new THREE.Vector3(CX(+c),LY(+l)+.44,.4).project(cam), r=cv.getBoundingClientRect(); return {x:r.left+(v.x+1)/2*r.width,y:r.top+(1-v.y)/2*r.height}; }, ok:true };
+  const loop=()=>{ rn.render(sc,cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  }catch(e){ $('s3d').style.display='none'; } }
 function drawAisles(){ $('aisles').innerHTML=AIS.map(a=>`<button class="${a===aisle?'on':''}" onclick="aisle='${a}';drawAisles();drawRack()">Pasillo ${a}</button>`).join(''); }
-function drawRack(){ let h=''; for(let l=LVL;l>=1;l--){ for(let c=1;c<=COLS;c++){ const k=aisle+'-'+String(c).padStart(2,'0')+'-'+l; const p=layout[k]; h+=`<div class="slot ${p?'':'empty'}" onclick="pickLoc('${k}',this)"><span class="lbl2">${String(c).padStart(2,'0')}-${l}</span><span class="box">${p?p[2]:'·'}</span><span>${p?p[0].slice(4):''}</span></div>`; } } $('rack').innerHTML=h; }
+function drawRack(){ let h=''; for(let l=LVL;l>=1;l--){ for(let c=1;c<=COLS;c++){ const k=aisle+'-'+String(c).padStart(2,'0')+'-'+l; const p=layout[k]; h+=`<div class="slot ${p?'':'empty'}" onclick="pickLoc('${k}',this)"><span class="lbl2">${String(c).padStart(2,'0')}-${l}</span><span class="box">${p?p[2]:'·'}</span><span>${p?p[0].slice(4):''}</span></div>`; } } $('rack').innerHTML=h; if(!S3) s3init(); if(S3) S3.draw(); }
 function pickLoc(k,el){ if(k===cur.loc){ el.classList.add('good'); score+=5; correct++; toast('✓ Ubicación correcta',true); setTimeout(()=>{ $('step1').classList.add('hidden'); $('step2').classList.remove('hidden'); drawQty(); },350); }
   else { el.classList.add('badp'); score-=3; wrongLoc++; errors.push('Ubicación incorrecta'); const p=layout[k]; toast(p?`✗ Ese es ${p[1]} (${k}). Revisa pasillo-columna-nivel`:`✗ Ubicación ${k} vacía`); } $('sc').textContent=Math.max(0,score); }
 function drawQty(){ const opts=new Set([cur.qty]); while(opts.size<4) opts.add(Math.max(1,cur.qty+Math.floor(Math.random()*5)-2)); $('qtys').innerHTML=[...opts].sort((a,b)=>a-b).map(q=>`<button onclick="pickQty(${q})">${q}</button>`).join(''); }
@@ -154,6 +181,7 @@ function pickQty(q){ if(q===cur.qty){ score+=5; toast('✓ Cantidad correcta',tr
 function end(){ clearInterval(tick); finish(`<div><span>Líneas correctas</span><b>${correct}/21</b></div><div><span>Ubicaciones erradas</span><b>${wrongLoc}</b></div><div><span>Cantidades erradas</span><b>${wrongQty}</b></div><div><span>Pedidos fuera de tiempo</span><b>${timeouts}</b></div>`); }
 
 </script>
+<script src="js/three.min.js"></script>
 <script src="js/dicka-sync.js"></script>
 <script src="js/accesible.js"></script>
 <script src="js/perfil.js"></script>
