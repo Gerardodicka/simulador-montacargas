@@ -530,6 +530,11 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     const k = await q.evaluate(() => { aisle = cur.loc[0]; drawAisles(); drawRack(); document.getElementById('s3d').scrollIntoView({ block: 'center' }); return cur.loc; }); await q.waitForTimeout(300);
     const pt = await q.evaluate(k => S3.screen(k), k); const c0 = await q.evaluate(() => correct); await q.mouse.click(pt.x, pt.y); await q.waitForTimeout(400); const c1 = await q.evaluate(() => correct); await b3.close();
     ok('Surtido express 3D', 'tocar la caja correcta en el rack 3D cuenta como ubicación correcta', c1 > c0 && !e.length, k + ' ' + c0 + '→' + c1 + (e[0] || '')); }
+  // Turno Seguro: la escena 3D es opcional y solo se descarga al pedirla (ahorra datos con poca señal)
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); const req = []; q.on('request', r => req.push(r.url()));
+    await q.goto(url('juegos/turno-seguro.html')); await q.waitForTimeout(300); await q.evaluate(() => start()); await q.waitForTimeout(500); const antes = req.some(u => /three\.min/.test(u));
+    await q.click('#ver3dBtn'); await q.waitForTimeout(2500); const r = await q.evaluate(() => ({ ok: !!E3T && E3T.ok, link: !!document.querySelector('a[href="simulador-montacarga.html"]') })); await b3.close();
+    ok('Turno Seguro', '3D opcional: no descarga Three.js hasta pedirlo y enlaza al simulador 3D completo', !antes && r.ok && r.link && !e.length, JSON.stringify({ antes, ...r }) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

@@ -50,6 +50,9 @@ input.name{width:100%;padding:.8rem;border:2px solid #dfe3f0;border-radius:8px;f
 .stats b{color:var(--brillante)}
 .code{background:var(--marino);color:#fff;font-family:monospace;font-size:12px;padding:.8rem;border-radius:8px;word-break:break-all;margin-top:1rem}
 .err{background:#fff7e0;border-left:4px solid var(--amarillo);padding:.8rem 1rem;border-radius:8px;font-size:12.5px;margin-top:1rem;line-height:1.7}
+.v3dbox{position:relative;height:240px;border-radius:12px;overflow:hidden;margin:.4rem 0 .6rem;touch-action:none;background:#cfd6e4}.v3dbox canvas{display:block;width:100%;height:100%}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
+.ver3d{display:flex;gap:8px;flex-wrap:wrap;margin:.2rem 0 .6rem}.ver3d button,.ver3d a{flex:1;min-width:150px;padding:9px;border-radius:10px;border:2px solid #1D2586;background:#fff;color:#1D2586;font-weight:800;font-size:14px;cursor:pointer;text-align:center;text-decoration:none}
 </style>
 </head>
 <body>
@@ -72,6 +75,9 @@ input.name{width:100%;padding:.8rem;border:2px solid #dfe3f0;border-radius:8px;f
   </div>
 
   <div class="card hidden" id="game">
+    <div class="objbox"><div>🎯 <b>Objetivo:</b> reconocer las situaciones de riesgo al operar montacargas y saber qué hacer en cada una.</div><div>✅ <b>Qué debes hacer:</b> lee cada una de las 20 situaciones y elige la acción más segura. Esta versión es ligera para celular con poca señal.</div><div>📊 <b>Cómo se califica:</b> 10 puntos por respuesta correcta; apruebas con 160 de 200.</div></div>
+    <div class="ver3d"><button id="ver3dBtn" onclick="ver3d()">🎥 Ver la escena en 3D</button><a href="simulador-montacarga.html">🚜 Ir al simulador 3D completo</a></div>
+    <div class="v3dbox" id="v3dT" style="display:none"></div>
     <div class="prog"><span>Pregunta <span id="qn">1</span>/20</span><span id="sc">0 pts</span></div>
     <div class="bar"><div id="barfill" style="width:0"></div></div>
     <div style="text-align:center"><span class="tag" id="qtag">SITUACIÓN</span></div>
@@ -104,7 +110,16 @@ const Q=[{"icon": "🦺", "title": "Inicio de turno", "text": "Llegas al almacé
 let i=0,score=0,ans=[],who={},t0;
 function start(){ const n=document.getElementById('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;}
   who={name:n,puesto:document.getElementById('ppuesto').value,area:document.getElementById('parea').value,wh:document.getElementById('pwh').value}; t0=Date.now(); document.getElementById('intro').classList.add('hidden'); document.getElementById('game').classList.remove('hidden'); load(0); }
-function load(k){ i=k; const q=Q[k]; document.getElementById('qn').textContent=k+1; document.getElementById('qtag').textContent=TAG+' '+(k+1); document.getElementById('qicon').textContent=q.icon; document.getElementById('qtitle').textContent=q.title; document.getElementById('qtext').textContent=q.text;
+
+/* Escena 3D opcional: se descarga solo si el usuario la pide (para no gastar datos con poca señal) */
+let E3T=null;
+function ver3d(){ const box=document.getElementById('v3dT'), btn=document.getElementById('ver3dBtn'); if(box.style.display!=='none'){ box.style.display='none'; btn.textContent='🎥 Ver la escena en 3D'; return; }
+  box.style.display='block'; btn.textContent='Ocultar escena 3D'; if(E3T) return pinta3d();
+  const load=src=>new Promise((ok,no)=>{ const sc=document.createElement('script'); sc.src=src; sc.onload=ok; sc.onerror=no; document.head.appendChild(sc); });
+  btn.disabled=true; btn.textContent='Cargando 3D…';
+  (window.THREE?Promise.resolve():load('js/three.min.js')).then(()=>window.Escena3D?0:load('js/escena3d.js')).then(()=>{ E3T=Escena3D.montar(box,{escena:'anden'}); btn.disabled=false; btn.textContent='Ocultar escena 3D'; if(!E3T.ok){ box.style.display='none'; btn.textContent='3D no disponible en este equipo'; } else pinta3d(); }).catch(()=>{ btn.disabled=false; box.style.display='none'; btn.textContent='No se pudo cargar el 3D'; }); }
+function pinta3d(){ if(!E3T||!E3T.ok) return; const q=Q[i]||{}; const t=(q.title||'')+' '+(q.text||''); E3T.setTarima({cajas:/carga|tarima|estib/i.test(t)?9:6, dano:/dañ|rot|derram|falla|fuga/i.test(t), frio:/fr[ií]o|refriger/i.test(t), etiqueta:'SIT '+(i+1)}); }
+function load(k){ i=k; const q=Q[k]; document.getElementById('qn').textContent=k+1; document.getElementById('qtag').textContent=TAG+' '+(k+1); document.getElementById('qicon').textContent=q.icon; document.getElementById('qtitle').textContent=q.title; document.getElementById('qtext').textContent=q.text; if(E3T) pinta3d();
   document.getElementById('barfill').style.width=((k+1)/Q.length*100)+'%'; document.getElementById('fb').className='fb'; document.getElementById('nextBtn').disabled=true;
   document.getElementById('opts').innerHTML=''; q.opts.forEach((o,j)=>{const b=document.createElement('button');b.className='opt';b.textContent=o.t;b.onclick=()=>pick(j);opts.appendChild(b);}); }
 function pick(j){ const q=Q[i],o=q.opts[j]; [...opts.children].forEach((b,k)=>{b.disabled=true; if(k===j) b.classList.add(o.ok?'ok':'bad'); else if(q.opts[k].ok) b.classList.add('ok');});
