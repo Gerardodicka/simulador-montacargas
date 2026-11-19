@@ -503,6 +503,11 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
   // Cada juego 3D explica su objetivo, qué hacer y cómo se califica (recuadro fijo arriba de la escena)
   { const fs = require('fs'); const files = fs.readdirSync('juegos').filter(f => f.endsWith('.html') && /class="objbox"/.test(fs.readFileSync('juegos/' + f, 'utf8'))); const bad = files.filter(f => { const s = fs.readFileSync('juegos/' + f, 'utf8'); return !/Objetivo:/.test(s) || !/Qué debes hacer:/.test(s) || !/Cómo se califica:/.test(s); });
     ok('Claridad', files.length + ' juegos 3D muestran objetivo, qué hacer y cómo se califica', files.length >= 16 && !bad.length, bad.join(', ')); }
+  // Cadena de frío en 3D: cámara fría con la tarima del lote y el registrador mostrando la gráfica
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/cadena-frio.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Frio 3D'); await q.click('#startBtn'); await q.waitForTimeout(1500);
+    const r = await q.evaluate(() => ({ ok: E3.ok, pantalla: !!E3._pant, canvas: !!document.querySelector('#v3dF canvas'), obj: !!document.querySelector('.objbox') })); await b3.close();
+    ok('Cadena de frío 3D', 'cámara fría 3D con registrador que muestra la gráfica y objetivo visible', r.ok && r.pantalla && r.canvas && r.obj && !e.length, JSON.stringify(r) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

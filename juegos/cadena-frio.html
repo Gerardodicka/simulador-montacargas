@@ -47,6 +47,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .acts{display:grid;gap:8px;margin-top:.6rem}.acts button{padding:.85rem;border:2px solid #dfe3f0;background:#fff;border-radius:10px;font-weight:700;cursor:pointer;text-align:left;font-size:13.5px}.acts button:hover{border-color:var(--brillante)}.acts button:disabled{opacity:.6;cursor:default}
 .why{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.7rem 1rem;border-radius:8px;font-size:13px;margin-top:.6rem;line-height:1.6}
 .rules{font-size:12.5px;line-height:1.7}
+.v3dbox{position:relative;height:320px;border-radius:12px;overflow:hidden;margin:.4rem 0 .6rem;touch-action:none;background:#d6e6f2}.v3dbox canvas{display:block;width:100%;height:100%}.v3dhint{position:absolute;left:8px;top:8px;right:8px;background:rgba(1,17,49,.78);color:#fff;font-size:13px;padding:4px 8px;border-radius:8px;pointer-events:none}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
 </style>
 </head>
 <body>
@@ -68,7 +70,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   <div class="card hidden" id="game">
     <div class="topbar"><span>Lote <span id="ln">1</span>/8</span><span>⭐ <span id="sc">0</span></span></div>
     <div class="bar"><div id="bar" style="width:0"></div></div>
-    <div class="lot" id="lot"></div>
+    <div class="objbox"><div>🎯 <b>Objetivo:</b> proteger la calidad del producto refrigerado y congelado leyendo el registrador de temperatura.</div><div>✅ <b>Qué debes hacer:</b> en cada uno de los 8 lotes revisa la gráfica de 12 horas (en el registrador de la cámara fría) y decide: <b>liberar</b> si siempre estuvo en rango, <b>retener y escalar a Calidad</b> si hubo una salida corta o faltan datos, o <b>rechazar</b> si la excursión fue larga o extrema.</div><div>📊 <b>Cómo se califica:</b> cada lote correcto vale 12.5 puntos; apruebas con 75 de 100. Al responder te explicamos por qué.</div></div><div class="lot" id="lot"></div><div class="v3dbox" id="v3dF"><div class="v3dhint">Cámara fría · el registrador muestra la temperatura del lote · arrastra para girar</div></div>
     <canvas class="chart" id="chart" width="760" height="300"></canvas>
     <div class="acts" id="acts"></div>
     <div id="fb"></div>
@@ -107,7 +109,7 @@ const CASOS=[
   {tipo:'cong',ok:'rechazar',gen:()=>exc(serie(-20,1),10,6,-9.5),why:'El congelado subió arriba de −12 °C por 1.5 horas: posible descongelación y recongelación. Se rechaza.'}];
 function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now();
   let fi=0, ci=0; L=CASOS.slice().sort(()=>Math.random()-.5).map(c=>{ const p=c.tipo==='frio'?PROD.frio[fi++%4]:PROD.cong[ci++%2]; return Object.assign({},c,{prod:p[0],sku:p[1],data:c.gen(),lote:'L'+(3000+Math.floor(Math.random()*900)),caja:'TR-'+(100+Math.floor(Math.random()*800))}); });
-  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); show(); }
+  $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); if(!window.E3){ window.E3=window.Escena3D?Escena3D.montar($('v3dF'),{escena:'camara'}):{ok:false}; if(!E3.ok) $('v3dF').style.display='none'; } show(); }
 function draw(c){ const cv=$('chart'); if(innerWidth<520){ cv.width=420; cv.height=280; } else { cv.width=760; cv.height=300; } const g=cv.getContext('2d'), W=cv.width, H=cv.height, P={l:46,r:12,t:16,b:30}, lo=c.tipo==='frio'?-3:-24, hi=c.tipo==='frio'?15:-6, X=i=>P.l+i*(W-P.l-P.r)/47, Y=v=>P.t+(hi-v)*(H-P.t-P.b)/(hi-lo);
   g.clearRect(0,0,W,H); g.fillStyle='#e9f7ef'; const a=c.tipo==='frio'?[8,2]:[-18,hi>-18?-24:-24]; if(c.tipo==='frio') g.fillRect(P.l,Y(8),W-P.l-P.r,Y(2)-Y(8)); else g.fillRect(P.l,Y(-18),W-P.l-P.r,Y(lo)-Y(-18));
   g.strokeStyle='#e3e6f2'; g.fillStyle='#6b7390'; g.font='12px Arial'; for(let v=Math.ceil(lo/3)*3;v<=hi;v+=3){ g.beginPath(); g.moveTo(P.l,Y(v)); g.lineTo(W-P.r,Y(v)); g.stroke(); g.fillText(v+'°',8,Y(v)+4); }
@@ -118,8 +120,8 @@ function draw(c){ const cv=$('chart'); if(innerWidth<520){ cv.width=420; cv.heig
   const gap=c.data.findIndex(v=>v===null); if(gap>=0){ g.fillStyle='rgba(245,184,0,.25)'; const e=c.data.lastIndexOf(null); g.fillRect(X(gap),P.t,X(e)-X(gap),H-P.t-P.b); g.fillStyle='#8a6d00'; g.fillText('sin datos',X(gap)+4,P.t+14); } }
 function show(){ const c=L[idx]; $('ln').textContent=idx+1; $('bar').style.width=(idx/N*100)+'%'; $('fb').innerHTML='';
   $('lot').innerHTML=`<span class="k">LOTE ${idx+1} · REGISTRADOR DE TEMPERATURA (12 h, cada 15 min)</span><br><b>${c.prod}</b> · ${c.sku} · Lote ${c.lote} · Tráiler ${c.caja}<br>${c.tipo==='frio'?'❄️ Refrigerado · rango 2 a 8 °C':'🧊 Congelado · −18 °C o menos'}`;
-  draw(c); $('acts').innerHTML=[['liberar','✅ Liberar el lote'],['retener','🟡 Retener y escalar a Calidad'],['rechazar','❌ Rechazar el lote']].map(([k,t])=>`<button data-d="${k}" onclick="decide('${k}')">${t}</button>`).join(''); }
-function decide(k){ const c=L[idx], ok=k===c.ok; if(ok){ score+=12.5; okN++; toast('✓ Decisión correcta',true); } else { errors.push(c.prod+': '+({liberar:'liberó',retener:'retuvo',rechazar:'rechazó'}[k])+' cuando debía '+({liberar:'liberar',retener:'retener',rechazar:'rechazar'}[c.ok])); toast('✗ No era lo correcto'); } $('sc').textContent=Math.round(score);
+  draw(c); if(window.E3&&E3.ok){ E3.setTarima({cajas:6,frio:true,etiqueta:c.lote,etiquetaColor:c.tipo==='frio'?'#e3f2fd':'#b3e5fc'}); E3.setPantalla($('chart'),c.tipo==='frio'?'REGISTRADOR · REFRIGERADO 2–8 °C':'REGISTRADOR · CONGELADO ≤ −18 °C'); } $('acts').innerHTML=[['liberar','✅ Liberar el lote'],['retener','🟡 Retener y escalar a Calidad'],['rechazar','❌ Rechazar el lote']].map(([k,t])=>`<button data-d="${k}" onclick="decide('${k}')">${t}</button>`).join(''); }
+function decide(k){ const c=L[idx], ok=k===c.ok; if(window.E3&&E3.ok) E3.marcar(ok); if(ok){ score+=12.5; okN++; toast('✓ Decisión correcta',true); } else { errors.push(c.prod+': '+({liberar:'liberó',retener:'retuvo',rechazar:'rechazó'}[k])+' cuando debía '+({liberar:'liberar',retener:'retener',rechazar:'rechazar'}[c.ok])); toast('✗ No era lo correcto'); } $('sc').textContent=Math.round(score);
   document.querySelectorAll('#acts button').forEach(b=>b.disabled=true); $('fb').innerHTML=`<div class="why"><b>${ok?'✅ Correcto.':'❌ Lo correcto era: '+{liberar:'liberar',retener:'retener y escalar',rechazar:'rechazar'}[c.ok]+'.'}</b> ${c.why}</div><button class="btn" id="nextBtn" onclick="next()">SIGUIENTE →</button>`; }
 function next(){ idx++; if(idx<N) show(); else finish(); }
 function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
@@ -134,6 +136,8 @@ function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombr
 function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
 function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
 </script>
+<script src="js/three.min.js"></script>
+<script src="js/escena3d.js"></script>
 <script src="js/dicka-sync.js"></script>
 <script src="js/accesible.js"></script>
 <script src="js/perfil.js"></script>
