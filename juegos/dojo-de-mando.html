@@ -818,6 +818,8 @@ function finish() { if (!FLAGS.epi) { FLAGS.epi = true; const E = epilogue(); ap
   const PLAN = ['Separar a la persona de la conducta al dar retroalimentación', 'Empezar las conversaciones difíciles en privado y con hechos', 'Cerrar cada acuerdo con responsable y fecha de seguimiento', 'Defender las decisiones ante mi jefe con datos', 'Escuchar a quien teme hablar antes de decidir'];
   const secs = Math.round((Date.now() - t0) / 1000), date = new Date(); const base = `REG|${GAME_ID}|${who.name}${who.num ? " #" + who.num : ""}|${who.puesto}|${LV.diff}|${who.wh}|${score}|100|${ok ? 'APROBADO' : 'NO APROBADO'}|${path}|${date.toISOString().slice(0, 16)}`, REG = base + '|' + chk(base + 'DICKA');
   window.REPORT = { score, ok, path, REG, cs, K: { ...K }, secs }; savePlatica('El mejor operador', score); saveRecord('El mejor operador', score, ok, Object.fromEntries(Object.keys(OBJ).map(k => [k, !!OBJ[k]])), secs);
+  // Guarda el avance para que la tarjeta de la lista muestre "Practicada · mejor X/100" (igual que las prácticas cortas)
+  try { const pgM = progGet(), keyM = LV.key + ':mejor'; pgM[keyM] = Math.max(pgM[keyM] || 0, score); localStorage.setItem('dicka_dojo_prog', JSON.stringify(pgM)); } catch (e) { }
   $('sim').classList.add('hidden'); const r = $('report'); r.classList.remove('hidden');
   r.innerHTML = `<div class="brand"><small>DEBRIEF CON TU MENTOR · 5 MIN</small><h1>Resultado de la sesión</h1></div>
   <div class="card"><div class="hd"><small>${who.puesto.toUpperCase()} · NIVEL ${LV.diff.toUpperCase()} · ${who.name}</small><h2>El mejor operador · ruta ${path}</h2></div><div class="bd">
