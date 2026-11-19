@@ -2,7 +2,7 @@
 
 > **Para quien lea esto (persona o IA):** este documento describe a detalle la plataforma de simuladores de capacitación de **DICKA Logistics**. Úsalo como contexto para proponer mejoras concretas. Al final hay una sección **"Qué te pido"** con el formato de respuesta esperado.
 >
-> Versión documentada: **v23.3** (noviembre 2026) · Sitio: `simuladordickalogistics.netlify.app` · Repositorio: `Gerardodicka/simulador-montacargas`.
+> Versión documentada: **v23.4** · Incluye 19 capturas en `docs/capturas/` (noviembre 2026) · Sitio: `simuladordickalogistics.netlify.app` · Repositorio: `Gerardodicka/simulador-montacargas`.
 
 ---
 
@@ -66,6 +66,75 @@ docs/mejoras.md               ← Cola de mejoras + bitácora con resultado de p
 4. **Juega** → resultado con puntaje, aprobado, código `REG|...|hash`, botón WhatsApp y copiar.
 5. El resultado se guarda en `localStorage` (`dicka_console_results`) y se **sincroniza** con la base compartida.
 6. Botón fijo **"← Inicio"** en todos los juegos para regresar al portal.
+
+---
+
+## 3-bis. Pantallas del simulador
+
+> Capturas reales de la versión v23.4 (PC 1280 px salvo donde dice celular). Si las pegas en otro chat, súbelas junto con este documento o abre el enlace del repositorio.
+
+### Portal
+**1. Identificación única al entrar** — se pide una sola vez nombre, número, puesto y almacén.
+![Identificación](capturas/01-portal-identificacion.jpg)
+
+**2. Catálogo ordenado por la ruta del puesto** — etiqueta «TU RUTA · n», arriba a la derecha quién está jugando.
+![Catálogo por puesto](capturas/02-catalogo-ruta-por-puesto.jpg)
+
+### Dashboard de Capacitación (RH)
+**3. Resumen** — aprobación por curso, evolución, por almacén y puesto.
+![Dashboard resumen](capturas/03-dashboard-resumen.jpg)
+
+**4. 👥 Perfiles** — rutas por puesto y avance de cada colaborador.
+![Perfiles RH](capturas/04-dashboard-perfiles-rh.jpg)
+
+### Simulador de Montacarga
+**5. Registro del operador** (con nivel de práctica y diagnóstico).
+![Registro montacargas](capturas/05-montacargas-registro.jpg)
+
+**6. Elegir montacargas de la flota Raymond.**
+![Flota Raymond](capturas/06-montacargas-flota-raymond.jpg)
+
+### Recorridos 3D (15 juegos con el mismo motor)
+**8. Guía «¿Cómo se juega?»** al iniciar.
+![Guía](capturas/08-recorrido-guia-como-se-juega.jpg)
+
+**9. Escena con objetivo arriba y panel de opciones** (cada opción explica cuándo aplica).
+![Escena y opciones](capturas/09-recorrido-escena-y-opciones.jpg)
+
+**10. Retroalimentación** — lo correcto, por qué y por qué no la respuesta elegida.
+![Retroalimentación](capturas/10-recorrido-retroalimentacion.jpg)
+
+**11. Vista en celular (390 px).**
+![Celular](capturas/11-recorrido-celular.jpg)
+
+### Simuladores de proceso en 3D
+**12. Recepción y Decantado** — tarima 3D con etiqueta; se escanea tocándola.
+![Recepción](capturas/12-recepcion-3d.jpg)
+
+**13. Patio y Andenes** — tráileres en patio (verde con cita, rojo sin cita) y andenes.
+![Patio](capturas/13-patio-andenes-3d.jpg)
+
+**14. Métodos de Surtido** — ruta del lote por pasillos en 3D.
+![Métodos de surtido](capturas/14-metodos-surtido-ruta-3d.jpg)
+
+**15. Cadena de Frío** — cámara fría con registrador de temperatura.
+![Cadena de frío](capturas/15-cadena-frio-3d.jpg)
+
+**16. Pantalla de resultado** (puntaje, aprobado, código de verificación, WhatsApp).
+![Resultado](capturas/16-resultado-final.jpg)
+
+### Dojo de Mando (liderazgo)
+**17. Registro del participante.**
+![Dojo registro](capturas/17-dojo-registro.jpg)
+
+**18. Prueba de micrófono** antes de practicar.
+![Prueba de micrófono](capturas/18-dojo-prueba-microfono.jpg)
+
+**19. Elegir situación** (práctica rápida, crear situación, Mi avance).
+![Situaciones](capturas/19-dojo-situaciones.jpg)
+
+**20. Escena 3D con personaje que habla** — objetivo de la plática y micrófono.
+![Escena Dojo](capturas/20-dojo-escena.jpg)
 
 ---
 
