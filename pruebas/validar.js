@@ -547,6 +547,10 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await q.selectOption('#dOT', '1'); await q.evaluate(() => month()); const t1 = await q.textContent('#gbub');
     await q.evaluate(() => { month(); month(); month(); }); await q.waitForTimeout(300); const r = await q.evaluate(() => ({ ok: !!G3, enEnd: !!document.querySelector('#end #ger'), fin: document.getElementById('gbub').textContent })); await b3.close();
     ok('Tablero del Gerente 3D', 'el director 3D presenta metas, comenta cada mes y el trimestre', r.ok && /OTIF 97/.test(t0) && /OTIF de/.test(t1) && /tiempo extra/.test(t1) && r.enEnd && /trimestre/.test(r.fin) && !e.length, JSON.stringify({ t0: t0.slice(0, 30), t1: t1.slice(0, 60), ...r }).slice(0, 220) + (e[0] || '')); }
+  // Escena 3D compartida: el muñeco básico se cambia por el operario 3D DICKA (casco y chaleco)
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 1280, height: 900 } }); const e = []; q.on('pageerror', x => e.push(x.message)); const req = []; q.on('requestfinished', r => req.push(r.url()));
+    await q.goto(url('juegos/cadena-frio.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Avatar'); await q.evaluate(() => start()); await q.waitForTimeout(5000); const r = { glb: req.some(u => /operario_lod\.glb/.test(u)), loader: await q.evaluate(() => !!THREE.GLTFLoader && !!window.gltfPrepareBones) }; await b3.close();
+    ok('Escena 3D compartida', 'usa el avatar operario 3D en lugar del muñeco básico', r.glb && r.loader && !e.length, JSON.stringify(r) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
