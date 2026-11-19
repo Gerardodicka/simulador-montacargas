@@ -51,6 +51,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .vv{display:flex;flex-wrap:wrap;gap:6px;margin:.3rem 0}.vv label{border:2px solid #e1e5f2;border-radius:8px;padding:6px 9px;font-size:13px;cursor:pointer}.vv input{margin-right:4px}
 .acts{display:grid;gap:8px;margin-top:.6rem}.acts button{padding:.85rem;border:2px solid #dfe3f0;background:#fff;border-radius:10px;font-weight:700;cursor:pointer;text-align:left;font-size:13.5px}.acts button:hover{border-color:var(--brillante)}
 .why{background:#f0f4f8;border-left:4px solid var(--brillante);padding:.7rem 1rem;border-radius:8px;font-size:13px;margin-top:.6rem;line-height:1.6}
+.t3d{position:relative;height:340px;border-radius:12px;overflow:hidden;margin:.4rem 0 .6rem;touch-action:none;background:#dfe5ee}.t3d canvas{display:block;width:100%;height:100%}.t3hint{position:absolute;left:8px;top:8px;right:8px;background:rgba(1,17,49,.78);color:#fff;font-size:13px;padding:5px 9px;border-radius:8px;pointer-events:none}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
 </style>
 </head>
 <body>
@@ -72,7 +74,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   <div class="card hidden" id="game">
     <div class="topbar"><span>Unidad <span id="ln">1</span>/3</span><span>⭐ <span id="sc">0</span></span></div>
     <div class="bar"><div id="bar" style="width:0"></div></div>
-    <div id="stage"></div>
+    <div class="objbox"><div>🎯 <b>Objetivo:</b> evitar contrabando y robos revisando cada tráiler en sus 17 puntos (programas OEA/C-TPAT) antes de cargar o recibir.</div><div>✅ <b>Qué debes hacer:</b> en cada una de las 3 unidades toca en el tráiler 3D (o en la lista) los puntos donde veas algo raro, revisa el sello con VVTT y decide si la aceptas o la detienes.</div><div>📊 <b>Cómo se califica:</b> hasta 33 puntos por unidad (anomalías bien detectadas, VVTT completo y decisión correcta); apruebas con 75 de 100.</div></div><div class="t3d" id="t3d"><div class="t3hint">Tráiler en 3D · toca los números para marcar una anomalía · arrastra para girar</div></div><div id="stage"></div>
   </div>
   <div class="card hidden" id="end">
     <div class="big" id="eicon">🏆</div><h2 id="etitle"></h2>
@@ -101,19 +103,48 @@ function build(){ const sello=()=>'DK'+(100000+Math.floor(Math.random()*899999))
     {eco:'ECO-'+(300+Math.floor(Math.random()*600)),tipo:'Embarque · exportación',anom:[13,15],seal:{doc:C,fis:C,vvtt:'ok'},dec:'detener',why:'La pared frontal mide menos por dentro (posible compartimiento oculto) y hay tablones nuevos en el piso: aunque el sello esté bien, la unidad se detiene y se reporta a Seguridad.'}].sort(()=>Math.random()-.5); }
 function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); U=build();
   $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); show(); }
+
+/* ===== Tráiler 3D con los 17 puntos tocables ===== */
+let T3=null;
+const P17POS=[[-7.3,.9,0],[-6.7,1.9,0],[-5.5,.55,1.25],[-5.6,1.7,.5],[-4.6,.75,1.3],[-5.4,3.3,0],[-3.8,.8,-1.3],[-3.2,.45,0],[-3.0,1.25,0],[-4.2,3.4,-1.1],[8.2,2.3,0],[2.5,2.3,1.35],[2.5,2.3,-1.35],[-1.6,2.6,0],[2.5,4.05,0],[2.5,1.05,.6],[-1.8,3.6,0]];
+function t3init(){ if(T3||!window.THREE) return; try{ const el=$('t3d'), rn=new THREE.WebGLRenderer({antialias:true}); rn.setPixelRatio(Math.min(2,devicePixelRatio)); rn.shadowMap.enabled=true; el.insertBefore(rn.domElement,el.firstChild);
+  const sc=new THREE.Scene(); sc.background=new THREE.Color('#dfe5ee'); const cam=new THREE.PerspectiveCamera(45,1,.1,200); sc.add(new THREE.HemisphereLight('#fff','#8a8f99',.85)); const dl=new THREE.DirectionalLight('#fff4e0',.8); dl.position.set(6,14,10); dl.castShadow=true; Object.assign(dl.shadow.camera,{left:-14,right:14,top:10,bottom:-10}); dl.shadow.mapSize.set(1024,1024); sc.add(dl);
+  const TL=new THREE.TextureLoader(), tx=(f,x,y)=>{ const t=TL.load('assets/textures/'+f); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(x,y); return t; };
+  const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6},o||{})), box=(w,h,d,m,x,y,z)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof m==='string'?M(m):m); b.position.set(x,y,z); b.castShadow=b.receiveShadow=true; sc.add(b); return b; }, cyl=(r,h,c,x,y,z,rx,rz)=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,18),M(c)); m.position.set(x,y,z); if(rx) m.rotation.x=rx; if(rz) m.rotation.z=rz; m.castShadow=true; sc.add(m); return m; };
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(40,22),new THREE.MeshStandardMaterial({map:tx('piso.jpg',8,5),roughness:.8})); fl.rotation.x=-Math.PI/2; fl.receiveShadow=true; sc.add(fl);
+  // tractor
+  box(2.6,2.2,2.5,'#c62828',-6.1,2.0,0); box(1.2,1.2,2.4,'#b71c1c',-7.4,1.4,0); box(.2,.5,2.6,'#9e9e9e',-8.05,.75,0); box(.05,.7,1.6,'#90caf9',-7.38,2.55,0); box(4.2,.3,1.2,'#424242',-4.2,.85,0);
+  [[-7,1.3],[-7,-1.3],[-3.6,1.3],[-3.6,-1.3],[-2.6,1.3],[-2.6,-1.3]].forEach(([x,z])=>cyl(.5,.4,'#111',x,.5,z,Math.PI/2));
+  cyl(.35,1.3,'#bdbdbd',-4.6,.75,1.3,0,Math.PI/2); cyl(.22,1,'#78909c',-3.8,.8,-1.3,0,Math.PI/2); cyl(.08,2.6,'#9e9e9e',-4.2,3.4,-1.1); box(1.4,.15,1.4,'#212121',-3.0,1.1,0);
+  // remolque
+  const caja=new THREE.MeshStandardMaterial({map:tx('lamina.jpg',5,1),color:'#ffffff',roughness:.6}); box(10,2.9,2.6,caja,2.8,2.6,0); box(.3,1.2,2.2,'#90a4ae',-1.8,3.5,0); box(10,.2,2.6,'#616161',2.8,1.1,0);
+  [[6.6,1.3],[6.6,-1.3],[7.7,1.3],[7.7,-1.3]].forEach(([x,z])=>cyl(.5,.4,'#111',x,.5,z,Math.PI/2)); box(.08,2.7,2.5,'#cfd8dc',7.82,2.6,0);
+  const lc=document.createElement('canvas'); lc.width=512; lc.height=96; const lg=lc.getContext('2d'); lg.fillStyle='#1D2586'; lg.fillRect(0,0,512,96); lg.fillStyle='#fff'; lg.font='bold 54px sans-serif'; lg.textAlign='center'; lg.fillText('DICKA LOGISTICS',256,66);
+  [1.32,-1.32].forEach(z=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(5,.95),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(lc)})); m.position.set(2.8,2.9,z); if(z<0) m.rotation.y=Math.PI; sc.add(m); });
+  const G=new THREE.Group(); sc.add(G); let picks=[];
+  const dot=(n,col)=>{ const c=document.createElement('canvas'); c.width=96; c.height=96; const g=c.getContext('2d'); g.fillStyle=col; g.beginPath(); g.arc(48,48,44,0,7); g.fill(); g.lineWidth=7; g.strokeStyle='#fff'; g.stroke(); g.fillStyle='#fff'; g.font='bold 44px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(n,48,52); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false})); sp.scale.set(.8,.8,1); return sp; };
+  let th=.55, ph=1.0, rad=20, drag=null, moved=0; const tgt=new THREE.Vector3(0,1.8,0); const upd=()=>{ ph=Math.max(.35,Math.min(1.45,ph)); rad=Math.max(7,Math.min(36,rad)); cam.position.set(tgt.x+rad*Math.sin(th)*Math.sin(ph),tgt.y+rad*Math.cos(ph),tgt.z+rad*Math.cos(th)*Math.sin(ph)); cam.lookAt(tgt); };
+  const fit=()=>{ const w=el.clientWidth,h=el.clientHeight; rn.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); if(!fit.d){ rad=w/h<1?21:13; fit.d=1; } upd(); }; addEventListener('resize',fit); fit();
+  const cv=rn.domElement; cv.addEventListener('pointerdown',e=>{ drag={x:e.clientX,y:e.clientY}; moved=0; cv.setPointerCapture(e.pointerId); }); cv.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-drag.x,dy=e.clientY-drag.y; moved+=Math.abs(dx)+Math.abs(dy); th-=dx*.007; ph-=dy*.005; drag={x:e.clientX,y:e.clientY}; upd(); });
+  cv.addEventListener('pointerup',e=>{ if(moved<8){ const r=cv.getBoundingClientRect(), v=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1), rc=new THREE.Raycaster(); rc.setFromCamera(v,cam); const h=rc.intersectObjects(picks)[0]; if(h){ const i=h.object.userData.i, b=document.querySelector(`.pt[data-p="${i}"]`); if(b&&!b.disabled) b.click(); } } drag=null; });
+  cv.addEventListener('wheel',e=>{ e.preventDefault(); rad*=e.deltaY>0?1.1:.9; upd(); },{passive:false});
+  T3={ draw(){ while(G.children.length) G.remove(G.children[0]); picks=[]; P17POS.forEach((p,i)=>{ const b=document.querySelector(`.pt[data-p="${i}"]`); const col=b&&b.classList.contains('hit')?'#2e7d32':b&&b.classList.contains('miss')?'#e8a400':SEL.has(i)?'#d32f2f':'#2238d3'; const sp=dot(i+1,col); sp.position.set(p[0],p[1],p[2]); sp.userData.i=i; G.add(sp); picks.push(sp); }); },
+    screen(i){ const p=P17POS[i], v=new THREE.Vector3(p[0],p[1],p[2]).project(cam), r=cv.getBoundingClientRect(); return {x:r.left+(v.x+1)/2*r.width,y:r.top+(1-v.y)/2*r.height}; }, ok:true };
+  const loop=()=>{ rn.render(sc,cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  }catch(e){ $('t3d').style.display='none'; } }
 function show(){ const u=U[idx]; SEL=new Set(); $('ln').textContent=idx+1; $('bar').style.width=(idx/3*100)+'%';
   $('stage').innerHTML=`<div class="unit"><span class="k">UNIDAD ${idx+1} DE 3</span><br><b>🚛 ${u.eco}</b> · ${u.tipo}</div>
   <div class="step">1 · TOCA LOS PUNTOS CON ANOMALÍA</div><div class="pts">${P17.map((p,i)=>`<button class="pt" data-p="${i}" onclick="tog(${i},this)"><b>${i+1}. ${p[0]}</b><br>${u.anom.includes(i)?p[2]:p[1]}</button>`).join('')}</div>
   <div class="step">2 · SELLO DE ALTA SEGURIDAD (VVTT)</div><div class="seal"><div>Número en la remisión<br><b>${u.seal.doc}</b></div><div>Número en el sello<br><b>${u.seal.fis}</b></div></div>
   <div class="vv">${['Ver','Verificar número','Tirar (tug)','Torcer (twist)'].map((t,i)=>`<label><input type="checkbox" data-v="${i}" onchange="vv()">${t}</label>`).join('')}</div><div id="vvRes" style="font-size:13px;color:#555"></div>
-  <div class="step">3 · DECISIÓN</div><div class="acts"><button data-d="aceptar" onclick="decide('aceptar')">✅ Aceptar la unidad y registrar el sello</button><button data-d="detener" onclick="decide('detener')">🛑 Detener la unidad y reportar a Seguridad</button></div><div id="fb"></div>`; }
-function tog(i,el){ if(SEL.has(i)){ SEL.delete(i); el.classList.remove('sel'); } else { SEL.add(i); el.classList.add('sel'); } }
+  <div class="step">3 · DECISIÓN</div><div class="acts"><button data-d="aceptar" onclick="decide('aceptar')">✅ Aceptar la unidad y registrar el sello</button><button data-d="detener" onclick="decide('detener')">🛑 Detener la unidad y reportar a Seguridad</button></div><div id="fb"></div>`; if(!T3) t3init(); if(T3) T3.draw(); }
+function tog(i,el){ if(SEL.has(i)){ SEL.delete(i); el.classList.remove('sel'); } else { SEL.add(i); el.classList.add('sel'); } if(T3) T3.draw(); }
 function vv(){ const u=U[idx], c=[...document.querySelectorAll('.vv input')].filter(x=>x.checked).map(x=>+x.dataset.v); const m=[]; if(c.includes(1)) m.push(u.seal.doc===u.seal.fis?'✓ El número coincide':'⚠ El número NO coincide'); if(c.includes(2)||c.includes(3)) m.push(u.seal.vvtt==='ok'?'✓ El sello no se mueve ni gira':'⚠ El sello gira al torcerlo'); $('vvRes').textContent=m.join(' · '); }
 function decide(d){ const u=U[idx], vvAll=[...document.querySelectorAll('.vv input')].every(x=>x.checked); let pts=0, tp=0, fp=0, fn=0;
   SEL.forEach(i=>u.anom.includes(i)?tp++:fp++); u.anom.forEach(i=>{ if(!SEL.has(i)) fn++; }); det.tp+=tp; det.fp+=fp; det.fn+=fn;
   pts+=Math.max(0,13-fp*4-fn*6); if(vvAll) pts+=5; else errors.push('No completó VVTT del sello en '+u.eco); if(d===u.dec){ pts+=15; decOk++; } else errors.push(d==='aceptar'?'Aceptó una unidad que debía detener ('+u.eco+')':'Detuvo una unidad sin motivo ('+u.eco+')');
   if(fp) errors.push('Marcó '+fp+' punto(s) normales como anomalía'); if(fn) errors.push('No detectó '+fn+' anomalía(s) en '+u.eco);
-  score+=Math.min(33.34,pts); $('sc').textContent=Math.round(score); document.querySelectorAll('.pt').forEach(b=>{ const i=+b.dataset.p; if(u.anom.includes(i)) b.classList.add(SEL.has(i)?'hit':'miss'); b.disabled=true; }); document.querySelectorAll('.acts button,.vv input').forEach(b=>b.disabled=true);
+  score+=Math.min(33.34,pts); $('sc').textContent=Math.round(score); document.querySelectorAll('.pt').forEach(b=>{ const i=+b.dataset.p; if(u.anom.includes(i)) b.classList.add(SEL.has(i)?'hit':'miss'); b.disabled=true; }); document.querySelectorAll('.acts button,.vv input').forEach(b=>b.disabled=true); if(T3) T3.draw();
   $('fb').innerHTML=`<div class="why"><b>${d===u.dec?'✅ Decisión correcta.':'❌ Lo correcto era: '+(u.dec==='aceptar'?'aceptar.':'detener y reportar.')}</b> ${u.why}</div><button class="btn" id="nextBtn" onclick="next()">SIGUIENTE →</button>`; $('fb').scrollIntoView({block:'nearest'}); }
 function next(){ idx++; if(idx<3) show(); else finish(); }
 function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
@@ -128,6 +159,7 @@ function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombr
 function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
 function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
 </script>
+<script src="js/three.min.js"></script>
 <script src="js/dicka-sync.js"></script>
 <script src="js/accesible.js"></script>
 <script src="js/perfil.js"></script>
