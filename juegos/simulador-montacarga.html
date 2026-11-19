@@ -2394,7 +2394,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v24.7 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v24.8 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3113,7 +3113,8 @@
                 'Con el equipo DETENIDO sube las horquillas con ' + '__up__' + ' hasta que la tarima quede un poco arriba de la viga (__lvl__, mira la altura en pantalla).',
                 'Extiende el reach con ' + '__reach__' + ' (o avanza muy lento) hasta meter la tarima sobre la viga.',
                 'Baja suavemente con ' + '__down__' + ' hasta que la tarima se apoye y suelta con ' + '__grab__' + '.',
-                'Retrae, baja las horquillas a ras de piso y sal del pasillo en reversa, mirando hacia atrás.'], fail: 'Reprueba: golpear el rack, dejar caer la carga o colocarla fuera de la caja verde. Nunca subas la carga con el equipo en movimiento.' },
+                'Retrae, baja las horquillas a ras de piso y sal del pasillo en reversa, mirando hacia atrás.',
+                'Con montacargas RETRÁCTIL (Reach / Double Reach) la ubicación está en ALTURA (nivel 4 o 5, de 6 a 8 m) y el pasillo es angosto: avanza siempre con la carga abajo, gira solo con el mástil abajo y retraído, sube únicamente detenido y centrado, y extiende el reach solo cuando la tarima ya pasó la viga.'], fail: 'Reprueba: golpear el rack, dejar caer la carga o colocarla fuera de la caja verde. Nunca subas la carga con el equipo en movimiento ni gires con la carga elevada en el pasillo angosto.' },
             rack3: { goal: 'Bajar una tarima de un nivel alto del rack y dejarla en RECEPCIÓN (zona verde).', steps: [
                 'Ve al pasillo y ubicación indicados (columna amarilla y código en pantalla).',
                 'Colócate de frente al rack, centrado y detenido.',
@@ -3188,7 +3189,7 @@
             if (spec().clamp) { if (a.id === 'rack2') a.name = 'Estiba en bahía de piso'; if (a.id === 'rack3') a.name = 'Retiro de bahía de piso'; } else { if (a.id === 'rack2') a.name = 'Estiba en ubicación exacta'; if (a.id === 'rack3') a.name = 'Retiro de ubicación exacta'; }
             if (a.id === 'trailer') { trailerHonked = false; trailerEntered = false; trailerFast = false; trailerWarned = false; }
             if (spec().clamp && (a.id === 'rack2' || a.id === 'rack3')) setActBay(a);
-            else { if (a.id === 'rack2') setActLoc(a, randomLoc({ levels: [1, 2] }));
+            else { if (a.id === 'rack2') { const RT = /Reach/.test(spec().type || ''); a.alto = RT; if (RT) a.name = 'Estiba en altura · retráctil en pasillo angosto'; setActLoc(a, randomLoc({ levels: RT ? [3, 4] : [1, 2] })); if (RT) a.text += ' · ALTURA: con el equipo DETENIDO y centrado, sube a la viga, extiende el reach y baja suave. En pasillo angosto no gires con la carga elevada.'; }
             if (a.id === 'rack3') setActLoc(a, randomLoc({ levels: [2, 3] })); }
             if (a.type === 'move') { cargo.position.set(a.spawn.x, a.spawn.y, a.spawn.z); cargo.rotation.y = 0; cargo.visible = true; hasLoad = false; document.getElementById('loadDisplay').textContent = 'Sin carga'; }
             slotMarker.visible = !!(a.drop && a.drop.slot); if (slotMarker.visible) slotMarker.position.set(a.drop.x, a.drop.level + 0.7, a.drop.z); if (a.id !== 'rack2' && a.id !== 'rack3' && slotLabel) slotLabel.visible = false; else if (slotLabel) slotLabel.visible = true;

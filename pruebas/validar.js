@@ -53,6 +53,9 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
         const sp = spec(); ['reach1', 'reach2'].forEach((id, k) => { const el = document.getElementById(id); if (el && sp.reachStages > k) el.value = 0; });
         const tp = tipPos(); forkPosition.x += a.drop.x - tp.x; forkPosition.z += a.drop.z - tp.z; forklift.position.copy(forkPosition);
         updateMission(); const t = document.getElementById('missionDist').textContent; add('Misiones', 'distancia de estiba llega a "en posición"', /posición/.test(t), t); hasLoad = false; } }
+    // #45 retráctil: con Reach / Double Reach la estiba es en altura (nivel 4 o 5) y lo dice la misión
+    { const i2 = ACTS.findIndex(a => a.id === 'rack2'), prevM = currentModel, res = []; if (i2 >= 0 && typeof beginAct === 'function') { for (const m of ['doublereach', 'reach', 'counter']) { currentModel = m; try { beginAct(i2); } catch (e) { } const a = ACTS[i2]; res.push({ m, lvl: a.loc ? a.loc.level : -1, alto: !!a.alto, name: /altura/i.test(a.name) }); } currentModel = prevM; try { beginAct(i2); } catch (e) { } }
+      add('Misiones', '#45 retráctil: estiba en altura (N4/N5) solo con Reach/Double Reach', res.length === 3 && res[0].lvl >= 3 && res[0].alto && res[0].name && res[1].lvl >= 3 && !res[2].alto && res[2].lvl <= 2, JSON.stringify(res)); }
     // andén 3 y caja del tráiler
     const hd = WAREHOUSE.d / 2; Object.keys(FORK_SPECS).forEach(m => { const prev = currentModel; currentModel = m;
       add('Andén', `${FORK_SPECS[m].code} cruza el andén 3`, !bodyHits(0, hd, 0)); add('Andén', `${FORK_SPECS[m].code} dentro de la caja`, !bodyHits(0, TRAILER.z0 + 4, 0)); currentModel = prev; });
