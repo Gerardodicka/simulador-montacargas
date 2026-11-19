@@ -558,6 +558,13 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       for (let i = 0; i < 8; i++) { const k = L[idx]; if (i === 0 && k.t !== 'liberar') { decide('liberar'); malo = /cliente/.test(document.getElementById('fb').textContent); } else if (i === 0) { decide('cantidad'); malo = /retrasa/.test(document.getElementById('fb').textContent); } else decide(k.t); next(); }
       o.score = score; o.malo = malo; o.saved = JSON.parse(localStorage.getItem('dicka_console_results') || '[]').some(x => x.juego === 'Kitting y Valor Agregado'); return o; }); await b3.close();
     ok('Kitting 3D', 'mesa 3D, 5 tipos de dictamen, explica el error y califica 7/8 = 88', r.e3 && r.canvas && r.tipos === 5 && r.malo && r.score === 88 && r.saved && !e.length, JSON.stringify(r) + (e[0] || '')); }
+  // Indicadores del Almacén (nuevo): un solo KPI en rojo por tablero, 6 indicadores cubiertos, gerente 3D comenta y la acción correcta suma
+  { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/indicadores.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba KPI'); await q.evaluate(() => start()); await q.waitForTimeout(1200);
+    const r = await q.evaluate(() => { const o = { g3: !!G3, rojo: L.every(c => c.vals.filter(v => !v.ok).length === 1 && c.vals.find(v => !v.ok).key === c.kpi), kpis: new Set(L.map(c => c.kpi)).size }; const t0 = document.getElementById('gbub').textContent;
+      for (let i = 0; i < 8; i++) { const c = L[idx]; decide(c.ops.findIndex(x => x.ok === (i > 0))); if (i === 0) o.mal = /causa/.test(document.getElementById('gbub').textContent) && document.getElementById('gbub').textContent !== t0; next(); }
+      o.score = score; o.enEnd = !!document.querySelector('#end #ger'); return o; }); await b3.close();
+    ok('Indicadores del Almacén', 'un KPI en rojo por tablero, 6 indicadores, gerente 3D comenta y califica 7/8 = 88', r.g3 && r.rojo && r.kpis === 6 && r.mal && r.score === 88 && r.enEnd && !e.length, JSON.stringify(r) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
