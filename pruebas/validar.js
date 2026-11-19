@@ -500,6 +500,9 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     let hits = 0; for (let k = 0; k < 8; k++) { const i = await q.evaluate(() => { for (let j = 0; j < 8; j++) if (!route.includes(j)) return j; }); const pt = await q.evaluate(i => M3.screen(i), i); await q.mouse.click(pt.x, pt.y); await q.waitForTimeout(120); if (await q.evaluate(() => route.length) > k) hits++; else await q.evaluate(i => tapLoc(i, document.querySelector(`.loc.pick[data-i="${i}"]`)), i); }
     const r = await q.evaluate(() => ({ ok: M3 && M3.ok, n: route.length, fin: !!document.getElementById('finBtn') })); await b3.close();
     ok('Métodos de surtido 3D', 'almacén 3D y las ubicaciones del lote se surten tocándolas en la escena', r.ok && r.n === 8 && r.fin && hits >= 6 && !e.length, JSON.stringify(r) + ' 3D:' + hits + (e[0] || '')); }
+  // Cada juego 3D explica su objetivo, qué hacer y cómo se califica (recuadro fijo arriba de la escena)
+  { const fs = require('fs'); const files = fs.readdirSync('juegos').filter(f => f.endsWith('.html') && /class="objbox"/.test(fs.readFileSync('juegos/' + f, 'utf8'))); const bad = files.filter(f => { const s = fs.readFileSync('juegos/' + f, 'utf8'); return !/Objetivo:/.test(s) || !/Qué debes hacer:/.test(s) || !/Cómo se califica:/.test(s); });
+    ok('Claridad', files.length + ' juegos 3D muestran objetivo, qué hacer y cómo se califica', files.length >= 16 && !bad.length, bad.join(', ')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });

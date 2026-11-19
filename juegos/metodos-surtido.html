@@ -53,6 +53,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .dep{grid-column:1/-1;text-align:center;background:var(--marino);color:#fff;border-radius:8px;padding:4px;font-size:12px;font-weight:800}
 .step{font-size:12px;font-weight:800;color:var(--brillante);letter-spacing:1px;margin-top:.4rem}
 .m3d{position:relative;height:340px;border-radius:12px;overflow:hidden;margin:.4rem 0 .7rem;touch-action:none;background:#dfe5ee}.m3d canvas{display:block;width:100%;height:100%}.m3hint{position:absolute;left:8px;top:8px;right:8px;background:rgba(1,17,49,.78);color:#fff;font-size:13px;padding:5px 9px;border-radius:8px;pointer-events:none}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
 </style>
 </head>
 <body>
@@ -74,7 +75,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   <div class="card hidden" id="game">
     <div class="topbar"><span id="stLbl">Escenario 1/4</span><span>⭐ <span id="sc">0</span></span></div>
     <div class="bar"><div id="bar" style="width:0"></div></div>
-    <div class="m3d" id="m3d"><div class="m3hint" id="m3hint">Almacén con 6 pasillos · arrastra para girar, rueda o pellizco para acercar</div></div><div id="stage"></div>
+    <div class="objbox" id="objbox"><div>🎯 <b>Objetivo:</b> elegir el mejor método de surtido (por pedido, por lote, por zona u ola) según el tipo de pedidos, y trazar la ruta más corta.</div><div>✅ <b>Qué debes hacer:</b> en 4 escenarios elige el método correcto; al final toca las 8 ubicaciones del lote en el orden en que las surtirías, saliendo y regresando al andén.</div><div>📊 <b>Cómo se califica:</b> 60 puntos por los métodos y 40 por la ruta (más corta = más puntos); apruebas con 70 de 100.</div></div><div class="m3d" id="m3d"><div class="m3hint" id="m3hint">Almacén con 6 pasillos · arrastra para girar, rueda o pellizco para acercar</div></div><div id="stage"></div>
   </div>
   <div class="card hidden" id="end">
     <div class="big" id="eicon">🏆</div><h2 id="etitle"></h2>
