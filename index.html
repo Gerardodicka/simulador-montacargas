@@ -321,10 +321,10 @@
 const PRF_KEY='dicka_puestos';
 const PRF_BASE=['turno-seguro-3d','examen-seguridad','extintores-3d','5s','ergonomia','emergencias','senalizacion'];
 const PRF_DEF={
-  'Montacarguista':['montacarga','andenes','cargas','loto',...PRF_BASE],
-  'Aux de Almacén':['surtido','picking-guiado','metodos','excepciones','conteo','kitting',...PRF_BASE],
+  'Montacarguista':['montacarga','recepcion-acomodo','andenes','cargas','loto',...PRF_BASE],
+  'Aux de Almacén':['surtido','picking-guiado','recepcion-acomodo','metodos','excepciones','conteo','kitting',...PRF_BASE],
   'Surtidor':['surtido','picking-guiado','metodos','excepciones','slotting','kitting',...PRF_BASE],
-  'Recibidor':['recepcion','sellos','devoluciones','frio',...PRF_BASE],
+  'Recibidor':['recepcion','recepcion-acomodo','sellos','devoluciones','frio',...PRF_BASE],
   'Embarcador':['embarques','patio','carga','sellos',...PRF_BASE],
   'Supervisor de Operaciones':['flujo','indicadores','crossdock','conteo','loto','matpel','dojo-de-mando',...PRF_BASE],
   'Jefe de Turno':['flujo','indicadores','patio','embarques','dojo-de-mando',...PRF_BASE],
@@ -351,6 +351,7 @@ const BASE_GAMES = [
   { id:'sellos', name:'Inspección de Tráiler y Sellos', icon:'🔒', cat:'Seguridad', status:'activo', time:'8 min', pass:'75/100', desc:'Inspecciona 3 unidades en sus 17 puntos, verifica el sello con VVTT (ver, verificar, tirar, torcer) y decide aceptar o detener y reportar a Seguridad.', url:'juegos/inspeccion-trailer.html' },
   { id:'indicadores', name:'Indicadores del Almacén', icon:'📊', cat:'Liderazgo', status:'activo', time:'8 min', pass:'75/100', desc:'Con tu gerente en la oficina 3D lee 8 tableros de KPIs (OTIF, exactitud, productividad, citas, daños, rotación), detecta el indicador en rojo y elige la acción que ataca la causa.', url:'juegos/indicadores.html' },
   { id:'picking-guiado', name:'Picking Guiado', icon:'💡', cat:'Operaciones', status:'activo', time:'6 min', pass:'75/100', desc:'Surtido con luces (pick-to-light) en un rack 3D: toca la lámpara verde encendida, lee la cantidad, revisa las piezas y confirma o reporta faltante.', url:'juegos/picking-guiado.html' },
+  { id:'recepcion-acomodo', name:'Recepción y Acomodo', icon:'📥', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Valida 8 tarimas contra su orden de compra (SKU, cantidad, estado) y acomoda las conformes en el rack 3D según su clase de rotación y su peso.', url:'juegos/recepcion-acomodo.html' },
   { id:'kitting', name:'Kitting y Valor Agregado', icon:'🧩', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Inspección de calidad en la mesa de kitting 3D: compara 8 kits contra la orden del cliente (piezas, cantidades, etiqueta y empaque) y libera o detén.', url:'juegos/kitting.html' },
   { id:'devoluciones', name:'Devoluciones', icon:'↩️', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Logística inversa: revisa RMA, empaque, estado y caducidad de 8 devoluciones y decide reintegrar, reacondicionar, regresar a proveedor, merma o retener.', url:'juegos/devoluciones.html' },
   { id:'5s', name:'5S en el Almacén', icon:'🧹', cat:'Operaciones', status:'activo', time:'6 min', pass:'75/100', desc:'Recorrido 5S: en 10 hallazgos del almacén decide si aplica Clasificar, Ordenar, Limpiar, Estandarizar, Disciplina o si está bien.', url:'juegos/5s-almacen.html' },
