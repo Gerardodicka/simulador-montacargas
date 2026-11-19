@@ -322,8 +322,8 @@ const PRF_KEY='dicka_puestos';
 const PRF_BASE=['turno-seguro-3d','examen-seguridad','extintores-3d','5s','ergonomia','emergencias','senalizacion'];
 const PRF_DEF={
   'Montacarguista':['montacarga','andenes','cargas','loto',...PRF_BASE],
-  'Aux de Almacén':['surtido','metodos','excepciones','conteo',...PRF_BASE],
-  'Surtidor':['surtido','metodos','excepciones','slotting',...PRF_BASE],
+  'Aux de Almacén':['surtido','metodos','excepciones','conteo','kitting',...PRF_BASE],
+  'Surtidor':['surtido','metodos','excepciones','slotting','kitting',...PRF_BASE],
   'Recibidor':['recepcion','sellos','devoluciones','frio',...PRF_BASE],
   'Embarcador':['embarques','patio','carga','sellos',...PRF_BASE],
   'Supervisor de Operaciones':['flujo','crossdock','conteo','loto','matpel','dojo-de-mando',...PRF_BASE],
@@ -349,6 +349,7 @@ const BASE_GAMES = [
   { id:'tablero', name:'Tablero del Gerente', icon:'📊', cat:'Liderazgo', status:'activo', time:'10 min', pass:'70/100', desc:'Juego de negocio de 4 meses de temporada: decide personal, tiempo extra, mantenimiento y capacitación y mira su efecto en OTIF, costo por caja, accidentes y rotación.', url:'juegos/tablero-gerente.html' },
   { id:'frio', name:'Cadena de Frío', icon:'❄️', cat:'Calidad', status:'activo', time:'8 min', pass:'75/100', desc:'Lee el registro de temperatura de 8 lotes refrigerados y congelados y decide: liberar, retener y escalar a Calidad, o rechazar por excursión, congelación o datos faltantes.', url:'juegos/cadena-frio.html' },
   { id:'sellos', name:'Inspección de Tráiler y Sellos', icon:'🔒', cat:'Seguridad', status:'activo', time:'8 min', pass:'75/100', desc:'Inspecciona 3 unidades en sus 17 puntos, verifica el sello con VVTT (ver, verificar, tirar, torcer) y decide aceptar o detener y reportar a Seguridad.', url:'juegos/inspeccion-trailer.html' },
+  { id:'kitting', name:'Kitting y Valor Agregado', icon:'🧩', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Inspección de calidad en la mesa de kitting 3D: compara 8 kits contra la orden del cliente (piezas, cantidades, etiqueta y empaque) y libera o detén.', url:'juegos/kitting.html' },
   { id:'devoluciones', name:'Devoluciones', icon:'↩️', cat:'Operaciones', status:'activo', time:'7 min', pass:'75/100', desc:'Logística inversa: revisa RMA, empaque, estado y caducidad de 8 devoluciones y decide reintegrar, reacondicionar, regresar a proveedor, merma o retener.', url:'juegos/devoluciones.html' },
   { id:'5s', name:'5S en el Almacén', icon:'🧹', cat:'Operaciones', status:'activo', time:'6 min', pass:'75/100', desc:'Recorrido 5S: en 10 hallazgos del almacén decide si aplica Clasificar, Ordenar, Limpiar, Estandarizar, Disciplina o si está bien.', url:'juegos/5s-almacen.html' },
   { id:'matpel', name:'Materiales Peligrosos NOM-018', icon:'☣️', cat:'Seguridad', status:'activo', time:'7 min', pass:'75/100', desc:'Recorrido 3D por el almacén de químicos: etiquetado SGA, incompatibles, derrames, Hojas de Datos de Seguridad y EPP según la NOM-018-STPS.', url:'juegos/materiales-peligrosos.html' },
@@ -796,7 +797,7 @@ async function downloadOffline(){ const btn=document.getElementById('offlineBtn'
   if(location.protocol==='file:'){ alert('Disponible al abrir la app desde su liga (Netlify).'); return; }
   btn.disabled=true; const set=new Set(['/','/index.html','/manifest.webmanifest','/icons/icon-192.png']);
   try{ const pages=[...new Set([...document.querySelectorAll('a[href],[data-url]')].map(e=>e.getAttribute('href')||e.dataset.url).filter(u=>u&&/juegos\/[\w-]+\.html/.test(u)).map(u=>'/'+u.replace(/^\.?\//,'').replace(/[?#].*$/,'')))];
-    ['simulador-montacarga','turno-seguro-3d','extintores-3d','carga-unidades','conteo-ciclico','dojo-de-mando','diagnostico-usb','examen-seguridad','surtido-express','turno-seguro','recepcion-decantado','patio-andenes','metodos-surtido','planeacion-personal','tablero-gerente','cadena-frio','inspeccion-trailer','devoluciones','5s-almacen','materiales-peligrosos','ergonomia','emergencias','loto','alturas','senalizacion','andenes','cargas-no-estandar','excepciones-surtido','flujo-materiales','cross-docking','slotting','armado-embarques','conteo-ciclico'].forEach(n=>pages.push('/juegos/'+n+'.html'));
+    ['simulador-montacarga','turno-seguro-3d','extintores-3d','carga-unidades','conteo-ciclico','dojo-de-mando','diagnostico-usb','examen-seguridad','surtido-express','turno-seguro','recepcion-decantado','patio-andenes','metodos-surtido','planeacion-personal','tablero-gerente','cadena-frio','inspeccion-trailer','devoluciones','kitting','5s-almacen','materiales-peligrosos','ergonomia','emergencias','loto','alturas','senalizacion','andenes','cargas-no-estandar','excepciones-surtido','flujo-materiales','cross-docking','slotting','armado-embarques','conteo-ciclico'].forEach(n=>pages.push('/juegos/'+n+'.html'));
     for(const pg of [...new Set(pages)]){ set.add(pg); try{ const html=await (await fetch(pg,{cache:'no-store'})).text(); (html.match(/(?:src|href)="([^"]+\.(?:js|css)(?:\?[^"]*)?)"/g)||[]).forEach(m=>{ const u=m.replace(/^(?:src|href)="|"$/g,''); if(!/^https?:/.test(u)) set.add(new URL(u,location.origin+pg).pathname+(u.includes('?')?'?'+u.split('?')[1]:'')); });
         (html.match(/[\w-]+\.glb/g)||[]).forEach(m=>set.add('/juegos/assets/models/'+m)); } catch(e){} }
     try{ const js=await (await fetch('/juegos/comun/almacen-comun.js',{cache:'no-store'})).text(); (js.match(/assets\/textures\/[\w.-]+/g)||[]).forEach(t=>set.add('/juegos/'+t)); }catch(e){}
