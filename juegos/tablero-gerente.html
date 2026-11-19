@@ -48,6 +48,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .news{background:#fff7e0;border-left:4px solid var(--amarillo);padding:.6rem .9rem;border-radius:8px;font-size:13px;margin:.6rem 0;line-height:1.6}
 .hist{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:.6rem}.hist th{background:#eef2ff;color:var(--azul);padding:5px}.hist td{padding:5px;border-bottom:1px solid #eee;text-align:center}
 @media(max-width:480px){.kpis{grid-template-columns:repeat(2,1fr)}.dec{grid-template-columns:1fr}}
+.ger{position:relative;height:300px;border-radius:12px;overflow:hidden;margin:.4rem 0 .7rem;background:#cfd8e3}.ger canvas{display:block;width:100%;height:100%}.gbub{position:absolute;right:10px;top:10px;max-width:58%;background:#fff;color:#1a1f36;border:2px solid #1D2586;border-radius:14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 4px 14px rgba(0,0,0,.18)}.gbub b{color:#1D2586}.gname{position:absolute;left:10px;bottom:10px;background:rgba(1,17,49,.8);color:#fff;font-size:13px;padding:4px 9px;border-radius:8px}@media(max-width:600px){.ger{height:340px}.gbub{left:10px;right:10px;max-width:none;font-size:14px}}
+.objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
 </style>
 </head>
 <body>
@@ -67,7 +69,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
     <button class="btn" id="startBtn" onclick="start()">COMENZAR</button>
   </div>
   <div class="card hidden" id="game">
-    <div class="topbar"><span id="mLbl">Mes 1 de 4</span><span>📦 Volumen: <b id="vol"></b> cajas</span></div>
+    <div class="objbox"><div>🎯 <b>Objetivo:</b> dirigir el almacén 4 meses y cumplir las metas del tablero: OTIF de 97 %, costo por caja de $5.20 o menos, cero accidentes y rotación de 30 % o menos.</div><div>✅ <b>Qué debes hacer:</b> cada mes lee la noticia y el volumen, decide personal eventual, tiempo extra, mantenimiento y capacitación, y toca “Cerrar el mes”. Tu director te comenta cada decisión.</div><div>📊 <b>Cómo se califica:</b> OTIF 40 + costo 30 + seguridad 20 + rotación 10; apruebas con 70 de 100.</div></div><div class="ger" id="ger"><div class="gbub" id="gbub">Cargando a tu director…</div><div class="gname">👔 Ing. Torres · Director Regional</div></div><div class="topbar"><span id="mLbl">Mes 1 de 4</span><span>📦 Volumen: <b id="vol"></b> cajas</span></div>
     <div class="kpis" id="kpis"></div>
     <div class="news" id="news"></div>
     <div class="dec">
@@ -105,13 +107,44 @@ function step(S,d,vol){ const N=BASE+d.extra, prod=2600*(S.skill/70)*(.8+.2*S.fl
   const nx={ flota:Math.max(20,Math.min(100,S.flota+[-12,4,14][d.mant])), rot:Math.max(10,Math.min(60,S.rot+(d.ot?5:0)+(acc?2:0)-(d.cap?6:0)+(d.extra>=12?2:0))), skill:0 };
   nx.skill=Math.max(40,Math.min(95,S.skill+(d.cap?8:0)-(S.rot-25)/5-(d.extra>=12&&!d.cap?3:0)));
   return { cap, out, otif, cost, cpc, acc, nx }; }
+/* ===== Oficina 3D con avatar gerente que presenta el reto y comenta ===== */
+let G3=null;
+function gerSay(h){ const b=$('gbub'); if(b) b.innerHTML=h; if(G3) G3.talk=1.6; }
+function g3init(){ if(G3||!window.THREE) return; try{ const el=$('ger'), rn=new THREE.WebGLRenderer({antialias:true}); rn.setPixelRatio(Math.min(2,devicePixelRatio)); rn.shadowMap.enabled=true; el.insertBefore(rn.domElement,el.firstChild);
+  const sc=new THREE.Scene(); sc.background=new THREE.Color('#cfd8e3'); const cam=new THREE.PerspectiveCamera(40,1,.1,60); sc.add(new THREE.HemisphereLight('#ffffff','#7d8590',.95)); const dl=new THREE.DirectionalLight('#fff4e0',.7); dl.position.set(-3,6,5); dl.castShadow=true; sc.add(dl);
+  const TL=new THREE.TextureLoader(), tx=(f,x,y)=>{ const t=TL.load('assets/textures/'+f); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(x,y); return t; };
+  const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.65},o||{})), box=(w,h,d,m,x,y,z)=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof m==='string'?M(m):m); b.position.set(x,y,z); b.castShadow=b.receiveShadow=true; sc.add(b); return b; };
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(12,8),new THREE.MeshStandardMaterial({map:tx('madera.jpg',4,3),color:'#c9a77c'})); fl.rotation.x=-Math.PI/2; fl.receiveShadow=true; sc.add(fl);
+  box(12,4,.1,'#eef1f5',0,2,-2.2); box(.1,4,8,'#e3e8ef',-4,2,1.8);
+  // ventana al almacén
+  box(2.6,1.5,.06,'#9fc3e6',1.6,2.3,-2.13); box(2.7,.08,.1,'#90a4ae',1.6,1.53,-2.1); box(2.7,.08,.1,'#90a4ae',1.6,3.07,-2.1);
+  [0.6,1.6,2.6].forEach(x=>{ box(.06,1.1,.05,'#2a4bd7',x,2.1,-2.08); box(.7,.3,.05,'#c8a26b',x+.35,1.85,-2.07); });
+  // pizarrón con la semana
+  const pc=document.createElement('canvas'); pc.width=512; pc.height=300; const pg=pc.getContext('2d'); pg.fillStyle='#fff'; pg.fillRect(0,0,512,300); pg.fillStyle='#1D2586'; pg.fillRect(0,0,512,56); pg.fillStyle='#fff'; pg.font='bold 34px sans-serif'; pg.fillText('TABLERO KPI',20,40); pg.font='bold 26px sans-serif';
+  const drawB=()=>{ pg.fillStyle='#fff'; pg.fillRect(0,56,512,244); pg.font='bold 22px sans-serif'; pg.fillStyle='#1a1f36'; pg.fillText('OTIF por mes - meta 97%',20,86); pg.strokeStyle='#c62828'; pg.setLineDash([8,6]); pg.beginPath(); pg.moveTo(20,128); pg.lineTo(500,128); pg.stroke(); pg.setLineDash([]); (window.H_||[]).forEach((h,i)=>{ const v=Math.max(.05,(h.otif-.6)/.4), hh=Math.round(v*170); pg.fillStyle=h.otif>=.97?'#2e9e5b':'#f5a300'; pg.fillRect(40+i*115,285-hh,70,hh); pg.fillStyle='#1a1f36'; pg.fillText('M'+(i+1),52+i*115,282-hh-8); }); if(board) board.material.map.needsUpdate=true; };
+  let board=null; board=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.12),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(pc)})); board.position.set(-2.1,2.3,-2.13); sc.add(board); drawB();
+  // escritorio, monitor y silla
+  box(2.2,.08,1,'#5d4037',.3,.78,.2); [[-.7,-.2],[1.3,-.2],[-.7,.6],[1.3,.6]].forEach(([x,z])=>box(.06,.76,.06,'#3e2723',x,.38,z)); box(.7,.45,.04,'#212121',.9,1.12,0); box(.08,.25,.08,'#424242',.9,.9,0); box(.62,.38,.01,'#2a4bd7',.9,1.12,.025);
+  box(.55,.08,.55,'#37474f',-.6,.5,-.75); box(.55,.7,.07,'#37474f',-.6,.9,-1.03);
+  const cv=rn.domElement; const fit=()=>{ const w=el.clientWidth,h=el.clientHeight; if(!w||!h) return; rn.setSize(w,h,false); cam.aspect=w/h; cam.fov=w/h<1?62:40; cam.updateProjectionMatrix(); const nar=w/h<1; cam.position.set(nar?-.4:.2,1.75,nar?4.6:4.2); cam.lookAt(nar?-.5:.1,1.3,-.6); }; addEventListener('resize',fit); fit();
+  G3={talk:0,av:null,head:null,fit,drawB}; let man=null;
+  const put=(scene,hgt)=>{ const obj=THREE.SkeletonUtils.clone(scene); obj.scale.setScalar(1.78/hgt); obj.position.set(-.55,0,-.35); obj.rotation.y=.25; obj.traverse(o=>{ if(o.isMesh){ o.frustumCulled=false; o.castShadow=true; } }); sc.add(obj); obj.traverse(o=>{ if(o.isBone) o.name=o.name.replace(/^mixamorig:?/,''); }); const av={obj,procedural:true}; try{ gltfPrepareBones(av); gltfWalkPose(av,false,0,performance.now(),false,0); }catch(e){ console.warn("pose",e.message); } G3.av=av; obj.traverse(o=>{ if(o.isBone&&/Head$/.test(o.name)) G3.head=o; }); man=obj; };
+  const L=THREE.GLTFLoader?new THREE.GLTFLoader():null, ld=(f,cb,fail)=>L.load('assets/models/'+f,gl=>{ gl.scene.updateMatrixWorld(true); let hb=null,fb=null; gl.scene.traverse(o=>{ if(o.isBone){ if(/Head$/.test(o.name)) hb=o; if(/LeftFoot$/.test(o.name)) fb=o; } }); let h=1.8; if(hb&&fb){ const a=new THREE.Vector3(),b=new THREE.Vector3(); hb.getWorldPosition(a); fb.getWorldPosition(b); h=a.y-Math.min(b.y,0)+.13; } cb(gl.scene,h); },undefined,fail);
+  if(L&&THREE.SkeletonUtils) ld('oficina_hombre.glb',put,()=>ld('operario_lod.glb',put,()=>{}));
+  let t0=performance.now(); const loop=now=>{ const t=(now-t0)/1000; if(G3.talk>0) G3.talk-=1/60; if(G3.head){ G3.head.rotation.y=Math.sin(t*.7)*.12; G3.head.rotation.z=G3.talk>0?Math.sin(t*8)*.05:0; } rn.render(sc,cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  }catch(e){ $('ger').style.display='none'; G3=null; } }
+
+function dirComenta(h){ const d=h.d, c=[]; c.push(h.otif>=.97?`✅ OTIF de <b>${(h.otif*100).toFixed(1)}%</b>, cumpliste la meta.`:`⚠️ OTIF de <b>${(h.otif*100).toFixed(1)}%</b>, abajo de la meta de 97%${h.cap<=h.out?': te faltó capacidad para el volumen':''}.`);
+  if(h.acc) c.push(`Hubo <b>${h.acc} accidente${h.acc>1?'s':''}</b>: revisa flota, cansancio y capacitación.`); if(d.ot) c.push('El tiempo extra diario sube costo, cansancio y accidentes; úsalo solo en picos.');
+  if(d.mant===0) c.push('Ahorrar en mantenimiento hoy baja la salud de la flota y la capacidad mañana.'); if(d.cap) c.push('Bien la capacitación: baja la rotación y sube la productividad.'); else if(ST.rot>30) c.push(`La rotación va en <b>${Math.round(ST.rot)}%</b>; capacitar y reconocer ayuda a retener.`);
+  if(h.cpc>5.2) c.push(`Costo por caja de <b>$${h.cpc.toFixed(2)}</b>, arriba de $5.20.`); gerSay(c.slice(0,3).join(' ')); }
 function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); ST={flota:55,rot:38,skill:66}; m=0; H=[];
   $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); draw(); }
-function draw(){ $('mLbl').textContent=`Mes ${m+1} de 4`; $('vol').textContent=VOL[m].toLocaleString('es-MX'); $('news').innerHTML='📰 '+NEWS[m]; const L=H[H.length-1];
+function draw(){ window.H_=H; if(!G3){ g3init(); gerSay(`Hola <b>${(who.name||'').split(' ')[0]}</b>, te dejo el almacén 4 meses. Metas: <b>OTIF 97%</b>, costo de <b>$5.20</b> o menos por caja, <b>cero accidentes</b> y rotación de 30% o menos. Mes 1: ${VOL[0].toLocaleString('es-MX')} cajas.`); } else if(G3.drawB) G3.drawB(); $('mLbl').textContent=`Mes ${m+1} de 4`; $('vol').textContent=VOL[m].toLocaleString('es-MX'); $('news').innerHTML='📰 '+NEWS[m]; const L=H[H.length-1];
   $('kpis').innerHTML=`<div><b class="${L?(L.otif>=.97?'good':'bad'):''}">${L?(L.otif*100).toFixed(1)+'%':'—'}</b>OTIF del mes pasado</div><div><b class="${L?(L.cpc<=5.2?'good':'bad'):''}">${L?'$'+L.cpc.toFixed(2):'—'}</b>costo por caja</div><div><b class="${ST.rot<=30?'good':'bad'}">${Math.round(ST.rot)}%</b>rotación</div><div><b class="${ST.flota>=60?'good':ST.flota>=45?'':'bad'}">${Math.round(ST.flota)}%</b>salud de la flota</div>`;
   $('histBox').innerHTML=H.length?`<table class="hist"><tr><th>Mes</th><th>OTIF</th><th>Costo/caja</th><th>Accidentes</th><th>Rotación</th></tr>${H.map((h,i)=>`<tr><td>${i+1}</td><td>${(h.otif*100).toFixed(1)}%</td><td>$${h.cpc.toFixed(2)}</td><td>${h.acc}</td><td>${Math.round(h.rot)}%</td></tr>`).join('')}</table>`:''; }
 function readD(){ return {extra:+$('dExtra').value, ot:+$('dOT').value, mant:+$('dMant').value, cap:+$('dCap').value}; }
-function month(){ const d=readD(), r=step(ST,d,VOL[m]); ST=r.nx; H.push(Object.assign({rot:ST.rot,d},r)); m++; if(m<4) draw(); else finish(); }
+function month(){ const d=readD(), r=step(ST,d,VOL[m]); ST=r.nx; H.push(Object.assign({rot:ST.rot,d},r)); if(G3) dirComenta(H[H.length-1]); m++; if(m<4) draw(); else finish(); }
 function finish(){ const otif=H.reduce((a,h)=>a+h.otif,0)/4, cpc=H.reduce((a,h)=>a+h.cost,0)/H.reduce((a,h)=>a+h.out,0), acc=H.reduce((a,h)=>a+h.acc,0), rot=ST.rot;
   const sO=Math.round(40*Math.max(0,Math.min(1,(otif-.85)/(.97-.85)))), sC=Math.round(30*Math.max(0,Math.min(1,(6.4-cpc)/(6.4-5.2)))), sS=Math.max(0,20-acc*7), sR=rot<=30?10:rot<=36?5:0; score=sO+sC+sS+sR;
   score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
@@ -121,12 +154,17 @@ function finish(){ const otif=H.reduce((a,h)=>a+h.otif,0)/4, cpc=H.reduce((a,h)=
   const tips=[]; if(otif<.97) tips.push('El OTIF no llegó a la meta: anticipa el crecimiento del volumen con personal y cuida la salud de la flota (las fallas bajan la capacidad).'); if(cpc>5.2) tips.push('El costo por caja quedó alto: el tiempo extra permanente y el exceso de personal lo encarecen; el mantenimiento preventivo es más barato que las paradas.'); if(acc) tips.push('Hubo accidentes: el tiempo extra diario, una flota en mal estado y personal sin capacitar elevan el riesgo.'); if(rot>30) tips.push('La rotación siguió alta: capacitación y reconocimiento la bajan; el tiempo extra permanente la sube.');
   if(tips.length){ $('review').classList.remove('hidden'); $('review').innerHTML='<b>Lecciones del trimestre:</b><br>'+tips.map(t=>'• '+t).join('<br>'); }
   $('ecode').textContent='Código de verificación: '+REG;
+  if(G3){ window.H_=H; $('estats').before($('ger')); G3.fit(); G3.drawB(); gerSay(ok?`🏆 <b>Buen trimestre, ${who.name.split(' ')[0]}.</b> OTIF promedio ${(otif*100).toFixed(1)}%, costo $${cpc.toFixed(2)} por caja y ${acc} accidente${acc===1?'':'s'}.`:`📚 <b>Revisemos el trimestre:</b> ${otif<.97?'el OTIF quedó bajo la meta; ':''}${cpc>5.2?'el costo por caja quedó alto; ':''}${acc?'hubo accidentes; ':''}${rot>30?'la rotación subió; ':''}abajo están las lecciones.`); }
   try{ const k='dicka_console_results', l=JSON.parse(localStorage.getItem(k)||'[]'); l.push({juego:GAME_NAME,nombre:who.name,num:who.num,puesto:who.puesto,area:'Liderazgo',almacen:who.wh,score:`${score}/${MAX}`,aprobado:ok,fecha:date.toISOString(),reg:REG}); localStorage.setItem(k,JSON.stringify(l)); }catch(e){}
   try{ parent.postMessage({type:'dicka-result',juego:GAME_NAME,nombre:who.name,score:`${score}/${MAX}`,aprobado:ok},'*'); }catch(e){} }
 function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombre: ${who.name}${who.num?'\nNo. empleado: '+who.num:''}\nPuesto: ${who.puesto}\nAlmacén: ${who.wh}\nPuntaje: ${score}/${MAX}\nEstado: ${score>=PASS?'✓ APROBADO':'✗ NO APROBADO'}\n\n${REG}`; }
 function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
 function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
 </script>
+<script src="js/three.min.js"></script>
+<script src="js/GLTFLoader.js"></script>
+<script src="js/SkeletonUtils.js"></script>
+<script src="js/dicka-avatar.js"></script>
 <script src="js/dicka-sync.js"></script>
 <script src="js/accesible.js"></script>
 <script src="js/perfil.js"></script>
