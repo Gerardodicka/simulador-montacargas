@@ -597,7 +597,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
   // Planeación de Personal: el gerente 3D presenta el reto, comenta el plan y da retroalimentación al final
   { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 1280, height: 900 } }); const e = []; q.on('pageerror', x => e.push(x.message));
     await q.goto(url('juegos/planeacion-personal.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Gerente'); await q.evaluate(() => start()); await q.waitForTimeout(800); const t0 = await q.textContent('#gbub');
-    await q.fill('#ev0', '15'); await q.dispatchEvent('#ev0', 'input'); await q.waitForTimeout(700); const t1 = await q.textContent('#gbub');
+    await q.fill('#ev0', '15'); await q.dispatchEvent('#ev0', 'input'); await q.waitForFunction(t => document.getElementById('gbub').textContent !== t, t0, { timeout: 5000 }).catch(() => {}); const t1 = await q.textContent('#gbub');
     await q.evaluate(() => runWeek()); await q.waitForTimeout(300); const r = await q.evaluate(() => ({ ok: !!G3, enEnd: !!document.querySelector('#end #ger'), fin: document.getElementById('gbub').textContent })); await b3.close();
     ok('Planeación de Personal 3D', 'el gerente 3D presenta el reto, comenta el plan y retroalimenta al final', r.ok && /cajas/.test(t0) && t1 !== t0 && r.enEnd && r.fin !== t1 && !e.length, JSON.stringify({ t0: t0.slice(0, 30), t1: t1.slice(0, 30), ...r }).slice(0, 200) + (e[0] || '')); }
   // Tablero del Gerente: el director 3D presenta las metas, comenta cada cierre de mes y el resultado final
