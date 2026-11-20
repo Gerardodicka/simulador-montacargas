@@ -28,11 +28,11 @@
       if (opts.escena !== 'patio') { bx(W, 4, 4, .2, '#8d98ad', 0, 2, -7.8); bx(W, 3, 2.8, 8, '#eceff1', 0, 2.2, -12.2); bx(W, 30, .03, .15, '#ffd400', 0, .02, 2.5); }
       if (fria) { bx(W, 2, .6, .6, '#cfd8dc', -6, 4.6, -7.6); bx(W, 2, .6, .6, '#cfd8dc', 6, 4.6, -7.6); }
       if (opts.escena !== 'patio') { [-9, -5.5].forEach(x => rack(W, x, -4)); [5.5, 9].forEach(x => rack(W, x, -4)); }
-      if (opts.escena !== 'patio') persona(W, 2.4, 1.2, '#f2b705');
+      const PER = opts.escena !== 'patio' ? persona(W, 2.4, 1.2, '#f2b705') : null;
       const T = new THREE.Group(); sc.add(T); let pick = [];
       let th = opts.escena === 'patio' ? 0 : .35, ph = opts.escena === 'patio' ? .75 : 1.1, rad = opts.escena === 'patio' ? 24 : 6.5, drag = null, moved = 0;
       const upd = () => { ph = Math.max(.45, Math.min(1.35, ph)); rad = Math.max(3.5, Math.min(34, rad)); cam.position.set(rad * Math.sin(th) * Math.sin(ph), rad * Math.cos(ph) + 1, rad * Math.cos(th) * Math.sin(ph)); cam.lookAt(0, .8, opts.escena === 'patio' ? 1 : 0); };
-      const fit = () => { const w = el.clientWidth, h = el.clientHeight; rn.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); if (opts.escena === 'patio' && !fit.done) { rad = w / h < 1 ? 46 : 26; fit.done = 1; } upd(); }; addEventListener('resize', fit); fit();
+      const fit = () => { const w = el.clientWidth, h = el.clientHeight; rn.setSize(w, h, false); cam.aspect = w / h; cam.fov = cam.aspect < 1.2 ? Math.min(95, 2 * Math.atan(Math.tan(50 * Math.PI / 360) * 1.8 / cam.aspect) * 180 / Math.PI) : 50; cam.updateProjectionMatrix(); if (opts.escena === 'patio' && !fit.done) { rad = 26; fit.done = 1; } upd(); }; addEventListener('resize', fit); fit();
       const cv = rn.domElement;
       cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; moved = 0; cv.setPointerCapture(e.pointerId); });
       cv.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; moved += Math.abs(dx) + Math.abs(dy); th -= dx * .007; ph -= dy * .005; drag = { x: e.clientX, y: e.clientY }; upd(); });
@@ -54,7 +54,7 @@
           pick = [T];
         },
         setKit(o) {
-          o = o || {}; while (T.children.length) T.remove(T.children[0]); if (!api.kitCam) { api.kitCam = 1; th = .12; ph = .82; rad = el.clientWidth / el.clientHeight < 1 ? 4.6 : 3.6; upd(); }
+          o = o || {}; while (T.children.length) T.remove(T.children[0]); if (PER) PER.position.set(1.45, 0, .95); if (!api.kitCam) { api.kitCam = 1; th = .12; ph = .82; rad = 3.6; upd(); }
           const txt = (t, bg, fg, w, h) => { const c = document.createElement('canvas'); c.width = 256; c.height = 96; const x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, 256, 96); x.fillStyle = fg || '#111'; x.font = 'bold 40px sans-serif'; x.textAlign = 'center'; x.fillText(String(t).slice(0, 12), 128, 62); return new THREE.Mesh(new THREE.PlaneGeometry(w || .34, h || .13), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) })); };
           bx(T, 2.4, .08, 1.2, '#9e9e9e', 0, .9, 0); [[-1.1, -.5], [1.1, -.5], [-1.1, .5], [1.1, .5]].forEach(([x, z]) => bx(T, .07, .9, .07, '#616161', x, .45, z));
           const emp = o.empaque || 'caja', cajaC = emp === 'bolsa' ? '#cfd8dc' : '#c9a875';
@@ -67,7 +67,7 @@
           anillo = new THREE.Mesh(new THREE.RingGeometry(1.45, 1.6, 48), new THREE.MeshBasicMaterial({ color: '#2238d3', side: THREE.DoubleSide })); anillo.rotation.x = -Math.PI / 2; anillo.position.y = .02; T.add(anillo); pick = [T];
         },
         setPTL(o) {
-          o = o || {}; while (T.children.length) T.remove(T.children[0]); pick = []; if (!api.ptlCam) { api.ptlCam = 1; th = 0; ph = 1.32; rad = el.clientWidth / el.clientHeight < 1 ? 7.2 : 4.4; upd(); }
+          o = o || {}; while (T.children.length) T.remove(T.children[0]); pick = []; if (!api.ptlCam) { api.ptlCam = 1; th = 0; ph = 1.32; rad = 4.4; upd(); }
           const CX = c => (c - 3.5) * .95, LY = l => .1 + (l - 1) * 1.0, Z = -.6, blue = M('#2a4bd7', { metalness: .4 }), org = M('#e8730c');
           for (let c = 0; c <= 6; c++) { bx(T, .08, 3.2, .08, blue, CX(c + .5) - .95, 1.6, Z - .4); bx(T, .08, 3.2, .08, blue, CX(c + .5) - .95, 1.6, Z + .4); }
           for (let l = 1; l <= 3; l++) bx(T, 6 * .95 + .1, .06, .9, org, 0, LY(l), Z);
@@ -81,7 +81,7 @@
         },
         screenSlot(col, lvl) { const v = new THREE.Vector3((col - 3.5) * .95, .1 + (lvl - 1) + .48, -.6 + .46).project(cam), r = rn.domElement.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; },
         setSorter(o) {
-          o = o || {}; while (T.children.length) T.remove(T.children[0]); pick = []; if (!api.sorCam) { api.sorCam = 1; th = -.18; ph = 1.05; rad = el.clientWidth / el.clientHeight < 1 ? 10 : 6.6; upd(); }
+          o = o || {}; while (T.children.length) T.remove(T.children[0]); pick = []; if (!api.sorCam) { api.sorCam = 1; th = -.18; ph = 1.05; rad = 6.6; upd(); }
           const txt = (t, bg, fg, w, h, fs) => { const c = document.createElement('canvas'); c.width = 320; c.height = 128; const x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, 320, 128); x.fillStyle = fg; x.font = 'bold ' + (fs || 52) + 'px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, 160, 68); return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) })); };
           bx(T, 7, .12, 1, '#37474f', 0, .85, -1.2); for (let i = 0; i < 14; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 1, 10), M('#b0bec5')); r.rotation.x = Math.PI / 2; r.position.set(-3.25 + i * .5, .93, -1.2); T.add(r); }
           [[-3.3, -1.6], [3.3, -1.6], [-3.3, -.8], [3.3, -.8]].forEach(([x, z]) => bx(T, .08, .85, .08, '#455a64', x, .42, z));
