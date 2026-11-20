@@ -1023,6 +1023,13 @@ SCEN.sup.push(
     open: 'Jefe… perdón, creo que la regué. Puse una tarima de Querétaro en el tráiler de Celaya. Ya iba a salir y me acordé. No me vaya a levantar acta, por favor.',
     goal: 'Agradece el reporte y contén el error primero (detener la salida y corregir la carga), sin regañar; luego busca la causa con preguntas, acuerda una acción para que no se repita (con responsable y fecha) y reconoce que avisar a tiempo es lo correcto.',
     fb: ['Fue porque las dos etiquetas se parecen mucho y estaban juntas.', '¿Detengo al chofer o lo hace usted?', 'La verdad me dio miedo decirle.', 'Si quiere puedo revisar las otras tarimas antes de que salga.', 'Gracias por no regañarme enfrente de todos.'] });
+/* Ciclo #51: reconocer un buen trabajo (retroalimentación positiva específica) */
+SCEN.sup.push(
+  { id: 'reconocer', ic: '👏', t: 'Reconocer un buen trabajo', d: 'Pedro detectó y corrigió un error de etiquetado que habría mandado 30 tarimas al cliente equivocado.', k: 'ricardo', name: 'Pedro', role: 'Auxiliar de embarques', mood: 'Reservado', trust: 55,
+    intro: 'Cierre del turno nocturno. Revisando la bitácora ves que Pedro, auxiliar de embarques con dos años en el almacén, detectó que treinta tarimas tenían la etiqueta de otro cliente, detuvo la carga, avisó a calidad y reetiquetó antes de que saliera el tráiler. Nadie se lo pidió. Pedro casi no habla y nunca le han reconocido nada.',
+    open: '¿Me buscaba, jefe? Si es por lo del tráiler que salió tarde, fue porque tuve que reetiquetar unas tarimas…',
+    goal: 'Reconoce de forma específica: describe el hecho (qué hizo), el impacto (qué evitó para el cliente y el equipo) y da las gracias; pregúntale cómo lo detectó y qué propone para que no se repita, y si aplica, que lo comparta con el equipo. Evita el elogio genérico («buen trabajo») o mezclarlo con una crítica.',
+    fb: ['Ah… pensé que me iba a regañar por el retraso.', 'Pues me di cuenta porque el código del cliente no cuadraba con la orden.', 'Gracias, jefe. Casi nunca nos dicen nada cuando sale bien.', 'Se podría revisar la etiqueta contra la orden antes de subir la tarima, así no se repite.', '¿Lo cuento en la junta de arranque? Me da un poco de pena, pero va.'] });
 /* Casos de logística (ciclo de mejora #2): andén, inventario, capacitación, cambio de sistema y auditoría del cliente */
 SCEN.sup.push(
   { id: 'chofer', ic: '🚛', t: 'Chofer agresivo en el andén', d: 'El chofer de un transportista exige que lo descarguen ya y le grita a tu equipo.', k: 'ricardo', name: 'Don Chuy', role: 'Chofer del transportista', mood: 'Agresivo', trust: 30,
