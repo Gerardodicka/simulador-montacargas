@@ -630,6 +630,13 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     const q = await cx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('index.html')); await q.waitForTimeout(1200);
     const r = await q.evaluate(() => { const i = document.getElementById('insig'); return i ? { on: i.querySelectorAll('.badge.on').length, total: i.querySelectorAll('.badge').length, pct: (i.innerText.match(/(\d+)%/) || [])[1], falta: /faltan/.test(i.innerText) } : null; }); await cx.close();
     ok('Portal', '#47 insignias: barra de avance y medallas de la ruta por puesto', r && r.total === 3 && r.on === 1 && +r.pct > 0 && r.falta && !e.length, JSON.stringify(r) + (e[0] || '')); }
+  // #48 dificultad adaptativa: el caso fallado sale primero con aviso «Repaso» y se quita al acertarlo
+  { const cx = await b.newContext({ viewport: { width: 390, height: 844 } }); await cx.route(/(three\.min|GLTFLoader|SkeletonUtils|dicka-avatar)\.js/, r => r.abort()); const q = await cx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message)); const u = url('juegos/kitting.html');
+    await q.goto(u); await q.fill('#pname', 'Prueba Adapt'); await q.evaluate(() => start()); await q.waitForTimeout(400);
+    const f = await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); let f = null; for (let i = 0; i < 8; i++) { const k = L[idx]; if (i === 3) { f = k.kit; decide(k.t === 'liberar' ? 'cantidad' : 'liberar'); } else decide(k.t); await w(120); next(); } return f; });
+    await q.goto(u); await q.fill('#pname', 'Prueba Adapt'); await q.evaluate(() => start()); await q.waitForTimeout(1000);
+    const r = await q.evaluate(async () => { const o = { first: L[0].kit, banner: !!document.getElementById('dkRepaso') }; decide(L[0].t); await new Promise(r => setTimeout(r, 300)); o.after = DKAdapt.load().length; return o; }); await cx.close();
+    ok('Adaptativo', '#48 el caso fallado sale primero con aviso de repaso y se quita al acertarlo', r.first === f && r.banner && r.after === 0 && !e.length, JSON.stringify({ f, ...r }) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
