@@ -331,7 +331,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
   // Tablero del gerente: estrategia equilibrada aprueba; solo tiempo extra sin mantenimiento ni personal reprueba con accidentes
   { const run = async plan => { const q = await (await b.newContext()).newPage({ viewport: { width: 390, height: 844 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.route(/(three\.min|GLTFLoader|SkeletonUtils|dicka-avatar)\.js/, r => r.abort()); await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300);
       await q.fill('#pname', 'Prueba Tablero'); await q.click('#startBtn');
-      for (let i = 0; i < 4; i++) { const d = plan(i); await q.selectOption('#dExtra', String(d.extra)); await q.selectOption('#dOT', String(d.ot)); await q.selectOption('#dMant', String(d.mant)); await q.selectOption('#dCap', String(d.cap)); await q.click('#runBtn'); }
+      for (let i = 0; i < 4; i++) { const d = plan(i); for (const v of [d.extra, d.ot, d.mant, d.cap]) await q.click(`#wiz .opt[data-v="${v}"]`); await q.click('#runBtn'); }
       const r = await q.evaluate(() => ({ score, acc: H.reduce((a, h) => a + h.acc, 0), end: !document.getElementById('end').classList.contains('hidden'), saved: JSON.parse(localStorage.getItem('dicka_console_results') || '[]').some(x => x.juego === 'Tablero del Gerente') })); await q.close(); return { r, e }; };
     const g = await run(i => ({ extra: i < 2 ? 6 : 9, ot: 0, mant: 1, cap: 1 })), m = await run(() => ({ extra: 0, ot: 1, mant: 0, cap: 0 }));
     ok('Tablero del gerente', 'estrategia equilibrada aprueba (≥70) y guarda', g.r.score >= 70 && g.r.end && g.r.saved && g.r.acc === 0, JSON.stringify(g.r));
@@ -604,7 +604,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
   // Tablero del Gerente: el director 3D presenta las metas, comenta cada cierre de mes y el resultado final
   { const b3 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] }); const q = await (await b3.newContext()).newPage({ viewport: { width: 1280, height: 900 } }); const e = []; q.on('pageerror', x => e.push(x.message));
     await q.goto(url('juegos/tablero-gerente.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Director'); await q.evaluate(() => start()); await q.waitForTimeout(800); const t0 = await q.textContent('#gbub');
-    await q.selectOption('#dOT', '1'); await q.evaluate(() => month()); const t1 = await q.textContent('#gbub');
+    await q.evaluate(() => { document.getElementById('dOT').value = '1'; }); await q.evaluate(() => month()); const t1 = await q.textContent('#gbub');
     await q.evaluate(() => { month(); month(); month(); }); await q.waitForTimeout(300); const r = await q.evaluate(() => ({ ok: !!G3, enEnd: !!document.querySelector('#end #ger'), fin: document.getElementById('gbub').textContent })); await b3.close();
     ok('Tablero del Gerente 3D', 'el director 3D presenta metas, comenta cada mes y el trimestre', r.ok && /OTIF 97/.test(t0) && /OTIF de/.test(t1) && /tiempo extra/.test(t1) && r.enEnd && /trimestre/.test(r.fin) && !e.length, JSON.stringify({ t0: t0.slice(0, 30), t1: t1.slice(0, 60), ...r }).slice(0, 220) + (e[0] || '')); }
   // Escena 3D compartida: el muñeco básico se cambia por el operario 3D DICKA (casco y chaleco)
