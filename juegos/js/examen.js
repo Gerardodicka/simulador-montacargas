@@ -10,7 +10,7 @@
     l.innerHTML = '<input type="checkbox" id="dkExam" style="width:20px;height:20px"> ⏱️ Modo examen: cronómetro por caso y tiempo total en el resultado'; sb.parentNode.insertBefore(l, sb); }
   function tick() { const g = document.getElementById('game'), end = document.getElementById('end'); const cb = document.getElementById('dkExam');
     if (!on && cb && cb.checked && g && !g.classList.contains('hidden')) { on = true; t0 = tc = Date.now(); lastIdx = curIdx(); pill = document.createElement('div'); pill.id = 'dkExamPill'; pill.style.cssText = 'position:fixed;top:10px;right:10px;z-index:7000;background:#1D2586;color:#fff;border-radius:999px;padding:7px 12px;font:800 ' + (innerWidth < 600 ? 13 : 15) + 'px system-ui,sans-serif;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.3)'; document.body.appendChild(pill); }
-    if (!on) return; const i = curIdx(); if (i !== lastIdx) { times[lastIdx] = (Date.now() - tc) / 1000; tc = Date.now(); lastIdx = i; }
+    if (!on) return; const nL = (() => { try { return Array.isArray(L) ? L.length : 1e9; } catch (e) { return 1e9; } })(); const i = Math.min(curIdx(), nL - 1); if (i !== lastIdx) { times[lastIdx] = (Date.now() - tc) / 1000; tc = Date.now(); lastIdx = i; }
     if (pill) pill.textContent = `⏱️ Caso ${i + 1}: ${fmt((Date.now() - tc) / 1000)} · Total ${fmt((Date.now() - t0) / 1000)}`;
     if (end && !end.classList.contains('hidden') && !shown) { shown = true; if (times[lastIdx] === undefined) times[lastIdx] = (Date.now() - tc) / 1000; if (pill) pill.remove();
       const T = times.filter(x => typeof x === 'number' && x > 0), tot = (Date.now() - t0) / 1000, avg = T.length ? T.reduce((a, b) => a + b, 0) / T.length : 0, slow = T.length ? times.indexOf(Math.max(...T)) : -1;
