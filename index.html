@@ -205,6 +205,46 @@
 .card.enRuta{outline:3px solid #ffd600;position:relative}.rutaTag{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:2;background:#ffd600;color:#1a237e;font:800 11px Poppins,sans-serif;padding:3px 10px;border-radius:20px;letter-spacing:.5px}
 .rutaSep{grid-column:1/-1;color:#fff;font:700 15px Poppins,sans-serif;margin:8px 0 -4px;opacity:.85}
 .idl{display:flex;flex-direction:column;font-size:12px;font-weight:700;color:#1D2586;gap:3px}.idl input,.idl select{width:100%;box-sizing:border-box;min-width:0;padding:9px;border:1.5px solid #d6dbea;border-radius:9px;font-size:15px;font-weight:500;color:#222}
+
+  /* ===== Propuesta: fotos reales, ficha del simulador y navegación lateral ===== */
+  .cover.foto{height:150px;font-size:0;background:#1D2586 linear-gradient(110deg,#1D2586 30%,#2b3fb8 50%,#1D2586 70%);background-size:200% 100%;animation:dkShim 1.4s linear infinite}
+  .cover.foto.ld{animation:none}
+  .cover.foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .35s}
+  .cover.foto.ld img{opacity:1}
+  .cover.foto::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(1,17,49,.55) 0%,rgba(1,17,49,0) 38%,rgba(1,17,49,0) 62%,rgba(1,17,49,.6) 100%);pointer-events:none}
+  .cover.foto .cat,.cover.foto .status{z-index:2}
+  .cover .ico{position:absolute;left:12px;bottom:10px;z-index:2;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 4px 12px rgba(0,0,0,.3);overflow:hidden}
+  .cover .ico svg{width:38px;height:auto}
+  @keyframes dkShim{to{background-position:-200% 0}}
+  .card .ficha{width:100%;margin-top:6px;padding:.6rem;border:2px solid var(--brillante);border-radius:10px;background:#fff;color:var(--brillante);font-weight:800;font-size:13.5px;cursor:pointer}
+  #fichaModal .mcard{max-width:720px;padding:0;overflow:hidden auto}
+  .fhero{position:relative;height:260px;background:#1D2586}
+  .fhero img{width:100%;height:100%;object-fit:cover;display:block}
+  .fhero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(1,17,49,0) 35%,rgba(1,17,49,.85) 100%)}
+  .fhero h2{position:absolute;left:20px;right:20px;bottom:14px;z-index:2;color:#fff!important;font-size:26px!important;margin:0!important;line-height:1.15}
+  .fhero .fcat{position:absolute;left:20px;top:14px;z-index:2;background:#f5b800;color:#011131;font-weight:800;font-size:12px;letter-spacing:1px;padding:5px 12px;border-radius:999px}
+  .fhero .fx{position:absolute;right:12px;top:12px;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);font-size:20px;font-weight:800;cursor:pointer}
+  .fbody{padding:18px 20px 20px;font-size:16px;line-height:1.55}
+  .fkpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+  .fkpis div{background:#eef1fb;border-radius:12px;padding:10px;text-align:center;font-size:13px;color:#555}
+  .fkpis b{display:block;font-size:19px;color:var(--azul)}
+  .fbody h4{color:var(--azul);font-size:16px;margin:14px 0 6px}
+  .fsteps{counter-reset:st;list-style:none;padding:0;margin:0}
+  .fsteps li{counter-increment:st;position:relative;padding:8px 0 8px 46px;border-bottom:1px solid #eef0f6}
+  .fsteps li::before{content:counter(st);position:absolute;left:0;top:6px;width:32px;height:32px;border-radius:50%;background:var(--brillante);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .fcta{position:sticky;bottom:0;background:#fff;padding:12px 20px;border-top:1px solid #e6e9f4;display:flex;gap:10px}
+  .fcta .play{flex:2;font-size:17px;padding:1rem}
+  .fcta .ghost{flex:1;border:0;border-radius:10px;font-weight:800;cursor:pointer}
+  .fcred{font-size:11.5px;color:#888;margin-top:10px}
+  .sidenav{position:fixed;left:0;top:0;bottom:0;width:86px;z-index:40;background:#011131;border-right:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:70px}
+  .sidenav button{width:74px;border:0;background:transparent;color:#c5cdf5;border-radius:12px;padding:10px 4px;font:700 12px system-ui,sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .sidenav button span{font-size:22px}
+  .sidenav button:hover,.sidenav button.on{background:rgba(245,184,0,.15);color:#f5b800}
+  @media(min-width:1000px){body.hasNav{padding-left:86px}}
+  @media(max-width:999px){.sidenav{top:auto;left:0;right:0;width:auto;height:64px;flex-direction:row;justify-content:space-around;padding:0 4px;border-right:0;border-top:1px solid rgba(255,255,255,.15)}.sidenav button{flex:1;width:auto;padding:6px 2px;font-size:11.5px}.sidenav button span{font-size:20px}body.hasNav{padding-bottom:68px}#dkDemoBtn{bottom:78px}body.hasNav #bigTextBtn,body.hasNav #offlineBtn{padding:7px 10px!important;font-size:12px!important}body.hasNav #a11yBar{bottom:74px!important;left:8px!important}}
+  #fichaModal,#ayudaModal{z-index:9500}
+  body.fichaOpen #a11yBar,body.fichaOpen #dkDemoBtn{display:none!important}
+  @media(max-width:600px){.fhero{height:200px}.fhero h2{font-size:22px!important}.fkpis b{font-size:16px}.fcta{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -380,6 +420,37 @@ const LS_GAMES='dicka_console_games', LS_CFG='dicka_console_cfg';
 function customGames(){ try{return JSON.parse(localStorage.getItem(LS_GAMES)||'[]')}catch(e){return []} }
 function cfg(){ try{return JSON.parse(localStorage.getItem(LS_CFG)||'{}')}catch(e){return {}} }
 function allGames(){ const c=cfg(); return [...BASE_GAMES.map(g=>({...g,...(c[g.id]||{})})), ...customGames()].filter(g=>!g.hidden); }
+
+// ===== Propuesta: banco de 32 fotos asignadas por contenido (img/sims/NN.jpg) =====
+const FOTOS={ montacarga:['05','Montacarguista trasladando una tarima en un pasillo de racks'], 'turno-seguro-3d':['06','Montacargas con clamp moviendo cajas con un compañero que le da indicaciones'],
+  'turno-seguro':['29','Colaborador respondiendo en su celular dentro del almacén'], 'examen-seguridad':['30','Colaborador con tableta frente a señales de seguridad'], 'extintores-3d':['31','Práctica de uso de extintor sobre un conato de fuego'],
+  surtido:['22','Surtidor con carrito de cajas azules en un pasillo de racks'], recepcion:['20','Recepción de una tarima en andén con tableta'], patio:['17','Patio de maniobras con tráileres en andenes y un patiero dando indicaciones'],
+  metodos:['23','Surtidor tomando producto con carrito de contenedores de colores'], planeacion:['10','Supervisora con tableta revisando el flujo del piso'], tablero:['32','Gerente revisando tableros de indicadores'],
+  frio:['18','Revisión con registrador de temperatura dentro de una cámara fría'], sellos:['24','Inspección del sello y la puerta de una caja de tráiler'], indicadores:['28','Supervisor señalando gráficas de indicadores en una pantalla'],
+  'picking-guiado':['14','Surtidores tomando piezas de contenedores de colores'], 'surtido-voz':['22','Surtidor con carrito en pasillo de racks'], 'recepcion-acomodo':['25','Colaborador revisando tarimas acomodadas en rack'],
+  'clasificacion-ruta':['07','Andenes con carriles marcados, montacargas y colaborador con escáner'], kitting:['21','Colaboradora armando kits en mesa de trabajo'], devoluciones:['16','Colaborador escaneando una caja dañada marcada como rechazada'],
+  '5s':['09','Área limpia y ordenada con tablero de herramientas y estación de limpieza'], matpel:['11','Tambo de material peligroso con kit antiderrames y señalización'], ergonomia:['02','Levantamiento de caja con técnica correcta, flexionando rodillas'],
+  emergencias:['15','Colaborador señalando la ruta de evacuación y el extintor'], loto:['01','Técnico colocando candado y etiqueta de bloqueo en un tablero eléctrico'], alturas:['04','Plataforma de tijera con área delimitada por conos'],
+  senalizacion:['03','Pasillo peatonal señalizado con flechas en el piso'], andenes:['12','Tráiler en andén con calzas y semáforo'], cargas:['08','Carga larga y voluminosa asegurada en tarima con área delimitada'],
+  excepciones:['25','Revisión de producto en ubicación de rack'], flujo:['10','Supervisora coordinando el flujo de materiales en piso'], crossdock:['07','Flujo directo de andén a andén con montacargas'],
+  slotting:['14','Racks con contenedores de colores por zona'], embarques:['13','Colaborador asegurando la carga con bandas dentro del tráiler'], conteo:['19','Conteo de inventario en rack con escáner y tableta'],
+  inventario:['19','Conteo de inventario en rack con escáner y tableta'], 'dojo-de-mando':['26','Conversación uno a uno entre jefa y colaborador'], carga:['27','Carga de tarimas dentro de la caja de un tráiler'] };
+const fotoDe=g=>FOTOS[g.id]?{src:'img/sims/'+FOTOS[g.id][0]+'.jpg',alt:FOTOS[g.id][1]}:null;
+const GRUPO=g=>['montacarga','turno-seguro-3d','turno-seguro','cargas','andenes','diag'].includes(g.id)?'Equipo móvil':g.cat==='Seguridad'?'Seguridad':g.cat==='Liderazgo'?'Liderazgo':'Almacén';
+const HABIL={ Seguridad:'Identificar riesgos y aplicar la norma (EPP, señalización, procedimientos)', 'Equipo móvil':'Operación segura de montacargas y equipo motorizado', Almacén:'Proceso de almacén: exactitud, orden y sistema (RF/WMS)', Liderazgo:'Toma de decisiones, comunicación y manejo de personal' };
+function fichaSim(id){ const g=allGames().find(x=>x.id===id); if(!g) return; const f=fotoDe(g), e=t=>String(t||'').replace(/</g,'&lt;');
+  const m=document.getElementById('fichaModal'); m.querySelector('.mcard').innerHTML=`<div class="fhero">${f?`<img src="${f.src}" alt="${e(f.alt)}">`:''}<span class="fcat">${e(GRUPO(g).toUpperCase())}</span><button class="fx" aria-label="Cerrar" onclick="cerrarFicha()">✕</button><h2>${e(g.name)}</h2></div>
+  <div class="fbody"><div><b>🎯 Propósito:</b> ${e(g.desc)}</div>
+  <div class="fkpis"><div><b>${e(g.time||'—')}</b>Duración</div><div><b>${e(g.pass||'—')}</b>Para aprobar</div><div><b>${g.status==='activo'?'✓':'—'}</b>${g.status==='activo'?'Disponible':'En desarrollo'}</div></div>
+  <div><b>🧰 Habilidades:</b> ${HABIL[GRUPO(g)]}</div>
+  <h4>Cómo se practica</h4><ol class="fsteps"><li>Lee el <b>objetivo</b> y la guía de reglas que se califican.</li><li>Si es tu primera vez, toca <b>▶ Ver ejemplo</b>: una mano te muestra cada parte.</li><li>Resuelve cada caso: revisa los datos y la escena 3D y <b>decide</b>.</li><li>Lee la <b>explicación</b>: qué era lo correcto y por qué.</li><li>Al final ves tu <b>puntaje</b>, si aprobaste y qué repasar; envía el resultado a tu supervisor.</li></ol>
+  ${f?`<div class="fcred">Foto: ${e(f.alt)}</div>`:''}</div>
+  <div class="fcta"><button class="play" ${(!g.url||g.status==='proximo')?'disabled':''} onclick="cerrarFicha();play('${g.id}')">▶ Iniciar simulador</button><button class="ghost" onclick="cerrarFicha()">Volver</button></div>`;
+  m.classList.add('open'); document.body.classList.add('fichaOpen'); }
+function cerrarFicha(){ document.getElementById('fichaModal').classList.remove('open'); document.body.classList.remove('fichaOpen'); }
+function navIr(k){ document.querySelectorAll('.sidenav button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  if(k==='inicio') scrollTo({top:0,behavior:'smooth'}); else if(k==='sims'){ const c=document.getElementById('catalogo'); if(c.classList.contains('hidden')) showSimuladores(); else document.getElementById('simuladores').scrollIntoView({behavior:'smooth'}); }
+  else if(k==='avance') openLogros(); else if(k==='ayuda') document.getElementById('ayudaModal').classList.add('open'); }
 let filter='Todos', current=null;
 
 
@@ -399,9 +470,9 @@ function verPuesto(){ try{ const v=localStorage.getItem('dicka_ver_puesto'); if(
 function setVerPuesto(v){ try{ localStorage.setItem('dicka_ver_puesto',v); }catch(e){} render(); }
 function render(){
   const games=allGames().filter(g=>!g.hiddenCard);   // la validación USB vive en el menú principal y dentro del simulador, no en el catálogo
-  const cats=['Todos',...new Set(games.map(g=>g.cat))];
+  const cats=['Todos',...['Seguridad','Almacén','Equipo móvil','Liderazgo'].filter(c=>games.some(g=>GRUPO(g)===c))];
   document.getElementById('filters').innerHTML=cats.map(c=>`<button class="chip ${c===filter?'active':''}" onclick="filter='${c}';render()">${c}</button>`).join('');
-  let list=games.filter(g=>filter==='Todos'||g.cat===filter);
+  let list=games.filter(g=>filter==='Todos'||GRUPO(g)===filter);
   const pm=prfLoad(), pu=verPuesto(), ruta=pu?prfRuta(pm,pu).filter(id=>games.some(g=>g.id===id)):[];
   const yo=(()=>{ try{ return JSON.parse(localStorage.getItem('dicka_perfil')||'null'); }catch(e){ return null; } })();
   const apr=new Set(collectResults().filter(r=>r.aprobado&&yo&&((yo.num&&String(r.num)===String(yo.num))||(r.nombre||'').toLowerCase().startsWith((yo.nombre||'').toLowerCase()+' '))).map(r=>r.juego));
@@ -412,11 +483,12 @@ function render(){
   document.getElementById('rutaBar').innerHTML=`<label style="font-weight:700">🧭 Ver simuladores para el puesto:</label> <select id="rutaSel" onchange="setVerPuesto(this.value)" style="padding:7px 10px;border-radius:9px;border:0;font-weight:700"><option value="">Todos los puestos (sin orden)</option>${Object.keys(pm).sort().map(p=>`<option ${p===pu?'selected':''}>${p.replace(/</g,'&lt;')}</option>`).join('')}${pu&&!pm[pu]?`<option selected>${pu.replace(/</g,'&lt;')}</option>`:''}</select>${ruta.length?` <span style="margin-left:6px">Tu ruta: <b>${nR}</b> simuladores${yo?` · <b>${nA}</b> aprobados`:''}</span>`:''}`+(ruta.length&&yo?insigniasHTML(nA,nR):'');
   document.getElementById('grid').innerHTML=list.map((g,i)=>`${ruta.length&&i===nR&&i<list.length?'<div class="rutaSep">Otros simuladores</div>':''}
     <div class="card${ruta.includes(g.id)?' enRuta':''}">${ruta.includes(g.id)?`<span class="rutaTag">${apr.has(g.name)?'✓ APROBADO':'TU RUTA · '+(ruta.indexOf(g.id)+1)}</span>`:''}
-      <div class="cover">${g.icon}<span class="cat">${g.cat.toUpperCase()}</span><span class="status ${g.status}">${g.status==='activo'?'ACTIVO':g.status==='beta'?'BETA':'PRÓXIMAMENTE'}</span></div>
+      ${(f=>f?`<div class="cover foto"><img src="${f.src}" alt="${f.alt.replace(/"/g,'&quot;')}" loading="lazy" onload="this.parentNode.classList.add('ld')" onerror="this.remove();this.parentNode.classList.add('ld')"><span class="ico">${g.icon}</span>`:`<div class="cover">${g.icon}`)(fotoDe(g))}<span class="cat">${GRUPO(g).toUpperCase()}</span><span class="status ${g.status}">${g.status==='activo'?'ACTIVO':g.status==='beta'?'BETA':'PRÓXIMAMENTE'}</span></div>
       <div class="body">
         <h3><span style="color:var(--brillante)">${String(i+1).padStart(2,'0')}</span> · ${g.name}</h3><p>${g.desc||''}</p>
         <div class="meta"><span>${g.time||'—'}</span><span>Aprueba: ${g.pass||'—'}</span></div>
         <button class="play" ${(!g.url||g.status==='proximo')?'disabled':''} onclick="play('${g.id}')">${!g.url?'SIN LIGA CONFIGURADA':g.status==='proximo'?'EN DESARROLLO':'▶ JUGAR'}</button>
+        <button class="ficha" onclick="fichaSim('${g.id}')">📄 Ver ficha</button>
         <button class="del" onclick="removeGame('${g.id}')">quitar</button>
       </div>
     </div>`).join('');
@@ -934,5 +1006,9 @@ function renderLideres(){ const wh=document.getElementById('ldWh').value, d=+doc
   const sm=innerWidth<480; document.getElementById('ldBody').innerHTML=L.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px"><tr style="background:#eef2ff;color:#1D2586;text-align:left"><th style="padding:6px">#</th><th>Colaborador</th>${sm?'':'<th>Almacén</th>'}<th>Aprobados</th><th>🔥</th><th>Puntos</th></tr>${L.map((r,i)=>`<tr class="ld-row" style="border-bottom:1px solid #eee"><td style="padding:6px">${med[i]||i+1}</td><td>${String(full?r.n:shortName(r.n)).replace(/</g,'&lt;')}</td>${sm?'':`<td>${String(r.wh).replace(/</g,'&lt;')}</td>`}<td>${r.apr}/${r.cursos}</td><td>${r.racha}</td><td><b>${r.pts}</b></td></tr>`).join('')}</table></div>`:'<p style="color:#6b7390;margin-top:10px">Sin resultados con estos filtros.</p>'; }
 </script>
 <script src="juegos/js/accesible.js"></script>
+<nav class="sidenav" aria-label="Navegación principal"><button data-k="inicio" class="on" onclick="navIr('inicio')"><span>🏠</span>Inicio</button><button data-k="sims" onclick="navIr('sims')"><span>🎮</span>Simuladores</button><button data-k="avance" onclick="navIr('avance')"><span>🏅</span>Mi avance</button><button data-k="ayuda" onclick="navIr('ayuda')"><span>❓</span>Ayuda</button></nav>
+<div class="modal" id="fichaModal" onclick="if(event.target===this)cerrarFicha()"><div class="mcard"></div></div>
+<div class="modal" id="ayudaModal" onclick="if(event.target===this)this.classList.remove('open')"><div class="mcard"><h2>❓ Ayuda</h2><ol style="font-size:16px;line-height:1.7;padding-left:1.2rem"><li>Toca <b>🎮 Simuladores</b> y elige uno de <b>tu ruta</b> (aparecen primero).</li><li>Toca <b>📄 Ver ficha</b> para ver de qué trata, cuánto dura y con cuánto apruebas.</li><li>Toca <b>▶ Iniciar simulador</b>. Dentro, <b>▶ Ver ejemplo</b> te enseña paso a paso.</li><li>Al terminar se guarda tu resultado; envíalo a tu supervisor por WhatsApp.</li><li>En <b>🏅 Mi avance</b> ves tus logros y tu racha.</li></ol><div class="mbtns"><button class="primary" onclick="document.getElementById('ayudaModal').classList.remove('open')">Entendido</button></div></div></div>
+<script>document.body.classList.add('hasNav');</script>
 </body>
 </html>
