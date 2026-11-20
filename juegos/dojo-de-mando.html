@@ -311,7 +311,7 @@ const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q1 = new THREE.Quat
 function aimBone(b, c, dirW) { b.updateMatrixWorld(true); c.updateMatrixWorld(true); _v1.setFromMatrixPosition(b.matrixWorld); _v2.setFromMatrixPosition(c.matrixWorld).sub(_v1).normalize();
   _q1.setFromUnitVectors(_v2, dirW); b.getWorldQuaternion(_q2); b.parent.getWorldQuaternion(_q3); b.quaternion.copy(_q3.invert().multiply(_q1.multiply(_q2))); b.updateMatrixWorld(true); }
 /* Lenguaje corporal: poses de brazo (hombro→codo y codo→mano) que se mezclan suavemente; al hablar elige gestos variados, en reposo alterna posturas */
-const ARM_POSES = { rest: [[.2, -1, .06], [.1, -.92, .3]], clasp: [[.12, -1, .2], [-.4, -.35, .85]], beat: [[.22, -1, .18], [.15, -.35, .88]], open: [[.4, -.88, .3], [.55, -.1, .8]], point: [[.15, -.9, .45], [.1, -.05, 1]], relaxed: [[.25, -1, .1], [.18, -.85, .45]] };
+const ARM_POSES = { rest: [[.16, -1, .04], [.08, -.95, .22]], clasp: [[.1, -1, .16], [-.26, -.5, .8]], beat: [[.17, -1, .16], [.12, -.45, .85]], open: [[.24, -.96, .2], [.32, -.38, .78]], point: [[.14, -.92, .38], [.08, -.15, 1]], relaxed: [[.2, -1, .08], [.12, -.88, .4]] };
 const TALK_SETS = [['beat', 'beat'], ['open', 'rest'], ['rest', 'open'], ['beat', 'rest'], ['clasp', 'clasp'], ['point', 'rest'], ['relaxed', 'beat']], IDLE_SETS = [['rest', 'rest'], ['clasp', 'clasp'], ['relaxed', 'rest'], ['rest', 'relaxed']];
 /* Operadores y sindicato: gestos más abiertos y enfáticos al hablar (señalan, abren las manos, marcan el ritmo); en reposo, brazos sueltos */
 const TALK_SETS_OP = [['beat', 'beat'], ['open', 'open'], ['point', 'rest'], ['rest', 'point'], ['open', 'beat'], ['beat', 'open'], ['relaxed', 'beat']], IDLE_SETS_OP = [['rest', 'rest'], ['relaxed', 'rest'], ['rest', 'relaxed'], ['relaxed', 'relaxed']];
@@ -324,7 +324,9 @@ function officeArms(a, t, dt) { dt = dt || .016; const root = a.av.obj; if (!a.a
     const P = ARM_POSES[G.set[i]], beat = talk ? Math.sin(t * 4.2 + i * 2.1 + G.ph) * .14 : 0, br = Math.sin(t * 1.25 + G.ph) * .015;
     const tu = new THREE.Vector3(P[0][0] * sx, P[0][1], P[0][2] + br), tf = new THREE.Vector3(P[1][0] * sx, P[1][1] + beat, P[1][2] + beat * .3);
     const cur = G[sd] = G[sd] || { u: tu.clone(), f: tf.clone() }; cur.u.lerp(tu, k); cur.f.lerp(tf, k);
-    aimBone(ua, fa, cur.u.clone().normalize().applyQuaternion(gq)); aimBone(fa, hd, cur.f.clone().normalize().applyQuaternion(gq)); }); }
+    aimBone(ua, fa, cur.u.clone().normalize().applyQuaternion(gq)); aimBone(fa, hd, cur.f.clone().normalize().applyQuaternion(gq));
+    /* muñeca natural: la mano sigue al antebrazo, un poco caída y hacia adentro (antes quedaba rígida o volteada) */
+    const fg = hd.children.find(c => c.isBone && /Middle1|Finger2|Index1/i.test(c.name)) || hd.children.find(c => c.isBone); if (fg) { const hdir = cur.f.clone().normalize(); hdir.y -= .55; hdir.x -= .12 * sx; aimBone(hd, fg, hdir.normalize().applyQuaternion(gq)); } }); }
 /* Boca al hablar: los modelos de oficina tienen mandíbula (Bip01_MJaw); a los operarios se les agrega una boca que abre y cierra */
 function mouthAnim(a, t, dt) { const root = a.av && a.av.obj; if (!root) return; const talk = a.talkT > 0;
   const amp = talk ? Math.max(0, Math.sin(t * 15) * .6 + Math.sin(t * 23 + 1) * .4) * (.55 + .45 * Math.abs(Math.sin(t * 2.7))) : 0; if (window.MOUTH_FORCE != null) a.mOpen = window.MOUTH_FORCE; else a.mOpen = (a.mOpen || 0) + (amp - (a.mOpen || 0)) * Math.min(1, dt * 18);
