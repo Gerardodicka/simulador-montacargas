@@ -192,7 +192,7 @@ function init3d(){ const el=$('v3d'); const rn=new THREE.WebGLRenderer({antialia
     const hit=new THREE.Mesh(new THREE.BoxGeometry(3.2,5,3.2),new THREE.MeshBasicMaterial({visible:false})); hit.position.set(x,2.5,z); hit.userData.i=i; sc.add(hit); picks.push(hit); });
   let th=.0, ph=.95, rad=30, drag=null, moved=0, pin=null; const tgt=new THREE.Vector3(0,0,0);
   const upd=()=>{ ph=Math.max(.35,Math.min(1.35,ph)); rad=Math.max(8,Math.min(42,rad)); cam.position.set(tgt.x+rad*Math.sin(th)*Math.sin(ph),rad*Math.cos(ph)+1,tgt.z+rad*Math.cos(th)*Math.sin(ph)); cam.lookAt(tgt); };
-  const fit=()=>{ const w=el.clientWidth,h=el.clientHeight; rn.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); if(w<520&&rad===30) rad=40; upd(); }; addEventListener('resize',fit); fit();
+  const fit=()=>{ const w=el.clientWidth,h=el.clientHeight; rn.setSize(w,h,false); cam.aspect=w/h; cam.fov=cam.aspect<1.2?Math.min(88,2*Math.atan(Math.tan(55*Math.PI/360)*1.5/cam.aspect)*180/Math.PI):55; cam.updateProjectionMatrix(); if(w<520&&rad===30) rad=22; upd(); }; addEventListener('resize',fit); fit();
   const cv=rn.domElement, ptrs=new Map();
   cv.addEventListener('pointerdown',e=>{ ptrs.set(e.pointerId,e); cv.setPointerCapture(e.pointerId); drag={x:e.clientX,y:e.clientY}; moved=0; });
   cv.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,e); if(ptrs.size===2){ const [a,b]=[...ptrs.values()], d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY); if(pin) rad*=pin/d; pin=d; moved=99; upd(); return; } if(!drag) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; moved+=Math.abs(dx)+Math.abs(dy); th-=dx*.006; ph-=dy*.005; drag={x:e.clientX,y:e.clientY}; upd(); });
