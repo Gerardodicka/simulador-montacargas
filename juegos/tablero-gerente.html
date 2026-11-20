@@ -97,7 +97,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
     <div class="code" id="ecode"></div>
     <button class="btn" onclick="share()">📲 ENVIAR RESULTADO POR WHATSAPP</button>
     <button class="btn ghost" onclick="copyRes()">📋 COPIAR RESULTADO</button>
-    <button class="btn ghost" onclick="location.reload()">🔄 REPETIR</button>
+    <button class="btn ghost" onclick="localStorage.removeItem('dicka_tablero_avance');location.reload()">🔄 REPETIR</button>
   </div>
 </div>
 <script>
@@ -145,7 +145,9 @@ function dirComenta(h){ const d=h.d, c=[]; c.push(h.otif>=.97?`✅ OTIF de <b>${
   if(h.acc) c.push(`Hubo <b>${h.acc} accidente${h.acc>1?'s':''}</b>: revisa flota, cansancio y capacitación.`); if(d.ot) c.push('El tiempo extra diario sube costo, cansancio y accidentes; úsalo solo en picos.');
   if(d.mant===0) c.push('Ahorrar en mantenimiento hoy baja la salud de la flota y la capacidad mañana.'); if(d.cap) c.push('Bien la capacitación: baja la rotación y sube la productividad.'); else if(ST.rot>30) c.push(`La rotación va en <b>${Math.round(ST.rot)}%</b>; capacitar y reconocer ayuda a retener.`);
   if(h.cpc>5.2) c.push(`Costo por caja de <b>$${h.cpc.toFixed(2)}</b>, arriba de $5.20.`); gerSay(c.slice(0,3).join(' ')); }
-function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); ST={flota:55,rot:38,skill:66}; m=0; H=[];
+function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value};
+  let sv=null; try{ sv=JSON.parse(localStorage.getItem(AV)||'null'); }catch(e){} if(sv&&sv.who&&sv.who.name===n&&sv.m<4){ resumeAv(); toastMsg(`Retomaste tu avance: mes ${sv.m+1} de 4`,true); return; }
+  t0=Date.now(); ST={flota:55,rot:38,skill:66}; m=0; H=[];
   $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); draw(); }
 function draw(){ window.H_=H; if(!G3){ g3init(); gerSay(`Hola <b>${(who.name||'').split(' ')[0]}</b>, te dejo el almacén 4 meses. Metas: <b>OTIF 97%</b>, costo de <b>$5.20</b> o menos por caja, <b>cero accidentes</b> y rotación de 30% o menos. Mes 1: ${VOL[0].toLocaleString('es-MX')} cajas.`); } else if(G3.drawB) G3.drawB(); $('mLbl').textContent=`Mes ${m+1} de 4`; $('vol').textContent=VOL[m].toLocaleString('es-MX'); $('news').innerHTML='📰 '+NEWS[m]; const L=H[H.length-1];
   $('kpis').innerHTML=`<div><b class="${L?(L.otif>=.97?'good':'bad'):''}">${L?(L.otif*100).toFixed(1)+'%':'—'}</b>OTIF del mes pasado</div><div><b class="${L?(L.cpc<=5.2?'good':'bad'):''}">${L?'$'+L.cpc.toFixed(2):'—'}</b>costo por caja</div><div><b class="${ST.rot<=30?'good':'bad'}">${Math.round(ST.rot)}%</b>rotación</div><div><b class="${ST.flota>=60?'good':ST.flota>=45?'':'bad'}">${Math.round(ST.flota)}%</b>salud de la flota</div>`;
@@ -167,10 +169,18 @@ function elegir(v){ const P=PREG[WQ]; $(P.id).value=String(v); WQ++; WQmax=Math.
 function readD(){ return {extra:+$('dExtra').value, ot:+$('dOT').value, mant:+$('dMant').value, cap:+$('dCap').value}; }
 function month(){ const d=readD(), r=step(ST,d,VOL[m]); ST=r.nx; const h=Object.assign({rot:ST.rot,d},r); H.push(h); if(G3) dirComenta(h); const sem=(ok,t)=>`<div>${ok?'🟢':'🔴'} ${t}</div>`;
   $('mesRes').innerHTML=`<div class="mres"><b>📋 Resultado del mes ${m+1}</b><div class="sem">${sem(h.otif>=.97,`Pedidos a tiempo: <b>${(h.otif*100).toFixed(1)}%</b> (meta 97%)`)}${sem(h.cpc<=5.2,`Costo por caja: <b>$${h.cpc.toFixed(2)}</b> (meta $5.20)`)}${sem(!h.acc,`Accidentes: <b>${h.acc}</b> (meta 0)`)}${sem(ST.rot<=30,`Rotación: <b>${Math.round(ST.rot)}%</b> (meta 30%)`)}</div><small>Tu director te comenta arriba. Ahora decide el siguiente mes.</small></div>`;
-  m++; if(m<4) draw(); else finish(); }
-function finish(){ const otif=H.reduce((a,h)=>a+h.otif,0)/4, cpc=H.reduce((a,h)=>a+h.cost,0)/H.reduce((a,h)=>a+h.out,0), acc=H.reduce((a,h)=>a+h.acc,0), rot=ST.rot;
-  const sO=Math.round(40*Math.max(0,Math.min(1,(otif-.85)/(.97-.85)))), sC=Math.round(30*Math.max(0,Math.min(1,(6.4-cpc)/(6.4-5.2)))), sS=Math.max(0,20-acc*7), sR=rot<=30?10:rot<=36?5:0; score=sO+sC+sS+sR;
-  score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
+  $('mesRes').insertAdjacentHTML('beforeend',`<div class="mres"><b>Puntaje parcial: ${calc(H).total}/100</b> · se recalcula con cada mes; el resultado final se decide al cerrar el mes 4.</div>`);
+  m++; if(m<4){ saveAv(); draw(); } else finish(); }
+const AV='dicka_tablero_avance';
+function saveAv(){ try{ localStorage.setItem(AV,JSON.stringify({who,ST,H,m,t0})); }catch(e){} }
+function resumeAv(){ try{ const s=JSON.parse(localStorage.getItem(AV)||'null'); if(!s) return; who=s.who; ST=s.ST; H=s.H; m=s.m; t0=s.t0; $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); draw(); }catch(e){ toastMsg('No se pudo retomar el avance',false); } }
+function toastMsg(t,good){ const el=$('toast'); el.textContent=t; el.className='toast show'+(good?' good':''); setTimeout(()=>{ el.className='toast'; },2200); }
+/* Puntaje con la misma fórmula para el avance (parcial) y para el resultado final */
+function calc(hs){ const n=hs.length, otif=hs.reduce((a,h)=>a+h.otif,0)/n, cpc=hs.reduce((a,h)=>a+h.cost,0)/hs.reduce((a,h)=>a+h.out,0), acc=hs.reduce((a,h)=>a+h.acc,0), rot=ST.rot;
+  const sO=Math.round(40*Math.max(0,Math.min(1,(otif-.85)/(.97-.85)))), sC=Math.round(30*Math.max(0,Math.min(1,(6.4-cpc)/(6.4-5.2)))), sS=Math.max(0,20-acc*7), sR=rot<=30?10:rot<=36?5:0;
+  return {otif,cpc,acc,rot,sO,sC,sS,sR,total:Math.max(0,Math.min(MAX,Math.round(sO+sC+sS+sR)))}; }
+function finish(){ localStorage.removeItem(AV); const R=calc(H), otif=R.otif, cpc=R.cpc, acc=R.acc, rot=R.rot, sO=R.sO, sC=R.sC, sS=R.sS, sR=R.sR; score=R.total;
+  $('game').classList.add('hidden'); $('end').classList.remove('hidden');
   const ok=score>=PASS, date=new Date(); const base=`REG|${GAME_ID}|${who.name}${who.num?' #'+who.num:''}|${who.puesto}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');
   $('eicon').textContent=ok?'🏆':'📚'; $('etitle').textContent=ok?'¡Aprobaste!':'Aún no apruebas'; $('escore').textContent=score; $('ebadge').textContent=ok?'✓ APROBADO':'✗ NO APROBADO'; $('ebadge').className='badge '+(ok?'ok':'bad');
   $('estats').innerHTML=`<div><span>Gerente</span><b>${who.name}</b></div>${who.num?`<div><span>No. empleado</span><b>${who.num}</b></div>`:''}<div><span>OTIF promedio (meta 97%)</span><b>${(otif*100).toFixed(1)}% · ${sO}/40</b></div><div><span>Costo por caja (meta $5.20)</span><b>$${cpc.toFixed(2)} · ${sC}/30</b></div><div><span>Accidentes (meta 0)</span><b>${acc} · ${sS}/20</b></div><div><span>Rotación final (meta ≤30%)</span><b>${Math.round(rot)}% · ${sR}/10</b></div>`;
@@ -182,7 +192,8 @@ function finish(){ const otif=H.reduce((a,h)=>a+h.otif,0)/4, cpc=H.reduce((a,h)=
   try{ parent.postMessage({type:'dicka-result',juego:GAME_NAME,nombre:who.name,score:`${score}/${MAX}`,aprobado:ok},'*'); }catch(e){} }
 function txt(){ return `📋 ${GAME_NAME.toUpperCase()} - DICKA LOGISTICS\nNombre: ${who.name}${who.num?'\nNo. empleado: '+who.num:''}\nPuesto: ${who.puesto}\nAlmacén: ${who.wh}\nPuntaje: ${score}/${MAX}\nEstado: ${score>=PASS?'✓ APROBADO':'✗ NO APROBADO'}\n\n${REG}`; }
 function share(){ window.open('https://wa.me/?text='+encodeURIComponent(txt()),'_blank'); }
-function copyRes(){ navigator.clipboard.writeText(txt()); alert('Resultado copiado ✓'); }
+function copyRes(){ const s=txt(), ok=()=>toastMsg('Resultado copiado ✓',true), fb=()=>{ const ta=document.createElement('textarea'); ta.value=s; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); let done=false; try{ done=document.execCommand('copy'); }catch(e){} ta.remove(); done?ok():toastMsg('No se pudo copiar; selecciona el código a mano',false); };
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(s).then(ok,fb); else fb(); }
 </script>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
