@@ -660,6 +660,12 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await q.goto(u); await q.fill('#pname', 'Prueba Aprendiz'); await q.evaluate(() => start()); await q.waitForTimeout(1400); const r1 = await q.evaluate(() => { const b = document.getElementById('dkAprendiz'); return b ? /pista/.test(b.textContent) : false; });
     await q.goto(u); await q.fill('#pname', 'Prueba Aprendiz'); await q.evaluate(() => start()); await q.waitForTimeout(1400); const r2 = await q.evaluate(() => !!document.getElementById('dkAprendiz')); await cx.close();
     ok('Aprendiz', '#50 la primera vez el primer caso trae pista; la segunda vez ya no', r1 && !r2 && !e.length, JSON.stringify({ r1, r2 }) + (e[0] || '')); }
+  // #52 modo examen: casilla antes de comenzar, cronómetro visible y tiempos en el resultado
+  { const cx = await b.newContext({ viewport: { width: 390, height: 844 } }); await cx.route(/(three\.min|GLTFLoader|SkeletonUtils|dicka-avatar)\.js/, r => r.abort()); const q = await cx.newPage(); const e = []; q.on('pageerror', x => e.push(x.message));
+    await q.goto(url('juegos/kitting.html')); await q.fill('#pname', 'Prueba Examen'); const box = await q.$('#dkExam'); await q.check('#dkExam'); await q.evaluate(() => start()); await q.waitForTimeout(1300); const pill = await q.evaluate(() => (document.getElementById('dkExamPill') || {}).textContent || '');
+    await q.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)); for (let i = 0; i < 8; i++) { decide(L[idx].t); await w(560); next(); } }); await q.waitForTimeout(1200);
+    const r = await q.evaluate(() => ({ res: !!document.getElementById('dkExamRes'), n: (window.DK_EXAM || {}).n })); await cx.close();
+    ok('Modo examen', '#52 casilla, cronómetro por caso y tiempos (total, promedio, más lento) en el resultado', !!box && /Caso 1/.test(pill) && r.res && r.n === 8 && !e.length, JSON.stringify({ pill, ...r }) + (e[0] || '')); }
   // tráfico: si los avatares cargaron, debe haber movimiento sin atascos
   const traf = await p.evaluate(() => { if (!NPC.forks.length) return null; const snap = () => NPC.forks.map(f => f.x.toFixed(1) + ',' + f.z.toFixed(1)).join('|');
     const a = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); const b = snap(); for (let i = 0; i < 2000; i++) updateTraffic(0.05); return { mov: a !== b && b !== snap() }; });
