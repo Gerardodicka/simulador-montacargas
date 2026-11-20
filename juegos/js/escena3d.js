@@ -80,6 +80,17 @@
             const hit = bx(T, .9, .95, .9, new THREE.MeshBasicMaterial({ visible: false }), x, y + .48, Z); hit.userData.pick = { tipo: 'slot', k: sl.code }; pick.push(hit); });
         },
         screenSlot(col, lvl) { const v = new THREE.Vector3((col - 3.5) * .95, .1 + (lvl - 1) + .48, -.6 + .46).project(cam), r = rn.domElement.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; },
+        setSorter(o) {
+          o = o || {}; while (T.children.length) T.remove(T.children[0]); pick = []; if (!api.sorCam) { api.sorCam = 1; th = -.18; ph = 1.05; rad = el.clientWidth / el.clientHeight < 1 ? 10 : 6.6; upd(); }
+          const txt = (t, bg, fg, w, h, fs) => { const c = document.createElement('canvas'); c.width = 320; c.height = 128; const x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, 320, 128); x.fillStyle = fg; x.font = 'bold ' + (fs || 52) + 'px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, 160, 68); return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) })); };
+          bx(T, 7, .12, 1, '#37474f', 0, .85, -1.2); for (let i = 0; i < 14; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 1, 10), M('#b0bec5')); r.rotation.x = Math.PI / 2; r.position.set(-3.25 + i * .5, .93, -1.2); T.add(r); }
+          [[-3.3, -1.6], [3.3, -1.6], [-3.3, -.8], [3.3, -.8]].forEach(([x, z]) => bx(T, .08, .85, .08, '#455a64', x, .42, z));
+          (o.lanes || []).forEach((ln, i) => { const x = (i - 1.5) * 1.7 - 1.0; const ch = bx(T, 1.5, .08, 1.6, ln.c, x, .55, .4); ch.rotation.x = -.35; bx(T, 1.6, .5, .08, ln.c, x, .3, 1.25); const t = txt(ln.n, ln.c, '#ffffff', 1.5, .5, 46); t.position.set(x, 1.15, 1.3); T.add(t); const hit = bx(T, 1.6, 1.2, 1.8, new THREE.MeshBasicMaterial({ visible: false }), x, .6, .5); hit.userData.pick = { tipo: 'lane', i }; pick.push(hit); });
+          if (o.caja) { const c = o.caja, b = bx(T, .7, .5, .6, c.dano ? '#a1887f' : '#c9a875', 0, 1.2, -1.2); if (c.dano) { b.rotation.z = .12; b.scale.y = .8; }
+            const lab = txt(c.etiqueta || '', c.ilegible ? '#e0e0e0' : '#ffffff', c.ilegible ? '#9e9e9e' : '#111', .6, .24, 40); lab.position.set(0, 1.25, -.895); T.add(lab); const top = txt(c.etiqueta || '', c.ilegible ? '#e0e0e0' : '#ffffff', c.ilegible ? '#9e9e9e' : '#111', .6, .24, 40); top.rotation.x = -Math.PI / 2; top.position.set(0, 1.452, -1.2); T.add(top); }
+          anillo = new THREE.Mesh(new THREE.RingGeometry(.5, .6, 40), new THREE.MeshBasicMaterial({ color: '#2238d3', side: THREE.DoubleSide })); anillo.rotation.x = -Math.PI / 2; anillo.position.set(0, .93, -1.2); T.add(anillo);
+        },
+        screenLane(i) { const v = new THREE.Vector3((i - 1.5) * 1.7 - 1.0, .6, .5).project(cam), r = rn.domElement.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; },
         setPatio(st) {
           while (T.children.length) T.remove(T.children[0]); pick = [];
           const lbl = (t, c) => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 96; const x = cv.getContext('2d'); x.fillStyle = c; x.fillRect(0, 0, 256, 96); x.fillStyle = '#fff'; x.font = 'bold 54px sans-serif'; x.textAlign = 'center'; x.fillText(t, 128, 66); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false })); sp.scale.set(1.8, .68, 1); return sp; };
@@ -107,7 +118,7 @@
       };
       const loop = t => { if (anillo) anillo.scale.setScalar(1 + Math.sin(t / 250) * .04); rn.render(sc, cam); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
       return api;
-    } catch (e) { return { ok: false, setTarima() {}, setKit() {}, setPTL() {}, marcar() {} }; }
+    } catch (e) { return { ok: false, setTarima() {}, setKit() {}, setPTL() {}, setSorter() {}, marcar() {} }; }
   }
   window.Escena3D = { montar };
 })();
