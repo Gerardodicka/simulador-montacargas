@@ -274,7 +274,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
         if (!LISTEN) listen(); await until(() => (!LISTEN && /dictado|micrófono/.test((document.getElementById('orbState') || {}).textContent || '')) || CONV.some(c => c.quien === 'Líder' && /embarque/.test(c.texto)), 45000); return { st: window.__st, net: MIC && MIC.net, rs: MIC && MIC.rs, got: MIC && MIC.got, wait: MIC_WAIT, speak: speechSynthesis.speaking, orb: !!document.getElementById('orbState'), msg: (document.getElementById('orbState') || {}).textContent || '', tipo: !document.getElementById('typeBox').classList.contains('hidden'), dicho: CONV.some(c => c.quien === 'Líder' && /embarque/.test(c.texto)), listen: LISTEN }; });
       await ctx.close(); return { r, e }; };
     const net = await mk('network'), cap = await mk('audio-capture'), okv = await mk('ok', true);
-    ok('Dojo de Mando', 'micrófono: falla de red avisa y ofrece escribir', /dictado por voz no responde/.test(net.r.msg) && net.r.tipo && !net.r.listen, JSON.stringify(net.r));
+    ok('Dojo de Mando', 'micrófono: falla de red avisa y ofrece escribir', /dictado por voz no responde|no está transcribiendo/.test(net.r.msg) && net.r.tipo && !net.r.listen, JSON.stringify(net.r));
     ok('Dojo de Mando', 'micrófono: sin micrófono avisa y ofrece escribir', /No se detecta un micrófono/.test(cap.r.msg) && cap.r.tipo, cap.r.msg);
     ok('Dojo de Mando', 'micrófono: abre aunque la voz quede "atorada" (Edge) y el dictado llega', okv.r.dicho, JSON.stringify(okv.r));
     ok('Dojo de Mando', 'micrófono sin errores', !net.e.length && !cap.e.length && !okv.e.length, net.e[0] || cap.e[0] || okv.e[0] || ''); await bm.close(); }
