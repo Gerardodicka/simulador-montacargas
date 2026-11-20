@@ -904,7 +904,7 @@ async function downloadOffline(){ const btn=document.getElementById('offlineBtn'
     for(const pg of [...new Set(pages)]){ set.add(pg); try{ const html=await (await fetch(pg,{cache:'no-store'})).text(); (html.match(/(?:src|href)="([^"]+\.(?:js|css)(?:\?[^"]*)?)"/g)||[]).forEach(m=>{ const u=m.replace(/^(?:src|href)="|"$/g,''); if(!/^https?:/.test(u)) set.add(new URL(u,location.origin+pg).pathname+(u.includes('?')?'?'+u.split('?')[1]:'')); });
         (html.match(/[\w-]+\.glb/g)||[]).forEach(m=>set.add('/juegos/assets/models/'+m)); } catch(e){} }
     try{ const js=await (await fetch('/juegos/comun/almacen-comun.js',{cache:'no-store'})).text(); (js.match(/assets\/textures\/[\w.-]+/g)||[]).forEach(t=>set.add('/juegos/'+t)); }catch(e){}
-    ['carton.jpg','madera.jpg','piel.jpg','piso.jpg','piso_rough.jpg','lamina.jpg','dojo-dicka-logo.webp'].forEach(t=>set.add('/juegos/assets/textures/'+t));
+    ['carton.jpg','madera.jpg','piel.jpg','piso.jpg','piso_rough.jpg','lamina.jpg','dojo-dicka-logo.webp'].forEach(t=>set.add('/juegos/assets/textures/'+t)); new Set(Object.values(FOTOS).map(f=>f[0])).forEach(n=>set.add('/img/sims/'+n+'.jpg'));   // fotos del catálogo
     const list=[...set], cache=await caches.open('dicka-v1'); let ok=0, fail=0;
     for(const u of list){ btn.textContent=`📥 Descargando ${ok+fail+1}/${list.length}…`; try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){ await cache.put(u,r); ok++; } else fail++; }catch(e){ fail++; } }
     btn.textContent=`✅ Lista sin conexión (${ok} archivos)`; toastMsg&&toastMsg(`📥 App guardada en el dispositivo: ${ok} archivos${fail?' · '+fail+' no disponibles':''}. Podrás practicar con mala señal.`);
