@@ -281,7 +281,7 @@
   <div class="catalogo hidden" id="catalogo">
   <div class="sechead" id="simuladores">
     <div><h2>Simuladores disponibles</h2><small>Selecciona un curso · los resultados se registran automáticamente</small></div>
-    <div class="rutaBar" id="rutaBar"></div><div class="filters" id="filters"></div>
+    <div class="rutaBar" id="rutaBar"></div><div id="repasoBar" style="display:none;flex-basis:100%;background:#fff3e0;color:#6d3b00;border:2px solid #fb8c00;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div class="filters" id="filters"></div>
   </div>
   <div class="grid" id="grid"></div>
   </div>
@@ -451,6 +451,10 @@ function cerrarFicha(){ document.getElementById('fichaModal').classList.remove('
 function navIr(k){ document.querySelectorAll('.sidenav button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
   if(k==='inicio') scrollTo({top:0,behavior:'smooth'}); else if(k==='sims'){ const c=document.getElementById('catalogo'); if(c.classList.contains('hidden')) showSimuladores(); else document.getElementById('simuladores').scrollIntoView({behavior:'smooth'}); }
   else if(k==='avance') openLogros(); else if(k==='ayuda') document.getElementById('ayudaModal').classList.add('open'); }
+// #59 recordatorio de repasos: casos fallados guardados en ESTE dispositivo por cada simulador (dicka_adapt_<juego>)
+function repasosPend(){ const out=[]; allGames().forEach(g=>{ const m=(g.url||'').match(/juegos\/([\w-]+)\.html/); if(!m) return; try{ const l=JSON.parse(localStorage.getItem('dicka_adapt_'+m[1])||'[]'); if(Array.isArray(l)&&l.length) out.push({id:g.id,name:g.name,n:l.length}); }catch(e){} }); return out.sort((a,b)=>b.n-a.n); }
+function repasoRender(){ const el=document.getElementById('repasoBar'); if(!el) return; const R=repasosPend(); if(!R.length){ el.style.display='none'; return; } const tot=R.reduce((a,b)=>a+b.n,0), e=t=>String(t).replace(/</g,'&lt;');
+  el.innerHTML=`🔁 <b>Tienes ${tot} caso${tot>1?'s':''} para repasar</b> (los que fallaste la vez pasada). Repasar ayuda a que no se te olvide: ${R.slice(0,4).map(r=>`<a href="#" onclick="play('${r.id}');return false" style="color:#1D2586;font-weight:800;text-decoration:underline">${e(r.name)} (${r.n})</a>`).join(' · ')}${R.length>4?` y ${R.length-4} más`:''}`; el.style.display='block'; }
 let filter='Todos', current=null;
 
 
@@ -492,6 +496,7 @@ function render(){
         <button class="del" onclick="removeGame('${g.id}')">quitar</button>
       </div>
     </div>`).join('');
+  repasoRender();
   document.getElementById('stGames').textContent=games.filter(g=>g.status!=='proximo'&&!g.hideFromCount).length;
   const r=collectResults(); document.getElementById('stPlays').textContent=r.length;
   document.getElementById('stPass').textContent=r.length?Math.round(100*r.filter(x=>x.aprobado).length/r.length)+'%':'—';
