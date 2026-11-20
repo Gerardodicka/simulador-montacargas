@@ -15,7 +15,8 @@
     if (end && !end.classList.contains('hidden') && !shown) { shown = true; if (times[lastIdx] === undefined) times[lastIdx] = (Date.now() - tc) / 1000; if (pill) pill.remove();
       const T = times.filter(x => typeof x === 'number' && x > 0), tot = (Date.now() - t0) / 1000, avg = T.length ? T.reduce((a, b) => a + b, 0) / T.length : 0, slow = T.length ? times.indexOf(Math.max(...T)) : -1;
       const st = document.getElementById('estats'); if (st) st.insertAdjacentHTML('beforeend', `<div id="dkExamRes"><span>⏱️ Modo examen · tiempo total</span><b>${fmt(tot)}</b></div><div><span>Promedio por caso</span><b>${fmt(avg)}</b></div>${slow >= 0 ? `<div><span>Caso más lento</span><b>#${slow + 1} · ${fmt(T.length ? Math.max(...T) : 0)}</b></div>` : ''}`);
-      window.DK_EXAM = { tot, avg, n: T.length }; } }
+      window.DK_EXAM = { tot, avg, n: T.length };
+      try { const k = 'dicka_console_results', l = JSON.parse(localStorage.getItem(k) || '[]'), last = l[l.length - 1]; if (last) { last.examen = { tot: Math.round(tot), avg: Math.round(avg), n: T.length }; localStorage.setItem(k, JSON.stringify(l)); } } catch (e) { } } }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject); else inject();
   setInterval(tick, 500);
 })();
