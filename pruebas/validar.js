@@ -68,7 +68,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     { document.getElementById('mastHeight').value = 40; const n = faultLog.length; SAFE.cd = {}; safeToggle('key'); add('Seguridad', 'apagar con horquillas arriba marca falta', faultLog.slice(n).some(f => f.code === 'estacionamientoInseguro')); document.getElementById('mastHeight').value = 0; }
     { showChecklist(); const bs = [...document.querySelectorAll('#lotoSteps button')]; const r0 = document.getElementById('lotoRelease').disabled; bs.forEach((b, i) => lotoStep(i + 1, b)); add('Seguridad', 'bloqueo y etiquetado habilita la liberación', r0 && !document.getElementById('lotoRelease').disabled && !!LOTO.tag); document.getElementById('checklist').classList.remove('show'); lotoTag(false); safeReset(); }
     // cámara: un rack entre el equipo y la cámara la acerca
-    const L = new THREE.Vector3(-4, 6, -20), T = new THREE.Vector3(-9, 7, -20); camUnblock(L, T, true); add('Cámara', 'no queda detrás de un rack', T.x > -5.6, 'x=' + T.x.toFixed(2));
+    const RX = RACK_LAYOUT.xs[2], L = new THREE.Vector3(AISLES[1].x, 6, -20), T = new THREE.Vector3(RX - 1.9, 7, -20); camUnblock(L, T, true); add('Cámara', 'no queda detrás de un rack', T.x > RX + 1.3 && camLineFree(L, T.x, T.y, T.z, true), 'x=' + T.x.toFixed(2) + ' y=' + T.y.toFixed(2));
     return R; });
   sim.forEach(r => res.push(r));
   // Escenario Agave 1: selector, construcción y misiones alcanzables
