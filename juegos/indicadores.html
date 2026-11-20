@@ -59,6 +59,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .howbox{background:#eef2ff;border:2px solid #c5cae9;border-radius:12px;padding:10px 14px;margin:0 0 .7rem;font-size:15.5px;line-height:1.55;color:#1a1f36}.howbox summary{font-weight:800;color:#1D2586;cursor:pointer;font-size:16.5px}.howbox ul{margin:.4rem 0 0 1.2rem}.howbox li{margin:.25rem 0}
 .ger{position:relative;height:300px;border-radius:12px;overflow:hidden;margin:.4rem 0 .7rem;background:#cfd8e3}.ger canvas{display:block;width:100%;height:100%}.gbub{position:absolute;right:10px;top:10px;max-width:58%;background:#fff;color:#1a1f36;border:2px solid #1D2586;border-radius:14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 4px 14px rgba(0,0,0,.18)}.gbub b{color:#1D2586}.gname{position:absolute;left:10px;bottom:10px;background:rgba(1,17,49,.8);color:#fff;font-size:13px;padding:4px 9px;border-radius:8px}@media(max-width:600px){.ger{height:340px}.gbub{left:10px;right:10px;max-width:none;font-size:14px}}
 .kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.4rem 0}.kgrid div{background:#f4f6fb;border-radius:10px;padding:9px 6px;text-align:center;font-size:14px;line-height:1.35;border:2px solid transparent}.kgrid b{display:block;font-size:22px}.kgrid .bad{border-color:#e53935;background:#ffebee}.kgrid .bad b{color:#c62828}.kgrid .good b{color:#2e7d32}.kgrid small{color:#555}@media(max-width:600px){.kgrid{grid-template-columns:repeat(2,1fr)}}
+.talk{background:#f4f6fb;border:2px solid #c5cae9;border-radius:14px;padding:10px 12px;margin:.5rem 0}.talk .tt{font-weight:800;color:#1D2586;font-size:15px;margin-bottom:6px}.talk .row{display:flex;gap:8px;flex-wrap:wrap}.talk button{border:0;border-radius:12px;padding:12px 14px;font-weight:800;font-size:15.5px;cursor:pointer}.talk .mic{background:#c62828;color:#fff;flex:1 1 200px}.talk .mic.on{animation:dkPulse 1s infinite}.talk .kb{background:#fff;color:#1D2586;border:2px solid #1D2586!important;flex:1 1 140px}.talk input{flex:1 1 220px;min-height:46px;font-size:16px;border:2px solid #c5cae9;border-radius:10px;padding:8px 10px}.talk .heard{font-size:15px;color:#333;margin-top:6px;min-height:1.2em}@keyframes dkPulse{50%{box-shadow:0 0 0 8px rgba(198,40,40,.25)}}
+.kgrid div.tap{cursor:pointer}.kgrid div.tap:hover{outline:3px solid #2138D3}.kgrid div.pick{outline:3px solid #f5b800}.voz{position:absolute;right:10px;bottom:10px;z-index:3;border:0;border-radius:999px;padding:6px 10px;font-weight:800;font-size:13px;background:rgba(1,17,49,.8);color:#fff;cursor:pointer}
 </style>
 </head>
 <body>
@@ -80,7 +82,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   <div class="card hidden" id="game">
     <div class="topbar"><span>Tablero <span id="ln">1</span>/8</span><span>⭐ <span id="sc">0</span></span></div>
     <div class="bar"><div id="bar" style="width:0"></div></div>
-    <div class="objbox"><div>🎯 <b>Objetivo:</b> leer el tablero de indicadores, detectar qué está fallando y atacar la causa, no el síntoma.</div><div>✅ <b>Qué debes hacer:</b> en cada uno de los 8 tableros ubica el indicador en rojo, lee la pista del turno y elige la acción que lo corrige.</div><div>📊 <b>Cómo se califica:</b> cada acción correcta vale 12.5 puntos; apruebas con 75 de 100. Tu gerente te explica cada respuesta.</div></div>
+    <div class="objbox"><div>🎯 <b>Objetivo:</b> leer el tablero de indicadores, detectar qué está fallando y atacar la causa, no el síntoma.</div><div>✅ <b>Qué debes hacer, paso a paso:</b><br>① Mira los 6 cuadros: el que está en <b style="color:#c62828">rojo</b> es el que no llegó a su meta. <b>Tócalo.</b><br>② Lee la <b>pista del turno</b> (el recuadro azul oscuro): te dice qué pasó.<br>③ Dile al gerente qué harías: <b>háblale</b>, <b>escríbele</b> o <b>elige</b> una opción. Gana la acción que corrige la <b>causa</b> de la pista.</div><div>📊 <b>Cómo se califica:</b> cada acción correcta vale 12.5 puntos; apruebas con 75 de 100. Tu gerente te explica cada respuesta.</div></div>
     <details class="howbox"><summary>📘 Qué mide cada indicador</summary><ul>
 <li><b>OTIF</b> (a tiempo y completo): pedidos entregados en la fecha y con todas sus piezas. Meta ≥ 97 %.</li>
 <li><b>Exactitud de inventario:</b> ubicaciones donde el sistema y el físico coinciden. Meta ≥ 99 %.</li>
@@ -88,7 +90,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 <li><b>Cumplimiento de citas:</b> unidades recibidas o cargadas en su horario. Meta ≥ 95 %.</li>
 <li><b>Daños:</b> cajas dañadas por cada 10 mil movidas. Meta ≤ 5.</li>
 <li><b>Rotación de personal:</b> bajas del mes sobre la plantilla. Meta ≤ 4 %.</li></ul></details>
-    <div class="ger" id="ger"><div class="gbub" id="gbub">Cargando a tu gerente…</div><div class="gname">👔 Lic. Ramírez · Gerente de Operaciones</div></div>
+    <div class="ger" id="ger"><button class="voz" id="vozBtn" type="button" onclick="vozToggle()">🔊 Voz</button><div class="gbub" id="gbub">Cargando a tu gerente…</div><div class="gname">👔 Lic. Ramírez · Gerente de Operaciones</div></div>
     <div id="stage"></div>
   </div>
   <div class="card hidden" id="end">
@@ -129,7 +131,10 @@ function build(){ const a=CASOS.slice().sort(()=>Math.random()-.5); const seen=n
 function fmt(k){ return (k.u==='cj/h'?Math.round(k.v):k.v.toFixed(1))+(k.u==='%'?'%':' '+k.u); }
 /* ===== Oficina 3D con avatar gerente que presenta el reto y comenta ===== */
 let G3=null;
-function gerSay(h){ const b=$('gbub'); if(b) b.innerHTML=h; if(G3) G3.talk=1.6; }
+let VOZ=true; try{ VOZ=localStorage.getItem('dicka_kpi_voz')!=='0'; }catch(e){}
+function vozToggle(){ VOZ=!VOZ; try{ localStorage.setItem('dicka_kpi_voz',VOZ?'1':'0'); }catch(e){} $('vozBtn').textContent=VOZ?'🔊 Voz':'🔇 Sin voz'; if(!VOZ) try{ speechSynthesis.cancel(); }catch(e){} }
+function gerSay(h){ const b=$('gbub'); if(b) b.innerHTML=h; const t=String(h).replace(/<[^>]+>/g,''); if(G3) G3.talk=Math.min(6,1.2+t.length/22); window.DK_SAY=(window.DK_SAY||0)+1;
+  try{ if(VOZ&&window.speechSynthesis&&!window.DK_MUTE){ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t.replace(/[✅❌🏆📚]/gu,'')); u.lang='es-MX'; u.rate=1; const vs=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang)); const m=vs.find(v=>/male|jorge|raul|pablo|diego|hombre/i.test(v.name))||vs[0]; if(m) u.voice=m; speechSynthesis.speak(u); } }catch(e){} }
 function g3init(){ if(G3||!window.THREE) return; try{ const el=$('ger'), rn=new THREE.WebGLRenderer({antialias:true}); rn.setPixelRatio(Math.min(2,devicePixelRatio)); rn.shadowMap.enabled=true; el.insertBefore(rn.domElement,el.firstChild);
   const sc=new THREE.Scene(); sc.background=new THREE.Color('#cfd8e3'); const cam=new THREE.PerspectiveCamera(40,1,.1,60); sc.add(new THREE.HemisphereLight('#ffffff','#7d8590',.95)); const dl=new THREE.DirectionalLight('#fff4e0',.7); dl.position.set(-3,6,5); dl.castShadow=true; sc.add(dl);
   const TL=new THREE.TextureLoader(), tx=(f,x,y)=>{ const t=TL.load('assets/textures/'+f); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(x,y); return t; };
@@ -158,15 +163,33 @@ function g3init(){ if(G3||!window.THREE) return; try{ const el=$('ger'), rn=new 
 function start(){ const n=$('pname').value.trim(); if(n.length<3){alert('Escribe tu nombre completo');return;} who={name:n,num:$('pnum').value.trim(),puesto:$('ppuesto').value,wh:$('pwh').value}; t0=Date.now(); L=build();
   $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); show(); }
 function show(){ const c=L[idx]; window.KP=c.vals.map(k=>({c:k.n,ok:k.ok,p:k.sen>0?(k.v-(k.meta*.85))/(k.meta*.2):1-(k.v-k.meta*.2)/(k.meta*2)})); if(!G3){ g3init(); } else if(G3.drawB) G3.drawB();
-  gerSay(idx===0?`Buenos días <b>${who.name.split(' ')[0]}</b>. Revisemos el tablero: busca el indicador en <b>rojo</b>, lee la pista del turno y dime qué hacemos.`:'Siguiente tablero. ¿Qué indicador está fuera de meta y cuál es su causa?');
+  gerSay(idx===0?`Buenos días <b>${who.name.split(' ')[0]}</b>. Te explico: abajo hay 6 indicadores del almacén. Los <b>verdes</b> van bien; uno está en <b>rojo</b> porque no llegó a su meta. <b>Tócalo</b>, lee la pista del turno y dime qué harías para corregirlo.`:'Siguiente tablero. ¿Qué indicador está fuera de meta y cuál es su causa?');
   $('ln').textContent=idx+1; $('bar').style.width=(idx/8*100)+'%';
-  $('stage').innerHTML=`<div class="kgrid">${c.vals.map(k=>`<div class="${k.ok?'good':'bad'}">${k.n}<b>${fmt(k)}</b><small>meta ${k.sen>0?'≥':'≤'} ${k.meta}${k.u==='%'?'%':' '+k.u}</small></div>`).join('')}</div>
+  window.KSTEP={kpi:false,tries:0};
+  $('stage').innerHTML=`<div class="step">1 · TOCA EL INDICADOR QUE ESTÁ FUERA DE META</div><div class="kgrid">${c.vals.map((k,i)=>`<div class="${k.ok?'good':'bad'} tap" data-k="${k.key}" onclick="tocaKpi(${i})">${k.n}<b>${fmt(k)}</b><small>meta ${k.sen>0?'≥':'≤'} ${k.meta}${k.u==='%'?'%':' '+k.u}</small></div>`).join('')}</div>
   <div class="unit"><span class="k">PISTA DEL TURNO</span><br>${c.pista}</div>
-  <div class="step">¿QUÉ ACCIÓN TOMAS?</div><div class="acts">${c.ops.map((o,i)=>`<button data-i="${i}" data-ok="${o.ok?1:0}" onclick="decide(${i})">${o.t}</button>`).join('')}</div><div id="fb"></div>`; }
-function decide(i){ const c=L[idx], o=c.ops[i], right=c.ops.find(x=>x.ok); document.querySelectorAll('.acts button').forEach(b=>b.disabled=true); const kn=c.vals.find(k=>k.key===c.kpi);
+  <div class="talk" id="talk"><div class="tt">2 · Dile a tu gerente qué harías</div><div class="row"><button class="mic" id="micBtn" type="button" onclick="hablar()">🎙️ Responder hablando</button><button class="kb" type="button" onclick="escribir()">⌨️ Escribir</button></div><div class="row" id="kbRow" style="display:none;margin-top:6px"><input id="kbTxt" enterkeyhint="send" placeholder="Ej. liberar los pedidos más temprano" onkeydown="if(event.key==='Enter')responder(this.value)"><button class="kb" type="button" onclick="responder($('kbTxt').value)">Responder</button></div><div class="heard" id="heard"></div></div>
+  <div class="step">O ELIGE LA ACCIÓN:</div><div class="acts">${c.ops.map((o,i)=>`<button data-i="${i}" data-ok="${o.ok?1:0}" onclick="decide(${i})">${o.t}</button>`).join('')}</div><div id="fb"></div>`; }
+const DEF={otif:'pedidos que salieron completos y a tiempo',exa:'qué tanto coincide lo que dice el sistema con lo que hay en el rack',prod:'cajas que surte cada persona por hora',cit:'tráileres atendidos en su horario',dan:'cajas que se dañan por cada 10 mil que se mueven',rot:'personas que renuncian al mes'};
+function tocaKpi(i){ const c=L[idx], k=c.vals[i]; if(document.querySelector('.acts button:disabled')) return; document.querySelectorAll('.kgrid .tap').forEach(d=>d.classList.remove('pick')); document.querySelectorAll('.kgrid .tap')[i].classList.add('pick');
+  if(!k.ok){ KSTEP.kpi=true; gerSay(`Bien visto: <b>${k.n}</b> (${DEF[k.key]||''}) está en <b>${fmt(k)}</b> y la meta es ${k.sen>0?'≥':'≤'} ${k.meta}${k.u==='%'?'%':' '+k.u}. Ahora lee la pista del turno: ¿qué hacemos para corregirlo?`); }
+  else { KSTEP.tries++; gerSay(`${k.n} (${DEF[k.key]||''}) está en <b>${fmt(k)}</b>: ese sí cumple la meta, por eso está en verde. Busca el que está en <b>rojo</b>.`); } }
+const STOP=new Set('para como pero porque cuando donde desde entre sobre hacia hasta todos todas este esta estos estas aqui ahora luego mismo cada otra otro mucho poco solo tambien'.split(' '));
+const raiz=w=>w.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-zñ]/g,'').slice(0,5);
+const toks=t=>String(t).split(/\s+/).map(raiz).filter(w=>w.length>=4&&!STOP.has(w));
+function mejorOpcion(txt){ const T=new Set(toks(txt)); const c=L[idx]; let best=-1,bs=0; c.ops.forEach((o,i)=>{ const ot=toks(o.t); const sc=ot.filter(w=>T.has(w)).length/Math.max(2,Math.sqrt(ot.length)); if(sc>bs){ bs=sc; best=i; } }); return bs>=.35?best:-1; }
+function responder(txt){ txt=String(txt||'').trim(); if(!txt||document.querySelector('.acts button:disabled')) return; $('heard').innerHTML='🗣️ Dijiste: «'+txt.replace(/</g,'&lt;')+'»'; const i=mejorOpcion(txt);
+  if(i<0){ gerSay('No te entendí bien. Dímelo con otras palabras, más concreto: ¿qué acción tomarías? (o elige una de las opciones de abajo)'); return; }
+  window.DK_LIBRE=(window.DK_LIBRE||0)+1; decide(i, txt); }
+function escribir(){ $('kbRow').style.display='flex'; const i=$('kbTxt'); i.focus(); }
+let REC=null; function hablar(){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){ escribir(); gerSay('Tu navegador no permite dictado aquí. Escríbeme tu respuesta (en el celular puedes usar el micrófono del teclado).'); return; }
+  try{ if(REC){ REC.abort(); REC=null; } REC=new SR(); REC.lang='es-MX'; REC.interimResults=true; REC.maxAlternatives=1; const b=$('micBtn'); b.classList.add('on'); b.textContent='🎙️ Te escucho…'; let fin='';
+    REC.onresult=e=>{ let t=''; for(const r of e.results) t+=r[0].transcript; $('heard').textContent='🗣️ '+t; if(e.results[e.results.length-1].isFinal) fin=t; };
+    REC.onerror=()=>{ escribir(); }; REC.onend=()=>{ b.classList.remove('on'); b.textContent='🎙️ Responder hablando'; if(fin) responder(fin); REC=null; }; REC.start(); }catch(e){ escribir(); } }
+function decide(i,libre){ const c=L[idx], o=c.ops[i], right=c.ops.find(x=>x.ok); if(REC) try{ REC.abort(); }catch(e){} document.querySelectorAll('.acts button').forEach(b=>b.disabled=true); const kn=c.vals.find(k=>k.key===c.kpi);
   if(o.ok){ score+=12.5; decOk++; } else errors.push(`${kn.n} (${fmt(kn)}): elegiste «${o.t}» → lo correcto era «${right.t}»`);
   $('sc').textContent=Math.round(score);
-  gerSay(o.ok?`✅ Exacto. ${kn.n} está en <b>${fmt(kn)}</b> contra meta de ${kn.meta}${kn.u==='%'?'%':' '+kn.u}; esa acción ataca la causa.`:`❌ Eso no corrige la causa. ${kn.n} está en <b>${fmt(kn)}</b>; lo correcto era: <b>${right.t.toLowerCase()}</b>.`);
+  gerSay((libre?`Entiendo: «${o.t.toLowerCase()}». `:'')+(o.ok?`✅ Exacto. ${kn.n} está en <b>${fmt(kn)}</b> contra meta de ${kn.meta}${kn.u==='%'?'%':' '+kn.u}; esa acción ataca la causa.`:`❌ Eso no corrige la causa. ${kn.n} está en <b>${fmt(kn)}</b>; lo correcto era: <b>${right.t.toLowerCase()}</b>.`)+(!KSTEP.kpi?' La próxima vez, primero señala el indicador en rojo.':''));
   $('fb').innerHTML=`<div class="why"><b>${o.ok?'✅ Acción correcta.':'❌ Lo correcto era: '+right.t.toLowerCase()+'.'}</b> ${c.why}${o.ok?'':' Tu opción ataca el síntoma o no tiene que ver con la pista del turno.'}</div><button class="btn" id="nextBtn" onclick="next()">SIGUIENTE →</button>`; $('fb').scrollIntoView({block:'nearest'}); }
 function next(){ idx++; if(idx<8) show(); else finish(); }
 function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
