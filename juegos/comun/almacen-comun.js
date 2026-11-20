@@ -1602,7 +1602,7 @@ function buildWallBanners() { const hd = WAREHOUSE.d / 2; [['PEPSICO', -22], ['P
 
 function setActLoc(a, loc) { const w = slotWorld(loc); a.loc = loc; a.locCode = locCode(loc);
             if (clearedSlot) setSlotOccupied(clearedSlot, true); clearedSlot = w; setSlotOccupied(w, false);   // la ubicación destino/origen queda libre de producto
-            if (a.id === 'rack2') { a.drop = { x: w.x, z: w.z, r: 0.45, yMin: w.y + 0.02, yMax: w.y + 0.5, label: a.locCode, slot: true, facing: w.facing, level: w.y, interno: w.interno }; a.text = `Toma la tarima en la entrada del ${aisleName(RACK_LAYOUT.aisleOf[loc.rack])} y colócala EXACTAMENTE en ${a.locCode} · posición ${posName(loc)}`; a.spawn = { x: [0, -15.25, -4, 7.25, 18.25][RACK_LAYOUT.aisleOf[loc.rack]], y: 0, z: 24 }; }
+            if (a.id === 'rack2') { a.drop = { x: w.x, z: w.z, r: 0.45, yMin: w.y + 0.02, yMax: w.y + 0.5, label: a.locCode, slot: true, facing: w.facing, level: w.y, interno: w.interno }; a.text = `Toma la tarima en la entrada del ${aisleName(RACK_LAYOUT.aisleOf[loc.rack])} y colócala EXACTAMENTE en ${a.locCode} · posición ${posName(loc)}`; a.spawn = { x: [0, ...(typeof AISLES !== 'undefined' && AISLES.length >= 4 ? AISLES.map(A => A.x) : [-15.25, -4, 7.25, 18.25])][RACK_LAYOUT.aisleOf[loc.rack]], y: 0, z: 24 }; }
             if (a.id === 'rack3') { a.spawn = { x: w.x, y: w.y + 0.21, z: w.z }; a.pick = { x: w.x, z: w.z, y: w.y, facing: w.facing }; a.text = `Retira la tarima de ${a.locCode} (${aisleName(RACK_LAYOUT.aisleOf[loc.rack])}, nivel ${loc.level + 1}, posición ${posName(loc)}) y déjala en RECEPCIÓN`; }
             showSlotLabel(loc, w); }
 

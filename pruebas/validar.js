@@ -38,6 +38,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     const add = (area, prueba, pasa, detalle = '') => R.push({ area, prueba, pasa, detalle });
     add('Simulador', 'versión visible', /v\d+\.\d+/.test(document.body.innerText), (document.body.innerText.match(/v\d+\.\d+[^\n·]*/) || [''])[0]);
     add('Simulador', '8 misiones definidas', ACTS.length === 8, ACTS.map(a => a.id).join(', '));
+    { const X = RACK_LAYOUT.xs, cl = [1, 3, 5, 7].map(i => +(X[i] - X[i - 1] - 2.4).toFixed(2)), bk = [2, 4, 6].map(i => +(X[i] - X[i - 1] - 2.4).toFixed(2)); add('Simulador', 'Almacén Genérico: pasillos de 4.5 m libres entre racks (más de 2.5 m) y paso peatonal de 3 m', cl.every(v => v >= 4.5) && bk.every(v => v >= 3) && AISLES.every(a => a.half >= 2.25), JSON.stringify({ cl, bk })); }
     // ¿existe una postura libre (chasis sin chocar) con la punta de las horquillas sobre el objetivo?
     const reachable = (T, model) => { const prev = currentModel; currentModel = model; const sp = spec(); let found = null;
       for (let k = 0; k < 72 && !found; k++) { const a = k * Math.PI / 36; for (let r = 0; r <= sp.reachM + 1e-6 && !found; r += Math.max(0.1, sp.reachM / 4 || 1)) {

@@ -1850,8 +1850,8 @@
         const RACK_INST = [], RACK_SLOTS = []; const zeroM = new THREE.Matrix4().makeScale(0, 0, 0);
         
         function buildRacks() {
-            // Layout: 4 pasillos de 3.5 m (double reach), racks espalda con espalda
-            const rackXs = [-18.15, -12.35, -6.9, -1.1, 4.35, 10.15, 15.35, 21.15];   // doble profundidad: 2 racks por pasillo (izq. mira +x, der. mira −x)
+            // Layout: 4 pasillos de 4.5 m libres entre racks (double reach), racks espalda con espalda con paso peatonal de 3.05 m
+            const rackXs = [-20.475, -13.575, -8.125, -1.225, 4.225, 11.125, 16.575, 23.475];   // doble profundidad: 2 racks por pasillo (izq. mira +x, der. mira −x)
             const zStart = -38, bays = 14, levels = 6;
             rackXs.forEach((x, i) => buildRack(x, zStart, bays, levels, i % 2 === 0 ? 1 : -1, 'ABCDEFGH'[i]));
             flushRackInstances();
@@ -1861,11 +1861,11 @@
             if (typeof buildBays === 'function') buildBays();
             buildRackWalkways();   // franjas detrás de racks espalda con espalda = pasos peatonales
             // Pasillos entre pares de racks
-            const aisleCenters = [-15.25, -4, 7.25, 18.25];
+            const aisleCenters = [-17.025, -4.675, 7.675, 20.025], AH = 2.25;   // AH = medio ancho libre del pasillo (4.5 m)
             aisleCenters.forEach((cx, i) => {
-                AISLES.push({ x: cx, half: 1.75 });
-                paintLine(cx - 1.75, zStart, cx - 1.75, zStart + bays * 2.8);
-                paintLine(cx + 1.75, zStart, cx + 1.75, zStart + bays * 2.8);
+                AISLES.push({ x: cx, half: AH });
+                paintLine(cx - AH + .05, zStart, cx - AH + .05, zStart + bays * 2.8);
+                paintLine(cx + AH - .05, zStart, cx + AH - .05, zStart + bays * 2.8);
                 paintLabel(`PASILLO ${i + 1}`, cx, zStart + bays * 2.8 + 3, 2.2);
                 paintLabel(`PASILLO ${i + 1}`, cx, zStart - 3, 2.2, '#ffffff', Math.PI);
                 // Letrero colgante de identificación (número grande + nombre) en ambas entradas del pasillo
@@ -2394,7 +2394,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v26.4 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v26.5 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -2641,7 +2641,7 @@
         function bodyHits(x, z, a) { const pts = bodyPoints(x, z, a); return obstacles.some(o => !o.disabled && pts.some(([px, pz]) => px > o.minX - 0.05 && px < o.maxX + 0.05 && pz > o.minZ - 0.05 && pz < o.maxZ + 0.05)); }
         
         /* Brazo de cámara: si entre el punto observado y la cámara hay un rack o la carga, la cámara se acerca para no quedar tapada */
-        const RACK_XS = [-18.15, -12.35, -6.9, -1.1, 4.35, 10.15, 15.35, 21.15];
+        const RACK_XS = [-20.475, -13.575, -8.125, -1.225, 4.225, 11.125, 16.575, 23.475];
         function camOccluded(x, y, z, noCargo) { if (y < 11.5 && z > AISLE_Z.z0 + .6 && z < AISLE_Z.z1 - .4 && RACK_XS.some(rx => Math.abs(x - rx) < 1.3)) return true;
             if (!noCargo && cargo && cargo.visible) { const c = cargo.position; if (Math.abs(x - c.x) < 0.75 && Math.abs(z - c.z) < 0.75 && y > c.y - 0.05 && y < c.y + 1.25) return true; } return false; }
         function camLineFree(look, tx, ty, tz, noCargo) { for (let i = 1; i <= 24; i++) { const t = i / 24; if (camOccluded(look.x + (tx - look.x) * t, look.y + (ty - look.y) * t, look.z + (tz - look.z) * t, noCargo)) return false; } return true; }
@@ -2833,7 +2833,7 @@
         // Al terminar un trayecto el peatón elige otra ruta del catálogo (paso peatonal, cruce de tránsito, perimetral, área de recibo)
         // ====== Pasos peatonales detrás de los racks (espacio entre racks espalda con espalda) ======
         // franja verde con bordes amarillos y leyendas; conectan con un cruce peatonal al fondo del almacén. Los montacargas no deben entrar (falta: invadir paso peatonal).
-        const RACK_WALKS = [{ x: -9.625, w: 2.6 }, { x: 1.625, w: 2.6 }, { x: 12.75, w: 2.4 }], WALK_Z = [-38.4, 1.4], WALK_BACK = -40.6;
+        const RACK_WALKS = [{ x: -10.85, w: 2.6 }, { x: 1.5, w: 2.6 }, { x: 13.85, w: 2.6 }], WALK_Z = [-38.4, 1.4], WALK_BACK = -40.6;
         
         
            // pasos detrás de racks y cruce del fondo   // cruce peatonal (cebra) de la zona de tránsito
@@ -2919,8 +2919,8 @@
         function buildTraffic() {
             if (!GLTF_AVATAR.tried) { loadOperarioModel().then(() => loadOperaria()).then(() => loadExtraAvatars()).then(() => { buildTraffic(); try { buildDockOperations(); } catch (e) { console.warn('[SIM] andenes:', e.message); } try { mergeSceneStatics(); } catch (e) { console.warn('[SIM] fusión de estáticos:', e.message); } }); return; }
             // Montacargas a 10 km/h por pasillos 1 y 4 y por la zona de tránsito
-            npcForklift('04', [[-15.25, -36], [-15.25, 2]], 0.2); NPC.forks[0].aisle = 1;
-            npcForklift('07', [[18.25, -30], [18.25, 2]], 0.7); NPC.forks[1].aisle = 4;
+            npcForklift('04', [[-17.025, -36], [-17.025, 2]], 0.2); NPC.forks[0].aisle = 1;
+            npcForklift('07', [[20.025, -30], [20.025, 2]], 0.7); NPC.forks[1].aisle = 4;
             npcForklift('09', [[-27, 11], [27, 11]], 0.4); NPC.forks[2].aisle = 3;
             // Peatones por pasos autorizados: paso peatonal verde (frente) y cruce blanco de la zona de tránsito
             NPC.forks.forEach((f, i) => { if (f.aisle !== undefined) { const a = AISLES[f.aisle - 1]; f.path = buildAisleRoute(a.x, f.aisle - 1); f.t = 0.15 + i * 0.25; f.dir = 1; const p0 = segmentPos(f.path, f.t); f.x = p0.x; f.z = p0.z; f.g.position.set(f.x, 0, f.z); } });
@@ -3049,7 +3049,7 @@
         // Nombres de pasillos (editables por DICKA): número + familia de producto que se almacena
         const AISLE_NAMES = { 0: 'LATERAL · DEVOLUCIONES', 1: 'ABARROTES', 2: 'LIMPIEZA', 3: 'BEBIDAS', 4: 'CUIDADO PERSONAL' };
         
-        const RACK_LAYOUT = { xs: [-18.15, -12.35, -6.9, -1.1, 4.35, 10.15, 15.35, 21.15], zStart: -38, bayW: 2.8, levelH: 1.8, beamY0: 0.5, bays: 14, levels: 6, depth: 2.4,
+        const RACK_LAYOUT = { xs: [-20.475, -13.575, -8.125, -1.225, 4.225, 11.125, 16.575, 23.475], zStart: -38, bayW: 2.8, levelH: 1.8, beamY0: 0.5, bays: 14, levels: 6, depth: 2.4,
             letters: 'ABCDEFGH', aisleOf: [1, 1, 2, 2, 3, 3, 4, 4], facing: [1, -1, 1, -1, 1, -1, 1, -1] };
         const WH_CODES = { 'Agave 1': 'AG1', 'Agave 3': 'AG3', 'Mezquite 1': 'MZ1', 'Mezquite 2': 'MZ2', 'BIC': 'BIC', 'Celaya': 'CEL', 'Toluca': 'TOL', 'Escobedo': 'ESC', 'Apodaca': 'APO', 'Guadalajara': 'GDL', 'Villahermosa': 'VHS', 'Mérida': 'MID' };
         
