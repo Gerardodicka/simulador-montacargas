@@ -19,6 +19,11 @@
     var b = document.createElement('button'); b.id = 'dickaInicio'; b.type = 'button'; b.setAttribute('aria-label', 'Regresar al inicio'); b.title = 'Regresar al inicio';
     b.innerHTML = '<span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg></span><span class="tx">Inicio</span>'; b.onclick = ir;
     document.body.appendChild(b);
+    /* si el botón tapa un título o texto del encabezado, lo baja lo justo (solo esa sección, una vez) */
+    function despejar() { try { var R = b.getBoundingClientRect(), seen = [];
+      document.querySelectorAll('h1,h2,small,img,p,.brand,header *').forEach(function (e) { if (b.contains(e) || e.closest('#dickaInicio')) return; var q = e.getBoundingClientRect(); if (!q.width || !q.height || q.top > R.bottom || q.bottom < R.top || q.left > R.right || q.right < R.left) return; var cs = getComputedStyle(e); if (cs.visibility === 'hidden' || cs.display === 'none' || cs.position === 'fixed' || cs.position === 'absolute') return;
+        var a = e; while (a.parentElement && a.parentElement !== document.body && getComputedStyle(a.parentElement).position === 'static') a = a.parentElement; if (seen.indexOf(a) >= 0 || a.dataset.dkInicio) return; seen.push(a); a.dataset.dkInicio = 1; var need = Math.ceil(R.bottom + 6 - q.top); if (need > 0 && need < 80) a.style.marginTop = (parseFloat(getComputedStyle(a).marginTop) || 0) + need + 'px'; }); } catch (e) { } }
+    setTimeout(despejar, 60); setTimeout(despejar, 800);
   }
   window.dickaInicio = ir;
   if (document.body) poner(); else document.addEventListener('DOMContentLoaded', poner);
