@@ -91,7 +91,9 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
     await q.goto(url('juegos/turno-seguro-3d.html')); await q.waitForTimeout(1500);
     const st = await q.evaluate(() => { try { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); const sc = document.getElementById('simulatorScreen'); if (sc) sc.classList.add('active'); initSimulator(); return 'ok'; } catch (e) { return e.message; } });
     await q.waitForTimeout(6000); const ms = await q.evaluate(() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; });
-    ok('Turno seguro 3D', 'arranca el almacén compartido', st === 'ok' && !e2.length && ms > 500, st !== 'ok' ? st : e2[0] || ms + ' objetos'); await q.close(); }
+    ok('Turno seguro 3D', 'arranca el almacén compartido', st === 'ok' && !e2.length && ms > 500, st !== 'ok' ? st : e2[0] || ms + ' objetos');
+    const pz = await q.evaluate(() => { const X = RACK_LAYOUT.xs; return { cl: [1, 3, 5, 7].map(i => +(X[i] - X[i - 1] - 2.4).toFixed(2)), half: AISLES.map(a => a.half) }; });
+    ok('Turno seguro 3D', '#61 CLAMP SAFE con pasillos de 4.5 m libres entre racks, igual que el Almacén Genérico', pz.cl.every(v => v >= 4.5) && pz.half.every(h => h >= 2.25), JSON.stringify(pz)); await q.close(); }
   // Dojo de Mando: la ruta recomendada aprueba y la de evitar el problema no
   { const play = async path => { const q = await b.newPage({ viewport: { width: 1000, height: 700 } }); const e = []; q.on('pageerror', x => e.push(x.message)); await q.goto(url('juegos/dojo-de-mando.html')); await q.waitForTimeout(800);
       const r = await q.evaluate(async path => { const C = s => { const el = document.querySelector(s); if (el && el.offsetParent !== null) { el.click(); return true; } return false; }; const w = ms => new Promise(r => setTimeout(r, ms));

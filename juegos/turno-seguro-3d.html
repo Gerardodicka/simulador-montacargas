@@ -1630,7 +1630,7 @@
         
         function buildRacks() {
             // Layout: 4 pasillos de 3.5 m (double reach), racks espalda con espalda
-            const rackXs = [-18.15, -12.35, -6.9, -1.1, 4.35, 10.15, 15.35, 21.15];   // doble profundidad: 2 racks por pasillo (izq. mira +x, der. mira −x)
+            const rackXs = [-20.475, -13.575, -8.125, -1.225, 4.225, 11.125, 16.575, 23.475];   // doble profundidad: 2 racks por pasillo (izq. mira +x, der. mira −x)
             const zStart = -38, bays = 14, levels = 6;
             rackXs.forEach((x, i) => buildRack(x, zStart, bays, levels, i % 2 === 0 ? 1 : -1, 'ABCDEFGH'[i]));
             flushRackInstances();
@@ -1640,11 +1640,11 @@
             if (typeof buildBays === 'function') buildBays();
             buildRackWalkways();   // franjas detrás de racks espalda con espalda = pasos peatonales
             // Pasillos entre pares de racks
-            const aisleCenters = [-15.25, -4, 7.25, 18.25];
+            const aisleCenters = [-17.025, -4.675, 7.675, 20.025], AH = 2.25;   // pasillos de 4.5 m libres entre racks
             aisleCenters.forEach((cx, i) => {
-                AISLES.push({ x: cx, half: 1.75 });
-                paintLine(cx - 1.75, zStart, cx - 1.75, zStart + bays * 2.8);
-                paintLine(cx + 1.75, zStart, cx + 1.75, zStart + bays * 2.8);
+                AISLES.push({ x: cx, half: AH });
+                paintLine(cx - AH + .05, zStart, cx - AH + .05, zStart + bays * 2.8);
+                paintLine(cx + AH - .05, zStart, cx + AH - .05, zStart + bays * 2.8);
                 paintLabel(`PASILLO ${i + 1}`, cx, zStart + bays * 2.8 + 3, 2.2);
                 paintLabel(`PASILLO ${i + 1}`, cx, zStart - 3, 2.2, '#ffffff', Math.PI);
                 // Letrero colgante de identificación (número grande + nombre) en ambas entradas del pasillo
@@ -2590,7 +2590,7 @@
         // Al terminar un trayecto el peatón elige otra ruta del catálogo (paso peatonal, cruce de tránsito, perimetral, área de recibo)
         // ====== Pasos peatonales detrás de los racks (espacio entre racks espalda con espalda) ======
         // franja verde con bordes amarillos y leyendas; conectan con un cruce peatonal al fondo del almacén. Los montacargas no deben entrar (falta: invadir paso peatonal).
-        const RACK_WALKS = [{ x: -9.625, w: 2.6 }, { x: 1.625, w: 2.6 }, { x: 12.75, w: 2.4 }], WALK_Z = [-38.4, 1.4], WALK_BACK = -40.6;
+        const RACK_WALKS = [{ x: -10.85, w: 2.6 }, { x: 1.5, w: 2.6 }, { x: 13.85, w: 2.6 }], WALK_Z = [-38.4, 1.4], WALK_BACK = -40.6;
         
         
            // pasos detrás de racks y cruce del fondo   // cruce peatonal (cebra) de la zona de tránsito
@@ -2642,8 +2642,8 @@
         function buildTraffic() {
             if (!GLTF_AVATAR.tried) { loadOperarioModel().then(() => { buildTraffic(); try { buildDockOperations(); } catch (e) { console.warn('[SIM] andenes:', e.message); } try { mergeSceneStatics(); } catch (e) { console.warn('[SIM] fusión de estáticos:', e.message); } }); return; }
             // Montacargas a 10 km/h por pasillos 1 y 4 y por la zona de tránsito
-            npcForklift('04', [[-15.25, -36], [-15.25, 2]], 0.2); NPC.forks[0].aisle = 1;
-            npcForklift('07', [[18.25, -30], [18.25, 2]], 0.7); NPC.forks[1].aisle = 4;
+            npcForklift('04', [[-17.025, -36], [-17.025, 2]], 0.2); NPC.forks[0].aisle = 1;
+            npcForklift('07', [[20.025, -30], [20.025, 2]], 0.7); NPC.forks[1].aisle = 4;
             npcForklift('09', [[-27, 11], [27, 11]], 0.4); NPC.forks[2].aisle = 3;
             // Peatones por pasos autorizados: paso peatonal verde (frente) y cruce blanco de la zona de tránsito
             NPC.forks.forEach((f, i) => { if (f.aisle !== undefined) { const a = AISLES[f.aisle - 1]; f.path = buildAisleRoute(a.x, f.aisle - 1); f.t = 0.15 + i * 0.25; f.dir = 1; const p0 = segmentPos(f.path, f.t); f.x = p0.x; f.z = p0.z; f.g.position.set(f.x, 0, f.z); } });
@@ -2770,7 +2770,7 @@
         // Nombres de pasillos (editables por DICKA): número + familia de producto que se almacena
         const AISLE_NAMES = { 0: 'LATERAL · DEVOLUCIONES', 1: 'ABARROTES', 2: 'LIMPIEZA', 3: 'BEBIDAS', 4: 'CUIDADO PERSONAL' };
         
-        const RACK_LAYOUT = { xs: [-18.15, -12.35, -6.9, -1.1, 4.35, 10.15, 15.35, 21.15], zStart: -38, bayW: 2.8, levelH: 1.8, beamY0: 0.5, bays: 14, levels: 6, depth: 2.4,
+        const RACK_LAYOUT = { xs: [-20.475, -13.575, -8.125, -1.225, 4.225, 11.125, 16.575, 23.475], zStart: -38, bayW: 2.8, levelH: 1.8, beamY0: 0.5, bays: 14, levels: 6, depth: 2.4,
             letters: 'ABCDEFGH', aisleOf: [1, 1, 2, 2, 3, 3, 4, 4], facing: [1, -1, 1, -1, 1, -1, 1, -1] };
         const WH_CODES = { 'Agave 1': 'AG1', 'Agave 3': 'AG3', 'Mezquite 1': 'MZ1', 'Mezquite 2': 'MZ2', 'BIC': 'BIC', 'Celaya': 'CEL', 'Toluca': 'TOL', 'Escobedo': 'ESC', 'Apodaca': 'APO', 'Guadalajara': 'GDL', 'Villahermosa': 'VHS', 'Mérida': 'MID' };
         
