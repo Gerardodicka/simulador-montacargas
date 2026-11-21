@@ -368,7 +368,16 @@ const PRF_DEF={
   'Embarcador':['embarques','clasificacion-ruta','patio','carga','sellos',...PRF_BASE],
   'Supervisor de Operaciones':['flujo','indicadores','crossdock','conteo','loto','matpel','dojo-de-mando',...PRF_BASE],
   'Jefe de Turno':['flujo','indicadores','patio','embarques','dojo-de-mando',...PRF_BASE],
-  'Gerente de Operaciones':['tablero','indicadores','planeacion','dojo-de-mando','flujo','slotting','crossdock','emergencias']};
+  'Gerente de Operaciones':['tablero','indicadores','planeacion','dojo-de-mando','flujo','slotting','crossdock','emergencias'],
+  'Verificador':['embarques','sellos','devoluciones','excepciones','recepcion','clasificacion-ruta',...PRF_BASE],
+  'Auxiliar de Inventarios':['conteo','inventario','excepciones','slotting','recepcion-acomodo','devoluciones',...PRF_BASE],
+  'Mesa de Control':['indicadores','flujo','patio','crossdock','excepciones','embarques',...PRF_BASE],
+  'Coordinador de Patio':['patio','andenes','sellos','carga','clasificacion-ruta','emergencias',...PRF_BASE],
+  'Técnico de Mantenimiento':['loto','alturas','montacarga','matpel','emergencias',...PRF_BASE],
+  'Jefe de Operaciones':['indicadores','planeacion','flujo','crossdock','dojo-de-mando','tablero',...PRF_BASE],
+  'Director de Operaciones':['tablero','indicadores','planeacion','dojo-de-mando','emergencias','examen-seguridad'],
+  'HRBP · Talento y Cultura':['dojo-de-mando','indicadores','tablero','ergonomia','emergencias','examen-seguridad'],
+  'Seguridad e Higiene':['examen-seguridad','emergencias','extintores-3d','loto','alturas','matpel','senalizacion','ergonomia','andenes','turno-seguro-3d']};
 const BASE_GAMES = [
   { id:'diag', name:'Validación de joystick y volante USB', icon:'🔌', cat:'Herramientas', status:'activo', time:'2 min', pass:'—', desc:'Comprueba que el navegador detecta el Logitech Extreme 3D Pro y el volante G920, con prueba funcional guiada de ejes y botones y guía de solución.', url:'juegos/diagnostico-usb.html', hideFromCount:true, hiddenCard:true },
   { id:'montacarga', name:'Simulador de Montacarga', icon:"<svg viewBox='0 0 120 80' width='96' height='64' xmlns='http://www.w3.org/2000/svg'><rect x='14' y='34' width='46' height='22' rx='3' fill='#c8102e'/><rect x='40' y='16' width='20' height='20' rx='2' fill='#c8102e'/><rect x='44' y='19' width='12' height='11' fill='#dfe7ff' opacity='.85'/><rect x='18' y='10' width='40' height='3' fill='#1a1a1a'/><rect x='20' y='13' width='3' height='22' fill='#1a1a1a'/><rect x='55' y='13' width='3' height='22' fill='#1a1a1a'/><rect x='8' y='30' width='8' height='26' rx='2' fill='#1a1a1a'/><rect x='62' y='6' width='4' height='52' fill='#9a9a9a'/><rect x='68' y='6' width='4' height='52' fill='#9a9a9a'/><rect x='60' y='38' width='14' height='10' fill='#1a1a1a'/><rect x='72' y='56' width='40' height='4' fill='#1a1a1a'/><rect x='72' y='44' width='4' height='16' fill='#1a1a1a'/><rect x='78' y='40' width='28' height='16' fill='#c9a875' stroke='#8a6a40'/><rect x='80' y='42' width='24' height='3' fill='#2138D3'/><circle cx='24' cy='60' r='9' fill='#111'/><circle cx='24' cy='60' r='4' fill='#888'/><circle cx='54' cy='60' r='9' fill='#111'/><circle cx='54' cy='60' r='4' fill='#888'/><circle cx='50' cy='8' r='3' fill='#ff9900'/><text x='27' y='49' font-family='Arial Black,Arial' font-weight='900' font-size='7' fill='#fff'>RAYMOND</text></svg>", cat:'Equipo', status:'activo', time:'20 min', pass:'160/200 · 80/100',

@@ -18,7 +18,15 @@ function buildEscenariosDojo(scene) {
     const dash = tex(1024, 512, (g, w, h) => { g.fillStyle = '#0d1430'; g.fillRect(0, 0, w, h); g.fillStyle = '#f5b800'; g.font = 'bold 44px Arial'; g.fillText('TABLERO EJECUTIVO · CEDIS', 40, 70);
       [['OTIF', '91%', '#ff6b6b'], ['Costo/caja', '+8%', '#ff6b6b'], ['Rotación', '38%', '#ffb347'], ['Exactitud', '99.1%', '#4cd97b']].forEach(([k, v, c], i) => { const x = 40 + i * 245; g.fillStyle = '#18224a'; g.fillRect(x, 110, 225, 150); g.fillStyle = '#9fb0ff'; g.font = '28px Arial'; g.fillText(k, x + 16, 150); g.fillStyle = c; g.font = 'bold 60px Arial'; g.fillText(v, x + 16, 230); });
       g.strokeStyle = '#4f7bd8'; g.lineWidth = 6; g.beginPath(); [380, 360, 372, 330, 345, 310, 300, 320].forEach((y, i) => i ? g.lineTo(60 + i * 125, y + 90) : g.moveTo(60, y + 90)); g.stroke(); });
-    B(3.2, 1.8, .06, dark, cx, 1.9, cz - 4.4); panel(3.05, 1.65, dash, cx, 1.9, cz - 4.36);
+    { // TV de pared 75": marco delgado, pantalla con brillo propio y reflejo, soporte y barra de sonido
+      const bez = M(0x0b0d12, { roughness: .35, metalness: .3 }); B(.42, .32, .05, M(0x2b2f36, { metalness: .6, roughness: .4 }), cx, 1.75, cz - 4.43);   // soporte
+      B(2.9, 1.66, .045, bez, cx, 1.75, cz - 4.38);                                                                         // marco
+      const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.84, 1.6), new THREE.MeshStandardMaterial({ map: dash, emissive: 0xffffff, emissiveMap: dash, emissiveIntensity: .85, roughness: .55, metalness: 0 })); scr.position.set(cx, 1.75, cz - 4.355); G.add(scr);
+      const gl = tex(256, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, 'rgba(255,255,255,.16)'); gr.addColorStop(.35, 'rgba(255,255,255,.03)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+      const glare = new THREE.Mesh(new THREE.PlaneGeometry(2.84, 1.6), new THREE.MeshBasicMaterial({ map: gl, transparent: true, depthWrite: false })); glare.position.set(cx, 1.75, cz - 4.352); G.add(glare);
+      const logo = new THREE.Mesh(new THREE.PlaneGeometry(.12, .025), new THREE.MeshBasicMaterial({ color: 0x8a8f99 })); logo.position.set(cx, .935, cz - 4.355); G.add(logo);
+      B(1.6, .09, .1, M(0x15171c, { roughness: .5 }), cx, .78, cz - 4.36);                                                  // barra de sonido
+      }
     C(.25, .2, .45, M(0x8a5a3a), cx - 4.4, .23, cz - 3.9); const pl = new THREE.Mesh(new THREE.SphereGeometry(.5, 14, 10), M(0x3f8f4a)); pl.position.set(cx - 4.4, .9, cz - 3.9); G.add(pl);
     const lamp = new THREE.PointLight(0xfff1dd, .5, 12); lamp.position.set(cx, 3, cz - 1); G.add(lamp); }
 
