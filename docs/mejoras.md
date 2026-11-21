@@ -100,7 +100,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 70 | Mejora del Dojo | Investigación 2026-11-21 (práctica deliberada) | Dojo: botón «Repetir esta situación» al final del reporte para volver a intentar de inmediato con el mismo caso y comparar puntajes | Aprender del error al momento | ✅ |
 | 71 | Mejora del portal | Investigación 2026-11-21 (retos por almacén) | Ranking sano por almacén: promedio de aprobación por CEDIS en el Dashboard y en el portal (sin nombres), para motivar retos entre almacenes | Motivación colectiva | ✅ |
 | 72 | Mejora del portal | Investigación 2026-11-21 (microaprendizaje al inicio del turno, Axonify) | «⚡ Repaso rápido del turno»: 3 preguntas diarias de seguridad y operación con respuesta inmediata; el resultado solo se guarda en el equipo | Reforzar lo aprendido a diario | ✅ |
-| 73 | Mejora del Dojo | Investigación 2026-11-21 (retroalimentación directa, LiftNick) | Dojo: al final, «3 frases que funcionaron» del propio participante resaltadas en verde dentro de la transcripción | Aprender de lo que sí funcionó | ⬜ |
+| 73 | Mejora del Dojo | Investigación 2026-11-21 (retroalimentación directa, LiftNick) | Dojo: al final, «3 frases que funcionaron» del propio participante resaltadas en verde dentro de la transcripción | Aprender de lo que sí funcionó | 🔨 |
 | 74 | Mejora del montacargas | Investigación 2026-11-21 (Simlog v3, módulos nuevos) | Almacén Genérico: misión de recarga/cambio de batería con pasos de seguridad (EPP, área ventilada, desconectar) | Más cobertura de tareas reales | ⬜ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
