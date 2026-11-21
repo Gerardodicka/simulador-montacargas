@@ -281,7 +281,7 @@
   <div class="catalogo hidden" id="catalogo">
   <div class="sechead" id="simuladores">
     <div><h2>Simuladores disponibles</h2><small>Selecciona un curso · los resultados se registran automáticamente</small></div>
-    <div class="rutaBar" id="rutaBar"></div><div id="repasoBar" style="display:none;flex-basis:100%;background:#fff3e0;color:#6d3b00;border:2px solid #fb8c00;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div class="filters" id="filters"></div>
+    <div class="rutaBar" id="rutaBar"></div><div id="tipBar" style="flex-basis:100%;background:#e8f5e9;color:#1b5e20;border:2px solid #43a047;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div id="repasoBar" style="display:none;flex-basis:100%;background:#fff3e0;color:#6d3b00;border:2px solid #fb8c00;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div class="filters" id="filters"></div>
   </div>
   <div class="grid" id="grid"></div>
   </div>
@@ -464,6 +464,20 @@ function navIr(k){ document.querySelectorAll('.sidenav button').forEach(b=>b.cla
 function repasosPend(){ const out=[]; allGames().forEach(g=>{ const m=(g.url||'').match(/juegos\/([\w-]+)\.html/); if(!m) return; try{ const l=JSON.parse(localStorage.getItem('dicka_adapt_'+m[1])||'[]'); if(Array.isArray(l)&&l.length) out.push({id:g.id,name:g.name,n:l.length}); }catch(e){} }); return out.sort((a,b)=>b.n-a.n); }
 function repasoRender(){ const el=document.getElementById('repasoBar'); if(!el) return; const R=repasosPend(); if(!R.length){ el.style.display='none'; return; } const tot=R.reduce((a,b)=>a+b.n,0), e=t=>String(t).replace(/</g,'&lt;');
   el.innerHTML=`🔁 <b>Tienes ${tot} caso${tot>1?'s':''} para repasar</b> (los que fallaste la vez pasada). Repasar ayuda a que no se te olvide: ${R.slice(0,4).map(r=>`<a href="#" onclick="play('${r.id}');return false" style="color:#1D2586;font-weight:800;text-decoration:underline">${e(r.name)} (${r.n})</a>`).join(' · ')}${R.length>4?` y ${R.length-4} más`:''}`; el.style.display='block'; }
+// #68 Tip del día: un consejo corto de seguridad u operación por día, con liga al simulador donde se practica
+const TIPS=[['Antes de subir al montacargas haz la inspección pre-operativa: frenos, claxon, horquillas, cadenas y fugas.','montacarga'],['Carga a 2 cm de las horquillas al piso y con el mástil inclinado hacia atrás al transitar; nunca con la carga elevada.','montacarga'],
+ ['Levanta flexionando las rodillas y con la carga pegada al cuerpo. Más de 25 kg (hombres) o 20 kg (mujeres): pide ayuda o usa diablito.','ergonomia'],['Bloqueo y etiquetado: cada quien pone SU candado y SU etiqueta. Solo quien lo puso lo quita.','loto'],
+ ['Si ves un derrame de químico, aísla el área, avisa y usa el kit antiderrames con el EPP de la hoja de seguridad.','matpel'],['Extintor: Jala el seguro, Apunta a la base del fuego, Aprieta la palanca y Barre de lado a lado (J-A-A-B).','extintores-3d'],
+ ['Con un pedido que pide más piezas de las que hay, reporta faltante. Confirmar de menos descuadra el inventario.','picking-guiado'],['El dígito de control se lee de la etiqueta física; decirlo de memoria anula la protección del voice picking.','surtido-voz'],
+ ['FEFO: sale primero lo que caduca primero, aunque haya llegado después.','excepciones'],['Antes de cargar un tráiler revisa calzas, placa niveladora y el piso de la caja.','andenes'],
+ ['En embarques, lo último que se entrega va al fondo: carga por parada en orden inverso (LIFO).','embarques'],['Un sello sin número igual al documento o dañado: no se recibe la unidad hasta aclararlo.','sellos'],
+ ['Cadena de frío: si el registrador muestra horas fuera de rango, el lote se retiene; no se libera "porque se ve bien".','frio'],['5S: lo que no se usa en la operación se separa con tarjeta roja; un lugar para cada cosa y cada cosa en su lugar.','5s'],
+ ['Pasillo peatonal es solo para peatones: el montacargas cede el paso y toca claxon en cruces e intersecciones.','senalizacion'],['Trabajo en alturas: arnés con línea de vida anclada y área delimitada abajo. Sin permiso, no se sube.','alturas'],
+ ['Retroalimenta en privado, con hechos y sin etiquetas: «vi que…», no «siempre eres…».','dojo-de-mando'],['Reconoce de forma específica: qué hizo, qué evitó y gracias. El «buen trabajo» genérico no motiva.','dojo-de-mando'],
+ ['Un KPI en rojo se corrige atacando la causa de la pista, no el síntoma.','indicadores'],['Kitting: arma contra la lista de materiales y verifica cantidad y versión antes de cerrar el kit.','kitting']];
+function tipHoy(d){ d=d||new Date(); const doy=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5); return TIPS[doy%TIPS.length]; }
+function tipRender(){ const el=document.getElementById('tipBar'); if(!el) return; const [t,id]=tipHoy(), g=allGames().find(x=>x.id===id), e=s=>String(s).replace(/</g,'&lt;');
+  el.innerHTML=`💡 <b>Tip del día:</b> ${e(t)}${g?` <a href="#" onclick="play('${g.id}');return false" style="color:#1D2586;font-weight:800;text-decoration:underline">Practícalo en ${e(g.name)} →</a>`:''}`; }
 let filter='Todos', current=null;
 
 
@@ -505,7 +519,7 @@ function render(){
         <button class="del" onclick="removeGame('${g.id}')">quitar</button>
       </div>
     </div>`).join('');
-  repasoRender();
+  repasoRender(); tipRender();
   document.getElementById('stGames').textContent=games.filter(g=>g.status!=='proximo'&&!g.hideFromCount).length;
   const r=collectResults(); document.getElementById('stPlays').textContent=r.length;
   document.getElementById('stPass').textContent=r.length?Math.round(100*r.filter(x=>x.aprobado).length/r.length)+'%':'—';
