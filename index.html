@@ -281,7 +281,7 @@
   <div class="catalogo hidden" id="catalogo">
   <div class="sechead" id="simuladores">
     <div><h2>Simuladores disponibles</h2><small>Selecciona un curso · los resultados se registran automáticamente</small></div>
-    <div class="rutaBar" id="rutaBar"></div><div id="tipBar" style="flex-basis:100%;background:#e8f5e9;color:#1b5e20;border:2px solid #43a047;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div id="repasoBar" style="display:none;flex-basis:100%;background:#fff3e0;color:#6d3b00;border:2px solid #fb8c00;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div class="filters" id="filters"></div>
+    <div class="rutaBar" id="rutaBar"></div><div id="almBar" style="display:none;flex-basis:100%;background:#fff;color:#1a1f36;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div id="tipBar" style="flex-basis:100%;background:#e8f5e9;color:#1b5e20;border:2px solid #43a047;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div id="repasoBar" style="display:none;flex-basis:100%;background:#fff3e0;color:#6d3b00;border:2px solid #fb8c00;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:15px;line-height:1.5"></div><div class="filters" id="filters"></div>
   </div>
   <div class="grid" id="grid"></div>
   </div>
@@ -478,6 +478,10 @@ const TIPS=[['Antes de subir al montacargas haz la inspección pre-operativa: fr
 function tipHoy(d){ d=d||new Date(); const doy=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5); return TIPS[doy%TIPS.length]; }
 function tipRender(){ const el=document.getElementById('tipBar'); if(!el) return; const [t,id]=tipHoy(), g=allGames().find(x=>x.id===id), e=s=>String(s).replace(/</g,'&lt;');
   el.innerHTML=`💡 <b>Tip del día:</b> ${e(t)}${g?` <a href="#" onclick="play('${g.id}');return false" style="color:#1D2586;font-weight:800;text-decoration:underline">Practícalo en ${e(g.name)} →</a>`:''}`; }
+// #71 Reto entre almacenes: % de aprobación por CEDIS (solo resultados oficiales, sin nombres)
+function almRanking(){ const M={}, vistos=new Set(); collectResults().filter(r=>r.almacen&&!(typeof esPrueba==='function'&&esPrueba(r))).filter(r=>{ const k=r.reg||(r.juego+'|'+r.nombre+'|'+r.fecha); if(vistos.has(k)) return false; vistos.add(k); return true; }).forEach(r=>{ const m=M[r.almacen]||(M[r.almacen]={n:0,a:0}); m.n++; if(r.aprobado) m.a++; }); return Object.entries(M).filter(([k,m])=>m.n>=3).map(([k,m])=>({alm:k,n:m.n,pct:Math.round(m.a/m.n*100)})).sort((a,b)=>b.pct-a.pct||b.n-a.n); }
+function almRender(){ const el=document.getElementById('almBar'); if(!el) return; const R=almRanking(); if(R.length<2){ el.style.display='none'; return; } const e=s=>String(s).replace(/</g,'&lt;'), md=['🥇','🥈','🥉'];
+  el.innerHTML=`<b style="color:#1D2586">🏭 Reto entre almacenes</b> <small style="color:#666">· % de aprobación (mínimo 3 cursos; sin nombres)</small><div style="margin-top:6px">${R.slice(0,8).map((r,i)=>`<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="width:120px;font-weight:700">${md[i]||''} ${e(r.alm)}</span><div style="flex:1;height:14px;background:#e3e7f3;border-radius:7px;overflow:hidden"><i style="display:block;height:100%;width:${r.pct}%;background:${r.pct>=80?'#2e9e5b':r.pct>=60?'#f5a300':'#e53935'}"></i></div><b style="width:44px;text-align:right">${r.pct}%</b><small style="color:#666;width:64px">${r.n} cursos</small></div>`).join('')}</div>`; el.style.display='block'; }
 let filter='Todos', current=null;
 
 
@@ -519,7 +523,7 @@ function render(){
         <button class="del" onclick="removeGame('${g.id}')">quitar</button>
       </div>
     </div>`).join('');
-  repasoRender(); tipRender();
+  repasoRender(); tipRender(); almRender();
   document.getElementById('stGames').textContent=games.filter(g=>g.status!=='proximo'&&!g.hideFromCount).length;
   const r=collectResults(); document.getElementById('stPlays').textContent=r.length;
   document.getElementById('stPass').textContent=r.length?Math.round(100*r.filter(x=>x.aprobado).length/r.length)+'%':'—';
