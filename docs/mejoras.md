@@ -105,7 +105,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 75 | Mejora de los recorridos | Petición del usuario 2026-11-21 («no se entiende» Ergonomía) | Modo guiado en los otros 14 recorridos 3D: la cámara lleva de un punto al siguiente, panel «Punto X de 10», cámara cercana y panel que deja ver la escena en celular | Claridad: ya no hay que buscar números en la vista general | ✅ |
 | 76 | Mejora del Dojo | Investigación 2026-11-21 (simulaciones con consecuencias, Virbela / preprint 2026) | Dojo: «📅 Una semana después…» narra qué pasó con el equipo según cada objetivo logrado o no, y si subió o bajó la confianza | Ver el impacto de las decisiones | ✅ |
 | 77 | Mejora del Dojo | Investigación 2026-11-21 (competencias, Virbela) | Dojo: mapa de competencias (radar) con el promedio de tus prácticas por objetivo | Saber qué competencia reforzar | ✅ |
-| 78 | Mejora del portal | Investigación 2026-11-21 (práctica repetida, VirtualSpeech) | Portal: «Reintenta y mejora»: sugiere repetir el simulador con menor calificación de la semana | Segunda oportunidad para subir el puntaje | ⬜ |
+| 78 | Mejora del portal | Investigación 2026-11-21 (práctica repetida, VirtualSpeech) | Portal: «Reintenta y mejora»: sugiere repetir el simulador con menor calificación de la semana | Segunda oportunidad para subir el puntaje | 🔨 |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
