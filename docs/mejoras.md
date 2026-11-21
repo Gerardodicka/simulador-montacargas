@@ -101,7 +101,8 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 71 | Mejora del portal | Investigación 2026-11-21 (retos por almacén) | Ranking sano por almacén: promedio de aprobación por CEDIS en el Dashboard y en el portal (sin nombres), para motivar retos entre almacenes | Motivación colectiva | ✅ |
 | 72 | Mejora del portal | Investigación 2026-11-21 (microaprendizaje al inicio del turno, Axonify) | «⚡ Repaso rápido del turno»: 3 preguntas diarias de seguridad y operación con respuesta inmediata; el resultado solo se guarda en el equipo | Reforzar lo aprendido a diario | ✅ |
 | 73 | Mejora del Dojo | Investigación 2026-11-21 (retroalimentación directa, LiftNick) | Dojo: al final, «3 frases que funcionaron» del propio participante resaltadas en verde dentro de la transcripción | Aprender de lo que sí funcionó | ✅ |
-| 74 | Mejora del montacargas | Investigación 2026-11-21 (Simlog v3, módulos nuevos) | Almacén Genérico: misión de recarga/cambio de batería con pasos de seguridad (EPP, área ventilada, desconectar) | Más cobertura de tareas reales | ⬜ |
+| 74 | Mejora del montacargas | Investigación 2026-11-21 (Simlog v3, módulos nuevos) | Almacén Genérico: misión de recarga/cambio de batería con pasos de seguridad (EPP, área ventilada, desconectar) | Más cobertura de tareas reales | ✅ (ya existía: actividad «Carga de batería» con protocolo de 8 pasos) |
+| 75 | Mejora de los recorridos | Petición del usuario 2026-11-21 («no se entiende» Ergonomía) | Modo guiado en los otros 14 recorridos 3D: la cámara lleva de un punto al siguiente, panel «Punto X de 10», cámara cercana y panel que deja ver la escena en celular | Claridad: ya no hay que buscar números en la vista general | 🔨 |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
