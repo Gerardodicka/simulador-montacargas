@@ -22,5 +22,5 @@ oficina_mujer.glb / oficina_hombre.glb
 oficina_mujer2.glb / oficina_mujer3.glb / oficina_hombre2.glb / oficina_hombre3.glb
   Avatares Female_Adult_02, Female_Adult_07, Male_Adult_03 y Male_Adult_07 de Microsoft Rocketbox Avatar Library
   (https://github.com/microsoft/Microsoft-Rocketbox), licencia MIT, Copyright (c) 2020 Microsoft.
-  Convertidos de FBX a GLB (FBX2glTF) con huesos renombrados al esquema Mixamo y texturas de color incrustadas.
+  Convertidos de FBX a GLB (FBX2glTF) con huesos renombrados al esquema Mixamo, texturas de color a 2048 px y mapas normales (relieve de tela y piel).
   El Dojo de Mando asigna uno distinto a cada personaje de oficina (según su nombre) y el director usa oficina_hombre2.
