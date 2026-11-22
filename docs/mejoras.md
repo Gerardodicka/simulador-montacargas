@@ -120,6 +120,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 90 | Mejora del Tablero del Gerente | Petición del usuario (que lleve de la mano) | La primera vez, el director ofrece en la TV explicar los indicadores antes de decidir (Sí → recorrido; «Ya los conozco» se recuerda en el equipo) | Empezar sabiendo qué medir | ✅ |
 | 91 | Mejora del montacargas | Petición del usuario (audio en los avatares) | Almacén Genérico: instructor por voz que lee cada actividad y las indicaciones clave (es-MX), con botón 🔊 para silenciar | Operar escuchando, sin tener que leer | ✅ |
 | 92 | Mejora del portal | Investigación 2026-11-21 (microaprendizaje, retomar sin fricción) | Portal: «▶ Sigue donde te quedaste» con el último simulador abierto (7 días) mientras no se apruebe; botón «Continuar» | Retomar sin buscar en el catálogo | ✅ |
+| 93 | Mejora del Tablero del Gerente | Petición del usuario (más inmersivo y sencillo para manejar indicadores) | Pronóstico en vivo: cada opción muestra 🟢/🔴 de OTIF, costo, accidentes y rotación; el director reacciona y avisa qué se va a rojo | Aprender causa-efecto antes de decidir | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
