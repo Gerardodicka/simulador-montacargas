@@ -114,6 +114,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 84 | Mejora de Indicadores | Petición del usuario (aprendizaje paso a paso del Tablero del Gerente) | Indicadores: «👋 Aprende a calcular los indicadores paso a paso» con el gerente: qué mide → fórmula visual → calcúlalo tú → cómo se mide, de indicador en indicador | Aprender sin saturar la pantalla | ✅ |
 | 85 | Mejora de Planeación de personal | Petición del usuario (aprendizaje paso a paso) | Planeación: «👋 Aprende a planear paso a paso» con el gerente: gente disponible, capacidad del día, verde/rojo, eventuales vs horas extra y la ley, cada uno con pregunta rápida | Entender las reglas antes de planear | ✅ |
 | 86 | Mejora de los recorridos | Petición del usuario (menos información en una sola pantalla) | Recorridos 3D (15): guía inicial corta (sin repetir el objetivo) y «📘 Conoce las opciones una por una» con cuándo aplica cada una | Aprender las opciones antes de jugar | ✅ |
+| 87 | Mejora de Indicadores | Petición del usuario (explicación arriba con el avatar, sin repetir abajo) | Indicadores: el aprendizaje paso a paso vive dentro de una TV junto al gerente, interactivo ahí mismo | Aprender viendo al gerente | 🔨 |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
