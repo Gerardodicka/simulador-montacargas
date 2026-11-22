@@ -123,6 +123,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 93 | Mejora del Tablero del Gerente | Petición del usuario (más inmersivo y sencillo para manejar indicadores) | Pronóstico en vivo: cada opción muestra 🟢/🔴 de OTIF, costo, accidentes y rotación; el director reacciona y avisa qué se va a rojo | Aprender causa-efecto antes de decidir | ✅ |
 | 94 | Mejora del Tablero del Gerente | Petición del usuario (avatar calvo y brazo estático) | Director con casco DICKA; al señalar sube con suavidad, flexiona el codo, mueve la mano y baja el brazo solo | Avatar más humano | ✅ |
 | 95 | Mejora del Tablero del Gerente | Petición del usuario (explicar muy simple para no expertos) | Instrucciones en 3 pasos numerados, sin siglas; preguntas y opciones en lenguaje cotidiano con 💡 consejo; pronóstico con palabras (A tiempo, Gasto, Accidentes, Renuncias) | Que lo entienda cualquiera | ✅ |
+| 96 | Mejora del Tablero del Gerente | Petición del usuario (lenguaje simple para no expertos) | Pantalla de inicio sin siglas: las 4 metas explicadas con palabras e íconos | Que lo entienda cualquiera desde el inicio | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
