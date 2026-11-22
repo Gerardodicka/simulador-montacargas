@@ -111,6 +111,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 81 | Mejora de los recorridos | Investigación 2026-11-21 (retroalimentación inmediata) | Recorridos 3D: al terminar, botón «Repasar mis errores» que lleva la cámara solo a los puntos fallados | Corregir lo que fallaste en el mismo momento | ✅ |
 | 82 | Mejora de Indicadores | Seguimiento de la petición del usuario («posiblemente no sepan cómo calcularlo») | Indicadores: «📘 ¿Cómo se calcula cada indicador?» con fórmula, cómo medirlo y ejemplo para OTIF, exactitud, productividad, citas, daños y rotación | Que el operador sepa calcular sus KPI | ✅ |
 | 83 | Mejora del portal | Investigación 2026-11-21 (metas y progreso, gamificación en almacenes, Gartner/MMH) | Portal: «🗓️ Meta de la semana»: el colaborador elige cuántos cursos aprobar (2, 3 o 5) y ve su avance de lunes a domingo | Constancia en la práctica | ✅ |
+| 84 | Mejora de Indicadores | Petición del usuario (aprendizaje paso a paso del Tablero del Gerente) | Indicadores: «👋 Aprende a calcular los indicadores paso a paso» con el gerente: qué mide → fórmula visual → calcúlalo tú → cómo se mide, de indicador en indicador | Aprender sin saturar la pantalla | 🔨 |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
