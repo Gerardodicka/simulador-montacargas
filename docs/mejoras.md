@@ -109,6 +109,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 79 | Mejora de navegación | Seguimiento del rediseño del botón Inicio (petición del usuario) | El botón Inicio no tapa títulos: baja solo la sección del encabezado que queda debajo (Dojo, editor, reporte, diagnóstico USB, extintores) | Encabezados legibles | ✅ |
 | 80 | Mejora del Dojo | Investigación 2026-11-21 (personajes con personalidad configurable, Learningpool) | Dojo: elegir el temperamento del colaborador (tranquilo / a la defensiva / muy molesto) antes de practicar | Practicar el mismo caso con distinta dificultad emocional | ✅ |
 | 81 | Mejora de los recorridos | Investigación 2026-11-21 (retroalimentación inmediata) | Recorridos 3D: al terminar, botón «Repasar mis errores» que lleva la cámara solo a los puntos fallados | Corregir lo que fallaste en el mismo momento | ✅ |
+| 82 | Mejora de Indicadores | Seguimiento de la petición del usuario («posiblemente no sepan cómo calcularlo») | Indicadores: «📘 ¿Cómo se calcula cada indicador?» con fórmula, cómo medirlo y ejemplo para OTIF, exactitud, productividad, citas, daños y rotación | Que el operador sepa calcular sus KPI | 🔨 |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
