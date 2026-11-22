@@ -124,6 +124,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 94 | Mejora del Tablero del Gerente | Petición del usuario (avatar calvo y brazo estático) | Director con casco DICKA; al señalar sube con suavidad, flexiona el codo, mueve la mano y baja el brazo solo | Avatar más humano | ✅ |
 | 95 | Mejora del Tablero del Gerente | Petición del usuario (explicar muy simple para no expertos) | Instrucciones en 3 pasos numerados, sin siglas; preguntas y opciones en lenguaje cotidiano con 💡 consejo; pronóstico con palabras (A tiempo, Gasto, Accidentes, Renuncias) | Que lo entienda cualquiera | ✅ |
 | 96 | Mejora del Tablero del Gerente | Petición del usuario (lenguaje simple para no expertos) | Pantalla de inicio sin siglas: las 4 metas explicadas con palabras e íconos | Que lo entienda cualquiera desde el inicio | ✅ |
+| 97 | Mejora del Tablero del Gerente | Petición del usuario (indicadores más de logística: IRA e ILA) | IRA (inventario correcto) e ILA (producto en su lugar) reemplazan a la rotación; 5.ª pregunta de conteos cíclicos; ILA bajo baja el OTIF; seguridad como candado (−7 por accidente, 2 = no aprueba); meta de costo $5.50 | Indicadores reales de almacén | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -266,3 +267,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-22 21:40 UTC | 93 | Tablero: pronóstico en vivo 🟢/🔴 de los 4 indicadores en cada opción; el director reacciona (v30.3) | validar.js 378/378 (+3 nuevas) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-22 21:40 UTC | 94 | Tablero: director con casco y señalar natural (codo, mano, baja solo) (v30.4) | validar.js 378/378 (+3 nuevas) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-22 21:40 UTC | 95 | Tablero: instrucciones en 3 pasos, sin siglas, preguntas cotidianas con consejo (v30.5) | validar.js 378/378 (+3 nuevas) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-22 22:40 UTC | 96 | Tablero: inicio sin siglas, metas explicadas con palabras (v30.6) | validar.js 379/379 (+1 nueva) · dojo-ia 20/20 · capturas 390 revisadas · 0 errores de consola · privacidad OK | ✅ |
