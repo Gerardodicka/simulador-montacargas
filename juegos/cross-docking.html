@@ -100,7 +100,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
     <div class="code" id="ecode"></div>
     <button class="btn" onclick="share()">📲 ENVIAR RESULTADO POR WHATSAPP</button>
     <button class="btn ghost" onclick="copyRes()">📋 COPIAR RESULTADO</button>
-    <button class="btn ghost" onclick="location.reload()">🔄 REPETIR</button>
+    <button class="btn" id="repErrBtn" onclick="repasarErr()" style="display:none;background:#5b2bb5">🔁 REPASAR MIS ERRORES</button><button class="btn ghost" onclick="location.reload()">🔄 REPETIR</button>
   </div>
 </div>
 <script src="js/three.min.js"></script>
@@ -219,12 +219,18 @@ function expl(c,d,g){ const H2=k=>HINT[k]?`<div style="font-size:12.5px;color:#5
   <div style="margin-bottom:6px"><b>💡 Por qué, en este caso:</b> ${c.why}</div>
   ${g?'':`<div><b>✖ Tu respuesta:</b> ${lim(d)}${H2(d)}<div style="font-size:12.5px;color:#a33;margin-top:2px">Aquí no corresponde porque la situación no cumple esa condición.</div></div>`}</div>`; }
 function decide(d){ const c=L[idx]; document.querySelectorAll('.acts button').forEach(b=>b.disabled=true); done.add(idx); const g=d===c.ok;
-  if(g){ score+=10; decOk++; } else { fall[c.ok]=(fall[c.ok]||0)+1; errors.push(c.zona+': era '+D[c.ok].replace(/^\d · /,'')+', elegiste '+D[d].replace(/^\d · /,'')); }
+  if(g){ score+=10; decOk++; } else { fall[c.ok]=(fall[c.ok]||0)+1; FAILI.push(idx); errors.push(c.zona+': era '+D[c.ok].replace(/^\d · /,'')+', elegiste '+D[d].replace(/^\d · /,'')); }
   $('sc').textContent=score; $('ln').textContent=done.size; $('bar').style.width=(done.size*10)+'%'; mark(idx,g); const cb=$('closeBtn'); if(cb) cb.remove();
   $('fb').innerHTML=`${expl(c,d,g)}<button class="btn" id="nextBtn" onclick="next()">${done.size<10?'SIGUIENTE PUNTO →':'VER RESULTADO →'}</button>`; /*fbTop*/ { const st=$('stage'), fb=$('fb'); st.querySelectorAll('.acts,.step').forEach(x=>x.style.display='none'); [...st.children].forEach(x=>{ if(x!==fb&&!x.classList.contains('unit')&&x.id!=='closeBtn'&&x.tagName==='DIV'&&!x.querySelector('.why')&&x!==st.firstElementChild) x.style.display='none'; }); st.insertBefore(fb, st.firstElementChild.nextSibling); st.scrollTop=0; } }
 /* Modo guiado: lleva de un punto al siguiente (antes había que encontrar los números en la vista general) */
 function guia(){ const i=L.findIndex((c,k)=>!done.has(k)); if(i>=0) openH(i); }
-function next(){ $('stage').classList.add('hidden'); if(done.size>=10) finish(); else setTimeout(guia,200); }
+function next(){ $('stage').classList.add('hidden'); if(done.size>=10){ finish(); const rb=$('repErrBtn'); if(rb&&FAILI.length){ rb.style.display='block'; rb.textContent='🔁 REPASAR MIS '+FAILI.length+' ERROR'+(FAILI.length>1?'ES':''); } } else setTimeout(guia,200); }
+/* #81 Repasar mis errores: la cámara va solo a los puntos fallados y muestra qué era lo correcto y por qué (no cambia la calificación) */
+let FAILI=[], REPI=-1;
+function repasarErr(){ if(!FAILI.length) return; REPI=0; $('end').classList.add('hidden'); $('game').classList.remove('hidden'); repShow(); }
+function repShow(){ const i=FAILI[REPI], c=L[i]; if(R3.focus) R3.focus(i); const st=$('stage'); st.classList.remove('hidden'); const ult=REPI>=FAILI.length-1;
+  st.innerHTML=`<div class="unit"><span class="k">REPASO ${REPI+1} DE ${FAILI.length} · ${c.zona.toUpperCase()}</span><br><b>👀 ${c.txt}</b></div><div class="why" style="border-left-color:#2e7d32"><div style="margin-bottom:6px"><b>✔ Lo correcto:</b> ${lim(c.ok)}</div><div><b>💡 Por qué:</b> ${c.why}</div></div><button class="btn" id="repNext" onclick="${ult?'repFin()':'REPI++;repShow()'}">${ult?'TERMINAR REPASO ✓':'SIGUIENTE ERROR →'}</button>`; st.scrollTop=0; }
+function repFin(){ $('stage').classList.add('hidden'); $('game').classList.add('hidden'); $('end').classList.remove('hidden'); scrollTo(0,0); }
 function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
   const ok=score>=PASS, date=new Date(); const base=`REG|${GAME_ID}|${who.name}${who.num?' #'+who.num:''}|${who.puesto}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');
   $('eicon').textContent=ok?'🏆':'📚'; $('etitle').textContent=ok?'¡Aprobaste!':'Aún no apruebas'; $('escore').textContent=score; $('ebadge').textContent=ok?'✓ APROBADO':'✗ NO APROBADO'; $('ebadge').className='badge '+(ok?'ok':'bad');
