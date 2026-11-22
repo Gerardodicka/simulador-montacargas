@@ -74,6 +74,8 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .ger.kon{height:560px}.kboard{overflow-y:auto!important;text-align:left!important;padding:10px 14px 12px!important}.kboard .khead{margin:-10px -14px 8px;padding:8px 12px;background:linear-gradient(90deg,#1D2586,#2138D3);color:#fff}.kboard .khead small{color:#dfe5ff!important}.kboard .kdots i{background:rgba(255,255,255,.35)}.kboard .kdots i.on{background:#f5c400}.kboard .kx2{background:rgba(255,255,255,.18);color:#fff}
 .kboard .kq1{font-size:17px}.kboard .kbig{font-size:40px}
 @media(max-width:700px){.ger.kon{height:640px}.ger.kon .gbub{left:3%!important;right:3%!important;top:8px}.kboard{left:35%!important;right:2%!important;top:118px!important;bottom:40px!important;width:auto!important;border-width:8px!important;border-bottom-width:12px!important}.kboard .kq1{font-size:15px;margin:2px 0 8px}.kboard .kbig{font-size:30px;margin:0}.kboard .kform{font-size:14px}.kboard .kfn,.kboard .kfd{font-size:13px!important}.kboard .kop{min-width:76px;font-size:16px;padding:9px 10px}.kboard .kb1{font-size:14.5px;padding:9px 12px}.kboard .kol{font-size:14px}.kboard .kmeta{font-size:13.5px}.kboard .kvoz input{min-width:0;flex:1 1 100%}.kboard .kdots{display:none}.kboard .khead{font-size:13.5px;gap:4px}.kboard .khead small{display:block}.kboard .kops{gap:6px}.kboard .kop{min-width:58px;font-size:14.5px;padding:8px 6px;flex:1}.kboard .kvoz span{display:none}.kboard .kvoz{gap:4px}.kboard .kvoz .kb1,.kboard .kvoz .kb2{flex:1}.kboard .knav{flex-wrap:wrap}}
+.mtv{display:flex;flex-direction:column;gap:6px}.mrow{border-radius:10px;padding:7px 10px;font-size:15px;line-height:1.4}.mrow b{display:block}.mrow span{color:#444}.mrow.ok{background:#e8f5e9}.mrow.no{background:#ffebee}
+@media(max-width:700px){.mrow{font-size:13px;padding:6px 8px}}
 </style>
 </head>
 <body>
@@ -255,10 +257,21 @@ function wizRender(){ const P=PREG[WQ]; if(!P){ $('wiz').innerHTML=`<div class="
   if(WQ>0) gerSay(P.t+' '+P.h); }
 function elegir(v){ const P=PREG[WQ]; $(P.id).value=String(v); WQ++; WQmax=Math.max(WQmax,WQ); capRender(); wizRender(); }
 function readD(){ return {extra:+$('dExtra').value, ot:+$('dOT').value, mant:+$('dMant').value, cap:+$('dCap').value}; }
-function month(){ const d=readD(), r=step(ST,d,VOL[m]); ST=r.nx; const h=Object.assign({rot:ST.rot,d},r); H.push(h); if(G3) dirComenta(h); const sem=(ok,t)=>`<div>${ok?'🟢':'🔴'} ${t}</div>`;
+/* #89 El director explica en la TV el resultado del mes: semáforo y la causa de cada indicador */
+function mesCausas(h){ const d=h.d, S0=h.S0, fmt=n=>Math.round(n).toLocaleString('es-MX'), C=[];
+  C.push([h.otif>=.97,'📦 OTIF',(h.otif*100).toFixed(1)+'%', h.cap<h.vol?`Te faltó gente: podías sacar ${fmt(h.cap)} de ${fmt(h.vol)} cajas.`:(h.otif<.97?'Alcanzó la capacidad, pero las fallas de la flota retrasaron entregas.':'Tuviste capacidad suficiente y la flota respondió.')]);
+  C.push([h.cpc<=5.2,'💲 Costo por caja','$'+h.cpc.toFixed(2), h.cpc<=5.2?'Gastaste en proporción a lo que sacaste.':(h.out<h.vol?'Sacaste menos cajas de las pedidas: el gasto se reparte entre menos cajas.':`Gastaste de más${d.ot?' (tiempo extra diario)':''}${d.extra>=9?' (muchos eventuales)':''}${d.mant===2?' (renovación de equipo)':''}.`)]);
+  const ca=[]; if(d.ot) ca.push('fatiga por tiempo extra'); if(S0.flota<45) ca.push('flota abajo de 45%'); if(S0.skill<58) ca.push('personal poco capacitado'); if(d.extra>=12&&!d.cap) ca.push('muchos eventuales sin capacitar');
+  C.push([!h.acc,'⛑️ Accidentes',String(h.acc), h.acc?'Causa: '+ca.join(', ')+'.':'Sin fatiga, flota sana y gente capacitada.']);
+  C.push([h.rotF<=30,'🔄 Rotación',Math.round(h.rotF)+'%', d.cap?'La capacitación ayudó a que la gente se quede.':(d.ot||h.acc?'El tiempo extra y los accidentes hacen que la gente se vaya.':'Sin capacitación la rotación baja muy poco.')]);
+  return C; }
+function mesTV(h){ const B=$('kBoard'); if(!B) return; const C=mesCausas(h), bien=C.filter(c=>c[0]).length; tvOn(); B.style.display='block';
+  B.innerHTML=`<div class="khead"><span>📋 <b>Resultado del mes ${h.mes}</b> <small>· ${bien} de 4 en meta</small></span><button type="button" class="kx2" onclick="kCerrar()" aria-label="Cerrar">✕</button></div><div class="mtv">${C.map(c=>`<div class="mrow ${c[0]?'ok':'no'}"><b>${c[0]?'🟢':'🔴'} ${c[1]}: ${c[2]}</b><span>${c[3]}</span></div>`).join('')}</div><div class="knav"><span></span><button type="button" class="kb1" id="mesNext" onclick="kCerrar()">${h.mes<4?'Decidir el mes '+(h.mes+1)+' →':'Ver mi resultado →'}</button></div>`;
+  gGest('point'); const peor=C.find(c=>!c[0]); if(!G3) gerSay(peor?`Mes ${h.mes}: ${bien} de 4 en meta. Fíjate en ${peor[1].replace(/^\S+ /,'')}: ${peor[3]}`:`¡Excelente mes ${h.mes}! Los 4 indicadores en meta.`); $('ger').scrollIntoView({block:'start',behavior:'smooth'}); }
+function month(){ const d=readD(), S0=Object.assign({},ST), r=step(ST,d,VOL[m]); ST=r.nx; const h=Object.assign({rot:ST.rot,d},r); H.push(h); if(G3) dirComenta(h); const sem=(ok,t)=>`<div>${ok?'🟢':'🔴'} ${t}</div>`;
   $('mesRes').innerHTML=`<div class="mres"><b>📋 Resultado del mes ${m+1}</b><div class="sem">${sem(h.otif>=.97,`Pedidos a tiempo: <b>${(h.otif*100).toFixed(1)}%</b> (meta 97%)`)}${sem(h.cpc<=5.2,`Costo por caja: <b>$${h.cpc.toFixed(2)}</b> (meta $5.20)`)}${sem(!h.acc,`Accidentes: <b>${h.acc}</b> (meta 0)`)}${sem(ST.rot<=30,`Rotación: <b>${Math.round(ST.rot)}%</b> (meta 30%)`)}</div><small>Tu director te comenta arriba. Ahora decide el siguiente mes.</small></div>`;
   $('mesRes').insertAdjacentHTML('beforeend',`<div class="mres"><b>Puntaje parcial: ${calc(H).total}/100</b> · se recalcula con cada mes; el resultado final se decide al cerrar el mes 4.</div>`);
-  m++; if(m<4){ saveAv(); draw(); } else finish(); }
+  mesTV(Object.assign({vol:VOL[m],mes:m+1,S0,rotF:ST.rot},h)); m++; if(m<4){ saveAv(); draw(); } else finish(); }
 const AV='dicka_tablero_avance';
 function saveAv(){ try{ localStorage.setItem(AV,JSON.stringify({who,ST,H,m,t0})); }catch(e){} }
 function resumeAv(){ try{ const s=JSON.parse(localStorage.getItem(AV)||'null'); if(!s) return; who=s.who; ST=s.ST; H=s.H; m=s.m; t0=s.t0; $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); draw(); }catch(e){ toastMsg('No se pudo retomar el avance',false); } }
