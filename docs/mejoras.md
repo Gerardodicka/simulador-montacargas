@@ -116,6 +116,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 86 | Mejora de los recorridos | Petición del usuario (menos información en una sola pantalla) | Recorridos 3D (15): guía inicial corta (sin repetir el objetivo) y «📘 Conoce las opciones una por una» con cuándo aplica cada una | Aprender las opciones antes de jugar | ✅ |
 | 87 | Mejora de Indicadores | Petición del usuario (explicación arriba con el avatar, sin repetir abajo) | Indicadores: el aprendizaje paso a paso vive dentro de una TV junto al gerente, interactivo ahí mismo | Aprender viendo al gerente | ✅ |
 | 88 | Mejora de Planeación de personal | Petición del usuario (explicación arriba con el avatar) | Planeación: el paso a paso vive dentro de una TV junto al gerente | Consistencia con Tablero e Indicadores | ✅ |
+| 89 | Mejora del Tablero del Gerente | Investigación 2026-11-21 (retroalimentación inmediata con causa) | Al cerrar cada mes, el director explica en la TV el semáforo de los 4 indicadores y la causa de cada uno (falta de gente, fatiga, flota, capacitación) | Entender por qué salió así | 🔨 |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
