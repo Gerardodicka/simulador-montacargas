@@ -1151,7 +1151,7 @@
                 </div>
 
                 <!-- Marcador -->
-                <div class="hud" id="hud" onclick="toggleLog()" title="Ver bitácora">⭐ 0 pts · 🛡️ 100% · ⚠️ 0</div>
+                <button type="button" id="instrBtn" onclick="instrToggle()" style="position:fixed;right:10px;top:62px;z-index:30;border:0;border-radius:999px;padding:7px 12px;font:800 13px system-ui;background:rgba(1,17,49,.82);color:#fff;cursor:pointer">🔊 Instructor</button><div class="hud" id="hud" onclick="toggleLog()" title="Ver bitácora">⭐ 0 pts · 🛡️ 100% · ⚠️ 0</div>
 
                 <!-- Alerta de error en el momento -->
                 <div class="fault-toast" id="faultToast"></div>
@@ -2394,7 +2394,7 @@
 
         // ================== SONIDO AMBIENTE DEL EQUIPO ==================
         const SND = { on: false, motor: null, motorGain: null, hyd: null, hydGain: null, revT: 0 };
-        const SIM_BUILD = '2026.10.09 · v30.0 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
+        const SIM_BUILD = '2026.10.09 · v30.1 Dojo: boca al hablar, mi avance y redacción más clara';   // visible en el menú: permite confirmar que el navegador cargó la versión publicada
         document.addEventListener('DOMContentLoaded', () => { const st = document.querySelector('.subtitle'); if (st) st.insertAdjacentHTML('beforeend', `<span style="display:block;font-size:11px;opacity:.6;margin-top:4px">Versión ${SIM_BUILD}</span>`); console.log('[SIM] versión', SIM_BUILD); });
         
         // ====== Ambiente de almacén: ventilación/naves, montacargas NPC (motor según distancia), alarmas de reversa lejanas, tarimas, golpes metálicos, voces y radio ======
@@ -3178,6 +3178,12 @@
         
         let miniT = null;
         function showMissionCard(ms = 6000) { document.body.classList.remove('minihud'); clearTimeout(miniT); miniT = setTimeout(() => document.body.classList.add('minihud'), ms); }
+        /* #91 Instructor por voz: lee cada actividad y las indicaciones clave en voz alta (es-MX); se silencia con el botón 🔊 */
+        let IVOZ = true; try { IVOZ = localStorage.getItem('dicka_mc_voz') !== '0'; } catch (e) { }
+        const IV = { last: '', t: 0 };
+        function instrSay(t, force) { t = String(t || '').replace(/<[^>]+>/g, ' ').replace(/\p{Extended_Pictographic}/gu, '').replace(/[⬇⬆✔]/g, '').replace(/\s+/g, ' ').trim(); if (!t || (!force && (t === IV.last || Date.now() - IV.t < 4500))) return; IV.last = t; IV.t = Date.now(); window.DK_INSTR = (window.DK_INSTR || 0) + 1; window.DK_INSTR_LAST = t;
+            try { if (IVOZ && window.speechSynthesis && !window.DK_MUTE) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'es-MX'; u.rate = 1.02; const vs = speechSynthesis.getVoices().filter(v => /^es/i.test(v.lang)); const m = vs.find(v => /es-MX/i.test(v.lang)) || vs[0]; if (m) u.voice = m; speechSynthesis.speak(u); } } catch (e) { } }
+        function instrToggle() { IVOZ = !IVOZ; try { localStorage.setItem('dicka_mc_voz', IVOZ ? '1' : '0'); } catch (e) { } const b = document.getElementById('instrBtn'); if (b) b.textContent = IVOZ ? '🔊 Instructor' : '🔇 Instructor'; if (!IVOZ) try { speechSynthesis.cancel(); } catch (e) { } }
         function missionFloat(text, ms = 3500, html) { const el = document.getElementById('missionFloat'); if (!el) return; if (html) el.innerHTML = html; else el.textContent = text; el.classList.toggle('nudge', !!html); void el.offsetWidth; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), ms); }
         function toggleActs() { if (document.body.classList.contains('minihud')) { showMissionCard(7000); return; } const p = document.getElementById('actsPanel'); p.classList.toggle('open'); renderActs(); }
         function renderActs() { document.getElementById('actsPanel').innerHTML = `<button class="brief-go" style="margin:0 0 .5rem;padding:.5rem;font-size:13px" onclick="event.stopPropagation();document.getElementById('actsPanel').classList.remove('open');showBrief(actIdx)">📋 VER PASOS DE LA MISIÓN ACTUAL</button>` + ACTS.map((a, i) => `<div class="${i === actIdx ? 'cur' : i < actIdx ? 'done' : ''}"><span>${a.icon} ${i + 1}. ${a.name}</span><b>${i < actIdx ? (results[i] ? results[i].score + '%' : '✓') : i === actIdx ? '▶' : '·'}</b></div>`).join(''); }
@@ -3194,7 +3200,7 @@
             if (a.type === 'move') { cargo.position.set(a.spawn.x, a.spawn.y, a.spawn.z); cargo.rotation.y = 0; cargo.visible = true; hasLoad = false; document.getElementById('loadDisplay').textContent = 'Sin carga'; }
             slotMarker.visible = !!(a.drop && a.drop.slot); if (slotMarker.visible) slotMarker.position.set(a.drop.x, a.drop.level + 0.7, a.drop.z); if (a.id !== 'rack2' && a.id !== 'rack3' && slotLabel) slotLabel.visible = false; else if (slotLabel) slotLabel.visible = true;
             const b = document.getElementById('faultToast'); showBanner(`ACTIVIDAD ${i + 1}/${ACTS.length} · ${a.icon} ${a.name}`);
-            showMissionCard(6500); if (a.locCode) missionFloat('📍 Ubicación: ' + a.locCode, 5000);
+            showMissionCard(6500); if (a.locCode) missionFloat('📍 Ubicación: ' + a.locCode, 5000); instrSay(`Actividad ${i + 1} de ${ACTS.length}: ${a.name}. ${a.text || ''}${a.locCode ? '. Ubicación ' + a.locCode : ''}`, true);
             renderActs(); showBrief(i); xrNewMission();
             if (a.type !== 'checklist' && !safeAuto() && (!SAFE.keyOn || !SAFE.belt || SAFE.brake)) setTimeout(() => missionFloat('🔑 Arranque seguro: K llave → B cinturón → P liberar freno', 6000), 1800);
         }
@@ -3294,7 +3300,7 @@
             if (beacon && target) { beacon.position.x = target.x; beacon.position.z = target.z; beacon.visible = true; beacon.material.opacity = 0.15 + 0.1 * Math.sin(Date.now() / 250); }
             missionNudge(a, txt, target ? dist : null);
             document.getElementById('missionStep').textContent = `ACTIVIDAD ${actIdx + 1} / ${ACTS.length} · ${a.icon} ${a.name}`;
-            document.getElementById('missionText').textContent = txt;
+            document.getElementById('missionText').textContent = txt; if (txt !== IV.prevTxt) { IV.prevTxt = txt; if (Date.now() - IV.t > 4500) instrSay(txt); }
             document.getElementById('missionDist').textContent = target ? (dist < (target.r && hasLoad ? target.r : 0.3) ? '✔ en posición' : dist < 5 ? `${dist.toFixed(1)} m` : `${dist.toFixed(0)} m`) : '';
             const grab = document.getElementById('btnGrab');
             document.getElementById('grabLbl').textContent = hasLoad ? 'SOLTAR' : 'AGARRAR';
