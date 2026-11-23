@@ -125,6 +125,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 95 | Mejora del Tablero del Gerente | Petición del usuario (explicar muy simple para no expertos) | Instrucciones en 3 pasos numerados, sin siglas; preguntas y opciones en lenguaje cotidiano con 💡 consejo; pronóstico con palabras (A tiempo, Gasto, Accidentes, Renuncias) | Que lo entienda cualquiera | ✅ |
 | 96 | Mejora del Tablero del Gerente | Petición del usuario (lenguaje simple para no expertos) | Pantalla de inicio sin siglas: las 4 metas explicadas con palabras e íconos | Que lo entienda cualquiera desde el inicio | ✅ |
 | 97 | Mejora del Tablero del Gerente | Petición del usuario (indicadores más de logística: IRA e ILA) | IRA (inventario correcto) e ILA (producto en su lugar) reemplazan a la rotación; 5.ª pregunta de conteos cíclicos; ILA bajo baja el OTIF; seguridad como candado (−7 por accidente, 2 = no aprueba); meta de costo $5.50 | Indicadores reales de almacén | ✅ |
+| 98 | Mejora de Indicadores | Continuidad de #97 (IRA e ILA) | Indicadores: el cuadro de exactitud se llama IRA y la rotación se reemplaza por ILA (producto en su lugar) con fórmula, ejercicio y caso de causa raíz | Mismo lenguaje de indicadores en todos los simuladores | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
