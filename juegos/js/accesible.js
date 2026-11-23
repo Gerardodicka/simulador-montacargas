@@ -25,6 +25,11 @@
       if (!voices.length) lv(); go();
     } catch (e) { try { rawSpeak(u); } catch (_) { } }
   };
+  /* #101 Aviso si el equipo no tiene voz en español (una vez por sesión), para que la persona sepa por qué no oye al avatar */
+  setTimeout(() => { try { lv(); if (!voices.length || voices.some(v => /^es/i.test(v.lang)) || sessionStorage.getItem('dk_voz_aviso')) return; sessionStorage.setItem('dk_voz_aviso', '1'); const d = document.createElement('div'); d.id = 'dkVozAviso'; d.setAttribute('role', 'status');
+    d.style.cssText = 'position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:9999;max-width:min(92vw,520px);background:#1D2586;color:#fff;border-radius:12px;padding:10px 14px;font:600 15px/1.4 system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.35)';
+    d.innerHTML = '🔇 Tu equipo no tiene voz en español, por eso el avatar no se oye. Actívala en Ajustes → Idioma → Texto a voz (o usa Chrome). Mientras tanto lee los globos de texto. <button type="button" style="margin-left:6px;border:0;border-radius:8px;padding:4px 10px;font-weight:800;cursor:pointer">Entendido</button>';
+    d.querySelector('button').onclick = () => d.remove(); document.body.appendChild(d); setTimeout(() => d.remove(), 15000); } catch (e) { } }, 2500);
   window.dkVozInfo = () => ({ soporta: true, voces: voices.length, espanol: voices.filter(v => /^es/i.test(v.lang)).length });
 })();
 (function () {
