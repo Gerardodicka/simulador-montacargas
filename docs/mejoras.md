@@ -127,6 +127,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 97 | Mejora del Tablero del Gerente | Petición del usuario (indicadores más de logística: IRA e ILA) | IRA (inventario correcto) e ILA (producto en su lugar) reemplazan a la rotación; 5.ª pregunta de conteos cíclicos; ILA bajo baja el OTIF; seguridad como candado (−7 por accidente, 2 = no aprueba); meta de costo $5.50 | Indicadores reales de almacén | ✅ |
 | 98 | Mejora de Indicadores | Continuidad de #97 (IRA e ILA) | Indicadores: el cuadro de exactitud se llama IRA y la rotación se reemplaza por ILA (producto en su lugar) con fórmula, ejercicio y caso de causa raíz | Mismo lenguaje de indicadores en todos los simuladores | ✅ |
 | 99 | Mejora del Tablero del Gerente | Continuidad de #97 (ver los 4 indicadores juntos) | El pizarrón 3D de la sala muestra el semáforo por mes de OTIF, costo, IRA e ILA; al tocarlo el director dice cuáles van en rojo | Ver de un vistazo cómo vas | ✅ |
+| 100 | Voz en todos los simuladores | Petición del usuario (no tiene sonido) | Voz confiable: desbloquea el audio con el primer toque, espera a que carguen las voces en español, evita el error de Chrome que calla la voz al hablar justo después de cancelar y divide textos largos para que no se corten | Que siempre se escuche al avatar | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 

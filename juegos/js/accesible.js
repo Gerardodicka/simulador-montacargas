@@ -1,5 +1,32 @@
 // DICKA Play · Modo accesible: texto grande, alto contraste y subtítulos de todo lo que se narra en voz alta.
 // La preferencia se guarda solo en este equipo (localStorage) y aplica a todos los simuladores.
+// #100 Voz confiable en todos los simuladores: desbloquea el audio con el primer toque, espera las voces en español,
+// evita el error de Chrome que calla la voz si se habla justo después de cancelar y divide textos largos para que no se corten.
+(function () {
+  const S = window.speechSynthesis; if (!S || S.__dkVoz) return; S.__dkVoz = true;
+  const rawSpeak = S.speak.bind(S), rawCancel = S.cancel.bind(S), android = /Android/i.test(navigator.userAgent);
+  let voices = [], lastCancel = 0, keep = null, unlocked = false, pend = null;
+  const lv = () => { try { voices = S.getVoices() || []; } catch (e) { } if (voices.length && pend) { const p = pend; pend = null; p(); } };
+  lv(); try { S.addEventListener ? S.addEventListener('voiceschanged', lv) : (S.onvoiceschanged = lv); } catch (e) { }
+  const unlock = () => { if (unlocked) return; unlocked = true; try { if (S.paused) S.resume(); const u = new SpeechSynthesisUtterance(' '); u.volume = 0; rawSpeak(u); } catch (e) { } };
+  ['pointerdown', 'touchend', 'keydown', 'click'].forEach(ev => window.addEventListener(ev, unlock, { capture: true, passive: true }));
+  S.cancel = function () { lastCancel = Date.now(); clearInterval(keep); pend = null; return rawCancel(); };
+  const chunks = t => { const out = []; String(t).split(/(?<=[.!?;:])\s+/).forEach(p => { while (p.length > 180) { let k = p.lastIndexOf(',', 180); if (k < 60) k = p.lastIndexOf(' ', 180); if (k < 60) k = 180; out.push(p.slice(0, k + 1)); p = p.slice(k + 1).trim(); } if (p) out.push(p); }); return out; };
+  const pick = u => { if (u.voice) return; const es = voices.filter(v => /^es/i.test(v.lang)); const m = es.find(v => /es-MX/i.test(v.lang)) || es.find(v => /es-US|es-419/i.test(v.lang)) || es[0]; if (m) u.voice = m; };
+  S.speak = function (u) {
+    try {
+      if (!u || !u.text || !String(u.text).trim()) return rawSpeak(u);
+      window.DK_VOZ_N = (window.DK_VOZ_N || 0) + 1;
+      const send = () => { pick(u); const parts = chunks(u.text); window.DK_VOZ_PARTS = parts.length;
+        if (parts.length <= 1) rawSpeak(u);
+        else parts.forEach((p, i) => { const x = new SpeechSynthesisUtterance(p); x.lang = u.lang || 'es-MX'; x.rate = u.rate; x.pitch = u.pitch; x.volume = u.volume; if (u.voice) x.voice = u.voice; if (i === parts.length - 1) { x.onend = u.onend; x.onerror = u.onerror; } rawSpeak(x); });
+        clearInterval(keep); if (!android) keep = setInterval(() => { if (!S.speaking) { clearInterval(keep); return; } try { S.pause(); S.resume(); } catch (e) { } }, 10000); };
+      const go = () => { const w = Math.max(0, 140 - (Date.now() - lastCancel)); w ? setTimeout(send, w) : send(); };
+      if (!voices.length) { pend = go; setTimeout(() => { if (pend === go) { pend = null; go(); } }, 900); } else go();
+    } catch (e) { try { rawSpeak(u); } catch (_) { } }
+  };
+  window.dkVozInfo = () => ({ soporta: true, voces: voices.length, espanol: voices.filter(v => /^es/i.test(v.lang)).length });
+})();
 (function () {
   if (window.__dickaA11y) return; window.__dickaA11y = true;
   const KEY = 'dicka_a11y'; let P = { big: false, hc: false, subs: false };
