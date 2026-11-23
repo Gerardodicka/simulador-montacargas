@@ -137,6 +137,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 107 | Mejora de Indicadores | Investigación (práctica dirigida a los errores) | Al final, botón «🔁 Repasar los que fallé»: vuelve a jugar solo los tableros fallados como práctica, sin cambiar la calificación | Reforzar justo lo que no salió | ✅ |
 | 108 | Mejora de Planeación de personal | Continuidad de #106 (retroalimentación contrafactual) | Al final, tabla «Tu plan contra el plan óptimo, día por día» con ✅, ⚠️ faltó gente o 💲 de más en cada día | Ver exactamente en qué día ajustar | ✅ |
 | 109 | Mejora del Tablero del Gerente | Petición del usuario (no es muy funcional) | La pregunta del mes va justo debajo del director (antes estaba al final de la página); cada opción muestra solo los indicadores que esa pregunta mueve; reglas e indicadores en desplegables; la barra «¿Te alcanza?» sin números repetidos; la invitación dice 5 indicadores | Menos información en pantalla (página 26 % más corta) | ✅ |
+| 110 | Mejora del Tablero del Gerente | Petición del usuario (sigue habiendo mucha información) | Pantalla de una sola cosa: reglas plegadas en «¿Qué tengo que hacer?», sin noticia ni fila «Así vas», saludo corto del director y barra «¿Te alcanza?» solo en la pregunta de personal | Simplificar al máximo | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
