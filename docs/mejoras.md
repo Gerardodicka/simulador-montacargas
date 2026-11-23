@@ -133,6 +133,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 103 | Mejora del Tablero del Gerente | Investigación (coaching en el momento de decidir, para no expertos) | Botón «💡 ¿Qué me recomiendas?» en cada pregunta: el director calcula con tus números qué respuesta deja más indicadores en verde, la resalta y te deja decidir | Aprender a decidir con datos | ✅ |
 | 104 | Mejora de Planeación de personal | Continuidad de #103 (coaching al decidir) | Botón «💡 ¿Qué me recomiendas?»: el gerente compara tu plan con el de menor costo que saca todo a tiempo, resalta el día a ajustar y dice cuántos eventuales y horas extra poner | Aprender a planear con datos | ✅ |
 | 105 | Mejora de Indicadores | Continuidad de #103-104 (apoyo para no expertos) | Botón «💡 Dame una pista»: el gerente tacha una acción que no ataca la causa y pide releer la pista del turno (una vez por tablero) | Ayuda sin regalar la respuesta | ✅ |
+| 106 | Mejora del Tablero del Gerente | Investigación (retroalimentación contrafactual: ¿qué habría pasado si…?) | Al final, el simulador prueba todas las combinaciones de cada mes y dice cuál fue la decisión que más puntos costó y qué habría convenido | Aprender del error más caro | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -285,3 +286,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-23 13:10 UTC | 103 | Tablero: botón «💡 ¿Qué me recomiendas?»; el director simula los meses que faltan y resalta la opción con mejor puntaje (v31.3) | validar.js 386/386 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · partida siguiendo todas las pistas = 99/100 · 0 errores de consola | ✅ |
 | 2026-11-23 14:20 UTC | 104 | Planeación de personal: botón «💡 ¿Qué me recomiendas?» que señala el día a ajustar con el plan de menor costo (v31.4) | validar.js 387/387 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-23 15:20 UTC | 105 | Indicadores: botón «💡 Dame una pista» que tacha una acción incorrecta (v31.5) | validar.js 388/388 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
+| 2026-11-23 17:50 UTC | 106 | Tablero: al final, «La decisión que más te costó» con la combinación que habría convenido y los puntos de diferencia (v31.6) | validar.js 389/389 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola · cálculo < 0.2 s | ✅ |
