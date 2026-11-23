@@ -22,7 +22,7 @@
         else parts.forEach((p, i) => { const x = new SpeechSynthesisUtterance(p); x.lang = u.lang || 'es-MX'; x.rate = u.rate; x.pitch = u.pitch; x.volume = u.volume; if (u.voice) x.voice = u.voice; if (i === parts.length - 1) { x.onend = u.onend; x.onerror = u.onerror; } rawSpeak(x); });
         clearInterval(keep); if (!android) keep = setInterval(() => { if (!S.speaking) { clearInterval(keep); return; } try { S.pause(); S.resume(); } catch (e) { } }, 10000); };
       const go = () => { const w = Math.max(0, 140 - (Date.now() - lastCancel)); w ? setTimeout(send, w) : send(); };
-      if (!voices.length) { pend = go; setTimeout(() => { if (pend === go) { pend = null; go(); } }, 900); } else go();
+      if (!voices.length) lv(); go();
     } catch (e) { try { rawSpeak(u); } catch (_) { } }
   };
   window.dkVozInfo = () => ({ soporta: true, voces: voices.length, espanol: voices.filter(v => /^es/i.test(v.lang)).length });
