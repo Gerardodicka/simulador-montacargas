@@ -134,6 +134,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 104 | Mejora de Planeación de personal | Continuidad de #103 (coaching al decidir) | Botón «💡 ¿Qué me recomiendas?»: el gerente compara tu plan con el de menor costo que saca todo a tiempo, resalta el día a ajustar y dice cuántos eventuales y horas extra poner | Aprender a planear con datos | ✅ |
 | 105 | Mejora de Indicadores | Continuidad de #103-104 (apoyo para no expertos) | Botón «💡 Dame una pista»: el gerente tacha una acción que no ataca la causa y pide releer la pista del turno (una vez por tablero) | Ayuda sin regalar la respuesta | ✅ |
 | 106 | Mejora del Tablero del Gerente | Investigación (retroalimentación contrafactual: ¿qué habría pasado si…?) | Al final, el simulador prueba todas las combinaciones de cada mes y dice cuál fue la decisión que más puntos costó y qué habría convenido | Aprender del error más caro | ✅ |
+| 107 | Mejora de Indicadores | Investigación (práctica dirigida a los errores) | Al final, botón «🔁 Repasar los que fallé»: vuelve a jugar solo los tableros fallados como práctica, sin cambiar la calificación | Reforzar justo lo que no salió | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
