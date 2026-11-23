@@ -129,6 +129,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 99 | Mejora del Tablero del Gerente | Continuidad de #97 (ver los 4 indicadores juntos) | El pizarrón 3D de la sala muestra el semáforo por mes de OTIF, costo, IRA e ILA; al tocarlo el director dice cuáles van en rojo | Ver de un vistazo cómo vas | ✅ |
 | 100 | Voz en todos los simuladores | Petición del usuario (no tiene sonido) | Voz confiable: desbloquea el audio con el primer toque, espera a que carguen las voces en español, evita el error de Chrome que calla la voz al hablar justo después de cancelar y divide textos largos para que no se corten | Que siempre se escuche al avatar | ✅ |
 | 101 | Voz en todos los simuladores | Continuidad de #100 (no tiene sonido) | Si el equipo no tiene ninguna voz en español, aparece un aviso que explica cómo activarla (Ajustes → Idioma → Texto a voz o Chrome) | Que la persona sepa por qué no oye al avatar | ✅ |
+| 102 | Mejora de Planeación de personal | Continuidad de #95 (lenguaje simple para no expertos) | «Qué debes hacer» en 3 pasos numerados y calificación explicada con palabras simples | Que lo entienda cualquiera | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -277,3 +278,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-23 05:30 UTC | 99 | Tablero: semáforo de OTIF, costo, IRA e ILA por mes en el pizarrón 3D (v30.9) | validar.js 383/383 (+1 nueva) · dojo-ia 20/20 · captura 1280 revisada · 0 errores de consola | ✅ |
 | 2026-11-23 05:30 UTC | 100 | Voz confiable en todos los simuladores: pausa tras cancelar, textos largos en partes, desbloqueo con el primer toque (v31.0) | validar.js 383/383 (+1 nueva, 1 ajustada) · dojo-ia 20/20 · 0 errores de consola · privacidad OK (el audio no sale del navegador) | ✅ |
 | 2026-11-23 10:50 UTC | 101 | Aviso si el equipo no tiene voz en español; corrección de #100: sin pausa/reanuda (dejaba la voz «hablando» y trababa el Dojo) y reenvío de fin al dividir (v31.1) | validar.js 384/384 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
+| 2026-11-23 12:00 UTC | 102 | Planeación de personal: «Qué debes hacer» en 3 pasos y calificación en palabras simples (v31.2) | validar.js 385/385 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
