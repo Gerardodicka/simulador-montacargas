@@ -131,6 +131,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 101 | Voz en todos los simuladores | Continuidad de #100 (no tiene sonido) | Si el equipo no tiene ninguna voz en español, aparece un aviso que explica cómo activarla (Ajustes → Idioma → Texto a voz o Chrome) | Que la persona sepa por qué no oye al avatar | ✅ |
 | 102 | Mejora de Planeación de personal | Continuidad de #95 (lenguaje simple para no expertos) | «Qué debes hacer» en 3 pasos numerados y calificación explicada con palabras simples | Que lo entienda cualquiera | ✅ |
 | 103 | Mejora del Tablero del Gerente | Investigación (coaching en el momento de decidir, para no expertos) | Botón «💡 ¿Qué me recomiendas?» en cada pregunta: el director calcula con tus números qué respuesta deja más indicadores en verde, la resalta y te deja decidir | Aprender a decidir con datos | ✅ |
+| 104 | Mejora de Planeación de personal | Continuidad de #103 (coaching al decidir) | Botón «💡 ¿Qué me recomiendas?»: el gerente compara tu plan con el de menor costo que saca todo a tiempo, resalta el día a ajustar y dice cuántos eventuales y horas extra poner | Aprender a planear con datos | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
