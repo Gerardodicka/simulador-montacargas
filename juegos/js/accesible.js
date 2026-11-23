@@ -19,8 +19,8 @@
       window.DK_VOZ_N = (window.DK_VOZ_N || 0) + 1;
       const send = () => { pick(u); const parts = chunks(u.text); window.DK_VOZ_PARTS = parts.length;
         if (parts.length <= 1) rawSpeak(u);
-        else parts.forEach((p, i) => { const x = new SpeechSynthesisUtterance(p); x.lang = u.lang || 'es-MX'; x.rate = u.rate; x.pitch = u.pitch; x.volume = u.volume; if (u.voice) x.voice = u.voice; if (i === parts.length - 1) { x.onend = u.onend; x.onerror = u.onerror; } rawSpeak(x); });
-        clearInterval(keep); if (!android) keep = setInterval(() => { if (!S.speaking) { clearInterval(keep); return; } try { S.pause(); S.resume(); } catch (e) { } }, 10000); };
+        else parts.forEach((p, i) => { const x = new SpeechSynthesisUtterance(p); x.lang = u.lang || 'es-MX'; x.rate = u.rate; x.pitch = u.pitch; x.volume = u.volume; if (u.voice) x.voice = u.voice; const fwd = t => () => { try { u.dispatchEvent(new Event(t)); } catch (e) { } }; if (i === 0) x.onstart = fwd('start'); if (i === parts.length - 1) x.onend = fwd('end'); x.onerror = fwd('error'); rawSpeak(x); });
+        /* sin pausa/reanuda: cada parte dura menos de 15 s y así speaking no se queda pegado */ };
       const go = () => { const w = Math.max(0, 140 - (Date.now() - lastCancel)); w ? setTimeout(send, w) : send(); };
       if (!voices.length) lv(); go();
     } catch (e) { try { rawSpeak(u); } catch (_) { } }
