@@ -63,6 +63,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 @media(max-width:700px){.ger.kon{height:620px}.ger.kon .gbub{left:3%!important;right:3%!important;top:8px;font-size:13.5px!important}.kboard{left:40%!important;right:2%!important;top:118px!important;bottom:40px!important;width:auto!important;border-width:8px!important;border-bottom-width:12px!important}.kboard .kq1{font-size:14.5px;margin:2px 0 8px}.kboard .pform{font-size:12.5px;padding:6px 8px}.kboard .kdots{display:none}.kboard .khead{font-size:13.5px;gap:4px}.kboard .khead small{display:block}.kboard .kops{gap:6px}.kboard .kop{min-width:58px;font-size:14px;padding:8px 6px;flex:1}.kboard .kb1{font-size:14.5px;padding:9px 12px}.kboard .knav{flex-wrap:wrap}.kboard .kfb{font-size:14px}}
 .voz{position:absolute;right:10px;bottom:10px;z-index:4;border:0;border-radius:999px;padding:6px 10px;font-weight:800;font-size:13px;background:rgba(1,17,49,.8);color:#fff;cursor:pointer}
 .objbox ol.pasos{margin:4px 0 0 1.2em;padding:0}.objbox ol.pasos li{margin:2px 0}
+.pistaB{margin:8px 0;border:2px solid #f5c400;background:#fff8d6;color:#5a4500;font-weight:800;border-radius:10px;padding:8px 14px;font-size:15px;cursor:pointer}#plan tr.pista td{background:#fff3b0!important}
 </style>
 </head>
 <body>
@@ -89,7 +90,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 <li><b>Qué conviene:</b> el eventual cuesta $6.25 por caja y la hora extra $10 por caja. Usa <b>eventuales</b> para faltantes grandes y <b>horas extra</b> solo para completar pocas cajas.</li>
 <li><b>La ley (LFT art. 66):</b> máximo 3 horas extra al día y 9 a la semana por persona; si te pasas pierdes los 10 puntos de legalidad.</li>
 </ol></details><div class="ger" id="ger"><button class="voz" id="vozBtn" type="button" onclick="vozToggle()">🔊 Voz</button><div class="gbub" id="gbub">Cargando a tu gerente…</div><div class="gname">👔 Lic. Ramírez · Gerente de Operaciones</div></div><div class="topbar"><span>Semana de temporada</span><span>📦 <span id="totVol"></span> cajas</span></div>
-    <div class="tw"><table class="plan" id="plan"></table></div>
+    <div class="tw"><table class="plan" id="plan"></table></div><button type="button" id="pPistaB" class="pistaB" onclick="pPista()">💡 ¿Qué me recomiendas?</button>
     <div class="sum" id="sum"></div>
     <div class="hint">💡 Compara: una hora extra cuesta $150 por 15 cajas ($10 por caja); un eventual cuesta $750 por 120 cajas ($6.25 por caja). Considera el ausentismo esperado de cada día.</div>
     <button class="btn" id="runBtn" onclick="runWeek()">▶ EJECUTAR LA SEMANA</button>
@@ -178,6 +179,13 @@ function start(){ setTimeout(vozIni,0); const n=$('pname').value.trim(); if(n.le
   $('intro').classList.add('hidden'); $('game').classList.remove('hidden'); $('totVol').textContent=D.reduce((a,x)=>a+x.vol,0).toLocaleString('es-MX'); drawPlan(); }
 function readPlan(){ return D.map((_,i)=>({ev:Math.max(0,Math.min(15,+($('ev'+i).value)||0)),ot:+$('ot'+i).value})); }
 function drawPlan(){ if(!G3){ g3init(); const vt=D.reduce((a,x)=>a+x.vol,0), mx=D.reduce((a,x)=>x.vol>a.vol?x:a); gerSay(`Hola <b>${(who&&who.name||'').split(' ')[0]}</b>, esta semana entran <b>${vt.toLocaleString('es-MX')} cajas</b>. El día más pesado es el <b>${mx.d}</b>. Programa eventuales y horas extra para sacarlo todo a tiempo y barato.`); } $('plan').innerHTML=`<tr><th>Día</th><th>Volumen</th><th>Ausentismo<br><small>(presentes)</small></th><th>Eventuales</th><th>H. extra</th><th>Capacidad</th></tr>`+D.map((x,i)=>`<tr><td><b>${x.d}</b></td><td>${x.vol.toLocaleString('es-MX')}</td><td>${x.aus}% <small>(${present(x)})</small></td><td><input id="ev${i}" type="number" min="0" max="15" value="0" oninput="preview()"></td><td><select id="ot${i}" onchange="preview()">${[0,1,2,3].map(h=>`<option>${h}</option>`).join('')}</select></td><td id="cap${i}"></td></tr>`).join(''); preview(); }
+/* #104 Pista del gerente: compara tu plan con el de menor costo que saca todo a tiempo y te dice qué día ajustar */
+function pPista(){ const P=readPlan(), R=simulate(P), O=optimum(); if(!O){ gerSay('Esta semana no hay un plan que saque todo dentro de la ley: prioriza los días más pesados.'); return; }
+  let i=R.days.findIndex(d=>d.cap<d.need); if(i<0) i=P.findIndex((p,k)=>p.ev!==O.plan[k].ev||p.ot!==O.plan[k].ot);
+  document.querySelectorAll('#plan tr.pista').forEach(t=>t.classList.remove('pista'));
+  if(i<0){ window.DK_PPISTA=-1; gerSay('💡 ¡Tu plan ya es el de menor costo que saca todo a tiempo! Toca <b>«Ejecutar la semana»</b>.'); return; }
+  const o=O.plan[i], falta=R.days[i].cap<R.days[i].need; window.DK_PPISTA=i; const tr=$('ev'+i)&&$('ev'+i).closest('tr'); if(tr){ tr.classList.add('pista'); tr.scrollIntoView({block:'center',behavior:'smooth'}); setTimeout(()=>tr.classList.remove('pista'),5000); }
+  gerSay(`💡 Revisa el <b>${D[i].d}</b>: ${falta?'no te alcanza la gente':'puedes gastar menos'}. Te recomiendo <b>${o.ev} eventual${o.ev===1?'':'es'}</b> y <b>${o.ot} hora${o.ot===1?'':'s'} extra</b>. Así sacas todo a tiempo al menor costo y sin pasarte de la ley.`); }
 function preview(){ const P=readPlan(), R=simulate(P); R.days.forEach((d,i)=>{ $('cap'+i).innerHTML=`<span class="${d.cap>=d.need?'ok':'no'}">${d.cap.toLocaleString('es-MX')}</span>`; });
   $('sum').innerHTML=`<div><b>${Math.round(R.service*100)}%</b>servicio a tiempo</div><div><b>${money(R.cost)}</b>costo de la semana</div><div><b class="${R.legal?'ok':'no'}">${R.otWeek} h</b>extra por persona (máx. 9)</div>`;  if(G3) gerComenta(R); }
 function runWeek(){ const P=readPlan(), R=simulate(P), O=optimum(); const sv=Math.round(50*R.service), cs=R.service<.999?Math.round(40*R.service*Math.min(1,O.cost/R.cost)):Math.round(40*Math.min(1,O.cost/R.cost)), lg=R.legal?10:0; score=sv+cs+lg; RES={R,O,sv,cs,lg,P}; finish(); }

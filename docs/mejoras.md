@@ -131,6 +131,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 101 | Voz en todos los simuladores | Continuidad de #100 (no tiene sonido) | Si el equipo no tiene ninguna voz en español, aparece un aviso que explica cómo activarla (Ajustes → Idioma → Texto a voz o Chrome) | Que la persona sepa por qué no oye al avatar | ✅ |
 | 102 | Mejora de Planeación de personal | Continuidad de #95 (lenguaje simple para no expertos) | «Qué debes hacer» en 3 pasos numerados y calificación explicada con palabras simples | Que lo entienda cualquiera | ✅ |
 | 103 | Mejora del Tablero del Gerente | Investigación (coaching en el momento de decidir, para no expertos) | Botón «💡 ¿Qué me recomiendas?» en cada pregunta: el director calcula con tus números qué respuesta deja más indicadores en verde, la resalta y te deja decidir | Aprender a decidir con datos | ✅ |
+| 104 | Mejora de Planeación de personal | Continuidad de #103 (coaching al decidir) | Botón «💡 ¿Qué me recomiendas?»: el gerente compara tu plan con el de menor costo que saca todo a tiempo, resalta el día a ajustar y dice cuántos eventuales y horas extra poner | Aprender a planear con datos | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -281,3 +282,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-23 10:50 UTC | 101 | Aviso si el equipo no tiene voz en español; corrección de #100: sin pausa/reanuda (dejaba la voz «hablando» y trababa el Dojo) y reenvío de fin al dividir (v31.1) | validar.js 384/384 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-23 12:00 UTC | 102 | Planeación de personal: «Qué debes hacer» en 3 pasos y calificación en palabras simples (v31.2) | validar.js 385/385 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-23 13:10 UTC | 103 | Tablero: botón «💡 ¿Qué me recomiendas?»; el director simula los meses que faltan y resalta la opción con mejor puntaje (v31.3) | validar.js 386/386 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · partida siguiendo todas las pistas = 99/100 · 0 errores de consola | ✅ |
+| 2026-11-23 14:20 UTC | 104 | Planeación de personal: botón «💡 ¿Qué me recomiendas?» que señala el día a ajustar con el plan de menor costo (v31.4) | validar.js 387/387 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
