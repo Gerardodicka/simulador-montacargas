@@ -324,3 +324,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 19:00 UTC | 122 | Tablero: récord personal (mejor puntaje, intento y cuánto faltó), solo en el equipo (v33.2) | validar.js 405/405 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-24 20:05 UTC | 123 | Conteo cíclico: IRA al final | Dojo IA 20/20 · validar 406/406 (la prueba nueva se corrigió para no bloquear Three.js y se volvió a correr sola) · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-24 21:00 UTC | 124 | Recepción y acomodo: ILA al final | Dojo IA 20/20 · validar 407/407 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-24 22:00 UTC | 125 | Armado de embarques: OTIF al final | Dojo IA 20/20 · validar 408/408 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
