@@ -145,6 +145,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 115 | Mejora del Tablero del Gerente | Petición del usuario (la invitación tapaba al director) | En celular la TV «Antes de empezar» ya no se abre sola encima del director (el tour sigue en «📊 Mis indicadores»); la barra «¿Te alcanza?» va dentro de la tarjeta de la pregunta de personal, después de la barra de pasos | Pantalla inicial limpia | ✅ |
 | 116 | Mejora de Indicadores | Continuidad de #114 (final simple) | Al final, «Para repasar» muestra el primer error y los demás plegados en «Ver los otros N», con el botón de repaso visible | Menos texto al terminar | ✅ |
 | 117 | Mejora de Planeación de personal | Continuidad de #114-116 (final simple) | Al final: «Lo más importante» y la tabla día por día a la vista; los demás consejos plegados | Menos texto al terminar | ✅ |
+| 118 | Mejora del Almacén Genérico | Revisión del registro en celular | La versión visible debajo del título era vieja («Dojo: boca al hablar…»); ahora es corta y actual: «2026.11.24 · v32.8 Gerentes paso a paso» | Que el usuario confirme que tiene la versión publicada | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
