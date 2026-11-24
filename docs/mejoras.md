@@ -143,6 +143,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 113 | Mejora de Planeación de personal | Continuidad de #110-112 (menos información a la vez) | Reglas plegadas en «¿Qué tengo que hacer?» y «Cómo funciona, paso a paso» cerrado al inicio | Una cosa a la vez | ✅ |
 | 114 | Mejora del Tablero del Gerente | Continuidad de #109-111 (menos información a la vez) | Pantalla final: solo «Tu lección más importante» a la vista; las demás lecciones en «Ver las otras N lecciones» | Final claro y accionable | ✅ |
 | 115 | Mejora del Tablero del Gerente | Petición del usuario (la invitación tapaba al director) | En celular la TV «Antes de empezar» ya no se abre sola encima del director (el tour sigue en «📊 Mis indicadores»); la barra «¿Te alcanza?» va dentro de la tarjeta de la pregunta de personal, después de la barra de pasos | Pantalla inicial limpia | ✅ |
+| 116 | Mejora de Indicadores | Continuidad de #114 (final simple) | Al final, «Para repasar» muestra el primer error y los demás plegados en «Ver los otros N», con el botón de repaso visible | Menos texto al terminar | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -305,3 +306,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 01:20 UTC | 113 | Planeación de personal: reglas plegadas y «Cómo funciona» cerrado (v32.3) | validar.js 396/396 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-24 05:00 UTC | 114 | Tablero: final con «Tu lección más importante» y las demás plegadas (v32.4); prueba Surtido 3D con límite de 2 min y reintento (evita que la suite se trabe) | validar.js 397/397 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-24 06:30 UTC | 115 | Tablero: en celular sin la TV de invitación encima del director; «¿Te alcanza?» dentro de la pregunta de personal (v32.5) | validar.js 398/398 (+1 nueva, 2 ajustadas) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
+| 2026-11-24 08:00 UTC | 116 | Indicadores: final con el primer error a la vista y los demás plegados (v32.6) | validar.js 399/399 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
