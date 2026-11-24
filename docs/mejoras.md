@@ -141,6 +141,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 111 | Mejora del Tablero del Gerente | Petición del usuario (paso a paso, estructurado, usable) | Flujo guiado: barra de 6 pasos con nombre (Personal → Horas extra → Montacargas → Inventario → Capacitación → Revisar), una tarjeta a la vez, la vista baja sola a la siguiente, resumen editable con semáforo antes de «Cerrar el mes» y director más compacto en celular | Estructura clara sin confundir | ✅ |
 | 112 | Mejora de Indicadores | Continuidad de #109-111 (paso a paso sin confundir) | Reglas plegadas en «¿Qué tengo que hacer?»; la pista y la respuesta (paso 2) quedan atenuadas con «Primero toca el cuadro en rojo» hasta identificar el indicador | Una cosa a la vez | ✅ |
 | 113 | Mejora de Planeación de personal | Continuidad de #110-112 (menos información a la vez) | Reglas plegadas en «¿Qué tengo que hacer?» y «Cómo funciona, paso a paso» cerrado al inicio | Una cosa a la vez | ✅ |
+| 114 | Mejora del Tablero del Gerente | Continuidad de #109-111 (menos información a la vez) | Pantalla final: solo «Tu lección más importante» a la vista; las demás lecciones en «Ver las otras N lecciones» | Final claro y accionable | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
