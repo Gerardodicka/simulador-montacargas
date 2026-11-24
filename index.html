@@ -975,7 +975,7 @@ render();
   <button id="bigTextBtn" aria-label="Texto grande" onclick="toggleBigText()" style="background:#1D2586;color:#fff;border:0;border-radius:22px;padding:10px 14px;font:800 13px Poppins,Arial;box-shadow:0 6px 18px rgba(0,0,0,.25)">🔠 Texto grande</button>
   <button id="offlineBtn" aria-label="Descargar para usar sin conexión" onclick="downloadOffline()" style="background:#1D2586;color:#fff;border:0;border-radius:22px;padding:10px 14px;font:800 13px Poppins,Arial;box-shadow:0 6px 18px rgba(0,0,0,.25)">📥 <span class="albl">Usar sin conexión</span></button>
 </div>
-<style>/* #121 en celular: sin botones encimados (el «Aa» ya hace el texto grande) */@media(max-width:640px){#a11yBar{bottom:84px!important;left:auto!important;right:12px}#bigTextBtn{display:none!important}#offlineBtn{padding:9px 11px!important}#offlineBtn .albl{display:none}}</style>
+<style>/* #121 en celular: sin botones encimados (el «Aa» ya hace el texto grande) */@media(max-width:640px){#bigTextBtn{display:none!important}#offlineBtn{padding:9px 11px!important}#offlineBtn .albl{display:none}}</style>
 <script>
 function toggleBigText(on){ const r=document.documentElement; const v=on!==undefined?on:!r.classList.contains('big-text'); r.classList.toggle('big-text',v); r.style.fontSize=v?'118%':''; document.body.style.zoom=v?'1.12':''; try{localStorage.setItem('dicka_bigtext',v?'1':'')}catch(e){} document.getElementById('bigTextBtn').textContent=v?'🔠 Texto normal':'🔠 Texto grande'; }
 try{ if(localStorage.getItem('dicka_bigtext')) addEventListener('load',()=>toggleBigText(true)); }catch(e){}
