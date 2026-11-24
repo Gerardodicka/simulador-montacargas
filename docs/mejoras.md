@@ -145,6 +145,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 115 | Mejora del Tablero del Gerente | Petición del usuario (la invitación tapaba al director) | En celular la TV «Antes de empezar» ya no se abre sola encima del director (el tour sigue en «📊 Mis indicadores»); la barra «¿Te alcanza?» va dentro de la tarjeta de la pregunta de personal, después de la barra de pasos | Pantalla inicial limpia | ✅ |
 | 116 | Mejora de Indicadores | Continuidad de #114 (final simple) | Al final, «Para repasar» muestra el primer error y los demás plegados en «Ver los otros N», con el botón de repaso visible | Menos texto al terminar | ✅ |
 | 117 | Mejora de Planeación de personal | Continuidad de #114-116 (final simple) | Al final: «Lo más importante» y la tabla día por día a la vista; los demás consejos plegados | Menos texto al terminar | ✅ |
+| 118 | Mejora del Almacén Genérico | Revisión del registro en celular | La versión visible debajo del título era vieja («Dojo: boca al hablar…»); ahora es corta y actual: «2026.11.24 · v32.8 Gerentes paso a paso» | Que el usuario confirme que tiene la versión publicada | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -309,3 +310,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 06:30 UTC | 115 | Tablero: en celular sin la TV de invitación encima del director; «¿Te alcanza?» dentro de la pregunta de personal (v32.5) | validar.js 398/398 (+1 nueva, 2 ajustadas) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-24 08:00 UTC | 116 | Indicadores: final con el primer error a la vista y los demás plegados (v32.6) | validar.js 399/399 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-24 09:00 UTC | 117 | Planeación: final con «Lo más importante» y la tabla a la vista, demás consejos plegados (v32.7) | validar.js 400/400 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
+| 2026-11-24 10:00 UTC | 118 | Versión visible del registro corta y actual (v32.8) | validar.js 401/401 (+1 nueva) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
