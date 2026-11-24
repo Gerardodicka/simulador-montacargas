@@ -144,6 +144,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 114 | Mejora del Tablero del Gerente | Continuidad de #109-111 (menos información a la vez) | Pantalla final: solo «Tu lección más importante» a la vista; las demás lecciones en «Ver las otras N lecciones» | Final claro y accionable | ✅ |
 | 115 | Mejora del Tablero del Gerente | Petición del usuario (la invitación tapaba al director) | En celular la TV «Antes de empezar» ya no se abre sola encima del director (el tour sigue en «📊 Mis indicadores»); la barra «¿Te alcanza?» va dentro de la tarjeta de la pregunta de personal, después de la barra de pasos | Pantalla inicial limpia | ✅ |
 | 116 | Mejora de Indicadores | Continuidad de #114 (final simple) | Al final, «Para repasar» muestra el primer error y los demás plegados en «Ver los otros N», con el botón de repaso visible | Menos texto al terminar | ✅ |
+| 117 | Mejora de Planeación de personal | Continuidad de #114-116 (final simple) | Al final: «Lo más importante» y la tabla día por día a la vista; los demás consejos plegados | Menos texto al terminar | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
