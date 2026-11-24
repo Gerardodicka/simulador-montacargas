@@ -146,6 +146,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 116 | Mejora de Indicadores | Continuidad de #114 (final simple) | Al final, «Para repasar» muestra el primer error y los demás plegados en «Ver los otros N», con el botón de repaso visible | Menos texto al terminar | ✅ |
 | 117 | Mejora de Planeación de personal | Continuidad de #114-116 (final simple) | Al final: «Lo más importante» y la tabla día por día a la vista; los demás consejos plegados | Menos texto al terminar | ✅ |
 | 118 | Mejora del Almacén Genérico | Revisión del registro en celular | La versión visible debajo del título era vieja («Dojo: boca al hablar…»); ahora es corta y actual: «2026.11.24 · v32.8 Gerentes paso a paso» | Que el usuario confirme que tiene la versión publicada | ✅ |
+| 119 | Mejora del portal | Continuidad de «menos información a la vez» | Repaso rápido, meta de la semana, reto y tip del día quedan plegados en «⚡ Extras del día»; el catálogo aparece antes | Portal más limpio | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -311,3 +312,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 08:00 UTC | 116 | Indicadores: final con el primer error a la vista y los demás plegados (v32.6) | validar.js 399/399 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-24 09:00 UTC | 117 | Planeación: final con «Lo más importante» y la tabla a la vista, demás consejos plegados (v32.7) | validar.js 400/400 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-24 10:00 UTC | 118 | Versión visible del registro corta y actual (v32.8) | validar.js 401/401 (+1 nueva) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
+| 2026-11-24 11:50 UTC | 119 | Portal: repaso, meta, reto y tip plegados en «⚡ Extras del día» (v32.9) | validar.js 402/402 (+1 nueva, 5 ajustadas) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
