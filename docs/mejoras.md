@@ -140,6 +140,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 110 | Mejora del Tablero del Gerente | Petición del usuario (sigue habiendo mucha información) | Pantalla de una sola cosa: reglas plegadas en «¿Qué tengo que hacer?», sin noticia ni fila «Así vas», saludo corto del director y barra «¿Te alcanza?» solo en la pregunta de personal | Simplificar al máximo | ✅ |
 | 111 | Mejora del Tablero del Gerente | Petición del usuario (paso a paso, estructurado, usable) | Flujo guiado: barra de 6 pasos con nombre (Personal → Horas extra → Montacargas → Inventario → Capacitación → Revisar), una tarjeta a la vez, la vista baja sola a la siguiente, resumen editable con semáforo antes de «Cerrar el mes» y director más compacto en celular | Estructura clara sin confundir | ✅ |
 | 112 | Mejora de Indicadores | Continuidad de #109-111 (paso a paso sin confundir) | Reglas plegadas en «¿Qué tengo que hacer?»; la pista y la respuesta (paso 2) quedan atenuadas con «Primero toca el cuadro en rojo» hasta identificar el indicador | Una cosa a la vez | ✅ |
+| 113 | Mejora de Planeación de personal | Continuidad de #110-112 (menos información a la vez) | Reglas plegadas en «¿Qué tengo que hacer?» y «Cómo funciona, paso a paso» cerrado al inicio | Una cosa a la vez | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -299,3 +300,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-23 20:45 UTC | 110 | Tablero: reglas plegadas, sin noticia ni «Así vas», saludo corto (v32.0) | validar.js 394/394 (+4 nuevas, 1 ajustada) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-23 20:45 UTC | 111 | Tablero: flujo paso a paso con barra de 6 pasos y resumen editable antes de cerrar el mes (v32.1) | validar.js 394/394 (+4 nuevas, 1 ajustada) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-23 23:50 UTC | 112 | Indicadores paso a paso: reglas plegadas y paso 2 atenuado hasta tocar el cuadro en rojo (v32.2) | validar.js 395/395 (+1 nueva) · dojo-ia 20/20 · capturas 390 revisadas · 0 errores de consola | ✅ |
+| 2026-11-24 01:20 UTC | 113 | Planeación de personal: reglas plegadas y «Cómo funciona» cerrado (v32.3) | validar.js 396/396 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
