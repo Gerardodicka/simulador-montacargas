@@ -142,6 +142,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 112 | Mejora de Indicadores | Continuidad de #109-111 (paso a paso sin confundir) | Reglas plegadas en «¿Qué tengo que hacer?»; la pista y la respuesta (paso 2) quedan atenuadas con «Primero toca el cuadro en rojo» hasta identificar el indicador | Una cosa a la vez | ✅ |
 | 113 | Mejora de Planeación de personal | Continuidad de #110-112 (menos información a la vez) | Reglas plegadas en «¿Qué tengo que hacer?» y «Cómo funciona, paso a paso» cerrado al inicio | Una cosa a la vez | ✅ |
 | 114 | Mejora del Tablero del Gerente | Continuidad de #109-111 (menos información a la vez) | Pantalla final: solo «Tu lección más importante» a la vista; las demás lecciones en «Ver las otras N lecciones» | Final claro y accionable | ✅ |
+| 115 | Mejora del Tablero del Gerente | Petición del usuario (la invitación tapaba al director) | En celular la TV «Antes de empezar» ya no se abre sola encima del director (el tour sigue en «📊 Mis indicadores»); la barra «¿Te alcanza?» va dentro de la tarjeta de la pregunta de personal, después de la barra de pasos | Pantalla inicial limpia | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
