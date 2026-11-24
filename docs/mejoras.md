@@ -151,6 +151,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 121 | Mejora del portal | Revisión del portal en celular | En celular se quita «Texto grande» (lo hace el botón «Aa») y «Usar sin conexión» queda como ícono 📥 pequeño, sin tapar el catálogo | Pantalla sin elementos encimados | ✅ |
 | 122 | Mejora del Tablero del Gerente | Investigación 2026-11-24 (gamificación en simuladores de almacén: récords y medallas) | Récord personal al final: mejor puntaje, número de intento y cuánto faltó para igualarlo; «¡Nuevo récord personal!» al superarlo. Se guarda solo en el equipo | Motivar a repetir y mejorar | ✅ |
 | 123 | Mejora de Conteo cíclico | Continuidad de #97-98 (IRA en todos los simuladores) | Al final se muestra «Tu IRA (inventario correcto)»: % de ubicaciones que quedaron bien contra la meta de 98%, en verde o rojo, con una línea que lo liga al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
+| 124 | Mejora de Recepción y acomodo | Continuidad de #97-98 y #123 (IRA/ILA en todo el recorrido) | Al final se muestra «Tu ILA (producto en su lugar)»: % de tarimas acomodadas en su ubicación contra la meta de 99%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -321,3 +322,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 17:45 UTC | 121 | Portal en celular: sin «Texto grande» duplicado y «sin conexión» como ícono (v33.1) | validar.js 404/404 (+1 nueva) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
 | 2026-11-24 19:00 UTC | 122 | Tablero: récord personal (mejor puntaje, intento y cuánto faltó), solo en el equipo (v33.2) | validar.js 405/405 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-24 20:05 UTC | 123 | Conteo cíclico: IRA al final | Dojo IA 20/20 · validar 406/406 (la prueba nueva se corrigió para no bloquear Three.js y se volvió a correr sola) · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-24 21:00 UTC | 124 | Recepción y acomodo: ILA al final | Dojo IA 20/20 · validar 407/407 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
