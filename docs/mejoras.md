@@ -150,6 +150,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 120 | Mejora del portal | Revisión del portal en celular | El aviso flotante sale arriba de la barra inferior (no la tapa) y el aviso de restauración es corto: «Se recuperaron N resultados guardados» | Pantalla sin elementos encimados | ✅ |
 | 121 | Mejora del portal | Revisión del portal en celular | En celular se quita «Texto grande» (lo hace el botón «Aa») y «Usar sin conexión» queda como ícono 📥 pequeño, sin tapar el catálogo | Pantalla sin elementos encimados | ✅ |
 | 122 | Mejora del Tablero del Gerente | Investigación 2026-11-24 (gamificación en simuladores de almacén: récords y medallas) | Récord personal al final: mejor puntaje, número de intento y cuánto faltó para igualarlo; «¡Nuevo récord personal!» al superarlo. Se guarda solo en el equipo | Motivar a repetir y mejorar | ✅ |
+| 123 | Mejora de Conteo cíclico | Continuidad de #97-98 (IRA en todos los simuladores) | Al final se muestra «Tu IRA (inventario correcto)»: % de ubicaciones que quedaron bien contra la meta de 98%, en verde o rojo, con una línea que lo liga al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 

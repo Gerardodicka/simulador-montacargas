@@ -67,7 +67,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .hint{font-size:13.5px!important}.tuto>div{font-size:16px}.tuto h3{font-size:20px}.salidas{font-size:14.5px!important}
 .topbar{font-size:15px}
 .objbox{background:#fff8e1;border:2px solid #ffca28;border-radius:12px;padding:10px 14px;margin:.2rem 0 .7rem;font-size:15px;line-height:1.5;color:#3e2f00}.objbox b{color:#1D2586}.objbox div+div{margin-top:4px}
-</style>
+#iraFin{grid-column:1/-1;flex-wrap:wrap}#iraFin small{display:block;width:100%;font-size:14px;margin-top:2px}#iraFin.iraOk b{color:#1b7a3d}#iraFin.iraMal b{color:#c62828}</style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -238,7 +238,7 @@ function repFin(){ $('stage').classList.add('hidden'); $('game').classList.add('
 function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').classList.add('hidden'); $('end').classList.remove('hidden');
   const ok=score>=PASS, date=new Date(); const base=`REG|${GAME_ID}|${who.name}${who.num?' #'+who.num:''}|${who.puesto}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');
   $('eicon').textContent=ok?'🏆':'📚'; $('etitle').textContent=ok?'¡Aprobaste!':'Aún no apruebas'; $('escore').textContent=score; $('ebadge').textContent=ok?'✓ APROBADO':'✗ NO APROBADO'; $('ebadge').className='badge '+(ok?'ok':'bad');
-  $('estats').innerHTML=`<div><span>Auditor</span><b>${who.name}</b></div>${who.num?`<div><span>No. empleado</span><b>${who.num}</b></div>`:''}<div><span>Almacén</span><b>${who.wh}</b></div><div><span>Hallazgos correctos</span><b>${decOk}/10</b></div><div><span>Medida más débil</span><b>${debil()}</b></div><div><span>Tiempo</span><b>${Math.round((Date.now()-t0)/1000)} s</b></div>`;
+  $('estats').innerHTML=`<div><span>Auditor</span><b>${who.name}</b></div>${who.num?`<div><span>No. empleado</span><b>${who.num}</b></div>`:''}<div><span>Almacén</span><b>${who.wh}</b></div><div><span>Hallazgos correctos</span><b>${decOk}/10</b></div><div><span>Medida más débil</span><b>${debil()}</b></div><div id="iraFin" class="${decOk>=10?'iraOk':'iraMal'}"><span>📦 Tu IRA (inventario correcto)</span><b>${decOk*10}% · meta 98%</b><small>${decOk>=10?'¡En verde! Las 10 ubicaciones quedaron bien.':'En rojo: '+(10-decOk)+' ubicación(es) quedaron con error. Es el mismo IRA del Tablero del Gerente.'}</small></div><div><span>Tiempo</span><b>${Math.round((Date.now()-t0)/1000)} s</b></div>`;
   if(errors.length){ $('review').classList.remove('hidden'); $('review').innerHTML='<b>Para repasar:</b><br>'+errors.map(e=>'• '+e).join('<br>'); }
   $('ecode').textContent='Código de verificación: '+REG;
   try{ const k='dicka_console_results', l=JSON.parse(localStorage.getItem(k)||'[]'); l.push({juego:GAME_NAME,nombre:who.name,num:who.num,puesto:who.puesto,area:'Inventarios',almacen:who.wh,score:`${score}/${MAX}`,aprobado:ok,fecha:date.toISOString(),reg:REG}); localStorage.setItem(k,JSON.stringify(l)); }catch(e){}
