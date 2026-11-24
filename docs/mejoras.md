@@ -147,6 +147,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 117 | Mejora de Planeación de personal | Continuidad de #114-116 (final simple) | Al final: «Lo más importante» y la tabla día por día a la vista; los demás consejos plegados | Menos texto al terminar | ✅ |
 | 118 | Mejora del Almacén Genérico | Revisión del registro en celular | La versión visible debajo del título era vieja («Dojo: boca al hablar…»); ahora es corta y actual: «2026.11.24 · v32.8 Gerentes paso a paso» | Que el usuario confirme que tiene la versión publicada | ✅ |
 | 119 | Mejora del portal | Continuidad de «menos información a la vez» | Repaso rápido, meta de la semana, reto y tip del día quedan plegados en «⚡ Extras del día»; el catálogo aparece antes | Portal más limpio | ✅ |
+| 120 | Mejora del portal | Revisión del portal en celular | El aviso flotante sale arriba de la barra inferior (no la tapa) y el aviso de restauración es corto: «Se recuperaron N resultados guardados» | Pantalla sin elementos encimados | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
