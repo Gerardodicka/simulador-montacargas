@@ -148,7 +148,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 118 | Mejora del Almacén Genérico | Revisión del registro en celular | La versión visible debajo del título era vieja («Dojo: boca al hablar…»); ahora es corta y actual: «2026.11.24 · v32.8 Gerentes paso a paso» | Que el usuario confirme que tiene la versión publicada | ✅ |
 | 119 | Mejora del portal | Continuidad de «menos información a la vez» | Repaso rápido, meta de la semana, reto y tip del día quedan plegados en «⚡ Extras del día»; el catálogo aparece antes | Portal más limpio | ✅ |
 | 120 | Mejora del portal | Revisión del portal en celular | El aviso flotante sale arriba de la barra inferior (no la tapa) y el aviso de restauración es corto: «Se recuperaron N resultados guardados» | Pantalla sin elementos encimados | ✅ |
-| 121 | Mejora del portal | Revisión del portal en celular | En celular se quita «Texto grande» (lo hace el botón «Aa») y «Usar sin conexión» queda como ícono 📥 arriba de la barra inferior, sin tapar el catálogo | Pantalla sin elementos encimados | ✅ |
+| 121 | Mejora del portal | Revisión del portal en celular | En celular se quita «Texto grande» (lo hace el botón «Aa») y «Usar sin conexión» queda como ícono 📥 pequeño, sin tapar el catálogo | Pantalla sin elementos encimados | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -316,3 +316,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 10:00 UTC | 118 | Versión visible del registro corta y actual (v32.8) | validar.js 401/401 (+1 nueva) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
 | 2026-11-24 11:50 UTC | 119 | Portal: repaso, meta, reto y tip plegados en «⚡ Extras del día» (v32.9) | validar.js 402/402 (+1 nueva, 5 ajustadas) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
 | 2026-11-24 15:55 UTC | 120 | Portal: aviso flotante arriba de la barra inferior y aviso de restauración corto (v33.0); prueba Surtido 3D sin voz (el navegador de pruebas sin audio se congelaba al hablar) | validar.js 403/403 (+1 nueva) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
+| 2026-11-24 17:45 UTC | 121 | Portal en celular: sin «Texto grande» duplicado y «sin conexión» como ícono (v33.1) | validar.js 404/404 (+1 nueva) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
