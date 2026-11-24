@@ -312,3 +312,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 08:00 UTC | 116 | Indicadores: final con el primer error a la vista y los demás plegados (v32.6) | validar.js 399/399 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-24 09:00 UTC | 117 | Planeación: final con «Lo más importante» y la tabla a la vista, demás consejos plegados (v32.7) | validar.js 400/400 (+1 nueva) · dojo-ia 20/20 · capturas 1280/390 revisadas · 0 errores de consola | ✅ |
 | 2026-11-24 10:00 UTC | 118 | Versión visible del registro corta y actual (v32.8) | validar.js 401/401 (+1 nueva) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
+| 2026-11-24 11:50 UTC | 119 | Portal: repaso, meta, reto y tip plegados en «⚡ Extras del día» (v32.9) | validar.js 402/402 (+1 nueva, 5 ajustadas) · dojo-ia 20/20 · captura 390 revisada · 0 errores de consola | ✅ |
