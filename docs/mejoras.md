@@ -152,6 +152,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 122 | Mejora del Tablero del Gerente | Investigación 2026-11-24 (gamificación en simuladores de almacén: récords y medallas) | Récord personal al final: mejor puntaje, número de intento y cuánto faltó para igualarlo; «¡Nuevo récord personal!» al superarlo. Se guarda solo en el equipo | Motivar a repetir y mejorar | ✅ |
 | 123 | Mejora de Conteo cíclico | Continuidad de #97-98 (IRA en todos los simuladores) | Al final se muestra «Tu IRA (inventario correcto)»: % de ubicaciones que quedaron bien contra la meta de 98%, en verde o rojo, con una línea que lo liga al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 | 124 | Mejora de Recepción y acomodo | Continuidad de #97-98 y #123 (IRA/ILA en todo el recorrido) | Al final se muestra «Tu ILA (producto en su lugar)»: % de tarimas acomodadas en su ubicación contra la meta de 99%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
+| 125 | Mejora de Armado de embarques | Continuidad de #123-124 (indicadores del Tablero en todo el recorrido) | Al final se muestra «Tu OTIF (completo y a tiempo)»: % de embarques bien armados contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
