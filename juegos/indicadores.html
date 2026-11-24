@@ -71,6 +71,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
 .pistaB{margin:8px 0;border:2px solid #f5c400;background:#fff8d6;color:#5a4500;font-weight:800;border-radius:10px;padding:8px 14px;font-size:15px;cursor:pointer}.pistaB:disabled{opacity:.5;cursor:default}.acts button.tachada{text-decoration:line-through;opacity:.45}
 .objmas summary{cursor:pointer;font-weight:800;color:#1D2586;padding:6px 0;font-size:15px}.objbox{padding:8px 14px}
 .paso2{transition:opacity .3s}.paso2.off{opacity:.35}.p2aviso{font-weight:800;color:#1D2586;margin:8px 0;font-size:16px}
+.lecmas{margin-top:6px}.lecmas summary{cursor:pointer;font-weight:800;color:#1D2586}
 </style>
 </head>
 <body>
@@ -235,7 +236,7 @@ function finish(){ score=Math.max(0,Math.min(MAX,Math.round(score))); $('game').
   const ok=score>=PASS, date=new Date(); const base=`REG|${GAME_ID}|${who.name}${who.num?' #'+who.num:''}|${who.puesto}|${who.wh}|${score}|${MAX}|${ok?'APROBADO':'NO APROBADO'}|${date.toISOString().slice(0,16)}`; REG=base+'|'+chk(base+'DICKA');
   $('eicon').textContent=ok?'🏆':'📚'; $('etitle').textContent=ok?'¡Aprobaste!':'Aún no apruebas'; $('escore').textContent=score; $('ebadge').textContent=ok?'✓ APROBADO':'✗ NO APROBADO'; $('ebadge').className='badge '+(ok?'ok':'bad');
   $('estats').innerHTML=`<div><span>Participante</span><b>${who.name}</b></div>${who.num?`<div><span>No. empleado</span><b>${who.num}</b></div>`:''}<div><span>Almacén</span><b>${who.wh}</b></div><div><span>Acciones correctas</span><b>${decOk}/8</b></div><div><span>Tiempo</span><b>${Math.round((Date.now()-t0)/1000)} s</b></div>`;
-  if(errors.length){ $('review').classList.remove('hidden'); $('review').innerHTML='<b>Para repasar:</b><br>'+errors.map(e=>'• '+e).join('<br>')+`<br><button type="button" id="repBtn" class="btn" style="margin-top:10px" onclick="repasar()">🔁 Repasar los ${FALLA.length} que fallé</button>`; }
+  if(errors.length){ $('review').classList.remove('hidden'); /* #116 final simple: el primer error a la vista, los demás plegados */ $('review').innerHTML='<b>Para repasar:</b><br>• '+errors[0]+(errors.length>1?`<details class="lecmas"><summary>Ver los otros ${errors.length-1}</summary>${errors.slice(1).map(e=>'• '+e).join('<br>')}</details>`:'')+`<br><button type="button" id="repBtn" class="btn" style="margin-top:10px" onclick="repasar()">🔁 Repasar los ${FALLA.length} que fallé</button>`; }
   $('ecode').textContent='Código de verificación: '+REG;
   if(G3){ $('estats').before($('ger')); G3.fit(); gerSay(ok?`🏆 <b>Buen análisis, ${who.name.split(' ')[0]}.</b> Atacaste la causa en ${decOk} de 8 tableros.`:`📚 <b>Repasemos:</b> acertaste ${decOk} de 8. Recuerda: primero ubica el indicador en rojo y luego busca en la pista la <b>causa</b>, no el síntoma.`); }
   try{ const k='dicka_console_results', l=JSON.parse(localStorage.getItem(k)||'[]'); l.push({juego:GAME_NAME,nombre:who.name,num:who.num,puesto:who.puesto,area:'Operaciones',almacen:who.wh,score:`${score}/${MAX}`,aprobado:ok,fecha:date.toISOString(),reg:REG}); localStorage.setItem(k,JSON.stringify(l)); }catch(e){}
