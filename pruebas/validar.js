@@ -832,8 +832,8 @@ for (const f of fs.readdirSync(path.join(ROOT, 'netlify/functions'))) { let err 
       await q.goto(url('juegos/surtido-express.html')); await q.waitForTimeout(300); await q.fill('#pname', 'Prueba Surtido 3D'); await q.evaluate(() => start()); await q.waitForTimeout(1200);
       const k = await q.evaluate(() => { aisle = cur.loc[0]; drawAisles(); drawRack(); document.getElementById('s3d').scrollIntoView({ block: 'center' }); return cur.loc; }); await q.waitForTimeout(300);
       const pt = await q.evaluate(k => S3.screen(k), k); const c0 = await q.evaluate(() => correct); await q.mouse.click(pt.x, pt.y); await q.waitForTimeout(400); const c1 = await q.evaluate(() => correct); return { k, c0, c1, e }; } finally { await b3.close().catch(() => { }); } };
-    /* si el navegador de software se congela, se corta a los 2 min y se reintenta (antes podía trabar la suite) */
-    const intento = () => Promise.race([intento0(), new Promise((_, rj) => setTimeout(() => { if (b3ref) b3ref.close().catch(() => { }); rj(new Error('tiempo agotado')); }, 120000))]);
+    /* si el navegador de software se congela, se corta a los 7 min y se reintenta (antes podía trabar la suite) */
+    const intento = () => Promise.race([intento0(), new Promise((_, rj) => setTimeout(() => { if (b3ref) b3ref.close().catch(() => { }); rj(new Error('tiempo agotado')); }, 420000))]);
     let R; try { R = await intento(); } catch (x) { R = await intento().catch(y => ({ k: '', c0: 0, c1: 0, e: [y.message] })); }   // si el navegador de software se cae una vez, se reintenta
     ok('Surtido express 3D', 'tocar la caja correcta en el rack 3D cuenta como ubicación correcta', R.c1 > R.c0 && !R.e.length, R.k + ' ' + R.c0 + '→' + R.c1 + (R.e[0] || '')); }
   // Turno Seguro: la escena 3D es opcional y solo se descarga al pedirla (ahorra datos con poca señal)
