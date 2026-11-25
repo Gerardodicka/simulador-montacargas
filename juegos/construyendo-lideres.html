@@ -443,6 +443,21 @@ function aplicarMapasInterior(esc, piso) {
     if (hex === 0x8a6a3c || hex === 0xc9a06a) { o.material = o.material.clone(); o.material.map = hex === 0x8a6a3c ? made : cart; o.material.color.set(0xffffff); o.material.needsUpdate = true; }
   });
 }
+/* cabina de simulador en 3D para la estación de Práctica: monitor con la imagen del simulador, volante y palanca */
+function simuladorEn(esc, x, z) {
+  const g = new THREE.Group();
+  const mat = (c, r = 0.6) => new THREE.MeshStandardMaterial({ color: c, roughness: r });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.5, 1.3), mat(0x1b2240)); base.position.y = 0.25; base.castShadow = true; g.add(base);
+  const mesa = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 1.0), mat(0x2b3a55)); mesa.position.y = 0.55; mesa.castShadow = true; g.add(mesa);
+  const monitor = new THREE.Mesh(new THREE.BoxGeometry(1.7, 1.05, 0.08), mat(0x0b1640, 0.4)); monitor.position.set(0, 1.25, -0.45); monitor.castShadow = true; g.add(monitor);
+  const pantalla = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.9), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('assets/textures/dojo_simulador.webp') }));
+  pantalla.position.set(0, 1.25, -0.4); g.add(pantalla);
+  const columna = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), mat(0x333333)); columna.position.set(0, 0.8, -0.45); g.add(columna);
+  const volante = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.03, 10, 28), mat(0x1a1a1a, 0.5)); volante.position.set(-0.35, 0.95, 0.2); volante.rotation.x = -Math.PI / 3; volante.castShadow = true; g.add(volante);
+  const palanca = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.4, 10), mat(0x222222)); palanca.position.set(0.5, 0.8, 0.2); palanca.castShadow = true; g.add(palanca);
+  const boton = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), mat(0xf5c400, 0.4)); boton.position.set(0.5, 1.03, 0.2); g.add(boton);
+  g.position.set(x, 0, z); esc.add(g); return g;
+}
 /* construye el interior de un módulo: Lapzo (A), Entrenamiento (B) y Práctica (C). Todos los módulos muestran las mismas imágenes de Aprende y Práctica */
 function construirInterior(m) {
   const esc = new THREE.Scene();
@@ -478,6 +493,7 @@ function construirInterior(m) {
   bloqueEn(esc, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
   bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
   imagenEn(esc, 'assets/textures/dojo_simulador.webp', 2.9, 1735 / 901, 5, 1.6, -4.5);   // C · Práctica: simulador de casos prácticos
+  simuladorEn(esc, 5, -2.6);   // cabina de simulador frente a la pared de Práctica
   letreroEn(esc, 'C · PRÁCTICA | SIMULA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
   [[3.6, 0.9], [5, 0.9], [6.4, 0.9]].forEach(([x, z]) => silla(esc, x - 0.2, z, Math.PI));
   bloqueEn(esc, 3.4, 0.25, 0.5, 0x3a2f6b, 5, 0.12, -0.6, 0.6);
