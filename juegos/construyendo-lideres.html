@@ -656,8 +656,8 @@ function abrirZona(id) {
 }
 function cerrarPanel() {
   abierto = null;
-  if (enInterior) { if (zonaCerca) { const b = document.getElementById('btnEntrar'); b.textContent = (zonaCerca.id === 'salida' ? '' : 'Entrar · ') + zonaCerca.corto + ' (E)'; b.classList.add('on'); } return; }
   document.getElementById('panel').classList.remove('on');
+  if (enInterior) { if (zonaCerca) { const b = document.getElementById('btnEntrar'); b.textContent = (zonaCerca.id === 'salida' ? '' : 'Entrar · ') + zonaCerca.corto + ' (E)'; b.classList.add('on'); } return; }
   if (cerca) { const btn = document.getElementById('btnEntrar'); btn.textContent = 'Entrar · ' + cerca.corto + ' (E)'; btn.classList.add('on'); }
 }
 
