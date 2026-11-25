@@ -178,6 +178,85 @@ const piernaD = piernaI.clone(); piernaD.position.x = 0.15; avatar.add(piernaD);
 avatar.position.set(0, 0, 8);
 escena.add(avatar);
 
+/* ===================== Etapa 1 · Centro de distribución completo (geometría 3D, sin fondos planos) ===================== */
+function bloque(w, h, d, c, x, y, z, rough = 0.8) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: c, roughness: rough }));
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; escena.add(m); return m;
+}
+function texturaTexto(texto, fondo, colorTexto = '#ffffff') {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = fondo; g.fillRect(0, 0, 512, 256);
+  g.fillStyle = colorTexto; g.font = '800 44px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  texto.split('\n').forEach((t, i, arr) => g.fillText(t, 256, 128 + (i - (arr.length - 1) / 2) * 52));
+  const tex = new THREE.CanvasTexture(c); tex.anisotropy = 4; return tex;
+}
+function letrero(texto, w, h, fondo, colorTexto, x, y, z, rotY = 0) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: texturaTexto(texto, fondo, colorTexto) }));
+  m.position.set(x, y, z); m.rotation.y = rotY; escena.add(m); return m;
+}
+/* edificio principal de Dicka Logistics (detrás de los módulos) */
+bloque(11, 5.2, 4.2, 0xe8edf3, 0, 2.6, -17.2);
+bloque(10.2, 2.4, 0.1, 0x9fd3ef, 0, 3.4, -15.05, 0.2);
+bloque(11.4, 0.3, 4.6, 0x1D2586, 0, 5.35, -17.2);
+letrero('Dicka Logistics', 6.2, 1.3, '#1D2586', '#ffffff', 0, 5.9, -15.05);
+/* andenes: puertas enrollables y plataforma */
+[-6, -3, 0].forEach(z => {
+  bloque(0.25, 3.4, 2.6, 0x8a9099, 13.9, 1.7, z, 0.5);
+  bloque(1.8, 0.55, 3, 0x6b7280, 13.0, 0.28, z, 0.9);
+  bloque(0.3, 0.12, 0.6, 0xf5c400, 13.6, 0.06, z - 1.3, 0.6);
+});
+/* tarimas con mercancía */
+function tarima(x, z, pisos = 2) {
+  bloque(1.2, 0.15, 1.0, 0xb8864b, x, 0.08, z, 0.9);
+  for (let i = 0; i < pisos; i++) bloque(1.0, 0.5, 0.9, 0xc9a06a, x, 0.4 + i * 0.5, z, 0.95);
+}
+[[-11, 4, 2], [-11, 5.3, 1], [-9.7, 4, 3], [11, 4, 2], [11, 5.3, 2], [9.7, 4, 1]].forEach(([x, z, n]) => tarima(x, z, n));
+/* montacargas que recorre el pasillo (animado) */
+const montacargas = new THREE.Group();
+{
+  const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 1.3), new THREE.MeshStandardMaterial({ color: 0xf5c400, roughness: 0.5 })); cuerpo.position.set(0, 0.55, 0); cuerpo.castShadow = true; montacargas.add(cuerpo);
+  const mastil = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.2, 0.12), new THREE.MeshStandardMaterial({ color: 0x2b2b2b })); mastil.position.set(0, 1.4, 0.75); mastil.castShadow = true; montacargas.add(mastil);
+  [-0.3, 0.3].forEach(x => { const hor = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.95), new THREE.MeshStandardMaterial({ color: 0x222222 })); hor.position.set(x, 0.25, 1.2); montacargas.add(hor); });
+  const cabina = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.1, 0.08), new THREE.MeshStandardMaterial({ color: 0x222222 })); cabina.position.set(0, 1.45, -0.6); montacargas.add(cabina);
+  const techo = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 1.0), new THREE.MeshStandardMaterial({ color: 0x222222 })); techo.position.set(0, 2.0, -0.6); montacargas.add(techo);
+}
+montacargas.position.set(6, 0, 0); escena.add(montacargas);
+/* señalización: postes con letreros */
+function senal(x, z, texto, fondo, colorTexto) {
+  bloque(0.08, 2.2, 0.08, 0x444444, x, 1.1, z);
+  letrero(texto, 1.0, 1.0, fondo, colorTexto, x, 2.45, z + 0.06);
+}
+senal(-12.5, -6, 'SALIDA', '#2e9e5b', '#ffffff');
+senal(12.5, -9, 'EPP\nOBLIGATORIO', '#f5c400', '#1b2240');
+senal(-5.5, 6.5, 'PEATONES', '#1769AA', '#ffffff');
+/* tablero de indicadores del turno */
+const tableroTex = (() => {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#0b1640'; g.fillRect(0, 0, 512, 256);
+  g.fillStyle = '#ffffff'; g.font = '800 26px Arial'; g.fillText('INDICADORES DEL TURNO', 20, 40);
+  [['Productividad', 0.86, '#2e9e5b'], ['Exactitud', 0.94, '#2138D3'], ['Seguridad', 1.0, '#f5c400'], ['Inventario', 0.72, '#c62828']].forEach(([t, v, col], i) => {
+    const y = 80 + i * 42; g.fillStyle = '#dfe3f0'; g.font = '600 20px Arial'; g.fillText(t, 20, y + 14);
+    g.fillStyle = '#243060'; g.fillRect(210, y, 270, 22); g.fillStyle = col; g.fillRect(210, y, 270 * v, 22);
+  });
+  return new THREE.CanvasTexture(c);
+})();
+const tablero = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), new THREE.MeshBasicMaterial({ map: tableroTex }));
+tablero.position.set(11, 2.9, -14.9); escena.add(tablero);
+bloque(4.2, 2.2, 0.12, 0x1d2a4a, 11, 2.9, -14.98);
+/* camión estacionado en el andén */
+bloque(5, 3.4, 2.4, 0xe9eef5, 20.5, 1.9, -3);
+bloque(1.6, 2.0, 2.2, 0x1769aa, 23.3, 1.2, -3);
+[-1, 1].forEach(sd => bloque(0.9, 0.9, 0.3, 0x222222, 19.6, 0.45, -3 + sd * 1.15));
+bloque(0.12, 2.2, 1.5, 0x2e9e5b, 14.6, 1.6, -3);
+
+/* ambiente animado: el montacargas recorre el pasillo y se detiene en cada extremo */
+function animarAmbiente(t) {
+  const z = 2.5 + 4.5 * Math.sin(t * 0.22);
+  const avanza = Math.cos(t * 0.22) > 0;
+  montacargas.position.z = z;
+  montacargas.rotation.y = avanza ? Math.PI / 2 : -Math.PI / 2;
+}
+
 /* ===================== Estado y controles ===================== */
 const teclas = {};
 const tactil = {};
@@ -308,7 +387,7 @@ camara.position.set(0, 3, 14);
 let ultimo = performance.now();
 function bucle(t) {
   const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
-  mover(dt); detectar(); seguirCamara(dt);
+  mover(dt); detectar(); seguirCamara(dt); animarAmbiente(t / 1000);
   if (avisoT > 0) { avisoT -= dt; if (avisoT <= 0) ocultarAviso(); }
   renderer.render(escena, camara);
   requestAnimationFrame(bucle);
