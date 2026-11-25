@@ -336,3 +336,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-25 02:55 UTC | 128 | Cross-docking: citas cumplidas al final | Dojo IA 20/20 · validar 411/411 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 03:55 UTC | 129 | Slotting: productividad estimada al final | Dojo IA 20/20 · validar 412/412 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 04:55 UTC | 130 | Flujo de materiales: OTIF al final | Dojo IA 20/20 · validar 413/413 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-25 05:55 UTC | 131 | Andenes: riesgos de accidente al final | Dojo IA 20/20 · validar 414/414 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
