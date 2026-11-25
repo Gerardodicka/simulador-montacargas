@@ -155,6 +155,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 125 | Mejora de Armado de embarques | Continuidad de #123-124 (indicadores del Tablero en todo el recorrido) | Al final se muestra «Tu OTIF (completo y a tiempo)»: % de embarques bien armados contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 | 126 | Mejora de Cargas no estándar | Continuidad de #123-125 (indicadores del Tablero en todo el recorrido) | Al final se muestra «Tus daños (cargas en riesgo)»: cuántas de las 10 cargas se podrían caer o dañar contra la meta de 0, en verde o rojo, ligado al indicador de Daños del Tablero | Mismo indicador en todo el recorrido | ✅ |
 | 127 | Mejora de Excepciones de surtido | Continuidad de #123-126 (indicadores del Tablero en todo el recorrido) | Al final se muestra «Tu OTIF (pedidos completos y a tiempo)»: % de excepciones bien resueltas contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
+| 128 | Mejora de Cross-docking | Continuidad de #123-127 (indicadores en todo el recorrido) | Al final se muestra «Tus citas cumplidas (camiones a su hora)»: % contra la meta de 95%, en verde o rojo, ligado al indicador de Citas | Mismo indicador en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
