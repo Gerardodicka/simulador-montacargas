@@ -443,7 +443,7 @@ function aplicarMapasInterior(esc, piso) {
     if (hex === 0x8a6a3c || hex === 0xc9a06a) { o.material = o.material.clone(); o.material.map = hex === 0x8a6a3c ? made : cart; o.material.color.set(0xffffff); o.material.needsUpdate = true; }
   });
 }
-/* construye el interior de un módulo: Lapzo (A), Entrenamiento (B) y Dojo (C). El Módulo 1 muestra sus imágenes */
+/* construye el interior de un módulo: Lapzo (A), Entrenamiento (B) y Práctica (C). Todos los módulos muestran las mismas imágenes de Aprende y Práctica */
 function construirInterior(m) {
   const esc = new THREE.Scene();
   esc.background = new THREE.Color(0xe8edf3);
@@ -455,13 +455,11 @@ function construirInterior(m) {
   bloqueEn(esc, 0.4, 4.5, 14, 0xe9eef5, -8, 2.25, 0);
   bloqueEn(esc, 0.4, 4.5, 14, 0xe9eef5, 8, 2.25, 0);
   LUCES.forEach(([x, z]) => { const panel = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.05, 0.6), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff5d6, emissiveIntensity: 0.9 })); panel.position.set(x, 4.35, z); esc.add(panel); });
-  const esMod1 = m.id === 'm1';
   /* zona A · Lapzo */
   bloqueEn(esc, 4.4, 0.2, 3.2, 0x2138D3, -5, 0.1, -2.5);
   bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, -5, 1.6, -4.6);
   bloqueEn(esc, 0.12, 1.4, 0.12, 0x444444, -5, 0.7, -4.4);
-  if (esMod1) { const pl = imagenEn(esc, 'assets/textures/lapzo_universidad.webp', 2.6, 1141 / 984, -5, 1.6, -4.5); }
-  else letreroEn(esc, 'LAPZO\nPróximamente', '#0b1640', '#ffffff', 3, 1.8, -5, 1.6, -4.5);
+  imagenEn(esc, 'assets/textures/lapzo_universidad.webp', 2.6, 1141 / 984, -5, 1.6, -4.5);   // A · Aprende: Universidad Dicka (Lapzo)
   letreroEn(esc, 'A · LAPZO', '#2138D3', '#ffffff', 3.2, 0.7, -5, 3.1, -6.9);
   bloqueEn(esc, 1.6, 0.08, 0.8, 0x8a6a3c, -6.8, 0.8, -1.2, 0.5);
   silla(esc, -6.8, -0.5, Math.PI);
@@ -479,8 +477,7 @@ function construirInterior(m) {
   anillo.rotation.x = -Math.PI / 2; anillo.position.set(5, 0.02, -2.5); esc.add(anillo);
   bloqueEn(esc, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
   bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
-  if (esMod1) imagenEn(esc, 'assets/textures/dojo_simulador.webp', 2.9, 1735 / 901, 5, 1.6, -4.5);
-  else letreroEn(esc, 'PRÁCTICA\nSimula', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);
+  imagenEn(esc, 'assets/textures/dojo_simulador.webp', 2.9, 1735 / 901, 5, 1.6, -4.5);   // C · Práctica: simulador de casos prácticos
   letreroEn(esc, 'C · PRÁCTICA | SIMULA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
   [[3.6, 0.9], [5, 0.9], [6.4, 0.9]].forEach(([x, z]) => silla(esc, x - 0.2, z, Math.PI));
   bloqueEn(esc, 3.4, 0.25, 0.5, 0x3a2f6b, 5, 0.12, -0.6, 0.6);
