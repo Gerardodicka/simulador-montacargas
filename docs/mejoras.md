@@ -157,6 +157,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 127 | Mejora de Excepciones de surtido | Continuidad de #123-126 (indicadores del Tablero en todo el recorrido) | Al final se muestra «Tu OTIF (pedidos completos y a tiempo)»: % de excepciones bien resueltas contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 | 128 | Mejora de Cross-docking | Continuidad de #123-127 (indicadores en todo el recorrido) | Al final se muestra «Tus citas cumplidas (camiones a su hora)»: % contra la meta de 95%, en verde o rojo, ligado al indicador de Citas | Mismo indicador en todo el recorrido | ✅ |
 | 129 | Mejora de Slotting | Continuidad de #123-128 (indicadores en todo el recorrido) | Al final se muestra «Tu productividad estimada» en cajas/hora contra la meta de 110: cada producto mal acomodado hace caminar de más; verde o rojo, ligado al indicador de Productividad | Mismo indicador en todo el recorrido | ✅ |
+| 130 | Mejora de Flujo de materiales | Continuidad de #123-129 (indicadores en todo el recorrido) | Al final se muestra «Tu OTIF (pedidos a tiempo)»: % de cuellos de botella bien resueltos contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -333,3 +334,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-25 01:10 UTC | 127 | Excepciones de surtido: OTIF al final | Dojo IA 20/20 · validar 410/410 (también tras integrar la junta de arranque de main) · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 02:55 UTC | 128 | Cross-docking: citas cumplidas al final | Dojo IA 20/20 · validar 411/411 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 03:55 UTC | 129 | Slotting: productividad estimada al final | Dojo IA 20/20 · validar 412/412 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-25 04:55 UTC | 130 | Flujo de materiales: OTIF al final | Dojo IA 20/20 · validar 413/413 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
