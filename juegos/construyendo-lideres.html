@@ -18,6 +18,8 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 .fase{background:#fff;color:var(--azul);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 .aviso{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:rgba(1,17,49,.9);color:#fff;border-radius:14px;padding:10px 16px;font-size:14px;font-weight:700;border:2px solid var(--amarillo);display:none;z-index:3;white-space:nowrap}
 .aviso.on{display:block}
+.fundido{position:fixed;inset:0;background:#070b18;opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.fundido.on{opacity:1}
 .tarjeta-modulo{white-space:normal;min-width:260px;max-width:340px;text-align:left}
 .tarjeta-modulo b{display:block;font-size:14px;color:#f5c400}
 .tarjeta-modulo small{display:block;font-size:12px;opacity:.9;margin-top:3px;line-height:1.35}
@@ -63,6 +65,7 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 </div>
 
 <div class="aviso" id="aviso"></div>
+<div class="fundido" id="fundido"></div>
 
 <div class="controles" aria-label="Controles de movimiento">
   <button class="arriba" data-k="w" aria-label="Avanzar">▲</button>
@@ -229,7 +232,7 @@ if (typeof loadOperarioModel === 'function') {
     if (!ok || typeof makeStandingOperator !== 'function') return;
     const op = makeStandingOperator(false);
     avatar.children.forEach(ch => { ch.visible = false; });
-    avatar.add(op);
+    avatar.add(op); avatarGltf = op.userData.gltf;
     crearRicardo();
   }).catch(() => { });
 }
@@ -531,6 +534,7 @@ const teclas = {};
 const tactil = {};
 let heading = Math.PI;   // mira hacia el fondo de la nave (hacia los edificios)
 let moviendo = false, paso = 0;
+let avatarGltf = null, saludo = 0, fundiendo = false;   // modelo realista del líder, tiempo de saludo, fundido entre escenas
 let cerca = null;        // módulo al que puede entrar
 let abierto = null;      // panel abierto
 const pulsadas = new Set();
@@ -540,7 +544,8 @@ window.addEventListener('keydown', e => {
   if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
   teclas[k] = true;
   if (k === 'e' && !abierto) accionE();
-  if (k === 'escape') { if (abierto) cerrarPanel(); else if (enInterior) salirEdificio(); }
+  if (k === 'g' && !abierto && !fundiendo) saludo = 2.4;
+  if (k === 'escape') { if (abierto) cerrarPanel(); else if (enInterior) conFundido(salirEdificio); }
 });
 window.addEventListener('keyup', e => { teclas[e.key.toLowerCase()] = false; });
 document.querySelectorAll('.controles button').forEach(b => {
@@ -552,12 +557,12 @@ document.querySelectorAll('.controles button').forEach(b => {
 document.getElementById('btnEntrar').addEventListener('click', () => { if (!abierto) accionE(); });
 function accionE() {
   if (enInterior) {
-    if (zonaCerca && zonaCerca.id === 'salida') { salirEdificio(); return; }
+    if (zonaCerca && zonaCerca.id === 'salida') { conFundido(salirEdificio); return; }
     if (zonaCerca) abrirZona(zonaCerca.id);
     return;
   }
   if (cerca && cerca.id === 'ricardo') { abrirConversacion(); return; }
-  if (cerca) { entrarInterior(cerca); return; }
+  if (cerca) { const m = cerca; conFundido(() => entrarInterior(m)); return; }
 }
 function marcarVisitado(id) {
   let lista = [];
@@ -573,6 +578,14 @@ function actualizarObjetivo() {
   document.getElementById('visitados').textContent = n + '/4';
   document.getElementById('barraRecorrido').style.width = (n / 4 * 100) + '%';
 }
+/* transición corta entre la plaza y un interior: fundido a negro, cambio de escena, fundido de regreso */
+function conFundido(fn) {
+  if (fundiendo) return; fundiendo = true;
+  const f = document.getElementById('fundido'); f.classList.add('on');
+  setTimeout(() => { fn(); seguirCamaraSalto(); requestAnimationFrame(() => f.classList.remove('on')); setTimeout(() => { fundiendo = false; }, 300); }, 320);
+}
+/* al cambiar de escena la cámara salta a su sitio para no cruzar el edificio */
+function seguirCamaraSalto() { camara.position.set(avatar.position.x - Math.sin(heading) * 6.2, 2.9, avatar.position.z - Math.cos(heading) * 6.2); }
 function entrarInterior(m) {
   marcarVisitado(m.id);
   moduloInt = m; interiorActual = INTERIORES[m.id]; zonasActuales = ZONAS_INT;
@@ -640,12 +653,14 @@ function mover(dt) {
     }
     avatar.position.x = nx;
     avatar.position.z = nz;
-    paso += dt * 9;
+    paso += dt * (pulsa('shift') ? 13 : 9);   // correr: zancada más rápida
   }
   avatar.rotation.y = heading;
   const sw = moviendo ? Math.sin(paso) * 0.6 : 0;
   piernaI.rotation.x = sw; piernaD.rotation.x = -sw;
   brazoI.rotation.x = -sw * 0.7; brazoD.rotation.x = sw * 0.7;
+  /* modelo realista: caminar, correr y saludar con la misma pose procedural del Dojo */
+  if (avatarGltf) gltfWalkPose(avatarGltf, moviendo, paso, performance.now(), saludo > 0, 0);
 }
 
 /* detecta edificio cercano */
@@ -865,6 +880,7 @@ let ultimo = performance.now();
 function bucle(t) {
   const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
   mover(dt); detectar(); seguirCamara(dt); animarAmbiente(t / 1000);
+  if (saludo > 0) saludo -= dt;
   if (avisoT > 0) { avisoT -= dt; if (avisoT <= 0) ocultarAviso(); }
   renderer.render(enInterior ? interiorActual : escena, camara);
   requestAnimationFrame(bucle);
