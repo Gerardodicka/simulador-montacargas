@@ -168,7 +168,7 @@ const LOGO_DATA='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPIAAABGCAYAAAD2M
 const CARTON = { img: null, pend: [] };
 const TEXCACHE = {}; let _texCache = {}; const RACK_MATS = {}; const WAREHOUSE = { w: 60, d: 60, h: 12 };
 // ======================= DOJO DE MANDO · Escenario piloto "El mejor operador" =======================
-const GAME_ID = 'dojo-de-mando', GAME_NAME = 'Dojo de Mando · El mejor operador', PASS = 62;
+const GAME_ID = 'dojo-de-mando', GAME_NAME = 'Dojo de Mando · El mejor operador', PASS = 80;
 const $ = id => document.getElementById(id);
 let who = {}, t0 = 0;
 const K = { confianza: 55, claridad: 55, ejecucion: 65, clima: 55, cumplimiento: 50 };   // indicadores del equipo (0–100)
@@ -182,14 +182,14 @@ const FLAGS = {};
 // Datos de referencia del almacén (ficticios: reemplázalos por los reales de DICKA cuando los tengas)
 const DOJO_DATA = { productividad: 112, incidentes30d: 2, diasSinAccidente: 41, rotacionAnual: 38, quejasTrato: 2, costoAccidente: 450000, multaCliente: 120000, otif: 97.4 };
 const LEVELS = {
-  'Supervisor de Operaciones': { nivel: 'Supervisor', key: 'sup', diff: 'Básico', pass: 58, mult: .8, hints: true, timer: 0, extra: false, ric: 'Operador líder de montacargas', boss: 'Jefe de operaciones',
-    know: ['productividad', 'incidentes30d'], note: 'El mentor te da pistas en cada decisión. Los errores cuestan menos. Mínimo aprobatorio 58.' },
-  'Jefe de Operaciones': { nivel: 'Jefatura', key: 'jefe', diff: 'Intermedio', pass: 62, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
-    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato'], note: 'Sin pistas. Consecuencias completas. Mínimo aprobatorio 62.' },
-  'Gerente de Operaciones': { nivel: 'Gerencia', key: 'ger', diff: 'Avanzado', pass: 66, mult: 1.25, hints: false, timer: 45, extra: true, ric: 'Jefe de turno nocturno', boss: 'Director de operaciones',
-    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato', 'diasSinAccidente', 'costoAccidente', 'multaCliente', 'otif'], note: 'Sin pistas, 45 s por decisión (si no decides, evitas el tema) y una 4.ª decisión de prevención sistémica. Los errores cuestan 25% más. Mínimo aprobatorio 66.' },
-  'HRBP · Talento y Cultura': { nivel: 'HRBP', key: 'hrbp', diff: 'Intermedio', pass: 62, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
-    know: ['rotacionAnual', 'quejasTrato', 'incidentes30d', 'productividad'], note: 'Enfoque de Talento y Cultura: personas, legalidad y negocio. Sin pistas. Mínimo aprobatorio 62.' } };
+  'Supervisor de Operaciones': { nivel: 'Supervisor', key: 'sup', diff: 'Básico', pass: 80, mult: .8, hints: true, timer: 0, extra: false, ric: 'Operador líder de montacargas', boss: 'Jefe de operaciones',
+    know: ['productividad', 'incidentes30d'], note: 'El mentor te da pistas en cada decisión. Los errores cuestan menos. Mínimo aprobatorio 80.' },
+  'Jefe de Operaciones': { nivel: 'Jefatura', key: 'jefe', diff: 'Intermedio', pass: 80, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
+    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato'], note: 'Sin pistas. Consecuencias completas. Mínimo aprobatorio 80.' },
+  'Gerente de Operaciones': { nivel: 'Gerencia', key: 'ger', diff: 'Avanzado', pass: 80, mult: 1.25, hints: false, timer: 45, extra: true, ric: 'Jefe de turno nocturno', boss: 'Director de operaciones',
+    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato', 'diasSinAccidente', 'costoAccidente', 'multaCliente', 'otif'], note: 'Sin pistas, 45 s por decisión (si no decides, evitas el tema) y una 4.ª decisión de prevención sistémica. Los errores cuestan 25% más. Mínimo aprobatorio 80.' },
+  'HRBP · Talento y Cultura': { nivel: 'HRBP', key: 'hrbp', diff: 'Intermedio', pass: 80, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
+    know: ['rotacionAnual', 'quejasTrato', 'incidentes30d', 'productividad'], note: 'Enfoque de Talento y Cultura: personas, legalidad y negocio. Sin pistas. Mínimo aprobatorio 80.' } };
 const DATA_LBL = { productividad: ['Productividad del turno', v => v + '% de la meta'], incidentes30d: ['Incidentes de montacargas (30 días)', v => v], diasSinAccidente: ['Días sin accidente incapacitante', v => v], rotacionAnual: ['Rotación anual del turno nocturno', v => v + '%'], quejasTrato: ['Quejas por trato', v => v], costoAccidente: ['Costo promedio de un accidente', v => '$' + v.toLocaleString('es-MX')], multaCliente: ['Penalización del cliente por incidente', v => '$' + v.toLocaleString('es-MX')], otif: ['OTIF del cliente', v => v + '%'] };
 let LV = LEVELS['Jefe de Operaciones'];
 // Datos reales: se cargan desde CSV (clave,valor) o se capturan a mano; se guardan en localStorage con fecha
@@ -287,7 +287,7 @@ function initScene() { const st = $('stage'); renderer = new THREE.WebGLRenderer
   if (typeof buildEscenariosDojo === 'function') buildEscenariosDojo(scene);   // sala de juntas, andén y comedor (juegos/comun/escenarios-dojo.js)
   // personajes
   const L = { ricardo: { skin: 0xc68a5e, hair: 0x1a1a1a, hairStyle: 'buzz', shirt: 0x2a5a9c, pants: 0x223f6e, vest: 0x1769aa, helmet: 0xf5c400, height: 1.04, prop: 'radio', bodyType: 'broad' }, ana: { fem: true, skin: 0xd8a27a, hair: 0x2a1a10, hairStyle: 'medium', ponytail: true, shirt: 0xf2f2f2, pants: 0x2d4a80, vest: 0x1769aa, helmet: 0xf2d21b, height: .95, prop: 'scanner' } };
-  Object.keys(L).forEach(k => { const g = new THREE.Group(), h = buildHuman(L[k], { detail: 3, lod: false }); h.traverse(o => { if (o.isMesh) o.castShadow = true; }); g.add(h); scene.add(g); AV[k] = { g, proc: h, pose: 'neutral', cur: {}, talkT: 0, j: n => h.getObjectByName(n) }; });
+  Object.keys(L).forEach(k => { const g = new THREE.Group(), h = buildHuman(L[k], { detail: 3, lod: false }); h.traverse(o => { if (o.isMesh) o.castShadow = true; }); g.add(h); scene.add(g); AV[k] = { kid: k, g, proc: h, pose: 'neutral', cur: {}, talkT: 0, j: n => h.getObjectByName(n) }; });
   realAvatars();
   fpInit(renderer.domElement); renderer.domElement.addEventListener('click', e => { if (FP.moved > 8) return; const r = renderer.domElement.getBoundingClientRect(), m = new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), rc = new THREE.Raycaster(); rc.setFromCamera(m, cam);
     for (const [k, a] of Object.entries(AV)) { if (!a.g.visible) continue; if (rc.intersectObject(a.g, true).length) { talkTo(k); if (AV[k]) AV[k].talkT = .8; return; } } });
@@ -322,12 +322,12 @@ const TALK_SETS = [['beat', 'beat'], ['open', 'rest'], ['rest', 'open'], ['beat'
 /* Operadores y sindicato: gestos más abiertos y enfáticos al hablar (señalan, abren las manos, marcan el ritmo); en reposo, brazos sueltos */
 const TALK_SETS_OP = [['beat', 'beat'], ['open', 'open'], ['point', 'rest'], ['rest', 'point'], ['open', 'beat'], ['beat', 'open'], ['relaxed', 'beat']], IDLE_SETS_OP = [['rest', 'rest'], ['relaxed', 'rest'], ['rest', 'relaxed'], ['relaxed', 'relaxed']];
 const OP_GEST_POSES = ['neutral', 'open', 'talk', 'down'];   /* posturas de actitud (brazos cruzados, teléfono) se respetan */
-function officeArms(a, t, dt) { dt = dt || .016; const root = a.av.obj; if (!a.armB) { a.armB = {}; root.traverse(o => { if (!o.isBone) return; const m = o.name.match(/(Left|Right)(Arm|ForeArm|Hand)$/); if (m && !a.armB[m[1] + m[2]]) a.armB[m[1] + m[2]] = o; }); }
+function officeArms(a, t, dt) { dt = dt || .016; a.calm = window.CALM_K === a.kid; const root = a.av.obj; if (!a.armB) { a.armB = {}; root.traverse(o => { if (!o.isBone) return; const m = o.name.match(/(Left|Right)(Arm|ForeArm|Hand)$/); if (m && !a.armB[m[1] + m[2]]) a.armB[m[1] + m[2]] = o; }); }
   const talk = a.talkT > 0, G = a.gest = a.gest || { L: null, R: null, next: 0, set: ['rest', 'rest'], talk: false, ph: Math.random() * 6 };
-  if (t > G.next || talk !== G.talk) { const S = a.office ? (talk ? TALK_SETS : IDLE_SETS) : (talk ? TALK_SETS_OP : IDLE_SETS_OP); let n; do { n = S[Math.floor(Math.random() * S.length)]; } while (S.length > 1 && n.join() === G.set.join()); G.set = n; G.talk = talk; G.next = t + (talk ? 1.1 + Math.random() * 1.6 : 4 + Math.random() * 5); }
+  if (t > G.next || talk !== G.talk) { const S = a.office ? (talk ? TALK_SETS : IDLE_SETS) : (talk ? TALK_SETS_OP : IDLE_SETS_OP); let n; do { n = S[Math.floor(Math.random() * S.length)]; } while (S.length > 1 && n.join() === G.set.join()); G.set = n; G.talk = talk; G.next = t + (talk ? (1.1 + Math.random() * 1.6) * (a.calm ? 3 : 1) : (4 + Math.random() * 5) * (a.calm ? 2 : 1)); }
   const B = a.armB, gq = new THREE.Quaternion(), k = 1 - Math.pow(talk ? .02 : .1, dt); a.g.getWorldQuaternion(gq);
   [['Left', 1, 0], ['Right', -1, 1]].forEach(([sd, sx, i]) => { const ua = B[sd + 'Arm'], fa = B[sd + 'ForeArm'], hd = B[sd + 'Hand']; if (!ua || !fa || !hd) return;
-    const P = ARM_POSES[G.set[i]], beat = talk ? Math.sin(t * 4.2 + i * 2.1 + G.ph) * .14 : 0, br = Math.sin(t * 1.25 + G.ph) * .015;
+    const P = ARM_POSES[G.set[i]], beat = talk ? Math.sin(t * 4.2 + i * 2.1 + G.ph) * .14 * (a.calm ? .3 : 1) : 0, br = Math.sin(t * 1.25 + G.ph) * .015;
     const tu = new THREE.Vector3(P[0][0] * sx, P[0][1], P[0][2] + br), tf = new THREE.Vector3(P[1][0] * sx, P[1][1] + beat, P[1][2] + beat * .3);
     const cur = G[sd] = G[sd] || { u: tu.clone(), f: tf.clone() }; cur.u.lerp(tu, k); cur.f.lerp(tf, k);
     aimBone(ua, fa, cur.u.clone().normalize().applyQuaternion(gq)); aimBone(fa, hd, cur.f.clone().normalize().applyQuaternion(gq));
@@ -625,6 +625,7 @@ function trackObj(said) { Object.entries(OBJRE).forEach(([k, re]) => { if (re.te
 function presion() { const kAvg = Object.values(K).reduce((s, v) => s + v, 0) / 5, tr = P.ricardo ? P.ricardo.trust : 50, lvl = (LV.diff === 'Avanzado' ? 1 : LV.diff === 'Básico' ? -1 : 0);
   const v = (kAvg - 55) / 10 + (tr - 55) / 15 + lvl; return v > 1.2 ? 'alta' : v > 0 ? 'media' : 'baja'; }
 const PUSH = { ricardo: ['Ok, pero si me quitas del montacargas, ¿quién saca el embarque de las cinco?', 'Está bien, pero dígame: ¿le va a decir lo mismo a los del turno de día?', '¿Y si bajo la productividad por andar con tanto cuidado, me va a defender?'], director: ['Bien, pero necesito los números del cliente intactos esta semana.', 'Me convence, pero ¿qué le digo yo a dirección si baja la productividad?'], ana: ['¿Y si Ricardo se entera de que hablé?'] };
+function cierreAcuerdo(respuesta) { if (!PX || PX.cerrado || ACUERDOS.length < 1) return false; if (CONV.filter(c => c.quien === 'Líder').length < 3) return false; return /\b(gracias|de acuerdo|trato hecho|as[ií] quedamos|quedamos as[ií]|quedamos|me comprometo|entendido)\b/.test(norm(respuesta || '')); }
 async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!said) return; trackObj(said); if (!moveIntent(said)) acuerdoIntent(said); SAID.push({ t: said, dur: VOICE.lastDur || 0 }); VOICE.lastDur = 0; if (PX && PX.S.cast) { const n = said.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); const c = PX.S.cast.find(c => c.kw.test(n)); if (c) TALK = c.k; }
   if (document.querySelector('#talk .next') || !$('evt').classList.contains('hidden')) return handleSpeechLocal(alts);
   if (AI.off || AI.busy) return localConverse(said);
@@ -648,6 +649,7 @@ async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!sa
     if (r.tipo === 'decision' && r.opcion && r.confianza >= .6) { const el = [...document.querySelectorAll('#talk .opt')].find(o => o.querySelector('.k').textContent === r.opcion);
       if (el) { let done = false; const go = () => { if (done) return; done = true; VOICE.heard = { t: said, k: r.opcion, own: true, mentor: r.mentor }; el.click(); }; sayLines([[k, r.respuesta]], () => setTimeout(go, 400)); setTimeout(go, 1800 + (VOICE.on ? (r.respuesta || '').length * 70 : 0)); return; } }
     if (pxLimit()) { sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; }); return; }
+    if (cierreAcuerdo(r.respuesta)) { PX.cerrado = true; window.PX_END = 'acuerdo'; chatLog().insertAdjacentHTML('beforeend', '<div class="help">🥋 <b>Mentor:</b> acuerdo alcanzado. Cerramos la plática.</div>'); sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; setTimeout(endPractice, 1200); }); return; }
     sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; afterSpeech(); });
   } catch (e) { AI.busy = false; box.remove(); aiBadge('⚠️ IA tardó demasiado'); return localConverse(said); } }
 function handleSpeechLocal(alts) { const said = alts[0] || '', N = alts.map(norm);
@@ -680,11 +682,11 @@ function toggleVoiceMode() { VOICE.mode = !VOICE.mode; try { localStorage.setIte
 function afterSpeech() { micUI(); if (document.querySelector('#talk .next') || !$('evt').classList.contains('hidden')) return; if (VOICE.mode && SR_OK && $('sim') && !$('sim').classList.contains('hidden')) setTimeout(listen, 300); }
 function autoNext() { const tok = LOG.length + (FLAGS.epi ? 100 : 0) + ($('evt').classList.contains('hidden') ? 0 : 1000); if (autoNext.last === tok) return; autoNext.last = tok; const go = () => { const e = $('evt'); if (e && !e.classList.contains('hidden')) { const b = $('evOk'); if (b) b.click(); return; } const n = document.querySelector('#talk .next'); if (n) n.click(); }; setTimeout(go, 1300); }
 function animate(dt, t) { if (CINE) cineUpdate(dt); fpMove(dt); cam.position.lerp(camTo, 1 - Math.pow(.02, dt)); camLook.lerp(camLookTo, 1 - Math.pow(.02, dt)); if (CINE) cam.lookAt(camLook); else fpLook();
-  Object.entries(AV).forEach(([k, a]) => { if (a.av) { if (!CINE && a.g.visible) { if (a.ry0 === undefined || a.to !== a.toRef) { a.ry0 = a.ry; a.toRef = a.to; } const v = cam.position.clone().sub(a.g.position); let d = Math.atan2(v.x, v.z) - a.ry0; d = Math.atan2(Math.sin(d), Math.cos(d)); a.ry = a.ry0 + Math.max(-.35, Math.min(.35, d)); } a.g.position.copy(a.to); a.g.rotation.y += (a.ry - a.g.rotation.y) * Math.min(1, dt * .8); a.talkT = Math.max(0, a.talkT - dt); poseReal(a, dt, t); return; } const d = a.to.clone().sub(a.g.position); if (d.length() > .02) { a.g.position.addScaledVector(d, Math.min(1, dt * 1.4)); a.g.rotation.y = Math.atan2(d.x, d.z); a.walk = true; } else { a.walk = false; a.g.rotation.y += (a.ry - a.g.rotation.y) * Math.min(1, dt * 3); }
+  Object.entries(AV).forEach(([k, a]) => { a.calm = window.CALM_K === a.kid; if (a.av) { if (!CINE && a.g.visible) { if (a.ry0 === undefined || a.to !== a.toRef) { a.ry0 = a.ry; a.toRef = a.to; } const v = cam.position.clone().sub(a.g.position); let d = Math.atan2(v.x, v.z) - a.ry0; d = Math.atan2(Math.sin(d), Math.cos(d)); a.ry = a.ry0 + Math.max(-.35, Math.min(.35, d)); } a.g.position.copy(a.to); a.g.rotation.y += (a.ry - a.g.rotation.y) * Math.min(1, dt * .8); a.talkT = Math.max(0, a.talkT - dt); poseReal(a, dt, t); return; } const d = a.to.clone().sub(a.g.position); if (d.length() > .02) { a.g.position.addScaledVector(d, Math.min(1, dt * 1.4)); a.g.rotation.y = Math.atan2(d.x, d.z); a.walk = true; } else { a.walk = false; a.g.rotation.y += (a.ry - a.g.rotation.y) * Math.min(1, dt * 3); }
     a.talkT = Math.max(0, a.talkT - dt); const P0 = POSES[a.pose] || POSES.neutral;
     ['armL', 'elbowL', 'armR', 'elbowR', 'head'].forEach(j => { const b = a.j(j); if (!b) return; const tgt = P0[j]; const c = a.cur[j] || (a.cur[j] = [0, 0, 0]); for (let i = 0; i < 3; i++) c[i] += (tgt[i] - c[i]) * Math.min(1, dt * 4);
       let x = c[0], y = c[1], z = c[2]; if (a.walk && (j === 'armL' || j === 'armR')) x += Math.sin(t * 7 + (j === 'armL' ? 0 : Math.PI)) * .35;
-      if (a.talkT > 0 && j === 'head') { x += Math.sin(t * 9) * .05; y += Math.sin(t * 2.3) * .08; } if (a.talkT > 0 && a.pose === 'talk' && j === 'elbowR') x += Math.sin(t * 5) * .25;
+      const cm = a.calm ? .3 : 1; if (a.talkT > 0 && j === 'head') { x += Math.sin(t * 9) * .05 * cm; y += Math.sin(t * 2.3) * .08 * cm; } if (a.talkT > 0 && a.pose === 'talk' && j === 'elbowR') x += Math.sin(t * 5) * .25 * cm;
       b.rotation.set(x, y, z); });
     ['legL', 'legR'].forEach((j, i) => { const b = a.j(j); if (b) b.rotation.x = a.walk ? Math.sin(t * 7 + i * Math.PI) * .45 : 0; });
     const bi = a.j('bodyInner'); if (bi) bi.position.y = (bi.userData.y0 ?? (bi.userData.y0 = bi.position.y)) + Math.sin(t * 1.6 + (k === 'ana' ? 1 : 0)) * .006; }); }
@@ -1008,7 +1010,7 @@ const JUNTA_SCEN = [
     intro: 'Junta de arranque, siete de la mañana. Hay un pedido urgente y necesitas dos horas extra. Diego es de tus mejores operadores y llega con el ceño fruncido.',
     open: 'Jefe, me pidió que me quede dos horas más. No le voy a decir que sí. La semana pasada hice tiempo extra y todavía no me lo pagan. Llevo tres semanas preguntando y nadie me contesta.',
     goal: 'Escucha el problema del pago sin imponer la orden. Acuerda una fecha concreta con Nómina y deja claro que la hora extra de hoy es voluntaria.', fb: FBM },
-  { id: 'junta_dispuesta', ic: '🙋', t: 'Junta: colaboradora dispuesta', d: 'Marta se ofrece a quedarse, pero tiene un compromiso familiar a la misma hora.', k: 'ana', name: 'Marta', role: 'Auxiliar de almacén', mood: 'Dispuesta, con un poco de preocupación', trust: 60,
+  { id: 'junta_dispuesta', ic: '🙋', t: 'Junta: colaboradora dispuesta', d: 'Marta se ofrece a quedarse, pero tiene un compromiso familiar a la misma hora.', k: 'ana', name: 'Marta', role: 'Auxiliar de almacén', mood: 'Dispuesta, con un poco de preocupación', trust: 60, calmo: true,
     intro: 'Junta de arranque. Necesitas a alguien para un embarque que se atrasó. Marta levanta la mano antes de que termines de preguntar.',
     open: 'Jefe, sí puedo quedarme dos horas más. Ya me organicé con mi hermana para recoger a mi hijo, pero ella me dijo que hasta las ocho.',
     goal: 'Agradece sin abusar de su disponibilidad. Confirma cuánto puede quedarse, no le pidas mañana también y reconoce su esfuerzo de forma concreta.', fb: FBM },
@@ -1348,7 +1350,7 @@ function quickPractice() { const pg = progGet(), L = (SCEN[LV.key] || SCEN.jefe)
 function quickTimer() { clearInterval(window.QT); const el = document.createElement('div'); el.className = 'qtimer'; el.id = 'qtimer'; $('stage').append(el); const end = Date.now() + (window.QUICK_TEST_SECS || QUICK_SECS) * 1000;
   const tick = () => { const r = Math.max(0, Math.round((end - Date.now()) / 1000)); el.textContent = '⚡ ' + Math.floor(r / 60) + ':' + String(r % 60).padStart(2, '0'); el.classList.toggle('low', r <= 60); if (!r) { clearInterval(window.QT); if (PX) endPractice(); } }; tick(); window.QT = setInterval(tick, 1000); }
 function pickScen(id) { const S = (SCEN[LV.key] || SCEN.jefe).find(x => x.id === id); $('scen').classList.add('hidden'); if (S.full) return briefMejor(); startPractice(S); }
-function startPractice(S) { LUGAR = ''; ACUERDOS = []; PX = { S, t0: Date.now() }; window.PX_ID = S.id; CUR_DEC = 'px'; TALK = S.k; const CAST = S.cast || [S]; CAST.forEach(c => { Object.assign(P[c.k], { name: c.name, role: c.role, mood: c.mood, trust: c.trust }); NM[c.k] = [c.k === 'director' ? (S.inPerson ? '👔' : '📞') : c.k === 'ana' ? '👩‍💼' : '👷', c.name]; if (c.k === 'director') P.director.icon = S.inPerson ? '👔' : '📞'; }); const inCast = k => CAST.some(c => c.k === k); CONV.length = 0; SAID.length = 0; TRANS.length = 0; Object.keys(OBJ).forEach(k => OBJ[k] = 0);
+function startPractice(S) { LUGAR = ''; ACUERDOS = []; PX = { S, t0: Date.now() }; window.PX_ID = S.id; CUR_DEC = 'px'; TALK = S.k; window.CALM_K = S.calmo ? S.k : ''; const CAST = S.cast || [S]; CAST.forEach(c => { Object.assign(P[c.k], { name: c.name, role: c.role, mood: c.mood, trust: c.trust }); NM[c.k] = [c.k === 'director' ? (S.inPerson ? '👔' : '📞') : c.k === 'ana' ? '👩‍💼' : '👷', c.name]; if (c.k === 'director') P.director.icon = S.inPerson ? '👔' : '📞'; }); const inCast = k => CAST.some(c => c.k === k); CONV.length = 0; SAID.length = 0; TRANS.length = 0; Object.keys(OBJ).forEach(k => OBJ[k] = 0);
   try { if (SR_OK && navigator.mediaDevices) navigator.mediaDevices.getUserMedia({ audio: true }).then(st => st.getTracks().forEach(t => t.stop())).catch(() => { }); } catch (e) { }
   VOICE.mode = SR_OK && (function () { try { return localStorage.getItem('dicka_dojo_mic') !== 'off'; } catch (e) { return true; } })(); setTimeout(aiPing, 300);
   t0 = Date.now(); $('sim').classList.remove('hidden'); kpiHTML(); whoHTML(); document.querySelectorAll('#who .wc').forEach((e, i) => { if (!inCast(Object.keys(P)[i])) e.style.display = 'none'; }); if (!renderer) initScene();
