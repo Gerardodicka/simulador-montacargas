@@ -160,6 +160,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 130 | Mejora de Flujo de materiales | Continuidad de #123-129 (indicadores en todo el recorrido) | Al final se muestra «Tu OTIF (pedidos a tiempo)»: % de cuellos de botella bien resueltos contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 | 131 | Mejora de Andenes | Continuidad de #123-130 (indicadores en todo el recorrido) | Al final se muestra «Tus riesgos de accidente»: cuántas de las 10 maniobras podrían causar un accidente contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
 | 132 | Mejora de Trabajo en alturas | Continuidad de #131 (seguridad medida igual) | Al final se muestra «Tus riesgos de accidente»: cuántas de las 10 situaciones podrían terminar en caída contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
+| 133 | Mejora de Ergonomía | Continuidad de #131-132 (seguridad medida igual) | Al final se muestra «Tus riesgos de lesión»: cuántas de las 10 situaciones podrían lastimar espalda, hombros o manos contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -339,3 +340,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-25 04:55 UTC | 130 | Flujo de materiales: OTIF al final | Dojo IA 20/20 · validar 413/413 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 05:55 UTC | 131 | Andenes: riesgos de accidente al final | Dojo IA 20/20 · validar 414/414 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 06:55 UTC | 132 | Trabajo en alturas: riesgos de accidente al final | Dojo IA 20/20 · validar 415/415 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-25 07:55 UTC | 133 | Ergonomía: riesgos de lesión al final | Dojo IA 20/20 · validar 416/416 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
