@@ -344,3 +344,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-25 06:55 UTC | 132 | Trabajo en alturas: riesgos de accidente al final | Dojo IA 20/20 · validar 415/415 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 07:55 UTC | 133 | Ergonomía: riesgos de lesión al final | Dojo IA 20/20 · validar 416/416 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 08:55 UTC | 134 | LOTO: riesgos de accidente al final | Dojo IA 20/20 · validar 417/417 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-25 09:55 UTC | 135 | Materiales peligrosos: riesgos de accidente al final | Dojo IA 20/20 · validar 418/418 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
