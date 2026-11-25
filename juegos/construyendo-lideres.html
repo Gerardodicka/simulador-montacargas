@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construyendo Líderes Dicka | DICKA Logistics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#1D2586;--brillante:#2138D3;--marino:#011131;--amarillo:#f5c400;--verde:#2e9e5b;--gris:#6b7390;--papel:#f4f6fb;--linea:#dfe3f0}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Segoe UI',Roboto,Arial,sans-serif}
+#lienzo{position:fixed;inset:0}
+#lienzo canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:fixed;left:0;right:0;top:0;padding:12px 16px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none;z-index:2}
+.marca{background:rgba(1,17,49,.82);color:#fff;border-radius:14px;padding:10px 14px;border:1px solid rgba(245,196,0,.45)}
+.marca small{display:block;color:var(--amarillo);font-size:10px;font-weight:800;letter-spacing:.08em}
+.marca h1{font-family:Poppins,Inter,Arial;font-size:17px;margin-top:2px}
+.fase{background:#fff;color:var(--azul);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.aviso{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:rgba(1,17,49,.9);color:#fff;border-radius:14px;padding:10px 16px;font-size:14px;font-weight:700;border:2px solid var(--amarillo);display:none;z-index:3;white-space:nowrap}
+.aviso.on{display:block}
+.controles{position:fixed;left:14px;bottom:14px;z-index:3;display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:6px}
+.controles button{border:0;border-radius:14px;background:rgba(255,255,255,.92);color:var(--azul);font-size:22px;font-weight:800;box-shadow:0 4px 10px rgba(0,0,0,.3);touch-action:none;user-select:none}
+.controles button:active{background:#fff;transform:scale(.96)}
+.controles .arriba{grid-column:2;grid-row:1}.controles .izq{grid-column:1;grid-row:2}.controles .abajo{grid-column:2;grid-row:2}.controles .der{grid-column:3;grid-row:2}
+.entrar{position:fixed;right:14px;bottom:14px;z-index:3;border:0;border-radius:18px;background:var(--amarillo);color:var(--azul);font-weight:800;font-size:16px;padding:16px 20px;box-shadow:0 6px 14px rgba(0,0,0,.35);display:none}
+.entrar.on{display:block}
+.panel{position:fixed;inset:0;background:rgba(1,17,49,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+.panel.on{display:flex}
+.caja{background:var(--papel);border-radius:20px;width:100%;max-width:520px;max-height:92vh;overflow:auto;box-shadow:0 14px 36px rgba(0,0,0,.45)}
+.caja .cab{background:linear-gradient(135deg,var(--azul),var(--marino));color:#fff;padding:16px 18px}
+.caja .cab small{font-size:10px;letter-spacing:.08em;color:var(--amarillo);font-weight:800}
+.caja .cab h2{font-family:Poppins,Inter,Arial;font-size:18px;margin-top:4px;line-height:1.25}
+.caja .cuerpo{padding:14px}
+.puerta{background:#fff;border-radius:16px;padding:14px;margin-bottom:10px;border-left:6px solid var(--brillante)}
+.puerta h3{font-size:15px;color:var(--azul);font-family:Poppins,Inter,Arial}
+.puerta p{font-size:13px;color:var(--gris);margin:4px 0 10px;line-height:1.4}
+.puerta ul{font-size:13px;color:#33395a;margin:4px 0 10px 18px;line-height:1.5}
+.btn{display:inline-block;border:0;border-radius:12px;background:var(--brillante);color:#fff;font-weight:800;font-size:14px;padding:11px 16px;text-decoration:none;font-family:inherit;cursor:pointer}
+.btn[disabled]{background:#c9cde0;color:#5b6378;cursor:default}
+.chip{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#fff4cc;color:#8a6d00}
+.chip.ok{background:#d7f0e0;color:#1f6d40}
+.chip.pend{background:#eef0f7;color:#44506e}
+.cerrar{display:block;width:100%;margin-top:6px;border:2px solid var(--linea);background:#fff;color:var(--azul);font-weight:800;border-radius:12px;padding:11px;cursor:pointer;font-family:inherit}
+.nota{font-size:11px;color:var(--gris);margin-top:6px}
+</style>
+</head>
+<body>
+
+<div id="lienzo"></div>
+
+<div class="hud">
+  <div class="marca"><small>DOJO DE MANDO · CONSTRUYENDO LÍDERES DICKA</small><h1>Aprende. Entrena. Practica. Lidera.</h1></div>
+  <div class="fase" id="faseActiva">Fase 1 activa</div>
+</div>
+
+<div class="aviso" id="aviso"></div>
+
+<div class="controles" aria-label="Controles de movimiento">
+  <button class="arriba" data-k="w" aria-label="Avanzar">▲</button>
+  <button class="izq" data-k="a" aria-label="Girar a la izquierda">◀</button>
+  <button class="abajo" data-k="s" aria-label="Retroceder">▼</button>
+  <button class="der" data-k="d" aria-label="Girar a la derecha">▶</button>
+</div>
+<button class="entrar" id="btnEntrar">Entrar al edificio (E)</button>
+
+<div class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="tituloPanel">
+  <div class="caja" id="caja"></div>
+</div>
+
+<script src="comun/three-libs.js?v=13.6"></script>
+<script>
+/* ===================== Configuración ===================== */
+const LAPZO_URL = '';   // enlace al curso de Lapzo: pendiente de validar con su administrador
+const MODULOS = [
+  { id: 'm1', nombre: 'MÓDULO 1. TÚ ERES UNA PIEZA CLAVE COMO LÍDER', corto: 'Módulo 1 · Pieza clave como líder', color: 0x2138D3, activo: true,  x: -9 },
+  { id: 'm2', nombre: 'MÓDULO 2. SEGURIDAD, CALIDAD Y NORMATIVIDAD',  corto: 'Módulo 2 · Seguridad y normatividad', color: 0x2e9e5b, activo: false, x: -3 },
+  { id: 'm3', nombre: 'MÓDULO 3. PROCESOS OPERATIVOS',                corto: 'Módulo 3 · Procesos operativos', color: 0x8a5a2b, activo: false, x: 3 },
+  { id: 'm4', nombre: 'MÓDULO 4. ESPECIALIZACIÓN: WMS',               corto: 'Módulo 4 · Especialización WMS', color: 0x1769aa, activo: false, x: 9 }
+];
+const Z_EDIFICIOS = -12;
+const LIMITE = { x: 14, zMin: -17, zMax: 12 };
+const VEL = 4.2, GIRO = 2.4, RADIO_ENTRADA = 3.2;
+
+/* ===================== Escena ===================== */
+const cont = document.getElementById('lienzo');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.setClearColor(0xbfe6ff);
+cont.appendChild(renderer.domElement);
+const escena = new THREE.Scene();
+escena.fog = new THREE.Fog(0xbfe6ff, 40, 90);
+const camara = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+
+escena.add(new THREE.HemisphereLight(0xffffff, 0x556070, 0.85));
+const sol = new THREE.DirectionalLight(0xffffff, 0.9);
+sol.position.set(-8, 16, 10); sol.castShadow = true;
+sol.shadow.mapSize.set(1024, 1024); sol.shadow.camera.left = -22; sol.shadow.camera.right = 22; sol.shadow.camera.top = 22; sol.shadow.camera.bottom = -22;
+escena.add(sol);
+
+/* piso industrial con franjas de seguridad */
+const piso = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.85 }));
+piso.rotation.x = -Math.PI / 2; piso.receiveShadow = true; escena.add(piso);
+const franja = (x, z, w, d, c) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: c, roughness: 0.7 })); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.01, z); escena.add(m); };
+franja(0, 2, 30, 0.35, 0xf5c400);
+franja(0, -7, 30, 0.2, 0xffffff);
+franja(-14, -4, 0.35, 26, 0xf5c400);
+franja(14, -4, 0.35, 26, 0xf5c400);
+
+/* muro de fondo y techo de nave */
+const muro = new THREE.Mesh(new THREE.BoxGeometry(60, 9, 0.6), new THREE.MeshStandardMaterial({ color: 0xdfe6ee }));
+muro.position.set(0, 4.5, -19); muro.receiveShadow = true; escena.add(muro);
+const lados = [-30, 30].map(x => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.6, 9, 40), new THREE.MeshStandardMaterial({ color: 0xdfe6ee })); m.position.set(x, 4.5, -4); escena.add(m); return m; });
+
+/* racks decorativos al fondo (no interactivos) */
+const caja = (w, h, d, c) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: c, roughness: 0.9 }));
+[-20, -16, 16, 20].forEach(x => {
+  const rack = new THREE.Group();
+  const poste = caja(0.2, 6, 1.2, 0x2138D3); poste.position.set(-1, 3, 0); rack.add(poste);
+  const poste2 = caja(0.2, 6, 1.2, 0x2138D3); poste2.position.set(1, 3, 0); rack.add(poste2);
+  [1.5, 3.2, 4.8].forEach(y => { const v = caja(2.4, 0.15, 1.3, 0xf26b1d); v.position.set(0, y, 0); rack.add(v); });
+  [1.9, 3.6].forEach(y => { const c2 = caja(1.4, 1.2, 0.9, 0xc9a06a); c2.position.set(0, y, 0); rack.add(c2); });
+  rack.position.set(x, 0, -17.5); escena.add(rack);
+});
+
+/* edificios: arco con letrero, color del módulo y puerta */
+const etiquetas = {};
+function textura(texto, color) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#' + color.toString(16).padStart(6, '0'); g.fillRect(0, 0, 512, 256);
+  g.fillStyle = '#ffffff'; g.font = '800 46px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  texto.split('\n').forEach((t, i, arr) => g.fillText(t, 256, 128 + (i - (arr.length - 1) / 2) * 56));
+  return new THREE.CanvasTexture(c);
+}
+MODULOS.forEach(m => {
+  const g = new THREE.Group(); g.position.set(m.x, 0, Z_EDIFICIOS);
+  const color = new THREE.Color(m.color);
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1 });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(5, 4.2, 4), mat); base.position.set(0, 2.1, 0); base.castShadow = true; base.receiveShadow = true; g.add(base);
+  const hueco = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.8, 0.2), new THREE.MeshStandardMaterial({ color: m.activo ? 0xfff5c2 : 0x1b2240, emissive: m.activo ? 0xf5c400 : 0x000000, emissiveIntensity: m.activo ? 0.35 : 0 }));
+  hueco.position.set(0, 1.4, 2.05); g.add(hueco);
+  const letrero = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.6), new THREE.MeshBasicMaterial({ map: textura(m.id === 'm1' ? 'MÓDULO 1' : m.id === 'm2' ? 'MÓDULO 2' : m.id === 'm3' ? 'MÓDULO 3' : 'MÓDULO 4', m.color), transparent: false }));
+  letrero.position.set(0, 4.7, 2.02); g.add(letrero);
+  if (!m.activo) {
+    const aviso = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshBasicMaterial({ map: textura('PRÓXIMAMENTE', 0x44506e), transparent: false }));
+    aviso.position.set(0, 0.6, 2.12); g.add(aviso);
+  }
+  g.userData.modulo = m.id;
+  escena.add(g); etiquetas[m.id] = g;
+});
+
+/* personaje del participante (líder): figura simple con chaleco reflejante */
+const avatar = new THREE.Group();
+const piel = new THREE.MeshStandardMaterial({ color: 0xc68a5e, roughness: 0.7 });
+const azul = new THREE.MeshStandardMaterial({ color: 0x1769aa, roughness: 0.8 });
+const naranja = new THREE.MeshStandardMaterial({ color: 0xf26b1d, roughness: 0.5, emissive: 0x331000, emissiveIntensity: 0.15 });
+const oscuro = new THREE.MeshStandardMaterial({ color: 0x223f6e, roughness: 0.9 });
+const cabeza = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 16), piel); cabeza.position.y = 1.62; cabeza.castShadow = true; avatar.add(cabeza);
+const casco = new THREE.Mesh(new THREE.SphereGeometry(0.25, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xf5c400, roughness: 0.4 })); casco.position.y = 1.7; casco.castShadow = true; avatar.add(casco);
+const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.78, 0.36), azul); torso.position.y = 1.1; torso.castShadow = true; avatar.add(torso);
+const chaleco = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.6, 0.4), naranja); chaleco.position.y = 1.12; chaleco.castShadow = true; avatar.add(chaleco);
+[0.8, 1.18].forEach(y => { const tira = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.05, 0.42), new THREE.MeshStandardMaterial({ color: 0xfff27a, emissive: 0x665500, emissiveIntensity: 0.3 })); tira.position.y = y; avatar.add(tira); });
+const brazoI = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.7, 0.18), azul); brazoI.position.set(-0.4, 1.1, 0); brazoI.castShadow = true; avatar.add(brazoI);
+const brazoD = brazoI.clone(); brazoD.position.x = 0.4; avatar.add(brazoD);
+const piernaI = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.75, 0.22), oscuro); piernaI.position.set(-0.15, 0.4, 0); piernaI.castShadow = true; avatar.add(piernaI);
+const piernaD = piernaI.clone(); piernaD.position.x = 0.15; avatar.add(piernaD);
+avatar.position.set(0, 0, 8);
+escena.add(avatar);
+
+/* ===================== Estado y controles ===================== */
+const teclas = {};
+const tactil = {};
+let heading = Math.PI;   // mira hacia el fondo de la nave (hacia los edificios)
+let moviendo = false, paso = 0;
+let cerca = null;        // módulo al que puede entrar
+let abierto = null;      // panel abierto
+const pulsadas = new Set();
+
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
+  teclas[k] = true;
+  if (k === 'e' && cerca && !abierto) abrirModulo(cerca);
+  if (k === 'escape' && abierto) cerrarPanel();
+});
+window.addEventListener('keyup', e => { teclas[e.key.toLowerCase()] = false; });
+document.querySelectorAll('.controles button').forEach(b => {
+  const k = b.dataset.k;
+  const down = ev => { ev.preventDefault(); tactil[k] = true; };
+  const up = () => { tactil[k] = false; };
+  b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointerleave', up); b.addEventListener('pointercancel', up);
+});
+document.getElementById('btnEntrar').addEventListener('click', () => { if (cerca && !abierto) abrirModulo(cerca); });
+
+function pulsa(k) { return !!(teclas[k] || tactil[k] || teclas[k.replace('w','arrowup').replace('s','arrowdown').replace('a','arrowleft').replace('d','arrowright')]); }
+
+/* ===================== Movimiento ===================== */
+function mover(dt) {
+  if (abierto) return;
+  let girar = 0, avanzar = 0;
+  if (pulsa('a')) girar += 1;
+  if (pulsa('d')) girar -= 1;
+  if (pulsa('w')) avanzar += 1;
+  if (pulsa('s')) avanzar -= 1;
+  heading += girar * GIRO * dt;
+  moviendo = avanzar !== 0;
+  if (moviendo) {
+    const dx = Math.sin(heading) * avanzar * VEL * dt;
+    const dz = Math.cos(heading) * avanzar * VEL * dt;
+    avatar.position.x = Math.max(-LIMITE.x, Math.min(LIMITE.x, avatar.position.x + dx));
+    avatar.position.z = Math.max(LIMITE.zMin, Math.min(LIMITE.zMax, avatar.position.z + dz));
+    paso += dt * 9;
+  }
+  avatar.rotation.y = heading;
+  const sw = moviendo ? Math.sin(paso) * 0.6 : 0;
+  piernaI.rotation.x = sw; piernaD.rotation.x = -sw;
+  brazoI.rotation.x = -sw * 0.7; brazoD.rotation.x = sw * 0.7;
+}
+
+/* detecta edificio cercano */
+function detectar() {
+  let mejor = null, dist = Infinity;
+  MODULOS.forEach(m => {
+    const g = etiquetas[m.id];
+    const d = Math.hypot(avatar.position.x - g.position.x, avatar.position.z - (g.position.z + 3));
+    if (d < RADIO_ENTRADA && d < dist) { dist = d; mejor = m; }
+  });
+  if (mejor !== cerca) {
+    cerca = mejor;
+    const btn = document.getElementById('btnEntrar');
+    btn.classList.toggle('on', !!cerca && !abierto);
+    if (cerca) { btn.textContent = 'Entrar · ' + cerca.corto + ' (E)'; mostrarAviso(cerca.corto + ' · pulsa E para entrar'); }
+    else ocultarAviso();
+  }
+}
+let avisoT = 0;
+function mostrarAviso(t) { const a = document.getElementById('aviso'); a.textContent = t; a.classList.add('on'); avisoT = 2.2; }
+function ocultarAviso() { document.getElementById('aviso').classList.remove('on'); }
+
+/* cámara en tercera persona: detrás del avatar, siguiendo su rumbo */
+function seguirCamara(dt) {
+  const d = 6.2, alto = 2.9;
+  const objetivo = new THREE.Vector3(avatar.position.x - Math.sin(heading) * d, alto, avatar.position.z - Math.cos(heading) * d);
+  camara.position.lerp(objetivo, Math.min(1, dt * 6));
+  camara.lookAt(avatar.position.x, 1.2, avatar.position.z);
+}
+
+/* ===================== Paneles ===================== */
+function abrirModulo(m) {
+  abierto = m; cerca = m;
+  document.getElementById('btnEntrar').classList.remove('on');
+  ocultarAviso();
+  const caja = document.getElementById('caja');
+  const tituloId = 'tituloPanel';
+  if (!m.activo) {
+    caja.innerHTML = `
+      <div class="cab"><small>ÁREA PREPARADA</small><h2 id="${tituloId}">${m.nombre}</h2></div>
+      <div class="cuerpo">
+        <div class="puerta" style="border-left-color:#9aa3c7">
+          <h3>Contenido pendiente</h3>
+          <p>Este módulo está preparado para una fase futura. No hay cursos ni materiales publicados todavía, y el contenido debe validarse con su área responsable antes de mostrarse.</p>
+          <span class="chip pend">Pendiente de validación</span>
+        </div>
+        <button class="cerrar" onclick="cerrarPanel()">Volver al centro de distribución</button>
+      </div>`;
+  } else {
+    caja.innerHTML = `
+      <div class="cab"><small>MÓDULO ACTIVO · FASE 1</small><h2 id="${tituloId}">${m.nombre}</h2></div>
+      <div class="cuerpo">
+        <div class="puerta">
+          <h3>A · Lapzo (Aprende)</h3>
+          <p>Cursos asignados, videos, examen y diploma del módulo.</p>
+          ${LAPZO_URL ? `<a class="btn" href="${LAPZO_URL}" target="_blank" rel="noopener">Abrir en Lapzo</a>` : `<button class="btn" disabled>Abrir en Lapzo</button><div class="nota">Enlace pendiente de configurar con el administrador de Lapzo.</div>`}
+        </div>
+        <div class="puerta" style="border-left-color:#2e9e5b">
+          <h3>B · Entrenamiento (Entrena)</h3>
+          <p>Biblioteca de la sesión. Los materiales se cargarán cuando estén validados.</p>
+          <ul>
+            <li>Manual del participante</li>
+            <li>Presentación de la sesión</li>
+            <li>Guía del instructor</li>
+            <li>Ejercicios y formatos</li>
+          </ul>
+          <span class="chip pend">Materiales por cargar</span>
+        </div>
+        <div class="puerta" style="border-left-color:#f5c400">
+          <h3>C · Dojo de Mando (Practica)</h3>
+          <p>Simulación de conversaciones difíciles con personajes 3D, decisiones y puntaje del mentor.</p>
+          <a class="btn" href="dojo-de-mando.html">Entrar al Dojo</a>
+        </div>
+        <button class="cerrar" onclick="cerrarPanel()">Volver al centro de distribución</button>
+      </div>`;
+  }
+  document.getElementById('panel').classList.add('on');
+}
+function cerrarPanel() {
+  abierto = null;
+  document.getElementById('panel').classList.remove('on');
+  if (cerca) { const btn = document.getElementById('btnEntrar'); btn.textContent = 'Entrar · ' + cerca.corto + ' (E)'; btn.classList.add('on'); }
+}
+
+/* ===================== Bucle ===================== */
+function ajustar() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false); camara.aspect = w / h; camara.updateProjectionMatrix();
+}
+window.addEventListener('resize', ajustar); ajustar();
+camara.position.set(0, 3, 14);
+
+let ultimo = performance.now();
+function bucle(t) {
+  const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
+  mover(dt); detectar(); seguirCamara(dt);
+  if (avisoT > 0) { avisoT -= dt; if (avisoT <= 0) ocultarAviso(); }
+  renderer.render(escena, camara);
+  requestAnimationFrame(bucle);
+}
+requestAnimationFrame(bucle);
+</script>
+</body>
+</html>

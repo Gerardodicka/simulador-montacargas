@@ -367,17 +367,17 @@ const PRF_DEF={
   'Surtidor':['surtido','picking-guiado','surtido-voz','metodos','excepciones','slotting','kitting',...PRF_BASE],
   'Recibidor':['recepcion','recepcion-acomodo','sellos','devoluciones','frio',...PRF_BASE],
   'Embarcador':['embarques','clasificacion-ruta','patio','carga','sellos',...PRF_BASE],
-  'Supervisor de Operaciones':['flujo','indicadores','crossdock','conteo','loto','matpel','dojo-de-mando',...PRF_BASE],
-  'Jefe de Turno':['flujo','indicadores','patio','embarques','dojo-de-mando',...PRF_BASE],
-  'Gerente de Operaciones':['tablero','indicadores','planeacion','dojo-de-mando','flujo','slotting','crossdock','emergencias'],
+  'Supervisor de Operaciones':['flujo','indicadores','crossdock','conteo','loto','matpel','construyendo-lideres','dojo-de-mando',...PRF_BASE],
+  'Jefe de Turno':['flujo','indicadores','patio','embarques','construyendo-lideres','dojo-de-mando',...PRF_BASE],
+  'Gerente de Operaciones':['tablero','indicadores','planeacion','construyendo-lideres','dojo-de-mando','flujo','slotting','crossdock','emergencias'],
   'Verificador':['embarques','sellos','devoluciones','excepciones','recepcion','clasificacion-ruta',...PRF_BASE],
   'Auxiliar de Inventarios':['conteo','inventario','excepciones','slotting','recepcion-acomodo','devoluciones',...PRF_BASE],
   'Mesa de Control':['indicadores','flujo','patio','crossdock','excepciones','embarques',...PRF_BASE],
   'Coordinador de Patio':['patio','andenes','sellos','carga','clasificacion-ruta','emergencias',...PRF_BASE],
   'Técnico de Mantenimiento':['loto','alturas','montacarga','matpel','emergencias',...PRF_BASE],
-  'Jefe de Operaciones':['indicadores','planeacion','flujo','crossdock','dojo-de-mando','tablero',...PRF_BASE],
-  'Director de Operaciones':['tablero','indicadores','planeacion','dojo-de-mando','emergencias','examen-seguridad'],
-  'HRBP · Talento y Cultura':['dojo-de-mando','indicadores','tablero','ergonomia','emergencias','examen-seguridad'],
+  'Jefe de Operaciones':['indicadores','planeacion','flujo','crossdock','construyendo-lideres','dojo-de-mando','tablero',...PRF_BASE],
+  'Director de Operaciones':['tablero','indicadores','planeacion','construyendo-lideres','dojo-de-mando','emergencias','examen-seguridad'],
+  'HRBP · Talento y Cultura':['construyendo-lideres','dojo-de-mando','indicadores','tablero','ergonomia','emergencias','examen-seguridad'],
   'Seguridad e Higiene':['examen-seguridad','emergencias','extintores-3d','loto','alturas','matpel','senalizacion','ergonomia','andenes','turno-seguro-3d']};
 const BASE_GAMES = [
   { id:'diag', name:'Validación de joystick y volante USB', icon:'🔌', cat:'Herramientas', status:'activo', time:'2 min', pass:'—', desc:'Comprueba que el navegador detecta el Logitech Extreme 3D Pro y el volante G920, con prueba funcional guiada de ejes y botones y guía de solución.', url:'juegos/diagnostico-usb.html', hideFromCount:true, hiddenCard:true },
@@ -422,6 +422,8 @@ const BASE_GAMES = [
   { id:'embarques', name:'Armado de Embarques', icon:'🚚', cat:'Operaciones', status:'activo', time:'7 min', pass:'80/100', desc:'Recorrido 3D por los andenes: orden de carga LIFO por parada, peso por ejes, asegurar la carga, verificar contra la lista y sellar y documentar antes de salir.', url:'juegos/armado-embarques.html' },
   { id:'conteo', name:'Conteo Cíclico ABC', icon:'🔢', cat:'Operaciones', status:'activo', time:'7 min', pass:'80/100', desc:'Recorrido 3D por los racks: frecuencia de conteo por ABC, recuento, investigar la causa de diferencias, congelar la ubicación y ajustar con autorización.', url:'juegos/conteo-ciclico.html' },
   { id:'inventario', name:'Conteo Cíclico', icon:'🔢', cat:'Inventarios', status:'activo', time:'10 min', pass:'80/212', desc:'Cuenta cajas reales en el anaquel (con distractores y dañadas), compara con sistema y decide con Mesa de Control.', url:'juegos/conteo-ciclico.html' },
+  { id:'construyendo-lideres', name:'Construyendo Líderes Dicka', icon:'🧭', cat:'Liderazgo', status:'activo', time:'Recorrido', pass:'80/100',
+    desc:'Centro de distribución 3D para recorrer a pie. Entra a cada módulo de la ruta de liderazgo: Módulo 1 (Tú eres una pieza clave como líder) con sus áreas Aprende, Entrena y Practica; los módulos 2 a 4 están preparados para fases futuras.', url:'juegos/construyendo-lideres.html' },
   { id:'dojo-de-mando', name:'Dojo de Mando · Liderazgo', icon:'🥋', cat:'Liderazgo', status:'activo', time:'25 min', pass:'80/100',
     desc:'Simulador de liderazgo para jefes de turno, gerentes y directores. Escenario piloto "El mejor operador": conversación difícil con un supervisor de alto desempeño que se salta la seguridad, una auxiliar que teme hablar y un director que pide no hacer ruido. Cada decisión mueve 5 indicadores (confianza, claridad, ejecución, clima y cumplimiento) y la actitud de los personajes; cierra con debrief del mentor, puntaje por competencia y plan de práctica.', url:'juegos/dojo-de-mando.html' },
   { id:'carga', name:'Carga de Unidades', icon:'🚚', cat:'Distribución', status:'activo', time:'10 min', pass:'160/200', desc:'Acomoda 12 tarimas en caja seca: secuencia de ruta, balance izquierda/derecha, pesadas al fondo y frágiles protegidas.', url:'juegos/carga-unidades.html' }
@@ -997,7 +999,7 @@ async function downloadOffline(){ const btn=document.getElementById('offlineBtn'
   if(location.protocol==='file:'){ alert('Disponible al abrir la app desde su liga (Netlify).'); return; }
   btn.disabled=true; const set=new Set(['/','/index.html','/manifest.webmanifest','/icons/icon-192.png']);
   try{ const pages=[...new Set([...document.querySelectorAll('a[href],[data-url]')].map(e=>e.getAttribute('href')||e.dataset.url).filter(u=>u&&/juegos\/[\w-]+\.html/.test(u)).map(u=>'/'+u.replace(/^\.?\//,'').replace(/[?#].*$/,'')))];
-    ['simulador-montacarga','turno-seguro-3d','extintores-3d','carga-unidades','conteo-ciclico','dojo-de-mando','diagnostico-usb','examen-seguridad','surtido-express','turno-seguro','recepcion-decantado','patio-andenes','metodos-surtido','planeacion-personal','tablero-gerente','cadena-frio','inspeccion-trailer','devoluciones','kitting','indicadores','picking-guiado','surtido-voz','5s-almacen','materiales-peligrosos','ergonomia','emergencias','loto','alturas','senalizacion','andenes','cargas-no-estandar','excepciones-surtido','flujo-materiales','cross-docking','slotting','armado-embarques','conteo-ciclico'].forEach(n=>pages.push('/juegos/'+n+'.html'));
+    ['simulador-montacarga','turno-seguro-3d','extintores-3d','carga-unidades','conteo-ciclico','construyendo-lideres','dojo-de-mando','diagnostico-usb','examen-seguridad','surtido-express','turno-seguro','recepcion-decantado','patio-andenes','metodos-surtido','planeacion-personal','tablero-gerente','cadena-frio','inspeccion-trailer','devoluciones','kitting','indicadores','picking-guiado','surtido-voz','5s-almacen','materiales-peligrosos','ergonomia','emergencias','loto','alturas','senalizacion','andenes','cargas-no-estandar','excepciones-surtido','flujo-materiales','cross-docking','slotting','armado-embarques','conteo-ciclico'].forEach(n=>pages.push('/juegos/'+n+'.html'));
     for(const pg of [...new Set(pages)]){ set.add(pg); try{ const html=await (await fetch(pg,{cache:'no-store'})).text(); (html.match(/(?:src|href)="([^"]+\.(?:js|css)(?:\?[^"]*)?)"/g)||[]).forEach(m=>{ const u=m.replace(/^(?:src|href)="|"$/g,''); if(!/^https?:/.test(u)) set.add(new URL(u,location.origin+pg).pathname+(u.includes('?')?'?'+u.split('?')[1]:'')); });
         (html.match(/[\w-]+\.glb/g)||[]).forEach(m=>set.add('/juegos/assets/models/'+m)); } catch(e){} }
     try{ const js=await (await fetch('/juegos/comun/almacen-comun.js',{cache:'no-store'})).text(); (js.match(/assets\/textures\/[\w.-]+/g)||[]).forEach(t=>set.add('/juegos/'+t)); }catch(e){}
