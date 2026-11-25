@@ -625,6 +625,14 @@ function trackObj(said) { Object.entries(OBJRE).forEach(([k, re]) => { if (re.te
 function presion() { const kAvg = Object.values(K).reduce((s, v) => s + v, 0) / 5, tr = P.ricardo ? P.ricardo.trust : 50, lvl = (LV.diff === 'Avanzado' ? 1 : LV.diff === 'Básico' ? -1 : 0);
   const v = (kAvg - 55) / 10 + (tr - 55) / 15 + lvl; return v > 1.2 ? 'alta' : v > 0 ? 'media' : 'baja'; }
 const PUSH = { ricardo: ['Ok, pero si me quitas del montacargas, ¿quién saca el embarque de las cinco?', 'Está bien, pero dígame: ¿le va a decir lo mismo a los del turno de día?', '¿Y si bajo la productividad por andar con tanto cuidado, me va a defender?'], director: ['Bien, pero necesito los números del cliente intactos esta semana.', 'Me convence, pero ¿qué le digo yo a dirección si baja la productividad?'], ana: ['¿Y si Ricardo se entera de que hablé?'] };
+/* Actitud del personaje según su respuesta (sin cambiar la IA): define la postura del avatar */
+function actitudDe(texto) {
+  const n = norm(texto || '');
+  if (/\b(no me voy a quedar|no me quedo|no voy a|a mi no|me esta amenazando|lo voy a reportar|ni modo|no me parece justo|no es justo|me vale|no le voy a decir)\b/.test(n)) return 'cross';   // defensivo / cerrado
+  if (/\b(no se|perd[oó]n|me da miedo|me da pena|no quiero|cansad|agotad|preocupad|nervios|apenad|llevo tres|nadie me contesta)\b/.test(n)) return 'down';   // preocupado / apenado
+  if (/\b(gracias|de acuerdo|esta bien|entendido|quedamos|ok|perfecto|trato hecho|ah bueno)\b/.test(n)) return 'open';     // de acuerdo, postura abierta
+  return 'talk';   // conversando normal
+}
 function cierreAcuerdo(respuesta) { if (!PX || PX.cerrado || ACUERDOS.length < 1) return false; if (CONV.filter(c => c.quien === 'Líder').length < 3) return false; return /\b(gracias|de acuerdo|trato hecho|as[ií] quedamos|quedamos as[ií]|quedamos|me comprometo|entendido)\b/.test(norm(respuesta || '')); }
 async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!said) return; trackObj(said); if (!moveIntent(said)) acuerdoIntent(said); SAID.push({ t: said, dur: VOICE.lastDur || 0 }); VOICE.lastDur = 0; if (PX && PX.S.cast) { const n = said.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); const c = PX.S.cast.find(c => c.kw.test(n)); if (c) TALK = c.k; }
   if (document.querySelector('#talk .next') || !$('evt').classList.contains('hidden')) return handleSpeechLocal(alts);
@@ -649,8 +657,8 @@ async function handleSpeech(alts) { const said = (alts[0] || '').trim(); if (!sa
     if (r.tipo === 'decision' && r.opcion && r.confianza >= .6) { const el = [...document.querySelectorAll('#talk .opt')].find(o => o.querySelector('.k').textContent === r.opcion);
       if (el) { let done = false; const go = () => { if (done) return; done = true; VOICE.heard = { t: said, k: r.opcion, own: true, mentor: r.mentor }; el.click(); }; sayLines([[k, r.respuesta]], () => setTimeout(go, 400)); setTimeout(go, 1800 + (VOICE.on ? (r.respuesta || '').length * 70 : 0)); return; } }
     if (pxLimit()) { sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; }); return; }
-    if (cierreAcuerdo(r.respuesta)) { PX.cerrado = true; window.PX_END = 'acuerdo'; chatLog().insertAdjacentHTML('beforeend', '<div class="help">🥋 <b>Mentor:</b> acuerdo alcanzado. Cerramos la plática.</div>'); sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; setTimeout(endPractice, 1200); }); return; }
-    sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; afterSpeech(); });
+    setPose(k, actitudDe(r.respuesta)); if (cierreAcuerdo(r.respuesta)) { PX.cerrado = true; window.PX_END = 'acuerdo'; chatLog().insertAdjacentHTML('beforeend', '<div class="help">🥋 <b>Mentor:</b> acuerdo alcanzado. Cerramos la plática.</div>'); sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; setPose(k, 'neutral'); setTimeout(endPractice, 1200); }); return; }
+    sayLines([[k, r.respuesta]], () => { if (AV[k]) AV[k].listen = false; setPose(k, 'neutral'); afterSpeech(); });
   } catch (e) { AI.busy = false; box.remove(); aiBadge('⚠️ IA tardó demasiado'); return localConverse(said); } }
 function handleSpeechLocal(alts) { const said = alts[0] || '', N = alts.map(norm);
   const ev = $('evt'); if (ev && !ev.classList.contains('hidden')) { if (N.some(n => /continua|siguiente|ok|listo|adelante|sigue|vale|entendido/.test(n))) { $('evOk').click(); return; } }
