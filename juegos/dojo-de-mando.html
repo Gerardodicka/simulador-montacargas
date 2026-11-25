@@ -168,7 +168,7 @@ const LOGO_DATA='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPIAAABGCAYAAAD2M
 const CARTON = { img: null, pend: [] };
 const TEXCACHE = {}; let _texCache = {}; const RACK_MATS = {}; const WAREHOUSE = { w: 60, d: 60, h: 12 };
 // ======================= DOJO DE MANDO · Escenario piloto "El mejor operador" =======================
-const GAME_ID = 'dojo-de-mando', GAME_NAME = 'Dojo de Mando · El mejor operador', PASS = 62;
+const GAME_ID = 'dojo-de-mando', GAME_NAME = 'Dojo de Mando · El mejor operador', PASS = 80;
 const $ = id => document.getElementById(id);
 let who = {}, t0 = 0;
 const K = { confianza: 55, claridad: 55, ejecucion: 65, clima: 55, cumplimiento: 50 };   // indicadores del equipo (0–100)
@@ -182,14 +182,14 @@ const FLAGS = {};
 // Datos de referencia del almacén (ficticios: reemplázalos por los reales de DICKA cuando los tengas)
 const DOJO_DATA = { productividad: 112, incidentes30d: 2, diasSinAccidente: 41, rotacionAnual: 38, quejasTrato: 2, costoAccidente: 450000, multaCliente: 120000, otif: 97.4 };
 const LEVELS = {
-  'Supervisor de Operaciones': { nivel: 'Supervisor', key: 'sup', diff: 'Básico', pass: 58, mult: .8, hints: true, timer: 0, extra: false, ric: 'Operador líder de montacargas', boss: 'Jefe de operaciones',
-    know: ['productividad', 'incidentes30d'], note: 'El mentor te da pistas en cada decisión. Los errores cuestan menos. Mínimo aprobatorio 58.' },
-  'Jefe de Operaciones': { nivel: 'Jefatura', key: 'jefe', diff: 'Intermedio', pass: 62, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
-    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato'], note: 'Sin pistas. Consecuencias completas. Mínimo aprobatorio 62.' },
-  'Gerente de Operaciones': { nivel: 'Gerencia', key: 'ger', diff: 'Avanzado', pass: 66, mult: 1.25, hints: false, timer: 45, extra: true, ric: 'Jefe de turno nocturno', boss: 'Director de operaciones',
-    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato', 'diasSinAccidente', 'costoAccidente', 'multaCliente', 'otif'], note: 'Sin pistas, 45 s por decisión (si no decides, evitas el tema) y una 4.ª decisión de prevención sistémica. Los errores cuestan 25% más. Mínimo aprobatorio 66.' },
-  'HRBP · Talento y Cultura': { nivel: 'HRBP', key: 'hrbp', diff: 'Intermedio', pass: 62, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
-    know: ['rotacionAnual', 'quejasTrato', 'incidentes30d', 'productividad'], note: 'Enfoque de Talento y Cultura: personas, legalidad y negocio. Sin pistas. Mínimo aprobatorio 62.' } };
+  'Supervisor de Operaciones': { nivel: 'Supervisor', key: 'sup', diff: 'Básico', pass: 80, mult: .8, hints: true, timer: 0, extra: false, ric: 'Operador líder de montacargas', boss: 'Jefe de operaciones',
+    know: ['productividad', 'incidentes30d'], note: 'El mentor te da pistas en cada decisión. Los errores cuestan menos. Mínimo aprobatorio 80.' },
+  'Jefe de Operaciones': { nivel: 'Jefatura', key: 'jefe', diff: 'Intermedio', pass: 80, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
+    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato'], note: 'Sin pistas. Consecuencias completas. Mínimo aprobatorio 80.' },
+  'Gerente de Operaciones': { nivel: 'Gerencia', key: 'ger', diff: 'Avanzado', pass: 80, mult: 1.25, hints: false, timer: 45, extra: true, ric: 'Jefe de turno nocturno', boss: 'Director de operaciones',
+    know: ['productividad', 'incidentes30d', 'rotacionAnual', 'quejasTrato', 'diasSinAccidente', 'costoAccidente', 'multaCliente', 'otif'], note: 'Sin pistas, 45 s por decisión (si no decides, evitas el tema) y una 4.ª decisión de prevención sistémica. Los errores cuestan 25% más. Mínimo aprobatorio 80.' },
+  'HRBP · Talento y Cultura': { nivel: 'HRBP', key: 'hrbp', diff: 'Intermedio', pass: 80, mult: 1, hints: false, timer: 0, extra: false, ric: 'Supervisor nocturno', boss: 'Gerente de operaciones',
+    know: ['rotacionAnual', 'quejasTrato', 'incidentes30d', 'productividad'], note: 'Enfoque de Talento y Cultura: personas, legalidad y negocio. Sin pistas. Mínimo aprobatorio 80.' } };
 const DATA_LBL = { productividad: ['Productividad del turno', v => v + '% de la meta'], incidentes30d: ['Incidentes de montacargas (30 días)', v => v], diasSinAccidente: ['Días sin accidente incapacitante', v => v], rotacionAnual: ['Rotación anual del turno nocturno', v => v + '%'], quejasTrato: ['Quejas por trato', v => v], costoAccidente: ['Costo promedio de un accidente', v => '$' + v.toLocaleString('es-MX')], multaCliente: ['Penalización del cliente por incidente', v => '$' + v.toLocaleString('es-MX')], otif: ['OTIF del cliente', v => v + '%'] };
 let LV = LEVELS['Jefe de Operaciones'];
 // Datos reales: se cargan desde CSV (clave,valor) o se capturan a mano; se guardan en localStorage con fecha
