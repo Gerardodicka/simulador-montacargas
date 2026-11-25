@@ -110,7 +110,8 @@ sol.shadow.mapSize.set(1024, 1024); sol.shadow.camera.left = -22; sol.shadow.cam
 escena.add(sol);
 
 /* piso industrial con franjas de seguridad */
-const piso = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.85 }));
+const texPiso = new THREE.TextureLoader().load('assets/textures/piso.jpg', t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 12); t.anisotropy = 8; });
+const piso = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ map: texPiso, color: 0xdfe3e8, roughness: 0.85 }));
 piso.rotation.x = -Math.PI / 2; piso.receiveShadow = true; escena.add(piso);
 const franja = (x, z, w, d, c) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: c, roughness: 0.7 })); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.01, z); escena.add(m); };
 franja(0, 2, 30, 0.35, 0xf5c400);
@@ -178,6 +179,7 @@ const piernaD = piernaI.clone(); piernaD.position.x = 0.15; avatar.add(piernaD);
 avatar.position.set(0, 0, 8);
 escena.add(avatar);
 
+
 /* ===================== Etapa 1 · Centro de distribución completo (geometría 3D, sin fondos planos) ===================== */
 function bloque(w, h, d, c, x, y, z, rough = 0.8) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: c, roughness: rough }));
@@ -189,6 +191,17 @@ function texturaTexto(texto, fondo, colorTexto = '#ffffff') {
   g.fillStyle = colorTexto; g.font = '800 44px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
   texto.split('\n').forEach((t, i, arr) => g.fillText(t, 256, 128 + (i - (arr.length - 1) / 2) * 52));
   const tex = new THREE.CanvasTexture(c); tex.anisotropy = 4; return tex;
+}
+function aplicarMapas() {
+  const cart = new THREE.TextureLoader().load('assets/textures/carton.jpg');
+  const made = new THREE.TextureLoader().load('assets/textures/madera.jpg');
+  [cart, made].forEach(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; });
+  escena.traverse(o => {
+    if (!o.isMesh || !o.material || !o.material.color || o.material.map) return;
+    const hex = o.material.color.getHex();
+    if (hex === 0xc9a06a) { o.material = o.material.clone(); o.material.map = cart; o.material.color.set(0xffffff); o.material.needsUpdate = true; }
+    if (hex === 0xb8864b) { o.material = o.material.clone(); o.material.map = made; o.material.color.set(0xffffff); o.material.needsUpdate = true; }
+  });
 }
 function letrero(texto, w, h, fondo, colorTexto, x, y, z, rotY = 0) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: texturaTexto(texto, fondo, colorTexto) }));
@@ -248,6 +261,8 @@ bloque(5, 3.4, 2.4, 0xe9eef5, 20.5, 1.9, -3);
 bloque(1.6, 2.0, 2.2, 0x1769aa, 23.3, 1.2, -3);
 [-1, 1].forEach(sd => bloque(0.9, 0.9, 0.3, 0x222222, 19.6, 0.45, -3 + sd * 1.15));
 bloque(0.12, 2.2, 1.5, 0x2e9e5b, 14.6, 1.6, -3);
+
+aplicarMapas();
 
 /* ambiente animado: el montacargas recorre el pasillo y se detiene en cada extremo */
 function animarAmbiente(t) {
