@@ -144,12 +144,12 @@ docs/mejoras.md               ← Cola de mejoras + bitácora con resultado de p
 | Simulador | Tipo | Detalle |
 |---|---|---|
 | **Simulador de Montacarga** | 3D completo | Evaluación de 20 situaciones + práctica 3D con 7 actividades (inspección pre-operativa, traslado, estiba y retiro en ubicación exacta, paso peatonal, carga en caja de tráiler, estacionamiento). Flota **Raymond**: contrapeso, reach, double reach, patín eléctrico 8250, order picker, clamp. Fallas inyectadas, diagnóstico de nivel, métricas de seguridad, soporte volante/joystick USB. Aprueba 160/200 · 80/100. |
-| **CLAMP SAFE · Actos y Condiciones Inseguras** | 3D | 6 escenas con clamp de cartón: identificar riesgos tocando la escena. 70/100. |
+| **CLAMP SAFE · Actos y Condiciones Inseguras** | 3D | 6 escenas con clamp de cartón: identificar riesgos tocando la escena. 80/100. |
 | **Turno Seguro (versión rápida)** | Tarjetas | Las mismas 20 situaciones para celular con poca señal. 160/200. |
 | **Validación de joystick y volante USB** | Herramienta | Prueba de controles. |
 
 ### 4.2 Recorridos 3D (motor común "recorrido")
-Escena de almacén navegable (girar, acercar, tocar). **10 puntos marcados**; en cada uno se lee la situación y se elige entre **5 categorías + "está bien"**. Cada respuesta vale 10; aprueban con **75/100**. Tienen: recuadro fijo **🎯 Objetivo / ✅ Qué debes hacer / 📊 Cómo se califica**, guía **"¿Cómo se juega?"**, explicación de cada opción, cámara que se acerca, retroalimentación con **lo correcto, por qué y por qué no tu respuesta**, avatares 3D de operario, texturas, luminarias.
+Escena de almacén navegable (girar, acercar, tocar). **10 puntos marcados**; en cada uno se lee la situación y se elige entre **5 categorías + "está bien"**. Cada respuesta vale 10; aprueban con **80/100**. Tienen: recuadro fijo **🎯 Objetivo / ✅ Qué debes hacer / 📊 Cómo se califica**, guía **"¿Cómo se juega?"**, explicación de cada opción, cámara que se acerca, retroalimentación con **lo correcto, por qué y por qué no tu respuesta**, avatares 3D de operario, texturas, luminarias.
 
 | Simulador | Norma / tema | Las 5 categorías |
 |---|---|---|
@@ -172,20 +172,20 @@ Escena de almacén navegable (girar, acercar, tocar). **10 puntos marcados**; en
 ### 4.3 Simuladores de proceso (operación)
 | Simulador | Estado visual | Qué se hace |
 |---|---|---|
-| Recepción y Decantado | **3D** (andén con tráiler) | 8 tarimas: escanear con RF (tocando la tarima 3D), comparar contra el ASN, recibir completo / con diferencia / rechazar, decidir zona. 90/120. |
-| Patio y Andenes | **3D** (patio con 6 andenes) | Turno de 4 h, 12 unidades: asignar tráileres a andenes (refrigerados, con/sin cita) tocando tráiler y andén. 75/100. |
-| Métodos de Surtido | **3D** (6 pasillos) | 4 escenarios para elegir método (pedido, lote, zona, ola) + ruta de un lote de 8 ubicaciones tocadas en 3D, comparada con la ruta óptima. 70/100. |
-| Surtido Express | 2D (pendiente 3D) | Picking contra reloj por ubicación Pasillo-Columna-Nivel, 3 pedidos. 160/270. |
-| Cadena de Frío | 2D (pendiente 3D) | 8 lotes refrigerados/congelados con gráfica del registrador: liberar, retener o rechazar. 75/100. |
-| Inspección de Tráiler y Sellos | 2D (pendiente 3D) | 3 unidades, 17 puntos (OEA/C-TPAT), sello con VVTT, aceptar o detener. 75/100. |
-| Devoluciones | 2D (pendiente 3D) | 8 devoluciones con RMA, empaque, estado y caducidad: reintegrar, reacondicionar, proveedor, merma, retener. 75/100. |
-| Carga de Unidades | 2D (pendiente 3D) | Carga de caja de tráiler. 150/200. |
+| Recepción y Decantado | **3D** (andén con tráiler) | 8 tarimas: escanear con RF (tocando la tarima 3D), comparar contra el ASN, recibir completo / con diferencia / rechazar, decidir zona. 96/120. |
+| Patio y Andenes | **3D** (patio con 6 andenes) | Turno de 4 h, 12 unidades: asignar tráileres a andenes (refrigerados, con/sin cita) tocando tráiler y andén. 80/100. |
+| Métodos de Surtido | **3D** (6 pasillos) | 4 escenarios para elegir método (pedido, lote, zona, ola) + ruta de un lote de 8 ubicaciones tocadas en 3D, comparada con la ruta óptima. 80/100. |
+| Surtido Express | 2D (pendiente 3D) | Picking contra reloj por ubicación Pasillo-Columna-Nivel, 3 pedidos. 216/270. |
+| Cadena de Frío | 2D (pendiente 3D) | 8 lotes refrigerados/congelados con gráfica del registrador: liberar, retener o rechazar. 80/100. |
+| Inspección de Tráiler y Sellos | 2D (pendiente 3D) | 3 unidades, 17 puntos (OEA/C-TPAT), sello con VVTT, aceptar o detener. 80/100. |
+| Devoluciones | 2D (pendiente 3D) | 8 devoluciones con RMA, empaque, estado y caducidad: reintegrar, reacondicionar, proveedor, merma, retener. 80/100. |
+| Carga de Unidades | 2D (pendiente 3D) | Carga de caja de tráiler. 160/200. |
 | Conteo Cíclico (original) | 2D | Conteo de inventario. 150/212. |
 
 ### 4.4 Liderazgo
 | Simulador | Detalle |
 |---|---|
-| **Dojo de Mando** | Simulador de conversaciones difíciles con **avatares 3D que hablan** en escenarios (oficina, sala, andén, comedor). Niveles por puesto (jefatura, gerencia, etc.). Situaciones como: el mejor operador sin cinturón, faltante de inventario, antidoping positivo, tiempo extra, renuncia del mejor elemento, accidente y causa raíz, presupuesto, sucesión, automatización, crisis en andén, regalo de proveedor, conflicto entre áreas, revisión salarial, cultura de seguridad, delegar con cliente, 5 casos logísticos, situaciones personalizadas por RH. El usuario **habla** (micrófono) o escribe; la IA (Claude) interpreta y los personajes responden. Incluye: **prueba de micrófono** previa, aviso de dictado (Windows + H / teclado del celular), práctica rápida de 5 min, repaso espaciado, reintentar lo más débil, "Mi avance", exportar PDF, plan con pruebas psicométricas (los PDF se leen solo en el navegador). 62/100. |
+| **Dojo de Mando** | Simulador de conversaciones difíciles con **avatares 3D que hablan** en escenarios (oficina, sala, andén, comedor). Niveles por puesto (jefatura, gerencia, etc.). Situaciones como: el mejor operador sin cinturón, faltante de inventario, antidoping positivo, tiempo extra, renuncia del mejor elemento, accidente y causa raíz, presupuesto, sucesión, automatización, crisis en andén, regalo de proveedor, conflicto entre áreas, revisión salarial, cultura de seguridad, delegar con cliente, 5 casos logísticos, situaciones personalizadas por RH. El usuario **habla** (micrófono) o escribe; la IA (Claude) interpreta y los personajes responden. Incluye: **prueba de micrófono** previa, aviso de dictado (Windows + H / teclado del celular), práctica rápida de 5 min, repaso espaciado, reintentar lo más débil, "Mi avance", exportar PDF, plan con pruebas psicométricas (los PDF se leen solo en el navegador). 80/100. |
 | Planeación de Personal | Programar personal por día contra demanda; costo por caja; óptimo por programación dinámica. (Pendiente: avatar gerente). |
 | Tablero del Gerente | 4 meses de temporada: decisiones de personal, tiempo extra, mantenimiento y capacitación con efecto en OTIF, costo, accidentes y rotación. (Pendiente: avatar en oficina 3D). |
 
