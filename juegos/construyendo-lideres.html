@@ -18,6 +18,8 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 .fase{background:#fff;color:var(--azul);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 .aviso{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:rgba(1,17,49,.9);color:#fff;border-radius:14px;padding:10px 16px;font-size:14px;font-weight:700;border:2px solid var(--amarillo);display:none;z-index:3;white-space:nowrap}
 .aviso.on{display:block}
+.fundido{position:fixed;inset:0;background:#070b18;opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.fundido.on{opacity:1}
 .tarjeta-modulo{white-space:normal;min-width:260px;max-width:340px;text-align:left}
 .tarjeta-modulo b{display:block;font-size:14px;color:#f5c400}
 .tarjeta-modulo small{display:block;font-size:12px;opacity:.9;margin-top:3px;line-height:1.35}
@@ -63,6 +65,7 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 </div>
 
 <div class="aviso" id="aviso"></div>
+<div class="fundido" id="fundido"></div>
 
 <div class="controles" aria-label="Controles de movimiento">
   <button class="arriba" data-k="w" aria-label="Avanzar">▲</button>
@@ -229,7 +232,7 @@ if (typeof loadOperarioModel === 'function') {
     if (!ok || typeof makeStandingOperator !== 'function') return;
     const op = makeStandingOperator(false);
     avatar.children.forEach(ch => { ch.visible = false; });
-    avatar.add(op);
+    avatar.add(op); avatarGltf = op.userData.gltf;
     crearRicardo();
   }).catch(() => { });
 }
@@ -440,7 +443,20 @@ function aplicarMapasInterior(esc, piso) {
     if (hex === 0x8a6a3c || hex === 0xc9a06a) { o.material = o.material.clone(); o.material.map = hex === 0x8a6a3c ? made : cart; o.material.color.set(0xffffff); o.material.needsUpdate = true; }
   });
 }
-/* construye el interior de un módulo: Lapzo (A), Entrenamiento (B) y Dojo (C). El Módulo 1 muestra sus imágenes */
+/* cabina de simulador en 3D para la estación de Práctica: monitor, volante y palanca */
+function simuladorEn(esc, x, z) {
+  const g = new THREE.Group();
+  const mat = (c, r = 0.6) => new THREE.MeshStandardMaterial({ color: c, roughness: r });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.5, 1.3), mat(0x1b2240)); base.position.y = 0.25; base.castShadow = true; g.add(base);
+  const mesa = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 1.0), mat(0x2b3a55)); mesa.position.y = 0.55; mesa.castShadow = true; g.add(mesa);
+  const monitor = new THREE.Mesh(new THREE.BoxGeometry(1.7, 1.05, 0.08), mat(0x0b1640, 0.4)); monitor.position.set(0, 1.25, -0.45); monitor.castShadow = true; g.add(monitor);
+  const columna = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), mat(0x333333)); columna.position.set(0, 0.8, -0.45); g.add(columna);
+  const volante = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.03, 10, 28), mat(0x1a1a1a, 0.5)); volante.position.set(-0.35, 0.95, 0.2); volante.rotation.x = -Math.PI / 3; volante.castShadow = true; g.add(volante);
+  const palanca = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.4, 10), mat(0x222222)); palanca.position.set(0.5, 0.8, 0.2); palanca.castShadow = true; g.add(palanca);
+  const boton = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), mat(0xf5c400, 0.4)); boton.position.set(0.5, 1.03, 0.2); g.add(boton);
+  g.position.set(x, 0, z); esc.add(g); return g;
+}
+/* construye el interior de un módulo: Lapzo (A), Entrenamiento (B) y Práctica (C). Todos los módulos muestran las mismas imágenes de Aprende y Práctica */
 function construirInterior(m) {
   const esc = new THREE.Scene();
   esc.background = new THREE.Color(0xe8edf3);
@@ -452,13 +468,11 @@ function construirInterior(m) {
   bloqueEn(esc, 0.4, 4.5, 14, 0xe9eef5, -8, 2.25, 0);
   bloqueEn(esc, 0.4, 4.5, 14, 0xe9eef5, 8, 2.25, 0);
   LUCES.forEach(([x, z]) => { const panel = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.05, 0.6), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff5d6, emissiveIntensity: 0.9 })); panel.position.set(x, 4.35, z); esc.add(panel); });
-  const esMod1 = m.id === 'm1';
   /* zona A · Lapzo */
   bloqueEn(esc, 4.4, 0.2, 3.2, 0x2138D3, -5, 0.1, -2.5);
   bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, -5, 1.6, -4.6);
   bloqueEn(esc, 0.12, 1.4, 0.12, 0x444444, -5, 0.7, -4.4);
-  if (esMod1) { const pl = imagenEn(esc, 'assets/textures/lapzo_universidad.webp', 2.6, 1141 / 984, -5, 1.6, -4.5); }
-  else letreroEn(esc, 'LAPZO\nPróximamente', '#0b1640', '#ffffff', 3, 1.8, -5, 1.6, -4.5);
+  imagenEn(esc, 'assets/textures/lapzo_universidad.webp', 2.6, 1141 / 984, -5, 1.6, -4.5);   // A · Aprende: Universidad Dicka (Lapzo)
   letreroEn(esc, 'A · LAPZO', '#2138D3', '#ffffff', 3.2, 0.7, -5, 3.1, -6.9);
   bloqueEn(esc, 1.6, 0.08, 0.8, 0x8a6a3c, -6.8, 0.8, -1.2, 0.5);
   silla(esc, -6.8, -0.5, Math.PI);
@@ -476,8 +490,8 @@ function construirInterior(m) {
   anillo.rotation.x = -Math.PI / 2; anillo.position.set(5, 0.02, -2.5); esc.add(anillo);
   bloqueEn(esc, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
   bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
-  if (esMod1) imagenEn(esc, 'assets/textures/dojo_simulador.webp', 2.9, 1735 / 901, 5, 1.6, -4.5);
-  else letreroEn(esc, 'PRÁCTICA\nSimula', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);
+  letreroEn(esc, 'PRÁCTICA\nSimula', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);   // C · Práctica: la pared lleva letrero; la cabina muestra el simulador
+  simuladorEn(esc, 5, -2.6);   // cabina de simulador frente a la pared de Práctica
   letreroEn(esc, 'C · PRÁCTICA | SIMULA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
   [[3.6, 0.9], [5, 0.9], [6.4, 0.9]].forEach(([x, z]) => silla(esc, x - 0.2, z, Math.PI));
   bloqueEn(esc, 3.4, 0.25, 0.5, 0x3a2f6b, 5, 0.12, -0.6, 0.6);
@@ -531,6 +545,7 @@ const teclas = {};
 const tactil = {};
 let heading = Math.PI;   // mira hacia el fondo de la nave (hacia los edificios)
 let moviendo = false, paso = 0;
+let avatarGltf = null, saludo = 0, fundiendo = false;   // modelo realista del líder, tiempo de saludo, fundido entre escenas
 let cerca = null;        // módulo al que puede entrar
 let abierto = null;      // panel abierto
 const pulsadas = new Set();
@@ -540,7 +555,8 @@ window.addEventListener('keydown', e => {
   if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
   teclas[k] = true;
   if (k === 'e' && !abierto) accionE();
-  if (k === 'escape') { if (abierto) cerrarPanel(); else if (enInterior) salirEdificio(); }
+  if (k === 'g' && !abierto && !fundiendo) saludo = 2.4;
+  if (k === 'escape') { if (abierto) cerrarPanel(); else if (enInterior) conFundido(salirEdificio); }
 });
 window.addEventListener('keyup', e => { teclas[e.key.toLowerCase()] = false; });
 document.querySelectorAll('.controles button').forEach(b => {
@@ -552,12 +568,12 @@ document.querySelectorAll('.controles button').forEach(b => {
 document.getElementById('btnEntrar').addEventListener('click', () => { if (!abierto) accionE(); });
 function accionE() {
   if (enInterior) {
-    if (zonaCerca && zonaCerca.id === 'salida') { salirEdificio(); return; }
+    if (zonaCerca && zonaCerca.id === 'salida') { conFundido(salirEdificio); return; }
     if (zonaCerca) abrirZona(zonaCerca.id);
     return;
   }
   if (cerca && cerca.id === 'ricardo') { abrirConversacion(); return; }
-  if (cerca) { entrarInterior(cerca); return; }
+  if (cerca) { const m = cerca; conFundido(() => entrarInterior(m)); return; }
 }
 function marcarVisitado(id) {
   let lista = [];
@@ -573,6 +589,14 @@ function actualizarObjetivo() {
   document.getElementById('visitados').textContent = n + '/4';
   document.getElementById('barraRecorrido').style.width = (n / 4 * 100) + '%';
 }
+/* transición corta entre la plaza y un interior: fundido a negro, cambio de escena, fundido de regreso */
+function conFundido(fn) {
+  if (fundiendo) return; fundiendo = true;
+  const f = document.getElementById('fundido'); f.classList.add('on');
+  setTimeout(() => { fn(); seguirCamaraSalto(); requestAnimationFrame(() => f.classList.remove('on')); setTimeout(() => { fundiendo = false; }, 300); }, 320);
+}
+/* al cambiar de escena la cámara salta a su sitio para no cruzar el edificio */
+function seguirCamaraSalto() { camara.position.set(avatar.position.x - Math.sin(heading) * 6.2, 2.9, avatar.position.z - Math.cos(heading) * 6.2); }
 function entrarInterior(m) {
   marcarVisitado(m.id);
   moduloInt = m; interiorActual = INTERIORES[m.id]; zonasActuales = ZONAS_INT;
@@ -640,12 +664,14 @@ function mover(dt) {
     }
     avatar.position.x = nx;
     avatar.position.z = nz;
-    paso += dt * 9;
+    paso += dt * (pulsa('shift') ? 13 : 9);   // correr: zancada más rápida
   }
   avatar.rotation.y = heading;
   const sw = moviendo ? Math.sin(paso) * 0.6 : 0;
   piernaI.rotation.x = sw; piernaD.rotation.x = -sw;
   brazoI.rotation.x = -sw * 0.7; brazoD.rotation.x = sw * 0.7;
+  /* modelo realista: caminar, correr y saludar con la misma pose procedural del Dojo */
+  if (avatarGltf) gltfWalkPose(avatarGltf, moviendo, paso, performance.now(), saludo > 0, 0);
 }
 
 /* detecta edificio cercano */
@@ -865,6 +891,7 @@ let ultimo = performance.now();
 function bucle(t) {
   const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
   mover(dt); detectar(); seguirCamara(dt); animarAmbiente(t / 1000);
+  if (saludo > 0) saludo -= dt;
   if (avisoT > 0) { avisoT -= dt; if (avisoT <= 0) ocultarAviso(); }
   renderer.render(enInterior ? interiorActual : escena, camara);
   requestAnimationFrame(bucle);
