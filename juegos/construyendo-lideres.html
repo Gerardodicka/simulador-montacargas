@@ -335,7 +335,7 @@ const LUCES = [[-5, -2.5], [0, -2.5], [5, -2.5], [-5, 2.5], [5, 2.5]];
 const ZONAS_INT = [
   { id: 'lapzo', x: -5, z: -0.4, corto: 'Lapzo · Aprende' },
   { id: 'entrena', x: 0, z: -0.4, corto: 'Entrena · Materiales' },
-  { id: 'dojo', x: 5, z: -0.4, corto: 'Dojo · Practica' }
+  { id: 'dojo', x: 5, z: -0.4, corto: 'Práctica | Simula' }
 ];
 function bloqueEn(esc, w, h, d, c, x, y, z, rough = 0.7) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: c, roughness: rough }));
@@ -404,8 +404,8 @@ function construirInterior(m) {
   bloqueEn(esc, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
   bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
   if (esMod1) imagenEn(esc, 'assets/textures/dojo_simulador.webp', 2.9, 1735 / 901, 5, 1.6, -4.5);
-  else letreroEn(esc, 'DOJO DE MANDO\nCasos por cargar', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);
-  letreroEn(esc, 'C · PRACTICA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
+  else letreroEn(esc, 'PRÁCTICA\nSimula', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);
+  letreroEn(esc, 'C · PRÁCTICA | SIMULA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
   [[3.6, 0.9], [5, 0.9], [6.4, 0.9]].forEach(([x, z]) => silla(esc, x - 0.2, z, Math.PI));
   bloqueEn(esc, 3.4, 0.25, 0.5, 0x3a2f6b, 5, 0.12, -0.6, 0.6);
   /* salida */
@@ -505,6 +505,24 @@ const FLECHA = { w: 'arrowup', s: 'arrowdown', a: 'arrowleft', d: 'arrowright' }
 function pulsa(k) { return !!(teclas[k] || teclas[FLECHA[k]] || tactil[k]); }
 
 /* ===================== Movimiento ===================== */
+/* ===================== Colisiones de la plaza (cajas simples, independientes de la geometría visual) ===================== */
+const RADIO_AVATAR = 0.45;
+const COLISIONES_PLAZA = [
+  ...MODULOS.map(m => ({ minX: m.x - 2.7, maxX: m.x + 2.7, minZ: -13.6, maxZ: -9.7 })),   // edificios de los módulos
+  { minX: -5.6, maxX: 5.6, minZ: -19.5, maxZ: -14.8 },                                   // edificio principal
+  { minX: 12.0, maxX: 14.4, minZ: -7.6, maxZ: -0.9 },                                    // andenes
+  ...[[-11, 4], [-11, 5.3], [-9.7, 4], [11, 4], [11, 5.3], [9.7, 4]].map(([x, z]) => ({ minX: x - 0.7, maxX: x + 0.7, minZ: z - 0.6, maxZ: z + 0.6 })),   // tarimas
+  ...[[-12.5, -6], [12.5, -9], [-5.5, 6.5]].map(([x, z]) => ({ minX: x - 0.3, maxX: x + 0.3, minZ: z - 0.3, maxZ: z + 0.3 })),   // señales
+  { minX: 3.6, maxX: 4.4, minZ: -2.0, maxZ: -1.0 }                                        // colaborador de Ricardo (estático)
+];
+function choca(x, z) {
+  for (const c of COLISIONES_PLAZA) {
+    if (x > c.minX - RADIO_AVATAR && x < c.maxX + RADIO_AVATAR && z > c.minZ - RADIO_AVATAR && z < c.maxZ + RADIO_AVATAR) return true;
+  }
+  /* montacargas en movimiento */
+  if (montacargas && Math.abs(x - montacargas.position.x) < 0.8 + RADIO_AVATAR && Math.abs(z - montacargas.position.z) < 1.1 + RADIO_AVATAR) return true;
+  return false;
+}
 function mover(dt) {
   if (abierto) return;
   let girar = 0, avanzar = 0;
@@ -518,8 +536,16 @@ function mover(dt) {
     const dx = Math.sin(heading) * avanzar * VEL * dt;
     const dz = Math.cos(heading) * avanzar * VEL * dt;
     const L = enInterior ? { x: INT_LIM.x, zMin: INT_LIM.zMin, zMax: INT_LIM.zMax } : LIMITE;
-    avatar.position.x = Math.max(-L.x, Math.min(L.x, avatar.position.x + dx));
-    avatar.position.z = Math.max(L.zMin, Math.min(L.zMax, avatar.position.z + dz));
+    const x0 = avatar.position.x, z0 = avatar.position.z;
+    let nx = Math.max(-L.x, Math.min(L.x, x0 + dx));
+    let nz = Math.max(L.zMin, Math.min(L.zMax, z0 + dz));
+    if (!enInterior) {
+      /* deslizar: primero prueba X, después Z; si choca en un eje se queda en el otro */
+      if (choca(nx, z0)) nx = x0;
+      if (choca(nx, nz)) nz = z0;
+    }
+    avatar.position.x = nx;
+    avatar.position.z = nz;
     paso += dt * 9;
   }
   avatar.rotation.y = heading;
@@ -683,7 +709,7 @@ function abrirZona(id) {
   } else {
     cuerpo = bloqueCasos(moduloInt.id);
   }
-  const titulo = { lapzo: 'A · Lapzo · Aprende', entrena: 'B · Entrenamiento · Entrena', dojo: 'C · Dojo de Mando · Practica' }[id];
+  const titulo = { lapzo: 'A · Lapzo · Aprende', entrena: 'B · Entrenamiento · Entrena', dojo: 'C · Práctica | Simula' }[id];
   caja.innerHTML = `<div class="cab"><small>${moduloInt.nombre}</small><h2 id="tituloPanel">${titulo}</h2></div><div class="cuerpo">${cuerpo}<button class="cerrar" onclick="cerrarPanel()">Volver al interior</button></div>`;
   document.getElementById('panel').classList.add('on');
 }
