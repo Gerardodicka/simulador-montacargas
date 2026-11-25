@@ -309,7 +309,7 @@ bloqueEn(interior, 0.4, 4.5, 14, 0xe9eef5, 8, 2.25, 0);
 /* zona A · Lapzo (aula digital) */
 bloqueEn(interior, 4.4, 0.2, 3.2, 0x2138D3, -5, 0.1, -2.5);
 bloqueEn(interior, 3.2, 1.9, 0.12, 0x0b1640, -5, 1.6, -4.6);
-letreroEn(interior, 'AULA DIGITAL\nLapzo · Aprende', '#0b1640', '#ffffff', 3, 1.8, -5, 1.6, -4.5);
+{ const pl = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6 * 984 / 1141), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('assets/textures/lapzo_universidad.webp') })); pl.position.set(-5, 1.6, -4.5); interior.add(pl); }
 bloqueEn(interior, 0.12, 1.4, 0.12, 0x444444, -5, 0.7, -4.4);
 letreroEn(interior, 'A · LAPZO', '#2138D3', '#ffffff', 3.2, 0.7, -5, 3.1, -6.9);
 /* zona B · Entrenamiento (sala con mesa y materiales) */
@@ -325,7 +325,7 @@ const anilloDojo = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.9, 40), new THRE
 anilloDojo.rotation.x = -Math.PI / 2; anilloDojo.position.set(5, 0.02, -2.5); interior.add(anilloDojo);
 bloqueEn(interior, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
 bloqueEn(interior, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
-letreroEn(interior, 'DOJO DE MANDO\nPractica', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);
+{ const pl = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 2.9 * 901 / 1735), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('assets/textures/dojo_simulador.webp') })); pl.position.set(5, 1.6, -4.5); interior.add(pl); }
 letreroEn(interior, 'C · PRACTICA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
 /* salida */
 bloqueEn(interior, 0.2, 3, 0.2, 0x444444, -1.3, 1.5, 6.6);
