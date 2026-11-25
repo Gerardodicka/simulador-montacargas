@@ -152,19 +152,52 @@ function textura(texto, color) {
   texto.split('\n').forEach((t, i, arr) => g.fillText(t, 256, 128 + (i - (arr.length - 1) / 2) * 56));
   return new THREE.CanvasTexture(c);
 }
+/* edificios tipo arco con luz perimetral, icono y accesorios de andén (inspirados en la referencia) */
+const ICONOS = { m1: '👥', m2: '🦺', m3: '📦', m4: '💻' };
+function iconoTex(emoji, fondo) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = fondo; g.beginPath(); g.arc(128, 128, 124, 0, Math.PI * 2); g.fill();
+  g.font = '150px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffffff'; g.fillText(emoji, 128, 140);
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t;
+}
 MODULOS.forEach(m => {
-  const g = new THREE.Group(); g.position.set(m.x, 0, Z_EDIFICIOS);
-  const color = new THREE.Color(m.color);
-  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1 });
-  const base = new THREE.Mesh(new THREE.BoxGeometry(5, 4.2, 4), mat); base.position.set(0, 2.1, 0); base.castShadow = true; base.receiveShadow = true; g.add(base);
-  const hueco = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.8, 0.2), new THREE.MeshStandardMaterial({ color: m.activo ? 0xfff5c2 : 0x1b2240, emissive: m.activo ? 0xf5c400 : 0x000000, emissiveIntensity: m.activo ? 0.35 : 0 }));
-  hueco.position.set(0, 1.4, 2.05); g.add(hueco);
-  const letrero = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.6), new THREE.MeshBasicMaterial({ map: textura(m.id === 'm1' ? 'MÓDULO 1' : m.id === 'm2' ? 'MÓDULO 2' : m.id === 'm3' ? 'MÓDULO 3' : 'MÓDULO 4', m.color), transparent: false }));
-  letrero.position.set(0, 4.7, 2.02); g.add(letrero);
+  const g = new THREE.Group(); g.position.set(m.x, 0, Z_EDIFICIOS + 2);   // frente del edificio en z = -10
+  const W = 2.5, R = 2.5, pared = 2.2, prof = 3.2;
+  const forma = new THREE.Shape();
+  forma.moveTo(-W, 0); forma.lineTo(-W, pared); forma.absarc(0, pared, R, Math.PI, 0, true); forma.lineTo(W, 0); forma.lineTo(-W, 0);
+  const geo = new THREE.ExtrudeGeometry(forma, { depth: prof, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08, bevelSegments: 2, curveSegments: 32 });
+  const cuerpo = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: new THREE.Color(m.color), roughness: 0.5, metalness: 0.15 }));
+  cuerpo.position.z = -prof; cuerpo.castShadow = true; cuerpo.receiveShadow = true; g.add(cuerpo);
+  /* puerta de cristal oscuro y marco */
+  const puerta = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.7, 0.1), new THREE.MeshStandardMaterial({ color: m.activo ? 0x1b2a4a : 0x1b2240, roughness: 0.2, metalness: 0.4 }));
+  puerta.position.set(0, 1.35, 0.12); g.add(puerta);
+  /* luz perimetral del arco */
+  const puntos = [];
+  puntos.push(new THREE.Vector3(-W, 0, 0.14), new THREE.Vector3(-W, pared, 0.14));
+  for (let i = 0; i <= 24; i++) { const a = Math.PI - (i / 24) * Math.PI; puntos.push(new THREE.Vector3(Math.cos(a) * R, pared + Math.sin(a) * R, 0.14)); }
+  puntos.push(new THREE.Vector3(W, pared, 0.14), new THREE.Vector3(W, 0, 0.14));
+  const luz = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(puntos), 120, 0.05, 8, false), new THREE.MeshBasicMaterial({ color: m.activo ? 0xffd54a : 0x9aa3c7 }));
+  g.add(luz);
+  /* icono y letrero sobre el arco */
+  const icono = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: iconoTex(ICONOS[m.id], '#' + m.color.toString(16).padStart(6, '0')), transparent: true }));
+  icono.position.set(0, pared + R + 0.85, 0.2); g.add(icono);
+  const letrero = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.7), new THREE.MeshBasicMaterial({ map: textura(m.id === 'm1' ? 'MÓDULO 1' : m.id === 'm2' ? 'MÓDULO 2' : m.id === 'm3' ? 'MÓDULO 3' : 'MÓDULO 4', m.color) }));
+  letrero.position.set(0, pared + R + 0.25, 0.2); g.add(letrero);
   if (!m.activo) {
-    const aviso = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshBasicMaterial({ map: textura('PRÓXIMAMENTE', 0x44506e), transparent: false }));
-    aviso.position.set(0, 0.6, 2.12); g.add(aviso);
+    const aviso = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.45), new THREE.MeshBasicMaterial({ map: textura('PRÓXIMAMENTE', 0x44506e) }));
+    aviso.position.set(0, 2.8, 0.2); g.add(aviso);
   }
+  /* macetas y bolardos junto a la puerta */
+  [-3.3, 3.3].forEach(x => {
+    const maceta = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.45, 0.6, 16), new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.8 }));
+    maceta.position.set(x, 0.3, 1.1); maceta.castShadow = true; g.add(maceta);
+    const hoja = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 12), new THREE.MeshStandardMaterial({ color: 0x2e9e5b, roughness: 0.9 }));
+    hoja.position.set(x, 1.0, 1.1); hoja.castShadow = true; g.add(hoja);
+  });
+  [-1.6, 1.6].forEach(x => {
+    const bolardo = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1, 12), new THREE.MeshStandardMaterial({ color: 0xf5c400, roughness: 0.5 }));
+    bolardo.position.set(x * 1.7, 0.5, 1.6); bolardo.castShadow = true; g.add(bolardo);
+  });
   g.userData.modulo = m.id;
   escena.add(g); etiquetas[m.id] = g;
 });
