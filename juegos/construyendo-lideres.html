@@ -188,6 +188,7 @@ if (typeof loadOperarioModel === 'function') {
     const op = makeStandingOperator(false);
     avatar.children.forEach(ch => { ch.visible = false; });
     avatar.add(op);
+    crearRicardo();
   }).catch(() => { });
 }
 
@@ -284,14 +285,20 @@ function animarAmbiente(t) {
   montacargas.rotation.y = avanza ? Math.PI / 2 : -Math.PI / 2;
 }
 
-/* ===================== Etapa 2 · Interior del Módulo 1 (tres zonas en 3D) ===================== */
-const interior = new THREE.Scene();
-interior.background = new THREE.Color(0xe8edf3);
-interior.add(new THREE.HemisphereLight(0xffffff, 0x667080, 0.9));
-const luzInt = new THREE.DirectionalLight(0xffffff, 0.7); luzInt.position.set(0, 12, 6); luzInt.castShadow = true; interior.add(luzInt);
+/* ===================== Etapa 2 · Interiores de cada módulo (tres zonas en 3D) ===================== */
 const INT_LIM = { x: 6.6, zMin: -5.6, zMax: 6.2 };
 let enInterior = false;
 let zonaCerca = null;
+let moduloInt = null;      // módulo en el que está el participante
+let interiorActual = null;
+let zonasActuales = [];
+const SALIDA_POS = { x: 0, z: 5.2 };
+const LUCES = [[-5, -2.5], [0, -2.5], [5, -2.5], [-5, 2.5], [5, 2.5]];
+const ZONAS_INT = [
+  { id: 'lapzo', x: -5, z: -0.4, corto: 'Lapzo · Aprende' },
+  { id: 'entrena', x: 0, z: -0.4, corto: 'Entrena · Materiales' },
+  { id: 'dojo', x: 5, z: -0.4, corto: 'Dojo · Practica' }
+];
 function bloqueEn(esc, w, h, d, c, x, y, z, rough = 0.7) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: c, roughness: rough }));
   m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; esc.add(m); return m;
@@ -300,39 +307,10 @@ function letreroEn(esc, texto, fondo, colorTexto, w, h, x, y, z, rotY = 0) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: texturaTexto(texto, fondo, colorTexto) }));
   m.position.set(x, y, z); m.rotation.y = rotY; esc.add(m); return m;
 }
-/* piso y muros del interior */
-const pisoInt = new THREE.Mesh(new THREE.PlaneGeometry(16, 14), new THREE.MeshStandardMaterial({ color: 0xc9d0da, roughness: 0.6 }));
-pisoInt.rotation.x = -Math.PI / 2; pisoInt.receiveShadow = true; interior.add(pisoInt);
-bloqueEn(interior, 16, 4.5, 0.4, 0xe9eef5, 0, 2.25, -7);
-bloqueEn(interior, 0.4, 4.5, 14, 0xe9eef5, -8, 2.25, 0);
-bloqueEn(interior, 0.4, 4.5, 14, 0xe9eef5, 8, 2.25, 0);
-/* zona A · Lapzo (aula digital) */
-bloqueEn(interior, 4.4, 0.2, 3.2, 0x2138D3, -5, 0.1, -2.5);
-bloqueEn(interior, 3.2, 1.9, 0.12, 0x0b1640, -5, 1.6, -4.6);
-{ const pl = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6 * 984 / 1141), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('assets/textures/lapzo_universidad.webp') })); pl.position.set(-5, 1.6, -4.5); interior.add(pl); }
-bloqueEn(interior, 0.12, 1.4, 0.12, 0x444444, -5, 0.7, -4.4);
-letreroEn(interior, 'A · LAPZO', '#2138D3', '#ffffff', 3.2, 0.7, -5, 3.1, -6.9);
-/* zona B · Entrenamiento (sala con mesa y materiales) */
-bloqueEn(interior, 4.4, 0.2, 3.2, 0xf5c400, 0, 0.1, -2.5);
-bloqueEn(interior, 2.6, 0.12, 1.3, 0x8a6a3c, 0, 0.92, -2.8, 0.5);
-[[-1.1, -2.1], [1.1, -2.1], [-1.1, -3.5], [1.1, -3.5]].forEach(([x, z]) => bloqueEn(interior, 0.1, 0.9, 0.1, 0x333333, x, 0.5, z));
-bloqueEn(interior, 2.4, 1.6, 0.12, 0x0b1640, 0, 1.9, -4.7);
-letreroEn(interior, 'ENTRENAMIENTO\nMateriales', '#0b1640', '#ffffff', 2.3, 1.4, 0, 1.9, -4.62);
-[[2.6, -2.5, 0], [2.6, -2.5, 0.42]].forEach(([x, z, y]) => bloqueEn(interior, 0.5, 0.36, 0.4, 0xc9a06a, x, 0.28 + y, z, 0.95));
-letreroEn(interior, 'B · ENTRENA', '#f5c400', '#1b2240', 3.2, 0.7, 0, 3.1, -6.9);
-/* zona C · Dojo (escenario de práctica) */
-const anilloDojo = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.9, 40), new THREE.MeshBasicMaterial({ color: 0x7b3fe4, side: THREE.DoubleSide }));
-anilloDojo.rotation.x = -Math.PI / 2; anilloDojo.position.set(5, 0.02, -2.5); interior.add(anilloDojo);
-bloqueEn(interior, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
-bloqueEn(interior, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
-{ const pl = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 2.9 * 901 / 1735), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('assets/textures/dojo_simulador.webp') })); pl.position.set(5, 1.6, -4.5); interior.add(pl); }
-letreroEn(interior, 'C · PRACTICA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
-/* salida */
-bloqueEn(interior, 0.2, 3, 0.2, 0x444444, -1.3, 1.5, 6.6);
-bloqueEn(interior, 0.2, 3, 0.2, 0x444444, 1.3, 1.5, 6.6);
-bloqueEn(interior, 2.8, 0.2, 0.2, 0x444444, 0, 3.0, 6.6);
-letreroEn(interior, 'SALIDA AL\nCENTRO', '#2e9e5b', '#ffffff', 2.4, 1.0, 0, 3.6, 6.6);
-/* detalle del interior: sillas, escritorio, luminarias, materiales reales */
+function imagenEn(esc, ruta, ancho, proporcion, x, y, z) {
+  const pl = new THREE.Mesh(new THREE.PlaneGeometry(ancho, ancho / proporcion), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(ruta) }));
+  pl.position.set(x, y, z); esc.add(pl); return pl;
+}
 function silla(esc, x, z, giro = 0) {
   const g = new THREE.Group();
   const asiento = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.5), new THREE.MeshStandardMaterial({ color: 0x2b3a55, roughness: 0.8 })); asiento.position.y = 0.5; asiento.castShadow = true; g.add(asiento);
@@ -340,35 +318,101 @@ function silla(esc, x, z, giro = 0) {
   const pata = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8), new THREE.MeshStandardMaterial({ color: 0x333333 })); pata.position.y = 0.25; g.add(pata);
   g.position.set(x, 0, z); g.rotation.y = giro; esc.add(g); return g;
 }
-const LUCES = [[-5, -2.5], [0, -2.5], [5, -2.5], [-5, 2.5], [5, 2.5]];
-LUCES.forEach(([x, z]) => { const panel = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.05, 0.6), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff5d6, emissiveIntensity: 0.9 })); panel.position.set(x, 4.35, z); interior.add(panel); });
-/* zona A: escritorio de estudio con silla */
-bloqueEn(interior, 1.6, 0.08, 0.8, 0x8a6a3c, -6.8, 0.8, -1.2, 0.5);
-silla(interior, -6.8, -0.5, Math.PI);
-/* zona B: sillas alrededor de la mesa */
-[[-1.1, -1.4], [1.1, -1.4], [-1.1, -4.0], [1.1, -4.0]].forEach(([x, z]) => silla(interior, x, z, x < 0 ? Math.PI / 2 : -Math.PI / 2));
-/* zona C: butacas de público frente al escenario */
-[[3.6, 0.9], [5, 0.9], [6.4, 0.9]].forEach(([x, z]) => silla(interior, x - 0.2, z, Math.PI));
-bloqueEn(interior, 3.4, 0.25, 0.5, 0x3a2f6b, 5, 0.12, -0.6, 0.6);
-
-const SALIDA_POS = { x: 0, z: 5.2 };
-function aplicarMapasInterior() {
+function aplicarMapasInterior(esc, piso) {
   const piso2 = new THREE.TextureLoader().load('assets/textures/piso.jpg', t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 3); });
-  pisoInt.material.map = piso2; pisoInt.material.color.set(0xffffff); pisoInt.material.needsUpdate = true;
+  piso.material.map = piso2; piso.material.color.set(0xffffff); piso.material.needsUpdate = true;
   const made = new THREE.TextureLoader().load('assets/textures/madera.jpg');
   const cart = new THREE.TextureLoader().load('assets/textures/carton.jpg');
-  interior.traverse(o => {
-    if (!o.isMesh || !o.material || !o.material.color || o.material.map || o.material === pisoInt.material) return;
+  esc.traverse(o => {
+    if (!o.isMesh || !o.material || !o.material.color || o.material.map || o.material === piso.material) return;
     const hex = o.material.color.getHex();
     if (hex === 0x8a6a3c || hex === 0xc9a06a) { o.material = o.material.clone(); o.material.map = hex === 0x8a6a3c ? made : cart; o.material.color.set(0xffffff); o.material.needsUpdate = true; }
   });
 }
-aplicarMapasInterior();
-const ZONAS_INT = [
-  { id: 'lapzo', x: -5, z: -0.4, corto: 'Lapzo · Aprende' },
-  { id: 'entrena', x: 0, z: -0.4, corto: 'Entrena · Materiales' },
-  { id: 'dojo', x: 5, z: -0.4, corto: 'Dojo · Practica' }
-];
+/* construye el interior de un módulo: Lapzo (A), Entrenamiento (B) y Dojo (C). El Módulo 1 muestra sus imágenes */
+function construirInterior(m) {
+  const esc = new THREE.Scene();
+  esc.background = new THREE.Color(0xe8edf3);
+  esc.add(new THREE.HemisphereLight(0xffffff, 0x667080, 0.9));
+  const luz = new THREE.DirectionalLight(0xffffff, 0.7); luz.position.set(0, 12, 6); luz.castShadow = true; esc.add(luz);
+  const piso = new THREE.Mesh(new THREE.PlaneGeometry(16, 14), new THREE.MeshStandardMaterial({ color: 0xc9d0da, roughness: 0.6 }));
+  piso.rotation.x = -Math.PI / 2; piso.receiveShadow = true; esc.add(piso);
+  bloqueEn(esc, 16, 4.5, 0.4, 0xe9eef5, 0, 2.25, -7);
+  bloqueEn(esc, 0.4, 4.5, 14, 0xe9eef5, -8, 2.25, 0);
+  bloqueEn(esc, 0.4, 4.5, 14, 0xe9eef5, 8, 2.25, 0);
+  LUCES.forEach(([x, z]) => { const panel = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.05, 0.6), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff5d6, emissiveIntensity: 0.9 })); panel.position.set(x, 4.35, z); esc.add(panel); });
+  const esMod1 = m.id === 'm1';
+  /* zona A · Lapzo */
+  bloqueEn(esc, 4.4, 0.2, 3.2, 0x2138D3, -5, 0.1, -2.5);
+  bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, -5, 1.6, -4.6);
+  bloqueEn(esc, 0.12, 1.4, 0.12, 0x444444, -5, 0.7, -4.4);
+  if (esMod1) { const pl = imagenEn(esc, 'assets/textures/lapzo_universidad.webp', 2.6, 1141 / 984, -5, 1.6, -4.5); }
+  else letreroEn(esc, 'LAPZO\nPróximamente', '#0b1640', '#ffffff', 3, 1.8, -5, 1.6, -4.5);
+  letreroEn(esc, 'A · LAPZO', '#2138D3', '#ffffff', 3.2, 0.7, -5, 3.1, -6.9);
+  bloqueEn(esc, 1.6, 0.08, 0.8, 0x8a6a3c, -6.8, 0.8, -1.2, 0.5);
+  silla(esc, -6.8, -0.5, Math.PI);
+  /* zona B · Entrenamiento */
+  bloqueEn(esc, 4.4, 0.2, 3.2, 0xf5c400, 0, 0.1, -2.5);
+  bloqueEn(esc, 2.6, 0.12, 1.3, 0x8a6a3c, 0, 0.92, -2.8, 0.5);
+  [[-1.1, -2.1], [1.1, -2.1], [-1.1, -3.5], [1.1, -3.5]].forEach(([x, z]) => bloqueEn(esc, 0.1, 0.9, 0.1, 0x333333, x, 0.5, z));
+  bloqueEn(esc, 2.4, 1.6, 0.12, 0x0b1640, 0, 1.9, -4.7);
+  letreroEn(esc, 'ENTRENAMIENTO\nMateriales', '#0b1640', '#ffffff', 2.3, 1.4, 0, 1.9, -4.62);
+  [[2.6, -2.5, 0], [2.6, -2.5, 0.42]].forEach(([x, z, y]) => bloqueEn(esc, 0.5, 0.36, 0.4, 0xc9a06a, x, 0.28 + y, z, 0.95));
+  letreroEn(esc, 'B · ENTRENA', '#f5c400', '#1b2240', 3.2, 0.7, 0, 3.1, -6.9);
+  [[-1.1, -1.4], [1.1, -1.4], [-1.1, -4.0], [1.1, -4.0]].forEach(([x, z]) => silla(esc, x, z, x < 0 ? Math.PI / 2 : -Math.PI / 2));
+  /* zona C · Dojo */
+  const anillo = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.9, 40), new THREE.MeshBasicMaterial({ color: 0x7b3fe4, side: THREE.DoubleSide }));
+  anillo.rotation.x = -Math.PI / 2; anillo.position.set(5, 0.02, -2.5); esc.add(anillo);
+  bloqueEn(esc, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
+  bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
+  if (esMod1) imagenEn(esc, 'assets/textures/dojo_simulador.webp', 2.9, 1735 / 901, 5, 1.6, -4.5);
+  else letreroEn(esc, 'DOJO DE MANDO\nCasos por cargar', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);
+  letreroEn(esc, 'C · PRACTICA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
+  [[3.6, 0.9], [5, 0.9], [6.4, 0.9]].forEach(([x, z]) => silla(esc, x - 0.2, z, Math.PI));
+  bloqueEn(esc, 3.4, 0.25, 0.5, 0x3a2f6b, 5, 0.12, -0.6, 0.6);
+  /* salida */
+  bloqueEn(esc, 0.2, 3, 0.2, 0x444444, -1.3, 1.5, 6.6);
+  bloqueEn(esc, 0.2, 3, 0.2, 0x444444, 1.3, 1.5, 6.6);
+  bloqueEn(esc, 2.8, 0.2, 0.2, 0x444444, 0, 3.0, 6.6);
+  letreroEn(esc, 'SALIDA AL\nCENTRO', '#2e9e5b', '#ffffff', 2.4, 1.0, 0, 3.6, 6.6);
+  aplicarMapasInterior(esc, piso);
+  return esc;
+}
+const INTERIORES = {};
+MODULOS.forEach(m => { INTERIORES[m.id] = construirInterior(m); });
+
+/* ===================== Etapa 3 · Conversación con Ricardo desde el piso ===================== */
+const RICARDO_POS = { x: 4, z: -1.5 };
+let ricardoGrupo = null;
+function crearRicardo() {
+  if (typeof makeStandingOperator !== 'function' || ricardoGrupo) return;
+  const op = makeStandingOperator(false);
+  const g = new THREE.Group(); g.add(op);
+  g.position.set(RICARDO_POS.x, 0, RICARDO_POS.z); g.rotation.y = Math.PI * 0.85;
+  escena.add(g); ricardoGrupo = g;
+  /* etiqueta sobre su cabeza */
+  const etiq = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.5), new THREE.MeshBasicMaterial({ map: texturaTexto('Ricardo · Supervisor nocturno', '#0b1640', '#ffffff'), transparent: true }));
+  etiq.position.set(0, 2.25, 0); g.add(etiq);
+}
+const INICIO_RICARDO = 'Jefe, ¿qué pasó? Ando bien, nomás me desvelé. Déjeme trabajar, que traigo prisa.';
+function abrirConversacion() {
+  abierto = { id: 'conversacion-ricardo' };
+  document.getElementById('btnEntrar').classList.remove('on');
+  ocultarAviso();
+  const caja = document.getElementById('caja');
+  caja.innerHTML = `
+    <div class="cab"><small>PISO DE OPERACIÓN · 02:40 H</small><h2 id="tituloPanel">Conversación con Ricardo</h2></div>
+    <div class="cuerpo">
+      <div class="puerta" style="border-left-color:#2138D3">
+        <h3>Ricardo · Supervisor nocturno</h3>
+        <p style="font-size:15px;color:#1b2240;margin:8px 0 12px">"${INICIO_RICARDO}"</p>
+        <p>Tu respuesta define cómo sigue la plática. En la conversación completa puedes hablarle con voz o texto y tomar decisiones con su evaluación.</p>
+      </div>
+      <a class="btn" href="dojo-de-mando.html?caso=mejor" style="display:block;text-align:center;margin:8px 0">Iniciar la conversación en el Dojo</a>
+      <button class="cerrar" onclick="cerrarPanel()">Volver al piso</button>
+    </div>`;
+  document.getElementById('panel').classList.add('on');
+}
 
 /* ===================== Estado y controles ===================== */
 const teclas = {};
@@ -400,19 +444,22 @@ function accionE() {
     if (zonaCerca) abrirZona(zonaCerca.id);
     return;
   }
-  if (cerca && cerca.id === 'm1') { entrarInterior(); return; }
-  if (cerca) abrirModulo(cerca);
+  if (cerca && cerca.id === 'ricardo') { abrirConversacion(); return; }
+  if (cerca) { entrarInterior(cerca); return; }
 }
-function entrarInterior() {
+function entrarInterior(m) {
+  moduloInt = m; interiorActual = INTERIORES[m.id]; zonasActuales = ZONAS_INT;
   enInterior = true; cerca = null; ocultarAviso();
-  escena.remove(avatar); interior.add(avatar);
+  escena.remove(avatar); interiorActual.add(avatar);
   avatar.position.set(0, 0, -0.4); heading = Math.PI;
-  document.getElementById('faseActiva').textContent = 'Módulo 1 · Interior';
+  document.getElementById('faseActiva').textContent = m.corto;
 }
 function salirEdificio() {
+  const m = moduloInt;
   enInterior = false; zonaCerca = null; ocultarAviso();
-  interior.remove(avatar); escena.add(avatar);
-  avatar.position.set(-9, 0, -7.2); heading = Math.PI;
+  interiorActual.remove(avatar); escena.add(avatar);
+  avatar.position.set(m.x, 0, -7.2); heading = Math.PI;
+  moduloInt = null; interiorActual = null;
   document.getElementById('faseActiva').textContent = 'Fase 1 activa';
 }
 
@@ -445,7 +492,7 @@ function mover(dt) {
 /* detecta edificio cercano */
 function detectarZona() {
   let mejor = null, dist = Infinity;
-  ZONAS_INT.forEach(z => { const d = Math.hypot(avatar.position.x - z.x, avatar.position.z - z.z); if (d < 2.6 && d < dist) { dist = d; mejor = z; } });
+  zonasActuales.forEach(z => { const d = Math.hypot(avatar.position.x - z.x, avatar.position.z - z.z); if (d < 2.6 && d < dist) { dist = d; mejor = z; } });
   const dSal = Math.hypot(avatar.position.x - SALIDA_POS.x, avatar.position.z - SALIDA_POS.z);
   if (!mejor && dSal < 2.2) mejor = { id: 'salida', corto: 'Salir al centro de distribución' };
   if (mejor !== zonaCerca) {
@@ -464,11 +511,15 @@ function detectar() {
     const d = Math.hypot(avatar.position.x - g.position.x, avatar.position.z - (g.position.z + 3));
     if (d < RADIO_ENTRADA && d < dist) { dist = d; mejor = m; }
   });
+  if (!mejor && ricardoGrupo) {
+    const dR = Math.hypot(avatar.position.x - RICARDO_POS.x, avatar.position.z - RICARDO_POS.z);
+    if (dR < 3.2) mejor = { id: 'ricardo', corto: 'Hablar con Ricardo' };
+  }
   if (mejor !== cerca) {
     cerca = mejor;
     const btn = document.getElementById('btnEntrar');
     btn.classList.toggle('on', !!cerca && !abierto);
-    if (cerca) { btn.textContent = 'Entrar · ' + cerca.corto + ' (E)'; mostrarAviso(cerca.corto + ' · pulsa E para entrar'); }
+    if (cerca) { btn.textContent = (cerca.id === 'ricardo' ? '' : 'Entrar · ') + cerca.corto + ' (E)'; mostrarAviso(cerca.corto + ' · pulsa E'); }
     else ocultarAviso();
   }
 }
@@ -530,10 +581,10 @@ function abrirZona(id) {
   } else if (id === 'entrena') {
     cuerpo = `<div class="puerta" style="border-left-color:#2e9e5b"><h3>B · Entrenamiento (Entrena)</h3><p>Biblioteca de la sesión. Los materiales se cargarán cuando estén validados.</p><ul><li>Manual del participante</li><li>Presentación de la sesión</li><li>Guía del instructor</li><li>Ejercicios y formatos</li></ul><span class="chip pend">Materiales por cargar</span></div>`;
   } else {
-    cuerpo = bloqueCasos('m1');
+    cuerpo = bloqueCasos(moduloInt.id);
   }
   const titulo = { lapzo: 'A · Lapzo · Aprende', entrena: 'B · Entrenamiento · Entrena', dojo: 'C · Dojo de Mando · Practica' }[id];
-  caja.innerHTML = `<div class="cab"><small>MÓDULO 1 · ZONA</small><h2 id="tituloPanel">${titulo}</h2></div><div class="cuerpo">${cuerpo}<button class="cerrar" onclick="cerrarPanel()">Volver al interior</button></div>`;
+  caja.innerHTML = `<div class="cab"><small>${moduloInt.nombre}</small><h2 id="tituloPanel">${titulo}</h2></div><div class="cuerpo">${cuerpo}<button class="cerrar" onclick="cerrarPanel()">Volver al interior</button></div>`;
   document.getElementById('panel').classList.add('on');
 }
 function cerrarPanel() {
@@ -556,7 +607,7 @@ function bucle(t) {
   const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
   mover(dt); detectar(); seguirCamara(dt); animarAmbiente(t / 1000);
   if (avisoT > 0) { avisoT -= dt; if (avisoT <= 0) ocultarAviso(); }
-  renderer.render(enInterior ? interior : escena, camara);
+  renderer.render(enInterior ? interiorActual : escena, camara);
   requestAnimationFrame(bucle);
 }
 requestAnimationFrame(bucle);
