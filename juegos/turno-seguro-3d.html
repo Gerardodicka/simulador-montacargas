@@ -2099,7 +2099,7 @@
         // ============================================================================
         const CS = { on: true, idx: -1, phase: 'intro', found: new Set(), wrong: 0, scores: [], cats: {}, timer: 0, timerOn: false, markers: [], pedsFrozen: true };
         const CS_LEVELS = [[90, '🟢 Operador seguro', '#2e9e5b'], [70, '🟡 Atención preventiva', '#f5a300'], [50, '🟠 Reforzamiento', '#f26b1d'], [0, '🔴 Reentrenamiento', '#c62828']];
-        const CS_PASS = 70;   // umbral de aprobación (configurable): Atención preventiva o mejor
+        const CS_PASS = 80;   // umbral de aprobación (configurable): Atención preventiva o mejor
         const CAT_NAMES = { peaton: 'Identificación de riesgos de peatones', sujecion: 'Sujeción de carga', estiba: 'Estiba segura', velocidad: 'Velocidad y desplazamiento', visibilidad: 'Visibilidad e intersecciones', maniobra: 'Maniobras en espacios reducidos', desestiba: 'Desestiba y estabilidad' };
         // Escena: setup() coloca equipo, carga, peatones y cámara; hotspots: riesgos a identificar (y señuelos); q: decisión
         const CS_SCENES = [

@@ -90,7 +90,7 @@ input.name,select.name{width:100%;padding:.75rem;border:2px solid #dfe3f0;border
   </div>
 </div>
 <script>
-const GAME_ID='metodos-surtido', GAME_NAME='Métodos de Surtido', PASS=70, MAX=100, NA=6, NB=10;
+const GAME_ID='metodos-surtido', GAME_NAME='Métodos de Surtido', PASS=80, MAX=100, NA=6, NB=10;
 let who={}, t0, score=0, errors=[], REG='', step=0, okM=0, route=[], ROUTE_PTS=[], routeScore=0, myDist=0, bestDist=0;
 const $=id=>document.getElementById(id);
 function toast(msg,good){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(good?' good':''); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1900); if(!good&&navigator.vibrate) navigator.vibrate(80); }
