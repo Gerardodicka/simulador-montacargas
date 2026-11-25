@@ -188,6 +188,7 @@ if (typeof loadOperarioModel === 'function') {
     const op = makeStandingOperator(false);
     avatar.children.forEach(ch => { ch.visible = false; });
     avatar.add(op);
+    crearRicardo();
   }).catch(() => { });
 }
 
@@ -380,6 +381,39 @@ function construirInterior(m) {
 const INTERIORES = {};
 MODULOS.forEach(m => { INTERIORES[m.id] = construirInterior(m); });
 
+/* ===================== Etapa 3 · Conversación con Ricardo desde el piso ===================== */
+const RICARDO_POS = { x: 4, z: -1.5 };
+let ricardoGrupo = null;
+function crearRicardo() {
+  if (typeof makeStandingOperator !== 'function' || ricardoGrupo) return;
+  const op = makeStandingOperator(false);
+  const g = new THREE.Group(); g.add(op);
+  g.position.set(RICARDO_POS.x, 0, RICARDO_POS.z); g.rotation.y = Math.PI * 0.85;
+  escena.add(g); ricardoGrupo = g;
+  /* etiqueta sobre su cabeza */
+  const etiq = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.5), new THREE.MeshBasicMaterial({ map: texturaTexto('Ricardo · Supervisor nocturno', '#0b1640', '#ffffff'), transparent: true }));
+  etiq.position.set(0, 2.25, 0); g.add(etiq);
+}
+const INICIO_RICARDO = 'Jefe, ¿qué pasó? Ando bien, nomás me desvelé. Déjeme trabajar, que traigo prisa.';
+function abrirConversacion() {
+  abierto = { id: 'conversacion-ricardo' };
+  document.getElementById('btnEntrar').classList.remove('on');
+  ocultarAviso();
+  const caja = document.getElementById('caja');
+  caja.innerHTML = `
+    <div class="cab"><small>PISO DE OPERACIÓN · 02:40 H</small><h2 id="tituloPanel">Conversación con Ricardo</h2></div>
+    <div class="cuerpo">
+      <div class="puerta" style="border-left-color:#2138D3">
+        <h3>Ricardo · Supervisor nocturno</h3>
+        <p style="font-size:15px;color:#1b2240;margin:8px 0 12px">"${INICIO_RICARDO}"</p>
+        <p>Tu respuesta define cómo sigue la plática. En la conversación completa puedes hablarle con voz o texto y tomar decisiones con su evaluación.</p>
+      </div>
+      <a class="btn" href="dojo-de-mando.html?caso=mejor" style="display:block;text-align:center;margin:8px 0">Iniciar la conversación en el Dojo</a>
+      <button class="cerrar" onclick="cerrarPanel()">Volver al piso</button>
+    </div>`;
+  document.getElementById('panel').classList.add('on');
+}
+
 /* ===================== Estado y controles ===================== */
 const teclas = {};
 const tactil = {};
@@ -410,6 +444,7 @@ function accionE() {
     if (zonaCerca) abrirZona(zonaCerca.id);
     return;
   }
+  if (cerca && cerca.id === 'ricardo') { abrirConversacion(); return; }
   if (cerca) { entrarInterior(cerca); return; }
 }
 function entrarInterior(m) {
@@ -476,11 +511,15 @@ function detectar() {
     const d = Math.hypot(avatar.position.x - g.position.x, avatar.position.z - (g.position.z + 3));
     if (d < RADIO_ENTRADA && d < dist) { dist = d; mejor = m; }
   });
+  if (!mejor && ricardoGrupo) {
+    const dR = Math.hypot(avatar.position.x - RICARDO_POS.x, avatar.position.z - RICARDO_POS.z);
+    if (dR < 3.2) mejor = { id: 'ricardo', corto: 'Hablar con Ricardo' };
+  }
   if (mejor !== cerca) {
     cerca = mejor;
     const btn = document.getElementById('btnEntrar');
     btn.classList.toggle('on', !!cerca && !abierto);
-    if (cerca) { btn.textContent = 'Entrar · ' + cerca.corto + ' (E)'; mostrarAviso(cerca.corto + ' · pulsa E para entrar'); }
+    if (cerca) { btn.textContent = (cerca.id === 'ricardo' ? '' : 'Entrar · ') + cerca.corto + ' (E)'; mostrarAviso(cerca.corto + ' · pulsa E'); }
     else ocultarAviso();
   }
 }
