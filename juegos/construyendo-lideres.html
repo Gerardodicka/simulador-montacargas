@@ -71,6 +71,17 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 <script>
 /* ===================== Configuración ===================== */
 const LAPZO_URL = '';   // enlace al curso de Lapzo: pendiente de validar con su administrador
+const CASOS = {   /* casos ya cargados en el Dojo (nivel Jefatura) */
+  m1: [['mejor','El mejor operador · escenario completo'],['junta_tiempoextra','Junta: tiempo extra sin pagar'],['junta_dispuesta','Junta: colaboradora dispuesta'],['junta_liderpobre','Junta: líder de equipo sin comunicación'],['junta_actitud','Junta: productivo con mala actitud'],['junta_nuevo','Junta: operador nuevo con miedo a preguntar'],['junta_epp','Junta: se niega al uso del chaleco'],['junta_conflicto_compa','Junta: compañero que le deja el trabajo pesado'],['junta_faltas','Junta: faltas por problema familiar'],['desempeno2','Evaluación de desempeño baja'],['renuncia','Renuncia de tu mejor elemento'],['malasnoticias','Malas noticias al equipo']],
+  m2: [['accidente2','Accidente: causa raíz'],['antidoping','Antidoping positivo en periodo de prueba'],['tiempoextra2','Tiempo extra y cambio de horarios'],['terminacion','Comunicar una terminación']],
+  m3: [['faltante','Faltante de inventario']],
+  m4: [['wms','Cambio de WMS (resistencia al cambio)']]
+};
+const PENDIENTES = {   /* casos sugeridos en el brief que aún no están cargados */
+  m2: ['Operador en estado inconveniente', 'Operador nuevo sin DC-3', 'Queja de hostigamiento'],
+  m3: ['Diferencia de inventario que amenaza el cierre', 'Backlog de surtido al cierre del turno', 'Error de verificación o embarque', 'Cliente solicita prioridad extraordinaria', 'Descoordinación entre turnos'],
+  m4: ['El sistema muestra una ubicación sin existencia física', 'Se detecta una diferencia en recepción', 'Una tarea de surtido está bloqueada', 'El operador confirma un movimiento incorrecto', 'Hay una diferencia entre sistema y físico', 'Se requiere reubicar mercancía con trazabilidad']
+};
 const MODULOS = [
   { id: 'm1', nombre: 'MÓDULO 1. TÚ ERES UNA PIEZA CLAVE COMO LÍDER', corto: 'Módulo 1 · Pieza clave como líder', color: 0x2138D3, activo: true,  x: -9 },
   { id: 'm2', nombre: 'MÓDULO 2. SEGURIDAD, CALIDAD Y NORMATIVIDAD',  corto: 'Módulo 2 · Seguridad y normatividad', color: 0x2e9e5b, activo: false, x: -3 },
@@ -246,51 +257,38 @@ function seguirCamara(dt) {
 }
 
 /* ===================== Paneles ===================== */
+function bloqueCasos(id) {
+  const lista = CASOS[id] || [];
+  const botones = lista.map(([cid, t]) => `<a class="btn" style="display:block;margin:6px 0;text-align:left" href="dojo-de-mando.html?caso=${cid}">▶ ${t}</a>`).join('');
+  const pend = (PENDIENTES[id] || []).map(t => `<li>${t}</li>`).join('');
+  return `
+    <div class="puerta" style="border-left-color:#e8590c">
+      <h3>C · Práctica (Dojo de Mando)</h3>
+      <p>${lista.length ? 'Casos cargados. Cada uno abre la simulación en el Dojo.' : 'Aún no hay casos cargados en este módulo.'}</p>
+      ${botones || ''}
+      ${pend ? `<p style="margin-top:10px"><b>Pendientes de cargar (propuestos en el brief):</b></p><ul>${pend}</ul>` : ''}
+    </div>`;
+}
 function abrirModulo(m) {
   abierto = m; cerca = m;
   document.getElementById('btnEntrar').classList.remove('on');
   ocultarAviso();
   const caja = document.getElementById('caja');
   const tituloId = 'tituloPanel';
-  if (!m.activo) {
-    caja.innerHTML = `
-      <div class="cab"><small>ÁREA PREPARADA</small><h2 id="${tituloId}">${m.nombre}</h2></div>
-      <div class="cuerpo">
-        <div class="puerta" style="border-left-color:#9aa3c7">
-          <h3>Contenido pendiente</h3>
-          <p>Este módulo está preparado para una fase futura. No hay cursos ni materiales publicados todavía, y el contenido debe validarse con su área responsable antes de mostrarse.</p>
-          <span class="chip pend">Pendiente de validación</span>
-        </div>
-        <button class="cerrar" onclick="cerrarPanel()">Volver al centro de distribución</button>
-      </div>`;
-  } else {
-    caja.innerHTML = `
-      <div class="cab"><small>MÓDULO ACTIVO · FASE 1</small><h2 id="${tituloId}">${m.nombre}</h2></div>
-      <div class="cuerpo">
-        <div class="puerta">
-          <h3>A · Lapzo (Aprende)</h3>
-          <p>Cursos asignados, videos, examen y diploma del módulo.</p>
-          ${LAPZO_URL ? `<a class="btn" href="${LAPZO_URL}" target="_blank" rel="noopener">Abrir en Lapzo</a>` : `<button class="btn" disabled>Abrir en Lapzo</button><div class="nota">Enlace pendiente de configurar con el administrador de Lapzo.</div>`}
-        </div>
-        <div class="puerta" style="border-left-color:#2e9e5b">
-          <h3>B · Entrenamiento (Entrena)</h3>
-          <p>Biblioteca de la sesión. Los materiales se cargarán cuando estén validados.</p>
-          <ul>
-            <li>Manual del participante</li>
-            <li>Presentación de la sesión</li>
-            <li>Guía del instructor</li>
-            <li>Ejercicios y formatos</li>
-          </ul>
-          <span class="chip pend">Materiales por cargar</span>
-        </div>
-        <div class="puerta" style="border-left-color:#f5c400">
-          <h3>C · Dojo de Mando (Practica)</h3>
-          <p>Simulación de conversaciones difíciles con personajes 3D, decisiones y puntaje del mentor.</p>
-          <a class="btn" href="dojo-de-mando.html">Entrar al Dojo</a>
-        </div>
-        <button class="cerrar" onclick="cerrarPanel()">Volver al centro de distribución</button>
-      </div>`;
-  }
+  const aprende = m.activo
+    ? `<div class="puerta"><h3>A · Lapzo (Aprende)</h3><p>Cursos asignados, videos, examen y diploma del módulo.</p>${LAPZO_URL ? `<a class="btn" href="${LAPZO_URL}" target="_blank" rel="noopener">Abrir en Lapzo</a>` : `<button class="btn" disabled>Abrir en Lapzo</button><div class="nota">Enlace pendiente de configurar con el administrador de Lapzo.</div>`}</div>`
+    : `<div class="puerta" style="border-left-color:#9aa3c7"><h3>A · Lapzo (Aprende)</h3><p>Contenido pendiente de validación.</p><span class="chip pend">Pendiente</span></div>`;
+  const entrena = m.activo
+    ? `<div class="puerta" style="border-left-color:#2e9e5b"><h3>B · Entrenamiento (Entrena)</h3><p>Biblioteca de la sesión. Los materiales se cargarán cuando estén validados.</p><ul><li>Manual del participante</li><li>Presentación de la sesión</li><li>Guía del instructor</li><li>Ejercicios y formatos</li></ul><span class="chip pend">Materiales por cargar</span></div>`
+    : `<div class="puerta" style="border-left-color:#9aa3c7"><h3>B · Entrenamiento (Entrena)</h3><p>Materiales pendientes de validación.</p><span class="chip pend">Pendiente</span></div>`;
+  caja.innerHTML = `
+    <div class="cab"><small>${m.activo ? 'MÓDULO ACTIVO' : 'ÁREA PREPARADA'}</small><h2 id="${tituloId}">${m.nombre}</h2></div>
+    <div class="cuerpo">
+      ${aprende}
+      ${entrena}
+      ${bloqueCasos(m.id)}
+      <button class="cerrar" onclick="cerrarPanel()">Volver al centro de distribución</button>
+    </div>`;
   document.getElementById('panel').classList.add('on');
 }
 function cerrarPanel() {
