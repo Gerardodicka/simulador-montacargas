@@ -1001,7 +1001,27 @@ const C_COACH_H = { id: 'coaching_h', ic: '🧭', t: 'Coaching a un supervisor',
   notas: 'Coaching con GROW: meta de desarrollo, realidad con hechos (quejas, sin revelar nombres), opciones que él proponga, compromiso con seguimiento; separar resultados de la forma; NOM-035.',
   goal: 'Usa GROW: que reconozca el impacto de su estilo, que él proponga opciones y que se comprometa a conductas concretas con seguimiento.', fb: FBM };
 SCEN.sup.push(Object.assign({ id: 'desempeno' }, C_DESEMP));
-SCEN.jefe.push(Object.assign({ id: 'desempeno2' }, C_DESEMP), Object.assign({ id: 'terminacion' }, C_TERM), Object.assign({ id: 'malasnoticias' }, C_NEWS));
+SCEN.jefe.push(Object.assign({ id: 'desempeno2' }, C_DESEMP), Object.assign({ id: 'terminacion' }, C_TERM), Object.assign({ id: 'malasnoticias' }, C_NEWS))
+// ===== Junta de arranque de turno: cuatro conversaciones con colaboradores (práctica con voz e IA) =====
+const JUNTA_SCEN = [
+  { id: 'junta_tiempoextra', ic: '⏰', t: 'Junta: tiempo extra sin pagar', d: 'Pides dos horas extra. Diego se niega: la semana pasada nadie le pagó lo que trabajó de más.', k: 'ricardo', name: 'Diego', role: 'Operador de montacargas', mood: 'Molesto y cansado', trust: 45,
+    intro: 'Junta de arranque, siete de la mañana. Hay un pedido urgente y necesitas dos horas extra. Diego es de tus mejores operadores y llega con el ceño fruncido.',
+    open: 'Jefe, me pidió que me quede dos horas más. No le voy a decir que sí. La semana pasada hice tiempo extra y todavía no me lo pagan. Llevo tres semanas preguntando y nadie me contesta.',
+    goal: 'Escucha el problema del pago sin imponer la orden. Acuerda una fecha concreta con Nómina y deja claro que la hora extra de hoy es voluntaria.', fb: FBM },
+  { id: 'junta_dispuesta', ic: '🙋', t: 'Junta: colaboradora dispuesta', d: 'Marta se ofrece a quedarse, pero tiene un compromiso familiar a la misma hora.', k: 'ana', name: 'Marta', role: 'Auxiliar de almacén', mood: 'Dispuesta, con un poco de preocupación', trust: 60,
+    intro: 'Junta de arranque. Necesitas a alguien para un embarque que se atrasó. Marta levanta la mano antes de que termines de preguntar.',
+    open: 'Jefe, sí puedo quedarme dos horas más. Ya me organicé con mi hermana para recoger a mi hijo, pero ella me dijo que hasta las ocho.',
+    goal: 'Agradece sin abusar de su disponibilidad. Confirma cuánto puede quedarse, no le pidas mañana también y reconoce su esfuerzo de forma concreta.', fb: FBM },
+  { id: 'junta_liderpobre', ic: '🗣️', t: 'Junta: líder de equipo sin comunicación', d: 'Rubén dio la orden de quedarse a su equipo sin explicar nada. Nadie sabe por qué ni por cuánto tiempo.', k: 'ricardo', name: 'Rubén', role: 'Líder de equipo de montacargas', mood: 'A la defensiva', trust: 50,
+    intro: 'Junta de arranque. Dos operadores de su equipo se acercaron a preguntarte qué pasa, porque Rubén solo dijo «se quedan». Rubén está cerca, con los brazos cruzados.',
+    open: 'Jefe, ya les di la orden a los demás de quedarse. No me preguntaron nada, así que supongo que están de acuerdo. Yo no les tengo que andar explicando todo.',
+    goal: 'Descubre qué información no llegó al equipo. Enséñale a dar un briefing claro (qué, por qué, cuánto y quién pregunta) y acuerda un plan de seguimiento.', fb: FBM },
+  { id: 'junta_actitud', ic: '😤', t: 'Junta: productivo con mala actitud', d: 'Luis es el operador con más productividad del turno, pero contesta mal y reta a quien le pide algo.', k: 'ricardo', name: 'Luis', role: 'Operador de montacargas (alta productividad)', mood: 'Irónico y a la defensiva', trust: 50,
+    intro: 'Junta de arranque. Luis tiene los mejores números del almacén este mes. Hoy, cuando le pediste apoyo, contestó con una ironía frente a todo el turno.',
+    open: '¿Otra vez quieren que nos quedemos? Qué novedad. Saco más cajas que nadie y aun así me toca quedarme. Pero bueno, ustedes son los que mandan.',
+    goal: 'Reconoce sus resultados de forma específica. Pon límites con hechos, sin humillarlo ni hacerlo en público, y acuerda un cambio concreto con fecha de revisión.', fb: FBM }
+];
+for (const lvl of ['sup', 'jefe', 'ger', 'hrbp']) if (SCEN[lvl]) SCEN[lvl].push(...JUNTA_SCEN.map(x => Object.assign({}, x)));;
 SCEN.ger.push(Object.assign({ id: 'terminacion2' }, C_TERM), Object.assign({ id: 'malasnoticias2' }, C_NEWS));
 SCEN.hrbp.push(C_COACH_H, Object.assign({}, C_TERM, { id: 'terminacion_h', intro: 'Jorge no cumplió su plan de mejora. Laura, su jefa de operaciones, le comunicará la terminación y te pidió acompañarla porque está nerviosa. Como HRBP, cuidas que el proceso sea legal, claro y digno.',
   cast: [C_TERM.cast[0], { k: 'ana', name: 'Laura', role: 'Jefa de operaciones', mood: 'Nerviosa', trust: 55, kw: /laura|jefa/, open: 'Eh… Jorge, pásale. Este… queríamos platicar contigo de unas cosas.', fb: ['¿Le digo yo lo del finiquito o tú?', 'Perdón, me cuesta mucho esto.', 'Gracias por ayudarme a decirlo claro.'] }],
