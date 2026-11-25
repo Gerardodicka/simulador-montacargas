@@ -67,7 +67,10 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
   <div class="caja" id="caja"></div>
 </div>
 
+<script>var LOGO_DATA = "assets/textures/dojo-dicka-logo.webp", LOGO_DATA_W = LOGO_DATA;</script>
 <script src="comun/three-libs.js?v=13.6"></script>
+<script src="comun/almacen-comun.js?v=13.6"></script>
+<script src="comun/avatares.js?v=14.8"></script>
 <script>
 /* ===================== Configuración ===================== */
 const LAPZO_URL = '';   // enlace al curso de Lapzo: pendiente de validar con su administrador
@@ -178,6 +181,15 @@ const piernaI = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.75, 0.22), oscuro);
 const piernaD = piernaI.clone(); piernaD.position.x = 0.15; avatar.add(piernaD);
 avatar.position.set(0, 0, 8);
 escena.add(avatar);
+/* personaje realista: el mismo operario de pie que usa el Dojo (si no carga, queda la figura simple) */
+if (typeof loadOperarioModel === 'function') {
+  loadOperarioModel().then(ok => {
+    if (!ok || typeof makeStandingOperator !== 'function') return;
+    const op = makeStandingOperator(false);
+    avatar.children.forEach(ch => { ch.visible = false; });
+    avatar.add(op);
+  }).catch(() => { });
+}
 
 
 /* ===================== Etapa 1 · Centro de distribución completo (geometría 3D, sin fondos planos) ===================== */
