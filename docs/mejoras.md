@@ -328,4 +328,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 21:00 UTC | 124 | Recepción y acomodo: ILA al final | Dojo IA 20/20 · validar 407/407 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-24 22:00 UTC | 125 | Armado de embarques: OTIF al final | Dojo IA 20/20 · validar 408/408 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-24 23:00 UTC | 126 | Cargas no estándar: daños al final | Dojo IA 20/20 · validar 409/409 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
-| 2026-11-25 00:00 UTC | 127 | Excepciones de surtido: OTIF al final | Dojo IA 20/20 · validar 410/410 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-25 01:10 UTC | 127 | Excepciones de surtido: OTIF al final | Dojo IA 20/20 · validar 410/410 (también tras integrar la junta de arranque de main) · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
