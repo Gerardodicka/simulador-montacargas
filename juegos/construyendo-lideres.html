@@ -294,16 +294,26 @@ senal(-12.5, -6, 'SALIDA', '#2e9e5b', '#ffffff');
 senal(12.5, -9, 'EPP\nOBLIGATORIO', '#f5c400', '#1b2240');
 senal(-5.5, 6.5, 'PEATONES', '#1769AA', '#ffffff');
 /* tablero de indicadores del turno */
-const tableroTex = (() => {
-  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+const tableroCanvas = document.createElement('canvas'); tableroCanvas.width = 512; tableroCanvas.height = 256;
+const tableroTex = new THREE.CanvasTexture(tableroCanvas);
+function dibujarTablero(t) {
+  const g = tableroCanvas.getContext('2d');
+  const vals = [
+    ['Productividad', 0.84 + 0.08 * Math.sin(t * 0.35), '#2e9e5b'],
+    ['Exactitud', 0.93 + 0.04 * Math.sin(t * 0.5 + 1), '#2138D3'],
+    ['Seguridad', 1.0, '#f5c400'],
+    ['Inventario', 0.7 + 0.06 * Math.sin(t * 0.4 + 2), '#c62828']
+  ];
   g.fillStyle = '#0b1640'; g.fillRect(0, 0, 512, 256);
   g.fillStyle = '#ffffff'; g.font = '800 26px Arial'; g.fillText('INDICADORES DEL TURNO', 20, 40);
-  [['Productividad', 0.86, '#2e9e5b'], ['Exactitud', 0.94, '#2138D3'], ['Seguridad', 1.0, '#f5c400'], ['Inventario', 0.72, '#c62828']].forEach(([t, v, col], i) => {
-    const y = 80 + i * 42; g.fillStyle = '#dfe3f0'; g.font = '600 20px Arial'; g.fillText(t, 20, y + 14);
-    g.fillStyle = '#243060'; g.fillRect(210, y, 270, 22); g.fillStyle = col; g.fillRect(210, y, 270 * v, 22);
+  vals.forEach(([nombre, v, col], i) => {
+    const y = 80 + i * 42; g.fillStyle = '#dfe3f0'; g.font = '600 20px Arial'; g.fillText(nombre, 20, y + 14);
+    g.fillStyle = '#243060'; g.fillRect(210, y, 270, 22); g.fillStyle = col; g.fillRect(210, y, 270 * Math.max(0, Math.min(1, v)), 22);
   });
-  return new THREE.CanvasTexture(c);
-})();
+  tableroTex.needsUpdate = true;
+}
+dibujarTablero(0);
+const lucesAndén = [-6, -3, 0].map(z => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.22, 1.9), new THREE.MeshBasicMaterial({ color: 0x2e9e5b })); m.position.set(13.85, 3.5, z); escena.add(m); return m; });
 const tablero = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), new THREE.MeshBasicMaterial({ map: tableroTex }));
 tablero.position.set(11, 2.9, -14.9); escena.add(tablero);
 bloque(4.2, 2.2, 0.12, 0x1d2a4a, 11, 2.9, -14.98);
@@ -346,10 +356,40 @@ aplicarMapas();
 
 /* ambiente animado: el montacargas recorre el pasillo y se detiene en cada extremo */
 function animarAmbiente(t) {
+  const dt = Math.min(0.1, Math.max(0, t - ambienteT)); ambienteT = t;
+  moverAmbiente(dt);
+  lucesAndén.forEach((m, i) => { m.material.color.setRGB(0.18 * (0.55 + 0.45 * Math.sin(t * 2 + i)), 0.62 * (0.55 + 0.45 * Math.sin(t * 2 + i)), 0.35 * (0.55 + 0.45 * Math.sin(t * 2 + i))); });
+  if (Math.floor(t * 2) !== Math.floor((t - dt) * 2)) dibujarTablero(t);
   const z = 2.5 + 4.5 * Math.sin(t * 0.22);
   const avanza = Math.cos(t * 0.22) > 0;
   montacargas.position.z = z;
   montacargas.rotation.y = avanza ? Math.PI / 2 : -Math.PI / 2;
+}
+
+/* ===================== Paso 4 · Actividad ambiental: colaboradores en rutas fijas ===================== */
+const RUTAS_AMBIENTE = [
+  [[-6.2, 0], [-6.2, 8.4], [-3.4, 8.4], [-3.4, 0]],     // ruta 1: a la izquierda del pasillo central
+  [[5, 9.6], [10.4, 9.6], [10.4, 11.2], [5, 11.2]]      // ruta 2: frente a la zona de andenes, fuera del montacargas
+];
+const ambientes = [];
+let ambienteT = 0;
+function crearAmbiente() {
+  if (typeof makeStandingOperator !== 'function' || ambientes.length) return;
+  RUTAS_AMBIENTE.forEach(pts => {
+    const g = new THREE.Group(); g.add(makeStandingOperator(false)); escena.add(g);
+    ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9 });
+  });
+}
+function moverAmbiente(dt) {
+  ambientes.forEach(a => {
+    const A = a.pts[a.idx], B = a.pts[(a.idx + 1) % a.pts.length];
+    const largo = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
+    a.prog += dt * a.vel / largo;
+    if (a.prog >= 1) { a.prog = 0; a.idx = (a.idx + 1) % a.pts.length; }
+    const P = a.pts[a.idx], Q = a.pts[(a.idx + 1) % a.pts.length];
+    a.g.position.set(P[0] + (Q[0] - P[0]) * a.prog, 0, P[1] + (Q[1] - P[1]) * a.prog);
+    a.g.rotation.y = Math.atan2(Q[0] - P[0], Q[1] - P[1]);
+  });
 }
 
 /* ===================== Etapa 2 · Interiores de cada módulo (tres zonas en 3D) ===================== */
@@ -457,6 +497,7 @@ function crearRicardo() {
   const g = new THREE.Group(); g.add(op);
   g.position.set(RICARDO_POS.x, 0, RICARDO_POS.z); g.rotation.y = Math.PI * 0.85;
   escena.add(g); ricardoGrupo = g;
+  crearAmbiente();
   /* etiqueta sobre su cabeza */
   const etiq = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.5), new THREE.MeshBasicMaterial({ map: texturaTexto('Ricardo · Supervisor nocturno', '#0b1640', '#ffffff'), transparent: true }));
   etiq.position.set(0, 2.25, 0); g.add(etiq);
