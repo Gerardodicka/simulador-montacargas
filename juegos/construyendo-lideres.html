@@ -492,7 +492,7 @@ function construirInterior(m) {
   anillo.rotation.x = -Math.PI / 2; anillo.position.set(5, 0.02, -2.5); esc.add(anillo);
   bloqueEn(esc, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
   bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
-  imagenEn(esc, 'assets/textures/dojo_simulador.webp', 2.9, 1735 / 901, 5, 1.6, -4.5);   // C · Práctica: simulador de casos prácticos
+  letreroEn(esc, 'PRÁCTICA\nSimula', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);   // C · Práctica: la pared lleva letrero; la cabina muestra el simulador
   simuladorEn(esc, 5, -2.6);   // cabina de simulador frente a la pared de Práctica
   letreroEn(esc, 'C · PRÁCTICA | SIMULA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
   [[3.6, 0.9], [5, 0.9], [6.4, 0.9]].forEach(([x, z]) => silla(esc, x - 0.2, z, Math.PI));
