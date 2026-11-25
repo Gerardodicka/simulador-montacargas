@@ -42,6 +42,11 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 .chip.pend{background:#eef0f7;color:#44506e}
 .cerrar{display:block;width:100%;margin-top:6px;border:2px solid var(--linea);background:#fff;color:var(--azul);font-weight:800;border-radius:12px;padding:11px;cursor:pointer;font-family:inherit}
 .nota{font-size:11px;color:var(--gris);margin-top:6px}
+.eval-fila{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:8px;border:2px solid var(--linea);cursor:pointer;font-family:inherit;text-align:left;width:100%;color:inherit}
+.eval-fila b{color:var(--azul);font-size:14px}
+.eval-fila small{color:var(--gris);font-size:12px}
+.barra-ev{height:8px;background:var(--linea);border-radius:999px;overflow:hidden;margin-top:6px}
+.barra-ev i{display:block;height:100%;background:var(--verde)}
 </style>
 </head>
 <body>
@@ -50,7 +55,7 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 
 <div class="hud">
   <div class="marca"><small>DOJO DE MANDO · CONSTRUYENDO LÍDERES DICKA</small><h1>Aprende. Entrena. Practica. Lidera.</h1></div>
-  <div class="fase" id="faseActiva">Fase 1 activa</div>
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto"><div class="fase" id="faseActiva">Fase 1 activa</div><button class="fase" id="btnEval" style="border:0;cursor:pointer" onclick="abrirEvaluacion()">📊 Evaluación</button></div>
 </div>
 
 <div class="aviso" id="aviso"></div>
@@ -536,6 +541,67 @@ function seguirCamara(dt) {
 }
 
 /* ===================== Paneles ===================== */
+/* ===================== Paso 4.1 · Evaluación por módulo ===================== */
+const CHIP_ESTADO = { 'Pendiente': 'pend', 'En proceso': 'proc', 'Completada': 'proc', 'Aprobada': 'ok' };
+function progresoCasos() {
+  /* mejor puntaje por caso, leído del navegador (lo guarda el Dojo en dicka_dojo_prog como "nivel:caso") */
+  const mapa = {};
+  try {
+    const raw = JSON.parse(localStorage.getItem('dicka_dojo_prog') || '{}');
+    Object.entries(raw).forEach(([k, v]) => { const id = k.split(':').pop(); const n = Number(v); if (isFinite(n)) mapa[id] = Math.max(mapa[id] ?? 0, n); });
+  } catch (e) { }
+  return mapa;
+}
+function estadoModulo(m) {
+  const prog = progresoCasos();
+  const casos = (CASOS[m.id] || []).map(([id, t]) => ({ id, t, score: prog[id] }));
+  const hechos = casos.filter(c => c.score !== undefined);
+  const promedio = hechos.length ? Math.round(hechos.reduce((a, c) => a + c.score, 0) / hechos.length) : null;
+  let estado = 'Pendiente';
+  if (hechos.length) estado = 'En proceso';   // Completada / Aprobada requieren también teoría (Lapzo) y práctica en plataforma
+  return { casos, hechos, promedio, estado, pendiente: casos.filter(c => c.score === undefined) };
+}
+function abrirEvaluacion() {
+  abierto = { id: 'evaluacion' };
+  ocultarAviso();
+  const filas = MODULOS.map(m => {
+    const e = estadoModulo(m);
+    const txt = e.promedio === null ? 'Sin casos practicados' : `${e.hechos.length} de ${e.casos.length} casos · promedio ${e.promedio}`;
+    return `<button class="eval-fila" onclick="abrirEvaluacionModulo('${m.id}')"><div><b>${m.nombre.split('. ').slice(0, 2).join('. ')}</b><br><small>${txt}</small></div><span class="chip ${e.estado === 'Pendiente' ? 'pend' : 'ok'}">${e.estado}</span></button>`;
+  }).join('');
+  document.getElementById('caja').innerHTML = `
+    <div class="cab"><small>EVALUACIÓN DEL PARTICIPANTE</small><h2 id="tituloPanel">Estado por módulo</h2></div>
+    <div class="cuerpo">
+      <p class="nota" style="margin:0 0 10px">El avance se guarda en este navegador. La evaluación teórica (Lapzo) y la práctica en plataforma se integrarán después.</p>
+      ${filas}
+      <button class="cerrar" onclick="cerrarPanel()">Volver al centro de distribución</button>
+    </div>`;
+  document.getElementById('panel').classList.add('on');
+}
+function abrirEvaluacionModulo(id) {
+  const m = MODULOS.find(x => x.id === id);
+  const e = estadoModulo(m);
+  const chip = CHIP_ESTADO[e.estado] || 'pend';
+  const barra = e.promedio === null ? '' : `<div class="barra-ev"><i style="width:${e.promedio}%"></i></div>`;
+  const casos = e.casos.map(c => `<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--linea);font-size:13px"><span>${c.t}</span><b style="color:${c.score === undefined ? '#8a6d00' : (c.score >= 80 ? '#1f6d40' : '#c62828')}">${c.score === undefined ? 'Por practicar' : c.score + (c.score >= 80 ? ' · aprueba' : ' · no aprueba')}</b></div>`).join('');
+  const siguiente = e.pendiente[0];
+  document.getElementById('caja').innerHTML = `
+    <div class="cab"><small>${m.nombre}</small><h2 id="tituloPanel">Evaluación del módulo</h2></div>
+    <div class="cuerpo">
+      <div class="puerta" style="border-left-color:#9aa3c7"><h3>A · Teoría (Lapzo)</h3><p>Examen del módulo en Lapzo.</p><span class="chip pend">Pendiente de integración</span></div>
+      <div class="puerta" style="border-left-color:#9aa3c7"><h3>B · Práctica en plataforma</h3><p>Ejercicios y evaluaciones revisados en la misma plataforma.</p><span class="chip pend">Pendiente de integración</span></div>
+      <div class="puerta" style="border-left-color:#2138D3">
+        <h3>C · Simulador (Dojo)</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0"><span class="chip ${chip === 'ok' ? 'ok' : chip}">${e.estado}</span><b style="color:var(--azul)">${e.promedio === null ? 'Sin puntaje' : 'Promedio ' + e.promedio + ' / mínimo 80'}</b></div>
+        ${barra}
+        <div style="margin-top:10px">${casos || '<p>No hay casos cargados en este módulo.</p>'}</div>
+        ${siguiente ? `<a class="btn" style="display:block;text-align:center;margin-top:12px" href="dojo-de-mando.html?caso=${siguiente.id}">Practicar: ${siguiente.t}</a>` : ''}
+      </div>
+      <div class="nota">Para estar Completada o Aprobada el módulo necesita también la teoría en Lapzo y la práctica en plataforma.</div>
+      <button class="cerrar" onclick="abrirEvaluacion()">Volver a los módulos</button>
+    </div>`;
+  document.getElementById('panel').classList.add('on');
+}
 function bloqueCasos(id) {
   const lista = CASOS[id] || [];
   const botones = lista.map(([cid, t]) => `<a class="btn" style="display:block;margin:6px 0;text-align:left" href="dojo-de-mando.html?caso=${cid}">▶ ${t}</a>`).join('');
