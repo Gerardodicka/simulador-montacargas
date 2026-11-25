@@ -468,7 +468,8 @@ function salirEdificio() {
   document.getElementById('faseActiva').textContent = 'Fase 1 activa';
 }
 
-function pulsa(k) { return !!(teclas[k] || tactil[k] || teclas[k.replace('w','arrowup').replace('s','arrowdown').replace('a','arrowleft').replace('d','arrowright')]); }
+const FLECHA = { w: 'arrowup', s: 'arrowdown', a: 'arrowleft', d: 'arrowright' };
+function pulsa(k) { return !!(teclas[k] || teclas[FLECHA[k]] || tactil[k]); }
 
 /* ===================== Movimiento ===================== */
 function mover(dt) {
