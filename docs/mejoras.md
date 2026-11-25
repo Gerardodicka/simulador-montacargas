@@ -163,6 +163,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 133 | Mejora de Ergonomía | Continuidad de #131-132 (seguridad medida igual) | Al final se muestra «Tus riesgos de lesión»: cuántas de las 10 situaciones podrían lastimar espalda, hombros o manos contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
 | 134 | Mejora de LOTO | Continuidad de #131-133 (seguridad medida igual) | Al final se muestra «Tus riesgos de accidente»: cuántos de los 10 equipos podrían arrancar o soltar energía con alguien trabajando contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
 | 135 | Mejora de Materiales peligrosos | Continuidad de #131-134 (seguridad medida igual) | Al final se muestra «Tus riesgos de accidente»: cuántas de las 10 situaciones podrían causar derrame, incendio o intoxicación contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
+| 136 | Mejora de Emergencias | Continuidad de #131-135 (seguridad medida igual) | Al final se muestra «Tus riesgos de accidente»: cuántas de las 10 respuestas podrían poner en peligro a personas contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -345,3 +346,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-25 07:55 UTC | 133 | Ergonomía: riesgos de lesión al final | Dojo IA 20/20 · validar 416/416 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 08:55 UTC | 134 | LOTO: riesgos de accidente al final | Dojo IA 20/20 · validar 417/417 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 09:55 UTC | 135 | Materiales peligrosos: riesgos de accidente al final | Dojo IA 20/20 · validar 418/418 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-25 10:55 UTC | 136 | Emergencias: riesgos de accidente al final | Dojo IA 20/20 · validar 419/419 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
