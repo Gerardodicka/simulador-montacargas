@@ -154,6 +154,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 124 | Mejora de Recepción y acomodo | Continuidad de #97-98 y #123 (IRA/ILA en todo el recorrido) | Al final se muestra «Tu ILA (producto en su lugar)»: % de tarimas acomodadas en su ubicación contra la meta de 99%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 | 125 | Mejora de Armado de embarques | Continuidad de #123-124 (indicadores del Tablero en todo el recorrido) | Al final se muestra «Tu OTIF (completo y a tiempo)»: % de embarques bien armados contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 | 126 | Mejora de Cargas no estándar | Continuidad de #123-125 (indicadores del Tablero en todo el recorrido) | Al final se muestra «Tus daños (cargas en riesgo)»: cuántas de las 10 cargas se podrían caer o dañar contra la meta de 0, en verde o rojo, ligado al indicador de Daños del Tablero | Mismo indicador en todo el recorrido | ✅ |
+| 127 | Mejora de Excepciones de surtido | Continuidad de #123-126 (indicadores del Tablero en todo el recorrido) | Al final se muestra «Tu OTIF (pedidos completos y a tiempo)»: % de excepciones bien resueltas contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
@@ -327,3 +328,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-24 21:00 UTC | 124 | Recepción y acomodo: ILA al final | Dojo IA 20/20 · validar 407/407 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-24 22:00 UTC | 125 | Armado de embarques: OTIF al final | Dojo IA 20/20 · validar 408/408 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-24 23:00 UTC | 126 | Cargas no estándar: daños al final | Dojo IA 20/20 · validar 409/409 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-25 01:10 UTC | 127 | Excepciones de surtido: OTIF al final | Dojo IA 20/20 · validar 410/410 (también tras integrar la junta de arranque de main) · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
