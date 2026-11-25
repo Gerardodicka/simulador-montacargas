@@ -352,3 +352,4 @@ Una mejora no se marca ✅ ni se sube al PR si falla cualquier paso.
 | 2026-11-25 10:55 UTC | 136 | Emergencias: riesgos de accidente al final | Dojo IA 20/20 · validar 419/419 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 11:55 UTC | 137 | Señalización: riesgos de accidente al final | Dojo IA 20/20 · validar 420/420 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
 | 2026-11-25 12:55 UTC | 138 | 5S: ILA al final | Dojo IA 20/20 · validar 421/421 · capturas 1280/390 OK · 0 errores de consola · privacidad OK | ✅ |
+| 2026-11-25 13:55 UTC | 139 | Portal: Mis indicadores | Dojo IA 20/20 · validar 422/422 · capturas 1280/390 OK · 0 errores de consola · privacidad OK (solo lee resultados del equipo) | ✅ |
