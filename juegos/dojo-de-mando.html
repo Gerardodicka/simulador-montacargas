@@ -1001,7 +1001,43 @@ const C_COACH_H = { id: 'coaching_h', ic: '🧭', t: 'Coaching a un supervisor',
   notas: 'Coaching con GROW: meta de desarrollo, realidad con hechos (quejas, sin revelar nombres), opciones que él proponga, compromiso con seguimiento; separar resultados de la forma; NOM-035.',
   goal: 'Usa GROW: que reconozca el impacto de su estilo, que él proponga opciones y que se comprometa a conductas concretas con seguimiento.', fb: FBM };
 SCEN.sup.push(Object.assign({ id: 'desempeno' }, C_DESEMP));
-SCEN.jefe.push(Object.assign({ id: 'desempeno2' }, C_DESEMP), Object.assign({ id: 'terminacion' }, C_TERM), Object.assign({ id: 'malasnoticias' }, C_NEWS));
+SCEN.jefe.push(Object.assign({ id: 'desempeno2' }, C_DESEMP), Object.assign({ id: 'terminacion' }, C_TERM), Object.assign({ id: 'malasnoticias' }, C_NEWS))
+// ===== Junta de arranque de turno: cuatro conversaciones con colaboradores (práctica con voz e IA) =====
+const JUNTA_SCEN = [
+  { id: 'junta_tiempoextra', ic: '⏰', t: 'Junta: tiempo extra sin pagar', d: 'Pides dos horas extra. Diego se niega: la semana pasada nadie le pagó lo que trabajó de más.', k: 'ricardo', name: 'Diego', role: 'Operador de montacargas', mood: 'Molesto y cansado', trust: 45,
+    intro: 'Junta de arranque, siete de la mañana. Hay un pedido urgente y necesitas dos horas extra. Diego es de tus mejores operadores y llega con el ceño fruncido.',
+    open: 'Jefe, me pidió que me quede dos horas más. No le voy a decir que sí. La semana pasada hice tiempo extra y todavía no me lo pagan. Llevo tres semanas preguntando y nadie me contesta.',
+    goal: 'Escucha el problema del pago sin imponer la orden. Acuerda una fecha concreta con Nómina y deja claro que la hora extra de hoy es voluntaria.', fb: FBM },
+  { id: 'junta_dispuesta', ic: '🙋', t: 'Junta: colaboradora dispuesta', d: 'Marta se ofrece a quedarse, pero tiene un compromiso familiar a la misma hora.', k: 'ana', name: 'Marta', role: 'Auxiliar de almacén', mood: 'Dispuesta, con un poco de preocupación', trust: 60,
+    intro: 'Junta de arranque. Necesitas a alguien para un embarque que se atrasó. Marta levanta la mano antes de que termines de preguntar.',
+    open: 'Jefe, sí puedo quedarme dos horas más. Ya me organicé con mi hermana para recoger a mi hijo, pero ella me dijo que hasta las ocho.',
+    goal: 'Agradece sin abusar de su disponibilidad. Confirma cuánto puede quedarse, no le pidas mañana también y reconoce su esfuerzo de forma concreta.', fb: FBM },
+  { id: 'junta_liderpobre', ic: '🗣️', t: 'Junta: líder de equipo sin comunicación', d: 'Rubén dio la orden de quedarse a su equipo sin explicar nada. Nadie sabe por qué ni por cuánto tiempo.', k: 'ricardo', name: 'Rubén', role: 'Líder de equipo de montacargas', mood: 'A la defensiva', trust: 50,
+    intro: 'Junta de arranque. Dos operadores de su equipo se acercaron a preguntarte qué pasa, porque Rubén solo dijo «se quedan». Rubén está cerca, con los brazos cruzados.',
+    open: 'Jefe, ya les di la orden a los demás de quedarse. No me preguntaron nada, así que supongo que están de acuerdo. Yo no les tengo que andar explicando todo.',
+    goal: 'Descubre qué información no llegó al equipo. Enséñale a dar un briefing claro (qué, por qué, cuánto y quién pregunta) y acuerda un plan de seguimiento.', fb: FBM },
+  { id: 'junta_actitud', ic: '😤', t: 'Junta: productivo con mala actitud', d: 'Luis es el operador con más productividad del turno, pero contesta mal y reta a quien le pide algo.', k: 'ricardo', name: 'Luis', role: 'Operador de montacargas (alta productividad)', mood: 'Irónico y a la defensiva', trust: 50,
+    intro: 'Junta de arranque. Luis tiene los mejores números del almacén este mes. Hoy, cuando le pediste apoyo, contestó con una ironía frente a todo el turno.',
+    open: '¿Otra vez quieren que nos quedemos? Qué novedad. Saco más cajas que nadie y aun así me toca quedarme. Pero bueno, ustedes son los que mandan.',
+    goal: 'Reconoce sus resultados de forma específica. Pon límites con hechos, sin humillarlo ni hacerlo en público, y acuerda un cambio concreto con fecha de revisión.', fb: FBM },
+  { id: 'junta_nuevo', ic: '🔰', t: 'Junta: operador nuevo con miedo a preguntar', d: 'Sofía lleva dos semanas. Golpeó una columna con la horquilla y no lo reportó por miedo.', k: 'ana', name: 'Sofía', role: 'Operadora de montacargas (nueva)', mood: 'Nerviosa y apenada', trust: 45,
+    intro: 'Junta de arranque. Sofía no ha levantado la mano en toda la semana. Ayer se escuchó un golpe en el pasillo cuatro y nadie reportó nada. Ella está sentada al fondo, con la vista baja.',
+    open: 'Jefe… perdón, ayer le pegué a una columna con la horquilla. No fue tan fuerte, creo. No lo reporté porque me da miedo que me corran. Ya llevo dos semanas y todavía no sé ni a quién preguntarle.',
+    goal: 'Recibe el reporte sin castigar. Explica que reportar es lo correcto, revisa el daño con ella y acuerda con quién puede preguntar cada día durante su primer mes.', fb: FBM },
+  { id: 'junta_epp', ic: '🦺', t: 'Junta: se niega al uso del chaleco', d: 'Hugo dice que el chaleco le estorba y que otros no lo usan. Cuestiona la regla frente a sus compañeros.', k: 'ricardo', name: 'Hugo', role: 'Operador de montacargas', mood: 'Retador y con aire de superioridad', trust: 50,
+    intro: 'Junta de arranque. Antes de que empiece el turno, Hugo se quitó el chaleco y lo dejó colgado en el casillero. Dos compañeros lo miran sin decir nada.',
+    open: 'Jefe, con todo respeto, el chaleco me estorba para subirme al montacargas. Además, mire a fulano, él tampoco lo usa y a nadie le dice nada. ¿Por qué solo a mí?',
+    goal: 'Explica la regla con hechos y el riesgo real, sin humillarlo ni hacerlo público. Revisa qué le incomoda del chaleco y acuerda una solución concreta; aplica la misma regla a todos.', fb: FBM },
+  { id: 'junta_conflicto_compa', ic: '🤝', t: 'Junta: compañero que le deja el trabajo pesado', d: 'Carmen dice que su compañero siempre le pasa las tareas pesadas y que ya no quiere trabajar con él.', k: 'ana', name: 'Carmen', role: 'Auxiliar de almacén', mood: 'Frustrada y cansada', trust: 50,
+    intro: 'Junta de arranque. Carmen te pide hablar antes de que empiece la junta. Trae la libreta con anotaciones de los últimos cinco turnos.',
+    open: 'Jefe, necesito hablar con usted. Mario siempre me deja lo pesado: las tarimas de arriba, los embarques de última hora. Ya no quiero trabajar con él. Aquí tengo anotadas las fechas.',
+    goal: 'Escucha su versión y revisa los hechos con su libreta. Habla también con Mario sin tomar partido, define reglas claras de reparto de tareas y acuerda una revisión en una semana.', fb: FBM },
+  { id: 'junta_faltas', ic: '🏠', t: 'Junta: faltas por problema familiar', d: 'Esteban llegó tarde tres veces esta semana. Está cansado y tiene un problema en casa que no ha contado.', k: 'ricardo', name: 'Esteban', role: 'Operador de montacargas', mood: 'Agotado y avergonzado', trust: 50,
+    intro: 'Junta de arranque. Esteban llega con ojeras y el uniforme mal puesto. Es la tercera vez que llega tarde esta semana, y su expediente ya tiene una advertencia de hace un mes.',
+    open: 'Jefe, sé que llegué tarde otra vez. Perdón. Estoy cuidando a mi papá en las noches, se cayó y no hay quién lo cuide. No quiero perder el trabajo, pero tampoco puedo dejarlo solo.',
+    goal: 'Muestra empatía sin prometer lo que no puedes cumplir. Revisa con él opciones formales (permisos, horarios, apoyo de RH) y acuerda un plan con fechas de revisión.', fb: FBM }
+];
+for (const lvl of ['sup', 'jefe', 'ger', 'hrbp']) if (SCEN[lvl]) SCEN[lvl].push(...JUNTA_SCEN.map(x => Object.assign({}, x)));;
 SCEN.ger.push(Object.assign({ id: 'terminacion2' }, C_TERM), Object.assign({ id: 'malasnoticias2' }, C_NEWS));
 SCEN.hrbp.push(C_COACH_H, Object.assign({}, C_TERM, { id: 'terminacion_h', intro: 'Jorge no cumplió su plan de mejora. Laura, su jefa de operaciones, le comunicará la terminación y te pidió acompañarla porque está nerviosa. Como HRBP, cuidas que el proceso sea legal, claro y digno.',
   cast: [C_TERM.cast[0], { k: 'ana', name: 'Laura', role: 'Jefa de operaciones', mood: 'Nerviosa', trust: 55, kw: /laura|jefa/, open: 'Eh… Jorge, pásale. Este… queríamos platicar contigo de unas cosas.', fb: ['¿Le digo yo lo del finiquito o tú?', 'Perdón, me cuesta mucho esto.', 'Gracias por ayudarme a decirlo claro.'] }],
