@@ -18,6 +18,10 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 .fase{background:#fff;color:var(--azul);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 .aviso{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:rgba(1,17,49,.9);color:#fff;border-radius:14px;padding:10px 16px;font-size:14px;font-weight:700;border:2px solid var(--amarillo);display:none;z-index:3;white-space:nowrap}
 .aviso.on{display:block}
+.tarjeta-modulo{white-space:normal;min-width:260px;max-width:340px;text-align:left}
+.tarjeta-modulo b{display:block;font-size:14px;color:#f5c400}
+.tarjeta-modulo small{display:block;font-size:12px;opacity:.9;margin-top:3px;line-height:1.35}
+.tarjeta-modulo .est{display:inline-block;margin-top:6px;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#fff;color:#1b2240}
 .controles{position:fixed;left:14px;bottom:14px;z-index:3;display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:6px}
 .controles button{border:0;border-radius:14px;background:rgba(255,255,255,.92);color:var(--azul);font-size:22px;font-weight:800;box-shadow:0 4px 10px rgba(0,0,0,.3);touch-action:none;user-select:none}
 .controles button:active{background:#fff;transform:scale(.96)}
@@ -54,8 +58,8 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 <div id="lienzo"></div>
 
 <div class="hud">
-  <div class="marca"><small>DOJO DE MANDO · CONSTRUYENDO LÍDERES DICKA</small><h1>Aprende. Entrena. Practica. Lidera.</h1></div>
-  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto"><div class="fase" id="faseActiva">Fase 1 activa</div><button class="fase" id="btnEval" style="border:0;cursor:pointer" onclick="abrirEvaluacion()">📊 Evaluación</button></div>
+  <div class="marca"><small>DOJO DE MANDO · CONSTRUYENDO LÍDERES DICKA</small><h1>Aprende. Entrena. Practica. Lidera.</h1><div id="objetivo" style="margin-top:6px;font-size:12px;font-weight:700;color:#fff">Objetivo: explora los cuatro módulos · <span id="visitados">0/4</span></div><div style="height:6px;background:rgba(255,255,255,.2);border-radius:99px;margin-top:4px;overflow:hidden"><i id="barraRecorrido" style="display:block;height:100%;width:0;background:#f5c400;transition:width .4s"></i></div></div>
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto"><div class="fase" id="faseActiva">Fase 1 activa</div><button class="fase" id="btnEval" style="border:0;cursor:pointer" onclick="abrirEvaluacion()">📊 Evaluación</button><button class="fase" style="border:0;cursor:pointer" onclick="abrirMapa()">🗺️ Mapa</button></div>
 </div>
 
 <div class="aviso" id="aviso"></div>
@@ -536,7 +540,7 @@ window.addEventListener('keydown', e => {
   if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
   teclas[k] = true;
   if (k === 'e' && !abierto) accionE();
-  if (k === 'escape' && abierto) cerrarPanel();
+  if (k === 'escape') { if (abierto) cerrarPanel(); else if (enInterior) salirEdificio(); }
 });
 window.addEventListener('keyup', e => { teclas[e.key.toLowerCase()] = false; });
 document.querySelectorAll('.controles button').forEach(b => {
@@ -555,7 +559,22 @@ function accionE() {
   if (cerca && cerca.id === 'ricardo') { abrirConversacion(); return; }
   if (cerca) { entrarInterior(cerca); return; }
 }
+function marcarVisitado(id) {
+  let lista = [];
+  try { lista = JSON.parse(localStorage.getItem('dicka_recorrido') || '[]'); } catch (e) { }
+  if (!lista.includes(id)) lista.push(id);
+  try { localStorage.setItem('dicka_recorrido', JSON.stringify(lista)); } catch (e) { }
+  actualizarObjetivo();
+}
+function actualizarObjetivo() {
+  let lista = [];
+  try { lista = JSON.parse(localStorage.getItem('dicka_recorrido') || '[]'); } catch (e) { }
+  const n = MODULOS.filter(m => lista.includes(m.id)).length;
+  document.getElementById('visitados').textContent = n + '/4';
+  document.getElementById('barraRecorrido').style.width = (n / 4 * 100) + '%';
+}
 function entrarInterior(m) {
+  marcarVisitado(m.id);
   moduloInt = m; interiorActual = INTERIORES[m.id]; zonasActuales = ZONAS_INT;
   enInterior = true; cerca = null; ocultarAviso();
   escena.remove(avatar); interiorActual.add(avatar);
@@ -607,8 +626,9 @@ function mover(dt) {
   heading += girar * GIRO * dt;
   moviendo = avanzar !== 0;
   if (moviendo) {
-    const dx = Math.sin(heading) * avanzar * VEL * dt;
-    const dz = Math.cos(heading) * avanzar * VEL * dt;
+    const vel = pulsa('shift') ? VEL * 1.8 : VEL;
+    const dx = Math.sin(heading) * avanzar * vel * dt;
+    const dz = Math.cos(heading) * avanzar * vel * dt;
     const L = enInterior ? { x: INT_LIM.x, zMin: INT_LIM.zMin, zMax: INT_LIM.zMax } : LIMITE;
     const x0 = avatar.position.x, z0 = avatar.position.z;
     let nx = Math.max(-L.x, Math.min(L.x, x0 + dx));
@@ -658,12 +678,50 @@ function detectar() {
     cerca = mejor;
     const btn = document.getElementById('btnEntrar');
     btn.classList.toggle('on', !!cerca && !abierto);
-    if (cerca) { btn.textContent = (cerca.id === 'ricardo' ? '' : 'Entrar · ') + cerca.corto + ' (E)'; mostrarAviso(cerca.corto + ' · pulsa E'); }
+    if (cerca) { btn.textContent = (cerca.id === 'ricardo' ? '' : 'Entrar · ') + cerca.corto + ' (E)'; if (cerca.id && cerca.id.startsWith('m')) mostrarAviso(tarjetaModulo(cerca), true); else mostrarAviso(cerca.corto + ' · pulsa E'); }
     else ocultarAviso();
   }
 }
 let avisoT = 0;
-function mostrarAviso(t) { const a = document.getElementById('aviso'); a.textContent = t; a.classList.add('on'); avisoT = 2.2; }
+const DESCRIPCION_MODULO = {
+  m1: 'Liderazgo, comunicación, escucha activa y juntas de arranque.',
+  m2: 'Prevención de riesgos, EPP, reporte de hallazgos y normatividad.',
+  m3: 'Recepción, almacenamiento, surtido, embarques e inventarios.',
+  m4: 'Transacciones, ubicaciones, excepciones y trazabilidad en el WMS.'
+};
+function estadoRecorrido(m) {
+  if (!m.activo) return 'Disponible · contenido pendiente';
+  const e = estadoModulo(m).estado;
+  return e === 'En proceso' ? 'En progreso' : e === 'Aprobada' || e === 'Completada' ? 'Completado' : 'Disponible';
+}
+function tarjetaModulo(m) {
+  const n = MODULOS.indexOf(m) + 1;
+  return `<b>Módulo ${n} · ${m.corto.replace(/^Módulo \d+ · /, '')}</b><small>${DESCRIPCION_MODULO[m.id]}</small><span class="est">${estadoRecorrido(m)}</span><br><small style="margin-top:6px;opacity:.85">Pulsa E para entrar</small>`;
+}
+function mostrarAviso(t, html) { const a = document.getElementById('aviso'); if (html) { a.innerHTML = t; a.classList.add('tarjeta-modulo'); } else { a.textContent = t; a.classList.remove('tarjeta-modulo'); } a.classList.add('on'); avisoT = html ? 4 : 2.2; }
+function abrirMapa() {
+  abierto = { id: 'mapa' };
+  ocultarAviso();
+  const X = x => 20 + (x + 14) / 28 * 300, Z = z => 20 + (z + 17) / 29 * 180;
+  const mods = MODULOS.map(m => `<rect x="${X(m.x - 2.5)}" y="${Z(-13.4)}" width="${X(m.x + 2.5) - X(m.x - 2.5)}" height="${Z(-9.8) - Z(-13.4)}" fill="#${m.color.toString(16).padStart(6, '0')}" rx="6"/><text x="${X(m.x)}" y="${Z(-12) + 4}" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">${m.id.toUpperCase()}</text>`).join('');
+  const av = `<circle cx="${X(avatar.position.x)}" cy="${Z(avatar.position.z)}" r="6" fill="#f5c400" stroke="#1b2240" stroke-width="2"/>`;
+  document.getElementById('caja').innerHTML = `
+    <div class="cab"><small>CENTRO DE DISTRIBUCIÓN</small><h2 id="tituloPanel">Mapa del almacén</h2></div>
+    <div class="cuerpo">
+      <svg viewBox="0 0 340 220" width="100%" style="background:#c9d0da;border-radius:12px">
+        <rect x="20" y="20" width="300" height="180" fill="#dfe6ee" stroke="#9aa7bf" stroke-width="2"/>
+        ${mods}
+        <rect x="${X(-5.6)}" y="${Z(-19.5)}" width="${X(5.6) - X(-5.6)}" height="${Z(-14.8) - Z(-19.5)}" fill="#1D2586" rx="4"/>
+        <rect x="${X(12)}" y="${Z(-7.6)}" width="${X(14.4) - X(12)}" height="${Z(-0.9) - Z(-7.6)}" fill="#7d7f81"/>
+        <text x="${X(13)}" y="${Z(-9)}" font-size="10" fill="#1b2240" text-anchor="middle">Andenes</text>
+        <rect x="${X(-12.6) - 6}" y="${Z(-3.2) - 6}" width="12" height="20" fill="#2138D3"/>
+        ${av}
+      </svg>
+      <p class="nota" style="margin-top:8px">Punto amarillo: tu posición. Los módulos se abren pulsando E cerca de su entrada.</p>
+      <button class="cerrar" onclick="cerrarPanel()">Volver al almacén</button>
+    </div>`;
+  document.getElementById('panel').classList.add('on');
+}
 function ocultarAviso() { document.getElementById('aviso').classList.remove('on'); }
 
 /* cámara en tercera persona: detrás del avatar, siguiendo su rumbo */
@@ -802,6 +860,7 @@ function ajustar() {
 window.addEventListener('resize', ajustar); ajustar();
 camara.position.set(0, 3, 14);
 
+actualizarObjetivo();
 let ultimo = performance.now();
 function bucle(t) {
   const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
