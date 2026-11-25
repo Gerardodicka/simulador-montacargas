@@ -159,6 +159,7 @@ Estado: ⬜ pendiente · 🔨 en curso · ✅ en PR · 🚀 publicada
 | 129 | Mejora de Slotting | Continuidad de #123-128 (indicadores en todo el recorrido) | Al final se muestra «Tu productividad estimada» en cajas/hora contra la meta de 110: cada producto mal acomodado hace caminar de más; verde o rojo, ligado al indicador de Productividad | Mismo indicador en todo el recorrido | ✅ |
 | 130 | Mejora de Flujo de materiales | Continuidad de #123-129 (indicadores en todo el recorrido) | Al final se muestra «Tu OTIF (pedidos a tiempo)»: % de cuellos de botella bien resueltos contra la meta de 97%, en verde o rojo, ligado al Tablero del Gerente | Mismo indicador en todo el recorrido | ✅ |
 | 131 | Mejora de Andenes | Continuidad de #123-130 (indicadores en todo el recorrido) | Al final se muestra «Tus riesgos de accidente»: cuántas de las 10 maniobras podrían causar un accidente contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
+| 132 | Mejora de Trabajo en alturas | Continuidad de #131 (seguridad medida igual) | Al final se muestra «Tus riesgos de accidente»: cuántas de las 10 situaciones podrían terminar en caída contra la meta de 0, en verde o rojo, ligado a los accidentes del Tablero del Gerente | Seguridad medida igual en todo el recorrido | ✅ |
 
 Pendientes que requieren decisión del usuario (no se hacen solos): tablero central con consentimiento (F3-01), voz de pago (F3-03), facilitador humano (F3-04), calibración con evaluadores de RH (F2-07).
 
