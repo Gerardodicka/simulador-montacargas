@@ -18,6 +18,10 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 .fase{background:#fff;color:var(--azul);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 .aviso{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:rgba(1,17,49,.9);color:#fff;border-radius:14px;padding:10px 16px;font-size:14px;font-weight:700;border:2px solid var(--amarillo);display:none;z-index:3;white-space:nowrap}
 .aviso.on{display:block}
+.tarjeta-modulo{white-space:normal;min-width:260px;max-width:340px;text-align:left}
+.tarjeta-modulo b{display:block;font-size:14px;color:#f5c400}
+.tarjeta-modulo small{display:block;font-size:12px;opacity:.9;margin-top:3px;line-height:1.35}
+.tarjeta-modulo .est{display:inline-block;margin-top:6px;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#fff;color:#1b2240}
 .controles{position:fixed;left:14px;bottom:14px;z-index:3;display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:6px}
 .controles button{border:0;border-radius:14px;background:rgba(255,255,255,.92);color:var(--azul);font-size:22px;font-weight:800;box-shadow:0 4px 10px rgba(0,0,0,.3);touch-action:none;user-select:none}
 .controles button:active{background:#fff;transform:scale(.96)}
@@ -54,8 +58,8 @@ html,body{height:100%;overflow:hidden;background:#0b1640;font-family:Inter,'Sego
 <div id="lienzo"></div>
 
 <div class="hud">
-  <div class="marca"><small>DOJO DE MANDO · CONSTRUYENDO LÍDERES DICKA</small><h1>Aprende. Entrena. Practica. Lidera.</h1></div>
-  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto"><div class="fase" id="faseActiva">Fase 1 activa</div><button class="fase" id="btnEval" style="border:0;cursor:pointer" onclick="abrirEvaluacion()">📊 Evaluación</button></div>
+  <div class="marca"><small>DOJO DE MANDO · CONSTRUYENDO LÍDERES DICKA</small><h1>Aprende. Entrena. Practica. Lidera.</h1><div id="objetivo" style="margin-top:6px;font-size:12px;font-weight:700;color:#fff">Objetivo: explora los cuatro módulos · <span id="visitados">0/4</span></div><div style="height:6px;background:rgba(255,255,255,.2);border-radius:99px;margin-top:4px;overflow:hidden"><i id="barraRecorrido" style="display:block;height:100%;width:0;background:#f5c400;transition:width .4s"></i></div></div>
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto"><div class="fase" id="faseActiva">Fase 1 activa</div><button class="fase" id="btnEval" style="border:0;cursor:pointer" onclick="abrirEvaluacion()">📊 Evaluación</button><button class="fase" style="border:0;cursor:pointer" onclick="abrirMapa()">🗺️ Mapa</button></div>
 </div>
 
 <div class="aviso" id="aviso"></div>
@@ -152,19 +156,52 @@ function textura(texto, color) {
   texto.split('\n').forEach((t, i, arr) => g.fillText(t, 256, 128 + (i - (arr.length - 1) / 2) * 56));
   return new THREE.CanvasTexture(c);
 }
+/* edificios tipo arco con luz perimetral, icono y accesorios de andén (inspirados en la referencia) */
+const ICONOS = { m1: '👥', m2: '🦺', m3: '📦', m4: '💻' };
+function iconoTex(emoji, fondo) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = fondo; g.beginPath(); g.arc(128, 128, 124, 0, Math.PI * 2); g.fill();
+  g.font = '150px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffffff'; g.fillText(emoji, 128, 140);
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t;
+}
 MODULOS.forEach(m => {
-  const g = new THREE.Group(); g.position.set(m.x, 0, Z_EDIFICIOS);
-  const color = new THREE.Color(m.color);
-  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1 });
-  const base = new THREE.Mesh(new THREE.BoxGeometry(5, 4.2, 4), mat); base.position.set(0, 2.1, 0); base.castShadow = true; base.receiveShadow = true; g.add(base);
-  const hueco = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.8, 0.2), new THREE.MeshStandardMaterial({ color: m.activo ? 0xfff5c2 : 0x1b2240, emissive: m.activo ? 0xf5c400 : 0x000000, emissiveIntensity: m.activo ? 0.35 : 0 }));
-  hueco.position.set(0, 1.4, 2.05); g.add(hueco);
-  const letrero = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.6), new THREE.MeshBasicMaterial({ map: textura(m.id === 'm1' ? 'MÓDULO 1' : m.id === 'm2' ? 'MÓDULO 2' : m.id === 'm3' ? 'MÓDULO 3' : 'MÓDULO 4', m.color), transparent: false }));
-  letrero.position.set(0, 4.7, 2.02); g.add(letrero);
+  const g = new THREE.Group(); g.position.set(m.x, 0, Z_EDIFICIOS + 2);   // frente del edificio en z = -10
+  const W = 2.5, R = 2.5, pared = 2.2, prof = 3.2;
+  const forma = new THREE.Shape();
+  forma.moveTo(-W, 0); forma.lineTo(-W, pared); forma.absarc(0, pared, R, Math.PI, 0, true); forma.lineTo(W, 0); forma.lineTo(-W, 0);
+  const geo = new THREE.ExtrudeGeometry(forma, { depth: prof, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08, bevelSegments: 2, curveSegments: 32 });
+  const cuerpo = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: new THREE.Color(m.color), roughness: 0.5, metalness: 0.15 }));
+  cuerpo.position.z = -prof; cuerpo.castShadow = true; cuerpo.receiveShadow = true; g.add(cuerpo);
+  /* puerta de cristal oscuro y marco */
+  const puerta = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.7, 0.1), new THREE.MeshStandardMaterial({ color: m.activo ? 0x1b2a4a : 0x1b2240, roughness: 0.2, metalness: 0.4 }));
+  puerta.position.set(0, 1.35, 0.12); g.add(puerta);
+  /* luz perimetral del arco */
+  const puntos = [];
+  puntos.push(new THREE.Vector3(-W, 0, 0.14), new THREE.Vector3(-W, pared, 0.14));
+  for (let i = 0; i <= 24; i++) { const a = Math.PI - (i / 24) * Math.PI; puntos.push(new THREE.Vector3(Math.cos(a) * R, pared + Math.sin(a) * R, 0.14)); }
+  puntos.push(new THREE.Vector3(W, pared, 0.14), new THREE.Vector3(W, 0, 0.14));
+  const luz = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(puntos), 120, 0.05, 8, false), new THREE.MeshBasicMaterial({ color: m.activo ? 0xffd54a : 0x9aa3c7 }));
+  g.add(luz);
+  /* icono y letrero sobre el arco */
+  const icono = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: iconoTex(ICONOS[m.id], '#' + m.color.toString(16).padStart(6, '0')), transparent: true }));
+  icono.position.set(0, pared + R + 0.85, 0.2); g.add(icono);
+  const letrero = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.7), new THREE.MeshBasicMaterial({ map: textura(m.id === 'm1' ? 'MÓDULO 1' : m.id === 'm2' ? 'MÓDULO 2' : m.id === 'm3' ? 'MÓDULO 3' : 'MÓDULO 4', m.color) }));
+  letrero.position.set(0, pared + R + 0.25, 0.2); g.add(letrero);
   if (!m.activo) {
-    const aviso = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshBasicMaterial({ map: textura('PRÓXIMAMENTE', 0x44506e), transparent: false }));
-    aviso.position.set(0, 0.6, 2.12); g.add(aviso);
+    const aviso = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.45), new THREE.MeshBasicMaterial({ map: textura('PRÓXIMAMENTE', 0x44506e) }));
+    aviso.position.set(0, 2.8, 0.2); g.add(aviso);
   }
+  /* macetas y bolardos junto a la puerta */
+  [-3.3, 3.3].forEach(x => {
+    const maceta = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.45, 0.6, 16), new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.8 }));
+    maceta.position.set(x, 0.3, 1.1); maceta.castShadow = true; g.add(maceta);
+    const hoja = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 12), new THREE.MeshStandardMaterial({ color: 0x2e9e5b, roughness: 0.9 }));
+    hoja.position.set(x, 1.0, 1.1); hoja.castShadow = true; g.add(hoja);
+  });
+  [-1.6, 1.6].forEach(x => {
+    const bolardo = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1, 12), new THREE.MeshStandardMaterial({ color: 0xf5c400, roughness: 0.5 }));
+    bolardo.position.set(x * 1.7, 0.5, 1.6); bolardo.castShadow = true; g.add(bolardo);
+  });
   g.userData.modulo = m.id;
   escena.add(g); etiquetas[m.id] = g;
 });
@@ -261,16 +298,26 @@ senal(-12.5, -6, 'SALIDA', '#2e9e5b', '#ffffff');
 senal(12.5, -9, 'EPP\nOBLIGATORIO', '#f5c400', '#1b2240');
 senal(-5.5, 6.5, 'PEATONES', '#1769AA', '#ffffff');
 /* tablero de indicadores del turno */
-const tableroTex = (() => {
-  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+const tableroCanvas = document.createElement('canvas'); tableroCanvas.width = 512; tableroCanvas.height = 256;
+const tableroTex = new THREE.CanvasTexture(tableroCanvas);
+function dibujarTablero(t) {
+  const g = tableroCanvas.getContext('2d');
+  const vals = [
+    ['Productividad', 0.84 + 0.08 * Math.sin(t * 0.35), '#2e9e5b'],
+    ['Exactitud', 0.93 + 0.04 * Math.sin(t * 0.5 + 1), '#2138D3'],
+    ['Seguridad', 1.0, '#f5c400'],
+    ['Inventario', 0.7 + 0.06 * Math.sin(t * 0.4 + 2), '#c62828']
+  ];
   g.fillStyle = '#0b1640'; g.fillRect(0, 0, 512, 256);
   g.fillStyle = '#ffffff'; g.font = '800 26px Arial'; g.fillText('INDICADORES DEL TURNO', 20, 40);
-  [['Productividad', 0.86, '#2e9e5b'], ['Exactitud', 0.94, '#2138D3'], ['Seguridad', 1.0, '#f5c400'], ['Inventario', 0.72, '#c62828']].forEach(([t, v, col], i) => {
-    const y = 80 + i * 42; g.fillStyle = '#dfe3f0'; g.font = '600 20px Arial'; g.fillText(t, 20, y + 14);
-    g.fillStyle = '#243060'; g.fillRect(210, y, 270, 22); g.fillStyle = col; g.fillRect(210, y, 270 * v, 22);
+  vals.forEach(([nombre, v, col], i) => {
+    const y = 80 + i * 42; g.fillStyle = '#dfe3f0'; g.font = '600 20px Arial'; g.fillText(nombre, 20, y + 14);
+    g.fillStyle = '#243060'; g.fillRect(210, y, 270, 22); g.fillStyle = col; g.fillRect(210, y, 270 * Math.max(0, Math.min(1, v)), 22);
   });
-  return new THREE.CanvasTexture(c);
-})();
+  tableroTex.needsUpdate = true;
+}
+dibujarTablero(0);
+const lucesAndén = [-6, -3, 0].map(z => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.22, 1.9), new THREE.MeshBasicMaterial({ color: 0x2e9e5b })); m.position.set(13.85, 3.5, z); escena.add(m); return m; });
 const tablero = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), new THREE.MeshBasicMaterial({ map: tableroTex }));
 tablero.position.set(11, 2.9, -14.9); escena.add(tablero);
 bloque(4.2, 2.2, 0.12, 0x1d2a4a, 11, 2.9, -14.98);
@@ -280,14 +327,73 @@ bloque(1.6, 2.0, 2.2, 0x1769aa, 23.3, 1.2, -3);
 [-1, 1].forEach(sd => bloque(0.9, 0.9, 0.3, 0x222222, 19.6, 0.45, -3 + sd * 1.15));
 bloque(0.12, 2.2, 1.5, 0x2e9e5b, 14.6, 1.6, -3);
 
+/* ===================== Paso 3 · Almacén completo: racks, estación de surtido, emplayadora y patines ===================== */
+function rack(x, z, giro = 0) {
+  const g = new THREE.Group();
+  const poste = (dx) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3.6, 0.12), new THREE.MeshStandardMaterial({ color: 0x2138D3, roughness: 0.5, metalness: 0.3 })); m.position.set(dx, 1.8, 0); m.castShadow = true; g.add(m); };
+  poste(-1.2); poste(1.2);
+  [0.6, 1.9, 3.1].forEach(y => { const v = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.12, 0.9), new THREE.MeshStandardMaterial({ color: 0xf26b1d, roughness: 0.5 })); v.position.set(0, y, 0); v.castShadow = true; g.add(v); });
+  [0.7, 2.0, 3.2].forEach(y => { [-0.6, 0.6].forEach(dx => { const c = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.8), new THREE.MeshStandardMaterial({ color: 0xc9a06a, roughness: 0.95 })); c.position.set(dx, y + 0.45, 0); c.castShadow = true; g.add(c); }); });
+  g.position.set(x, 0, z); g.rotation.y = giro; escena.add(g); return g;
+}
+rack(-12.6, -3.2); rack(-12.6, 0.6);
+/* estación de surtido: mesa, monitor y terminal */
+const mesaSurtido = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.9, 1.2), new THREE.MeshStandardMaterial({ color: 0x8a9099, roughness: 0.6, metalness: 0.2 }));
+mesaSurtido.position.set(8, 0.45, -5.7); mesaSurtido.castShadow = true; mesaSurtido.receiveShadow = true; escena.add(mesaSurtido);
+const pantallaSurtido = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.7), new THREE.MeshBasicMaterial({ map: texturaTexto('SURTIDO\nVerificar', '#0b1640', '#7dd3fc') }));
+pantallaSurtido.position.set(8, 1.4, -5.1); pantallaSurtido.rotation.x = -0.25; escena.add(pantallaSurtido);
+/* emplayadora (envuelve tarimas) */
+const emplay = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.2, 1.4), new THREE.MeshStandardMaterial({ color: 0x1769aa, roughness: 0.5, metalness: 0.2 }));
+emplay.position.set(8.3, 1.1, -2.25); emplay.castShadow = true; escena.add(emplay);
+const anilloEmpl = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.06, 8, 24), new THREE.MeshStandardMaterial({ color: 0xf5c400 }));
+anilloEmpl.position.set(8.3, 1.6, -1.5); escena.add(anilloEmpl);
+/* patines hidráulicos en espera */
+[[-6.5, 1.2], [-5.4, 1.2], [-6.5, 2.0]].forEach(([x, z]) => {
+  const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.9), new THREE.MeshStandardMaterial({ color: 0xf5c400, roughness: 0.5 }));
+  cuerpo.position.set(x, 0.22, z); cuerpo.castShadow = true; escena.add(cuerpo);
+  const timon = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.9, 0.07), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+  timon.position.set(x, 0.7, z - 0.4); escena.add(timon);
+});
+/* tarimas en espera junto a la zona de operación */
+[[-7, -7.6, 2], [-5.9, -7.6, 1]].forEach(([x, z, n]) => tarima(x, z, n));
 aplicarMapas();
 
 /* ambiente animado: el montacargas recorre el pasillo y se detiene en cada extremo */
 function animarAmbiente(t) {
+  const dt = Math.min(0.1, Math.max(0, t - ambienteT)); ambienteT = t;
+  moverAmbiente(dt);
+  lucesAndén.forEach((m, i) => { m.material.color.setRGB(0.18 * (0.55 + 0.45 * Math.sin(t * 2 + i)), 0.62 * (0.55 + 0.45 * Math.sin(t * 2 + i)), 0.35 * (0.55 + 0.45 * Math.sin(t * 2 + i))); });
+  if (Math.floor(t * 2) !== Math.floor((t - dt) * 2)) dibujarTablero(t);
   const z = 2.5 + 4.5 * Math.sin(t * 0.22);
   const avanza = Math.cos(t * 0.22) > 0;
   montacargas.position.z = z;
   montacargas.rotation.y = avanza ? Math.PI / 2 : -Math.PI / 2;
+}
+
+/* ===================== Paso 4 · Actividad ambiental: colaboradores en rutas fijas ===================== */
+const RUTAS_AMBIENTE = [
+  [[-6.2, 0], [-6.2, 8.4], [-3.4, 8.4], [-3.4, 0]],     // ruta 1: a la izquierda del pasillo central
+  [[5, 9.6], [10.4, 9.6], [10.4, 11.2], [5, 11.2]]      // ruta 2: frente a la zona de andenes, fuera del montacargas
+];
+const ambientes = [];
+let ambienteT = 0;
+function crearAmbiente() {
+  if (typeof makeStandingOperator !== 'function' || ambientes.length) return;
+  RUTAS_AMBIENTE.forEach(pts => {
+    const g = new THREE.Group(); g.add(makeStandingOperator(false)); escena.add(g);
+    ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9 });
+  });
+}
+function moverAmbiente(dt) {
+  ambientes.forEach(a => {
+    const A = a.pts[a.idx], B = a.pts[(a.idx + 1) % a.pts.length];
+    const largo = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
+    a.prog += dt * a.vel / largo;
+    if (a.prog >= 1) { a.prog = 0; a.idx = (a.idx + 1) % a.pts.length; }
+    const P = a.pts[a.idx], Q = a.pts[(a.idx + 1) % a.pts.length];
+    a.g.position.set(P[0] + (Q[0] - P[0]) * a.prog, 0, P[1] + (Q[1] - P[1]) * a.prog);
+    a.g.rotation.y = Math.atan2(Q[0] - P[0], Q[1] - P[1]);
+  });
 }
 
 /* ===================== Etapa 2 · Interiores de cada módulo (tres zonas en 3D) ===================== */
@@ -302,7 +408,7 @@ const LUCES = [[-5, -2.5], [0, -2.5], [5, -2.5], [-5, 2.5], [5, 2.5]];
 const ZONAS_INT = [
   { id: 'lapzo', x: -5, z: -0.4, corto: 'Lapzo · Aprende' },
   { id: 'entrena', x: 0, z: -0.4, corto: 'Entrena · Materiales' },
-  { id: 'dojo', x: 5, z: -0.4, corto: 'Dojo · Practica' }
+  { id: 'dojo', x: 5, z: -0.4, corto: 'Práctica | Simula' }
 ];
 function bloqueEn(esc, w, h, d, c, x, y, z, rough = 0.7) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: c, roughness: rough }));
@@ -371,8 +477,8 @@ function construirInterior(m) {
   bloqueEn(esc, 3.4, 0.2, 3.4, 0x2e2250, 5, 0.1, -2.5);
   bloqueEn(esc, 3.2, 1.9, 0.12, 0x0b1640, 5, 1.6, -4.6);
   if (esMod1) imagenEn(esc, 'assets/textures/dojo_simulador.webp', 2.9, 1735 / 901, 5, 1.6, -4.5);
-  else letreroEn(esc, 'DOJO DE MANDO\nCasos por cargar', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);
-  letreroEn(esc, 'C · PRACTICA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
+  else letreroEn(esc, 'PRÁCTICA\nSimula', '#0b1640', '#ffffff', 3, 1.8, 5, 1.6, -4.5);
+  letreroEn(esc, 'C · PRÁCTICA | SIMULA', '#7b3fe4', '#ffffff', 3.2, 0.7, 5, 3.1, -6.9);
   [[3.6, 0.9], [5, 0.9], [6.4, 0.9]].forEach(([x, z]) => silla(esc, x - 0.2, z, Math.PI));
   bloqueEn(esc, 3.4, 0.25, 0.5, 0x3a2f6b, 5, 0.12, -0.6, 0.6);
   /* salida */
@@ -395,6 +501,7 @@ function crearRicardo() {
   const g = new THREE.Group(); g.add(op);
   g.position.set(RICARDO_POS.x, 0, RICARDO_POS.z); g.rotation.y = Math.PI * 0.85;
   escena.add(g); ricardoGrupo = g;
+  crearAmbiente();
   /* etiqueta sobre su cabeza */
   const etiq = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.5), new THREE.MeshBasicMaterial({ map: texturaTexto('Ricardo · Supervisor nocturno', '#0b1640', '#ffffff'), transparent: true }));
   etiq.position.set(0, 2.25, 0); g.add(etiq);
@@ -433,7 +540,7 @@ window.addEventListener('keydown', e => {
   if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
   teclas[k] = true;
   if (k === 'e' && !abierto) accionE();
-  if (k === 'escape' && abierto) cerrarPanel();
+  if (k === 'escape') { if (abierto) cerrarPanel(); else if (enInterior) salirEdificio(); }
 });
 window.addEventListener('keyup', e => { teclas[e.key.toLowerCase()] = false; });
 document.querySelectorAll('.controles button').forEach(b => {
@@ -452,7 +559,22 @@ function accionE() {
   if (cerca && cerca.id === 'ricardo') { abrirConversacion(); return; }
   if (cerca) { entrarInterior(cerca); return; }
 }
+function marcarVisitado(id) {
+  let lista = [];
+  try { lista = JSON.parse(localStorage.getItem('dicka_recorrido') || '[]'); } catch (e) { }
+  if (!lista.includes(id)) lista.push(id);
+  try { localStorage.setItem('dicka_recorrido', JSON.stringify(lista)); } catch (e) { }
+  actualizarObjetivo();
+}
+function actualizarObjetivo() {
+  let lista = [];
+  try { lista = JSON.parse(localStorage.getItem('dicka_recorrido') || '[]'); } catch (e) { }
+  const n = MODULOS.filter(m => lista.includes(m.id)).length;
+  document.getElementById('visitados').textContent = n + '/4';
+  document.getElementById('barraRecorrido').style.width = (n / 4 * 100) + '%';
+}
 function entrarInterior(m) {
+  marcarVisitado(m.id);
   moduloInt = m; interiorActual = INTERIORES[m.id]; zonasActuales = ZONAS_INT;
   enInterior = true; cerca = null; ocultarAviso();
   escena.remove(avatar); interiorActual.add(avatar);
@@ -472,6 +594,28 @@ const FLECHA = { w: 'arrowup', s: 'arrowdown', a: 'arrowleft', d: 'arrowright' }
 function pulsa(k) { return !!(teclas[k] || teclas[FLECHA[k]] || tactil[k]); }
 
 /* ===================== Movimiento ===================== */
+/* ===================== Colisiones de la plaza (cajas simples, independientes de la geometría visual) ===================== */
+const RADIO_AVATAR = 0.45;
+const COLISIONES_PLAZA = [
+  ...MODULOS.map(m => ({ minX: m.x - 2.7, maxX: m.x + 2.7, minZ: -13.6, maxZ: -9.7 })),   // edificios de los módulos
+  { minX: -5.6, maxX: 5.6, minZ: -19.5, maxZ: -14.8 },                                   // edificio principal
+  { minX: 12.0, maxX: 14.4, minZ: -7.6, maxZ: -0.9 },                                    // andenes
+  ...[[-11, 4], [-11, 5.3], [-9.7, 4], [11, 4], [11, 5.3], [9.7, 4]].map(([x, z]) => ({ minX: x - 0.7, maxX: x + 0.7, minZ: z - 0.6, maxZ: z + 0.6 })),   // tarimas
+  ...[[-12.5, -6], [12.5, -9], [-5.5, 6.5]].map(([x, z]) => ({ minX: x - 0.3, maxX: x + 0.3, minZ: z - 0.3, maxZ: z + 0.3 })),   // señales
+  ...[[-12.6, -3.2], [-12.6, 0.6]].map(([x, z]) => ({ minX: x - 1.3, maxX: x + 1.3, minZ: z - 0.5, maxZ: z + 0.5 })),   // racks de almacenamiento
+  { minX: 6.6, maxX: 9.4, minZ: -6.3, maxZ: -5.1 },   // mesa de surtido
+  ...[[-7, -7.6], [-5.9, -7.6]].map(([x, z]) => ({ minX: x - 0.7, maxX: x + 0.7, minZ: z - 0.6, maxZ: z + 0.6 })),   // tarimas en espera
+  { minX: 7.6, maxX: 9.2, minZ: -2.9, maxZ: -1.6 },   // emplayadora
+  { minX: 3.6, maxX: 4.4, minZ: -2.0, maxZ: -1.0 }                                        // colaborador de Ricardo (estático)
+];
+function choca(x, z) {
+  for (const c of COLISIONES_PLAZA) {
+    if (x > c.minX - RADIO_AVATAR && x < c.maxX + RADIO_AVATAR && z > c.minZ - RADIO_AVATAR && z < c.maxZ + RADIO_AVATAR) return true;
+  }
+  /* montacargas en movimiento */
+  if (montacargas && Math.abs(x - montacargas.position.x) < 0.8 + RADIO_AVATAR && Math.abs(z - montacargas.position.z) < 1.1 + RADIO_AVATAR) return true;
+  return false;
+}
 function mover(dt) {
   if (abierto) return;
   let girar = 0, avanzar = 0;
@@ -482,11 +626,20 @@ function mover(dt) {
   heading += girar * GIRO * dt;
   moviendo = avanzar !== 0;
   if (moviendo) {
-    const dx = Math.sin(heading) * avanzar * VEL * dt;
-    const dz = Math.cos(heading) * avanzar * VEL * dt;
+    const vel = pulsa('shift') ? VEL * 1.8 : VEL;
+    const dx = Math.sin(heading) * avanzar * vel * dt;
+    const dz = Math.cos(heading) * avanzar * vel * dt;
     const L = enInterior ? { x: INT_LIM.x, zMin: INT_LIM.zMin, zMax: INT_LIM.zMax } : LIMITE;
-    avatar.position.x = Math.max(-L.x, Math.min(L.x, avatar.position.x + dx));
-    avatar.position.z = Math.max(L.zMin, Math.min(L.zMax, avatar.position.z + dz));
+    const x0 = avatar.position.x, z0 = avatar.position.z;
+    let nx = Math.max(-L.x, Math.min(L.x, x0 + dx));
+    let nz = Math.max(L.zMin, Math.min(L.zMax, z0 + dz));
+    if (!enInterior) {
+      /* deslizar: primero prueba X, después Z; si choca en un eje se queda en el otro */
+      if (choca(nx, z0)) nx = x0;
+      if (choca(nx, nz)) nz = z0;
+    }
+    avatar.position.x = nx;
+    avatar.position.z = nz;
     paso += dt * 9;
   }
   avatar.rotation.y = heading;
@@ -525,12 +678,50 @@ function detectar() {
     cerca = mejor;
     const btn = document.getElementById('btnEntrar');
     btn.classList.toggle('on', !!cerca && !abierto);
-    if (cerca) { btn.textContent = (cerca.id === 'ricardo' ? '' : 'Entrar · ') + cerca.corto + ' (E)'; mostrarAviso(cerca.corto + ' · pulsa E'); }
+    if (cerca) { btn.textContent = (cerca.id === 'ricardo' ? '' : 'Entrar · ') + cerca.corto + ' (E)'; if (cerca.id && cerca.id.startsWith('m')) mostrarAviso(tarjetaModulo(cerca), true); else mostrarAviso(cerca.corto + ' · pulsa E'); }
     else ocultarAviso();
   }
 }
 let avisoT = 0;
-function mostrarAviso(t) { const a = document.getElementById('aviso'); a.textContent = t; a.classList.add('on'); avisoT = 2.2; }
+const DESCRIPCION_MODULO = {
+  m1: 'Liderazgo, comunicación, escucha activa y juntas de arranque.',
+  m2: 'Prevención de riesgos, EPP, reporte de hallazgos y normatividad.',
+  m3: 'Recepción, almacenamiento, surtido, embarques e inventarios.',
+  m4: 'Transacciones, ubicaciones, excepciones y trazabilidad en el WMS.'
+};
+function estadoRecorrido(m) {
+  if (!m.activo) return 'Disponible · contenido pendiente';
+  const e = estadoModulo(m).estado;
+  return e === 'En proceso' ? 'En progreso' : e === 'Aprobada' || e === 'Completada' ? 'Completado' : 'Disponible';
+}
+function tarjetaModulo(m) {
+  const n = MODULOS.indexOf(m) + 1;
+  return `<b>Módulo ${n} · ${m.corto.replace(/^Módulo \d+ · /, '')}</b><small>${DESCRIPCION_MODULO[m.id]}</small><span class="est">${estadoRecorrido(m)}</span><br><small style="margin-top:6px;opacity:.85">Pulsa E para entrar</small>`;
+}
+function mostrarAviso(t, html) { const a = document.getElementById('aviso'); if (html) { a.innerHTML = t; a.classList.add('tarjeta-modulo'); } else { a.textContent = t; a.classList.remove('tarjeta-modulo'); } a.classList.add('on'); avisoT = html ? 4 : 2.2; }
+function abrirMapa() {
+  abierto = { id: 'mapa' };
+  ocultarAviso();
+  const X = x => 20 + (x + 14) / 28 * 300, Z = z => 20 + (z + 17) / 29 * 180;
+  const mods = MODULOS.map(m => `<rect x="${X(m.x - 2.5)}" y="${Z(-13.4)}" width="${X(m.x + 2.5) - X(m.x - 2.5)}" height="${Z(-9.8) - Z(-13.4)}" fill="#${m.color.toString(16).padStart(6, '0')}" rx="6"/><text x="${X(m.x)}" y="${Z(-12) + 4}" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">${m.id.toUpperCase()}</text>`).join('');
+  const av = `<circle cx="${X(avatar.position.x)}" cy="${Z(avatar.position.z)}" r="6" fill="#f5c400" stroke="#1b2240" stroke-width="2"/>`;
+  document.getElementById('caja').innerHTML = `
+    <div class="cab"><small>CENTRO DE DISTRIBUCIÓN</small><h2 id="tituloPanel">Mapa del almacén</h2></div>
+    <div class="cuerpo">
+      <svg viewBox="0 0 340 220" width="100%" style="background:#c9d0da;border-radius:12px">
+        <rect x="20" y="20" width="300" height="180" fill="#dfe6ee" stroke="#9aa7bf" stroke-width="2"/>
+        ${mods}
+        <rect x="${X(-5.6)}" y="${Z(-19.5)}" width="${X(5.6) - X(-5.6)}" height="${Z(-14.8) - Z(-19.5)}" fill="#1D2586" rx="4"/>
+        <rect x="${X(12)}" y="${Z(-7.6)}" width="${X(14.4) - X(12)}" height="${Z(-0.9) - Z(-7.6)}" fill="#7d7f81"/>
+        <text x="${X(13)}" y="${Z(-9)}" font-size="10" fill="#1b2240" text-anchor="middle">Andenes</text>
+        <rect x="${X(-12.6) - 6}" y="${Z(-3.2) - 6}" width="12" height="20" fill="#2138D3"/>
+        ${av}
+      </svg>
+      <p class="nota" style="margin-top:8px">Punto amarillo: tu posición. Los módulos se abren pulsando E cerca de su entrada.</p>
+      <button class="cerrar" onclick="cerrarPanel()">Volver al almacén</button>
+    </div>`;
+  document.getElementById('panel').classList.add('on');
+}
 function ocultarAviso() { document.getElementById('aviso').classList.remove('on'); }
 
 /* cámara en tercera persona: detrás del avatar, siguiendo su rumbo */
@@ -650,14 +841,14 @@ function abrirZona(id) {
   } else {
     cuerpo = bloqueCasos(moduloInt.id);
   }
-  const titulo = { lapzo: 'A · Lapzo · Aprende', entrena: 'B · Entrenamiento · Entrena', dojo: 'C · Dojo de Mando · Practica' }[id];
+  const titulo = { lapzo: 'A · Lapzo · Aprende', entrena: 'B · Entrenamiento · Entrena', dojo: 'C · Práctica | Simula' }[id];
   caja.innerHTML = `<div class="cab"><small>${moduloInt.nombre}</small><h2 id="tituloPanel">${titulo}</h2></div><div class="cuerpo">${cuerpo}<button class="cerrar" onclick="cerrarPanel()">Volver al interior</button></div>`;
   document.getElementById('panel').classList.add('on');
 }
 function cerrarPanel() {
   abierto = null;
-  if (enInterior) { if (zonaCerca) { const b = document.getElementById('btnEntrar'); b.textContent = (zonaCerca.id === 'salida' ? '' : 'Entrar · ') + zonaCerca.corto + ' (E)'; b.classList.add('on'); } return; }
   document.getElementById('panel').classList.remove('on');
+  if (enInterior) { if (zonaCerca) { const b = document.getElementById('btnEntrar'); b.textContent = (zonaCerca.id === 'salida' ? '' : 'Entrar · ') + zonaCerca.corto + ' (E)'; b.classList.add('on'); } return; }
   if (cerca) { const btn = document.getElementById('btnEntrar'); btn.textContent = 'Entrar · ' + cerca.corto + ' (E)'; btn.classList.add('on'); }
 }
 
@@ -669,6 +860,7 @@ function ajustar() {
 window.addEventListener('resize', ajustar); ajustar();
 camara.position.set(0, 3, 14);
 
+actualizarObjetivo();
 let ultimo = performance.now();
 function bucle(t) {
   const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
