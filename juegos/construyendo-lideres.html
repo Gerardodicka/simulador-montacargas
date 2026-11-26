@@ -259,7 +259,8 @@ if (typeof loadOperarioModel === 'function') {
     const op = makeStandingOperator(false);
     avatar.children.forEach(ch => { ch.visible = false; });
     avatar.add(op); avatarGltf = op.userData.gltf;
-    (typeof loadOperaria === 'function' ? loadOperaria() : Promise.resolve(false)).catch(() => false).then(() => crearRicardo());
+    (typeof loadOperaria === 'function' ? loadOperaria() : Promise.resolve(false)).catch(() => false)
+      .then(() => (typeof loadExtraAvatars === 'function' ? loadExtraAvatars() : null)).catch(() => null).then(() => crearRicardo());
     conducirMontacargas();
   }).catch(() => { });
 }
@@ -473,15 +474,19 @@ function etiquetaCargo(texto) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }));
   sp.scale.set(2.4, 0.6, 1); sp.position.set(0, 2.35, 0); return sp;
 }
-function makeStandingOperatorFem() {
-  const av = makeFemAvatar(); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av);
+/* operario de pie a partir de una variante del simulador (modelo, rostro y equipo de protección propios de cada una) */
+function makeStandingDe(T) {
+  const av = makeFemAvatar(T); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av);
   const op = new THREE.Group(); op.add(av.obj); op.userData.gltf = av; op.userData.standing = true; return op;
 }
 function crearAmbiente() {
   if (typeof makeStandingOperator !== 'function' || ambientes.length) return;
   RUTAS_AMBIENTE.forEach((pts, i) => {
     const R = ROLES_AMBIENTE[i] || { fem: false };
-    const op = R.fem && GLTF_FEM.gltf && typeof makeStandingOperatorFem === 'function' ? makeStandingOperatorFem() : makeStandingOperator(false);
+    /* cada trabajador toma una variante distinta del mismo grupo (hombre o mujer) de los simuladores */
+    const pool = GLTF_EXTRA.filter(T => T.gltf && T.fem === !!R.fem); if (R.fem && GLTF_FEM.gltf) pool.push(GLTF_FEM);
+    const T = pool.length ? pool[i % pool.length] : null;
+    const op = T ? makeStandingDe(T) : makeStandingOperator(false);
     const g = new THREE.Group(); g.add(op); if (R.cargo) g.add(etiquetaCargo(R.cargo)); escena.add(g);
     ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9, av: op.userData.gltf, paso: Math.random() * 6, fase: Math.random() });
   });
