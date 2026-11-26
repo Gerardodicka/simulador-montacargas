@@ -129,8 +129,12 @@ const _escenaAdd = escena.add.bind(escena);
 escena.add = function (...objs) { objs.forEach(o => { if (!o.isLight) ENV_PROC.push(o); }); return _escenaAdd(...objs); };
 
 /* piso industrial con franjas de seguridad */
-const texPiso = new THREE.TextureLoader().load('assets/textures/piso.jpg', t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 12); t.anisotropy = 8; });
-const piso = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ map: texPiso, color: 0xdfe3e8, roughness: 0.85 }));
+var _texCache = {};   // caché de texturas del módulo compartido (debe existir antes de usarlas)
+var WAREHOUSE = { w: 60, d: 90, h: 12 };   // medidas de la nave que usan las texturas del módulo compartido
+/* piso de concreto pulido del simulador (textura generada por el módulo compartido) */
+const texPiso = typeof concreteTex === 'function' ? concreteTex() : new THREE.TextureLoader().load('assets/textures/piso.jpg');
+texPiso.wrapS = texPiso.wrapT = THREE.RepeatWrapping; texPiso.repeat.set(10, 10); texPiso.anisotropy = 8;
+const piso = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ map: texPiso, color: 0xffffff, roughness: 0.82, metalness: 0.02 }));
 piso.rotation.x = -Math.PI / 2; piso.receiveShadow = true; escena.add(piso);
 const franja = (x, z, w, d, c) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: c, roughness: 0.7 })); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.01, z); escena.add(m); };
 franja(0, 2, 30, 0.35, 0xf5c400);
@@ -954,10 +958,9 @@ var currentModel = "doublereach", forklift = null, forkPosition = { x: 0, y: 0, 
 
 /* racks del simulador (módulo compartido almacen-comun.js) a los costados de la plaza: el mismo diseño de racks cargados */
 var scene = escena;                                   // el módulo compartido espera la variable scene
-var WAREHOUSE = { w: 60, d: 90, h: 12 };
 var BRAND = { azul: 0x1D2586, brillante: 0x2138D3, marino: 0x011131, gris: 0x838383, blanco: 0xFFFFFF };
 var AISLES = [], obstacles = [];
-var RACK_MATS = {}, RAY_MATS = {}, _texCache = {}, TEXCACHE = {};
+var RACK_MATS = {}, RAY_MATS = {}, TEXCACHE = {};
 var CARTON = { img: null, pend: [], loading: false };
 var RACK_INST = [], RACK_SLOTS = [], RAYMOND = 0xc8102e;
 var zeroM = new THREE.Matrix4().makeScale(0, 0, 0);   // matriz de escala cero: oculta instancias libres   // cachés de materiales que el módulo compartido espera
