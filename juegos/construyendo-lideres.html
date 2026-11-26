@@ -458,18 +458,16 @@ const RUTAS_AMBIENTE = [
   [[-6.2, 0], [-6.2, 8.4], [-3.4, 8.4], [-3.4, 0]],     // ruta 1: a la izquierda del pasillo central
   [[5, 9.6], [10.4, 9.6], [10.4, 11.2], [5, 11.2]],     // ruta 2: frente a la zona de andenes, fuera del montacargas
   [[-9, -3.2], [9, -3.2]],                              // ruta 3: cruza la plaza por el paso peatonal (línea de frente)
-  [[13, -6], [13, 4]],                                  // ruta 5: costado derecho de la plaza
-  [[-9.4, 4], [-9.4, -4]]                               // ruta 4: pasillo izquierdo, junto a los racks
+  [[13, -6], [13, 4]]                                   // ruta 5: costado derecho de la plaza
 ];
 const ambientes = [];
 let ambienteT = 0;
-/* personal de la plaza: algunas operarias (modelo femenino del simulador) y el jefe y gerente de operaciones con su etiqueta */
+/* personal de la plaza: algunas operarias (modelo femenino del simulador) y el jefe de operaciones con su etiqueta */
 const ROLES_AMBIENTE = [
   { fem: true },
   { fem: false },
   { fem: true, cargo: 'Operaria de surtido' },
-  { fem: false, cargo: 'Jefe de Operaciones' },
-  { gerente: true, cargo: 'Gerente de Operaciones' }
+  { fem: false, cargo: 'Jefe de Operaciones' }
 ];
 function etiquetaCargo(texto) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
@@ -479,22 +477,6 @@ function etiquetaCargo(texto) {
   sp.scale.set(2.4, 0.6, 1); sp.position.set(0, 2.35, 0); return sp;
 }
 /* operario de pie a partir de una variante del simulador (modelo, rostro y equipo de protección propios de cada una) */
-/* gerente de operaciones: modelo de traje (estático) con chaleco de seguridad naranja y bandas reflectivas; de pie en un punto fijo de la plaza */
-function gerenteEnPlaza() {
-  if (!THREE.GLTFLoader) return;
-  new THREE.GLTFLoader().load('assets/models/gerente-traje.glb', g => {
-    const grupo = new THREE.Group();
-    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    grupo.add(g.scene);
-    const naranja = new THREE.MeshStandardMaterial({ color: 0xf26b1d, roughness: 0.5, emissive: 0x331000, emissiveIntensity: 0.15 });
-    const plata = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, roughness: 0.3, metalness: 0.6 });
-    /* solo tiras reflectivas: dos bandas plateadas sobre el pecho, pegadas al frente del torso (ancho ±0.31 m) */
-    /* ancho del pecho medido en cada altura: ±0.40 m a 1.10 m y ±0.26 m a 1.40 m */
-    [[1.12, 0.78], [1.36, 0.54]].forEach(([y, w]) => { const t = new THREE.Mesh(new THREE.BoxGeometry(w, 0.025, 0.012), plata); t.position.set(0, y, 0.15); grupo.add(t); });
-    grupo.add(etiquetaCargo('Gerente de Operaciones'));
-    grupo.position.set(6, 0, -4.5); escena.add(grupo);
-  }, undefined, () => console.warn('[SIM] gerente no cargó'));
-}
 /* trabajador de construcción (modelo rigged con clip de caminar) y trabajador con transpaleta (de pie, en un punto fijo) */
 function cargarPersonajesNuevos() {
   if (!THREE.GLTFLoader) return;
@@ -521,7 +503,6 @@ function crearAmbiente() {
   if (typeof makeStandingOperator !== 'function' || ambientes.length) return;
   RUTAS_AMBIENTE.forEach((pts, i) => {
     const R = ROLES_AMBIENTE[i] || { fem: false };
-    if (R.gerente) { gerenteEnPlaza(); return; }   // el gerente es un personaje fijo, no ruta
     /* cada trabajador toma una variante distinta del mismo grupo (hombre o mujer) de los simuladores */
     const pool = GLTF_EXTRA.filter(T => T.gltf && T.fem === !!R.fem); if (R.fem && GLTF_FEM.gltf) pool.push(GLTF_FEM);
     const T = pool.length ? pool[i % pool.length] : null;
