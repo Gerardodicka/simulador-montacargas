@@ -513,6 +513,68 @@ function simuladorEn(esc, x, z) {
   const boton = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), mat(0xf5c400, 0.4)); boton.position.set(0.5, 1.03, 0.2); g.add(boton);
   g.position.set(x, 0, z); esc.add(g); return g;
 }
+/* contenido propio de cada pabellón (sección 5 del brief): datos de pantalla marcados como demostración */
+function pantallaEn(esc, x, y, z, rotY, dibujar) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 288; const g = c.getContext('2d');
+  dibujar(g, 512, 288);
+  const marco = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.0), new THREE.MeshBasicMaterial({ color: 0x0b1640 }));
+  marco.position.set(x - Math.sin(rotY) * 0.03, y, z - Math.cos(rotY) * 0.03); marco.rotation.y = rotY; esc.add(marco);
+  const pl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) }));
+  pl.position.set(x, y, z); pl.rotation.y = rotY; esc.add(pl); return pl;
+}
+function propsModulo(esc, id) {
+  if (id === 'm1') {
+    /* Liderazgo: pantalla de indicadores de equipo, con los valores iniciales del escenario */
+    pantallaEn(esc, -7.75, 2.0, 2.2, Math.PI / 2, (g, w, h) => {
+      g.fillStyle = '#0b1640'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffffff'; g.font = 'bold 26px Arial'; g.fillText('Indicadores de equipo', 24, 42);
+      [['Confianza', 55], ['Claridad', 55], ['Ejecución', 65], ['Clima', 55], ['Cumplimiento', 50]].forEach(([n, v], i) => {
+        const y = 80 + i * 40; g.fillStyle = '#c9d3ee'; g.font = '20px Arial'; g.fillText(n, 24, y + 18);
+        g.fillStyle = '#2a3560'; g.fillRect(190, y, 260, 22); g.fillStyle = '#f5c400'; g.fillRect(190, y, 260 * v / 100, 22); g.fillStyle = '#ffffff'; g.fillText(v + '', 462, y + 18);
+      });
+      g.fillStyle = '#f5c400'; g.font = 'bold 16px Arial'; g.fillText('DATOS DE DEMOSTRACIÓN', 24, 270);
+    });
+    bloqueEn(esc, 1.6, 0.9, 0.5, 0x2b3a55, -5.5, 0.45, 3.3);
+  }
+  if (id === 'm2') {
+    /* Seguridad: estación de EPP (cascos, chalecos, botiquín y extintor) y panel de riesgos */
+    bloqueEn(esc, 2.4, 1.8, 0.5, 0xc9d0da, 6.2, 0.9, 2.6);
+    [[5.6, 1.9], [6.2, 1.9], [6.8, 1.9]].forEach(([x, y]) => bloqueEn(esc, 0.22, 0.2, 0.22, 0xf5c400, x, y, 2.6));
+    [[5.6, 1.5], [6.2, 1.5], [6.8, 1.5]].forEach(([x, y]) => bloqueEn(esc, 0.3, 0.25, 0.2, 0xf26b1d, x, y, 2.6));
+    bloqueEn(esc, 0.6, 0.7, 0.08, 0xffffff, 6.2, 1.0, 3.25);
+    const ext = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.6, 14), new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: 0.5 })); ext.position.set(7.55, 0.5, 3.4); esc.add(ext);
+    pantallaEn(esc, 7.75, 2.2, -0.6, -Math.PI / 2, (g, w, h) => {
+      g.fillStyle = '#0b1640'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffffff'; g.font = 'bold 26px Arial'; g.fillText('Mapa de riesgos', 24, 42);
+      [[140, 120, '#e53935', 'Alto'], [300, 170, '#f5c400', 'Medio'], [400, 110, '#2e9e5b', 'Bajo']].forEach(([x, y, c, t]) => { g.fillStyle = c; g.beginPath(); g.arc(x, y, 22, 0, Math.PI * 2); g.fill(); g.fillStyle = '#ffffff'; g.font = '18px Arial'; g.fillText(t, x - 26, y + 48); });
+      g.fillStyle = '#f5c400'; g.font = 'bold 16px Arial'; g.fillText('DATOS DE DEMOSTRACIÓN', 24, 270);
+    });
+    bloqueEn(esc, 0.1, 1.0, 1.6, 0x2b3a55, 7.6, 1.0, -0.6);
+  }
+  if (id === 'm3') {
+    /* Procesos: tarimas con cajas, mesa de verificación con escáner y estantes de surtido */
+    [-5.8].forEach(x => {
+      bloqueEn(esc, 1.2, 0.14, 1.0, 0xb8864b, x, 0.07, 3.2);
+      bloqueEn(esc, 0.55, 0.55, 0.5, 0xc9a06a, x - 0.3, 0.42, 3.2);
+      bloqueEn(esc, 0.55, 0.55, 0.5, 0xb99460, x + 0.3, 0.42, 3.2);
+      bloqueEn(esc, 0.55, 0.5, 0.5, 0xc9a06a, x, 0.97, 3.2);
+    });
+    bloqueEn(esc, 2.2, 0.08, 1.0, 0x8a6a3c, 5.2, 0.9, 3.0);
+    bloqueEn(esc, 0.3, 0.12, 0.2, 0x111111, 5.6, 0.98, 3.0);
+    bloqueEn(esc, 0.2, 0.2, 0.2, 0x222222, 4.8, 1.0, 2.8);
+    [0.9, 1.5, 2.1].forEach(y => bloqueEn(esc, 0.1, 0.06, 1.0, 0xf26b1d, 7.2, y, 3.2));
+    [[-3, 3.2], [-3, 3.9]].forEach(([x, z]) => bloqueEn(esc, 0.08, 1.6, 0.08, 0xf26b1d, x + 0.0, 0.8, z));
+  }
+  if (id === 'm4') {
+    /* WMS: escritorio con dos monitores de mapa de ubicaciones y terminales portátiles */
+    bloqueEn(esc, 2.8, 0.08, 1.0, 0x1b2240, 0, 0.85, 3.0);
+    [-0.7, 0.7].forEach(x => pantallaEn(esc, x, 1.35, 2.6, 0, (g, w, h) => {
+      g.fillStyle = '#0b1640'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffffff'; g.font = 'bold 18px Arial'; g.fillText('Ubicaciones · Pasillo ' + (x < 0 ? 'A' : 'B'), 16, 30);
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 10; c++) { g.fillStyle = (r * 7 + c * 3 + (x < 0 ? 1 : 4)) % 5 === 0 ? '#e53935' : ((r + c) % 3 === 0 ? '#f5c400' : '#2e9e5b'); g.fillRect(24 + c * 46, 60 + r * 46, 38, 36); }
+      g.fillStyle = '#f5c400'; g.font = 'bold 14px Arial'; g.fillText('DATOS DE DEMOSTRACIÓN', 16, 275);
+    }));
+    [[-0.9, 3.4], [0.9, 3.4]].forEach(([x, z]) => bloqueEn(esc, 0.3, 0.06, 0.45, 0x222222, x, 0.91, z));
+    [[-0.3, 3.2], [0.3, 3.2]].forEach(([x, z]) => bloqueEn(esc, 0.14, 0.28, 0.06, 0x111111, x, 1.0, z));
+  }
+}
 /* construye el interior de un módulo: Lapzo (A), Entrenamiento (B) y Práctica (C). Todos los módulos muestran las mismas imágenes de Aprende y Práctica */
 function construirInterior(m) {
   const esc = new THREE.Scene();
@@ -557,6 +619,7 @@ function construirInterior(m) {
   bloqueEn(esc, 0.2, 3, 0.2, 0x444444, 1.3, 1.5, 6.6);
   bloqueEn(esc, 2.8, 0.2, 0.2, 0x444444, 0, 3.0, 6.6);
   letreroEn(esc, 'SALIDA AL\nCENTRO', '#2e9e5b', '#ffffff', 2.4, 1.0, 0, 3.6, 6.6);
+  propsModulo(esc, m.id);
   aplicarMapasInterior(esc, piso);
   return esc;
 }
