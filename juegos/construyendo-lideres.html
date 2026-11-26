@@ -469,7 +469,7 @@ const ROLES_AMBIENTE = [
   { fem: false },
   { fem: true, cargo: 'Operaria de surtido' },
   { fem: false, cargo: 'Jefe de Operaciones' },
-  { fem: true, cargo: 'Gerente de Operaciones' }
+  { gerente: true, cargo: 'Gerente de Operaciones' }
 ];
 function etiquetaCargo(texto) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
@@ -479,6 +479,21 @@ function etiquetaCargo(texto) {
   sp.scale.set(2.4, 0.6, 1); sp.position.set(0, 2.35, 0); return sp;
 }
 /* operario de pie a partir de una variante del simulador (modelo, rostro y equipo de protección propios de cada una) */
+/* gerente de operaciones: modelo de traje (estático) con chaleco de seguridad naranja y bandas reflectivas; de pie en un punto fijo de la plaza */
+function gerenteEnPlaza() {
+  if (!THREE.GLTFLoader) return;
+  new THREE.GLTFLoader().load('assets/models/gerente-traje.glb', g => {
+    const grupo = new THREE.Group();
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    grupo.add(g.scene);
+    const naranja = new THREE.MeshStandardMaterial({ color: 0xf26b1d, roughness: 0.5, emissive: 0x331000, emissiveIntensity: 0.15 });
+    const plata = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, roughness: 0.3, metalness: 0.6 });
+    const chaleco = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.56, 0.3), naranja); chaleco.position.set(0, 1.2, 0.02); chaleco.castShadow = true; grupo.add(chaleco);
+    [1.02, 1.34].forEach(y => { const t = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.05, 0.32), plata); t.position.set(0, y, 0.02); grupo.add(t); });
+    grupo.add(etiquetaCargo('Gerente de Operaciones'));
+    grupo.position.set(6, 0, -4.5); escena.add(grupo);
+  }, undefined, () => console.warn('[SIM] gerente no cargó'));
+}
 function makeStandingDe(T) {
   const av = makeFemAvatar(T); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av);
   const op = new THREE.Group(); op.add(av.obj); op.userData.gltf = av; op.userData.standing = true; return op;
@@ -487,6 +502,7 @@ function crearAmbiente() {
   if (typeof makeStandingOperator !== 'function' || ambientes.length) return;
   RUTAS_AMBIENTE.forEach((pts, i) => {
     const R = ROLES_AMBIENTE[i] || { fem: false };
+    if (R.gerente) { gerenteEnPlaza(); return; }   // el gerente es un personaje fijo, no ruta
     /* cada trabajador toma una variante distinta del mismo grupo (hombre o mujer) de los simuladores */
     const pool = GLTF_EXTRA.filter(T => T.gltf && T.fem === !!R.fem); if (R.fem && GLTF_FEM.gltf) pool.push(GLTF_FEM);
     const T = pool.length ? pool[i % pool.length] : null;
