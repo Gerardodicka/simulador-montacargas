@@ -854,30 +854,36 @@ function abrirModulo(m) {
     </div>`;
   document.getElementById('panel').classList.add('on');
 }
-/* manual del Pilar 1 (Módulo 1): visor de diapositivas dentro de ENTRENAMIENTO */
+/* materiales de ENTRENAMIENTO con visor de diapositivas: manuales por pilar y presentaciones */
 const MANUALES = {
-  m1: { base: 'assets/materiales/manual-pilar-1/', total: 19, titulo: 'Manual · Pilar 1 · Tú eres una pieza clave' },
-  m2: { base: 'assets/materiales/manual-pilar-2/', total: 12, titulo: 'Manual · Pilar 2 · Construimos excelencia' },
-  m3: { base: 'assets/materiales/manual-pilar-3/', total: 9, titulo: 'Manual · Pilar 3 · Movimientos que construyen' },
-  m4: { base: 'assets/materiales/manual-pilar-4/', total: 6, titulo: 'Manual · Pilar 4 · Tu herramienta clave' }
+  m1: [
+    { key: 'manual', base: 'assets/materiales/manual-pilar-1/', total: 19, pdf: 'manual-pilar-1.pdf', titulo: 'Manual · Pilar 1 · Tú eres una pieza clave' },
+    { key: 'pres', base: 'assets/materiales/presentacion-pilar-1/', total: 40, pdf: 'presentacion-pilar-1.pdf', titulo: 'Presentación · Pilar 1 · 2026' }
+  ],
+  m2: [{ key: 'manual', base: 'assets/materiales/manual-pilar-2/', total: 12, pdf: 'manual-pilar-2.pdf', titulo: 'Manual · Pilar 2 · Construimos excelencia' }],
+  m3: [{ key: 'manual', base: 'assets/materiales/manual-pilar-3/', total: 9, pdf: 'manual-pilar-3.pdf', titulo: 'Manual · Pilar 3 · Movimientos que construyen' }],
+  m4: [{ key: 'manual', base: 'assets/materiales/manual-pilar-4/', total: 6, pdf: 'manual-pilar-4.pdf', titulo: 'Manual · Pilar 4 · Tu herramienta clave' }]
 };
-let MANUAL = null, manualI = 1;
-function bloqueManual(modId) {
-  MANUAL = MANUALES[modId]; manualI = 1;
-  return `<div class="puerta" style="border-left-color:#2e9e5b"><h3>${MANUAL.titulo}</h3>
-    <div style="text-align:center"><img id="manualImg" src="${MANUAL.base}slide-01.jpg" alt="Diapositiva 1" style="max-width:100%;max-height:50vh;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.25)"></div>
+const VISORES = {};
+function visorHTML(c) {
+  VISORES[c.key] = { base: c.base, total: c.total, i: 1 };
+  return `<div class="puerta" style="border-left-color:#2e9e5b"><h3>${c.titulo}</h3>
+    <div style="text-align:center"><img id="${c.key}Img" src="${c.base}slide-01.jpg" alt="Diapositiva 1" style="max-width:100%;max-height:50vh;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.25)"></div>
     <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px;flex-wrap:wrap">
-      <button class="btn" onclick="cambiarManual(-1)">◀ Anterior</button>
-      <span id="manualNum" style="font-weight:700">1 / ${MANUAL.total}</span>
-      <button class="btn" onclick="cambiarManual(1)">Siguiente ▶</button>
+      <button class="btn" onclick="cambiarVisor('${c.key}', -1)">◀ Anterior</button>
+      <span id="${c.key}Num" style="font-weight:700">1 / ${c.total}</span>
+      <button class="btn" onclick="cambiarVisor('${c.key}', 1)">Siguiente ▶</button>
     </div>
-    <p style="margin-top:10px"><a class="btn" href="${MANUAL.base}manual-pilar-1.pdf" target="_blank" rel="noopener">Descargar PDF</a></p></div>`;
+    <p style="margin-top:10px"><a class="btn" href="${c.base}${c.pdf}" target="_blank" rel="noopener">Descargar PDF</a></p></div>`;
 }
-function cambiarManual(d) {
-  manualI = Math.min(MANUAL.total, Math.max(1, manualI + d));
-  document.getElementById('manualImg').src = MANUAL.base + 'slide-' + String(manualI).padStart(2, '0') + '.jpg';
-  document.getElementById('manualNum').textContent = manualI + ' / ' + MANUAL.total;
+function bloqueManual(modId) { return (MANUALES[modId] || []).map(visorHTML).join(''); }
+function cambiarVisor(key, d) {
+  const v = VISORES[key];
+  v.i = Math.min(v.total, Math.max(1, v.i + d));
+  document.getElementById(key + 'Img').src = v.base + 'slide-' + String(v.i).padStart(2, '0') + '.jpg';
+  document.getElementById(key + 'Num').textContent = v.i + ' / ' + v.total;
 }
+function cambiarManual(d) { cambiarVisor('manual', d); }
 function abrirZona(id) {
   abierto = { id: 'zona-' + id };
   document.getElementById('btnEntrar').classList.remove('on');
