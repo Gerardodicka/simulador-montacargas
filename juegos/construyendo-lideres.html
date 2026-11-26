@@ -442,7 +442,7 @@ const GLB_ALMACEN = { url: 'assets/models/almacen-3pl.glb', ok: false };
     ejeZup.add(g.scene); exterior.add(ejeZup); escena.add(exterior);
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     /* solo decoración: columnas, racks, andenes y trailers de la nave; el resto del GLB (pabellones, piso, equipos) queda oculto */
-    const RX_DECOR = /^(COLUMNA_ESTRUCTURAL|RACK_|PROTECTOR_RACK|VIGA_RACK|TARIMA|CAJA_MERCANCIA|MARCO_ANDEN|TOPE_ANDEN|CAJA_TRAILER|CHASIS_TRAILER|RUEDA_TRAILER)/;
+    const RX_DECOR = /^(COLUMNA_ESTRUCTURAL|MARCO_ANDEN|TOPE_ANDEN|CAJA_TRAILER|CHASIS_TRAILER|RUEDA_TRAILER)/;   // los racks y tarimas los pone el módulo compartido del simulador
     g.scene.traverse(o => { if (o.isMesh && (!o.name || !RX_DECOR.test(o.name))) o.visible = false; });
     GLB_ALMACEN.ok = true;
     console.log('[SIM] almacén 3D (GLB) cargado');
@@ -775,6 +775,22 @@ const COLISIONES_PLAZA = [
   { minX: 7.6, maxX: 9.2, minZ: -2.9, maxZ: -1.6 },   // emplayadora
   { minX: 3.6, maxX: 4.4, minZ: -2.0, maxZ: -1.0 }                                        // colaborador de Ricardo (estático)
 ];
+/* racks del simulador (módulo compartido almacen-comun.js) a los costados de la plaza: el mismo diseño de racks cargados */
+var scene = escena;                                   // el módulo compartido espera la variable scene
+var WAREHOUSE = { w: 60, d: 90, h: 12 };
+var BRAND = { azul: 0x1D2586, brillante: 0x2138D3, marino: 0x011131, gris: 0x838383, blanco: 0xFFFFFF };
+var AISLES = [], obstacles = [];
+var RACK_MATS = {}, RAY_MATS = {}, _texCache = {}, TEXCACHE = {};
+var CARTON = { img: null, pend: [], loading: false };
+var RACK_INST = [], RACK_SLOTS = [], RAYMOND = 0xc8102e;
+var zeroM = new THREE.Matrix4().makeScale(0, 0, 0);   // matriz de escala cero: oculta instancias libres   // cachés de materiales que el módulo compartido espera
+(function racksLaterales() {
+  if (typeof buildRack !== 'function') { console.warn('[SIM] almacen-comun.js no disponible: sin racks'); return; }
+  [-22.5, 22.5].forEach((x, i) => buildRack(x, -16, 9, 6, i === 0 ? 1 : -1, 'AB'[i]));
+  flushRackInstances();
+  obstacles.forEach(o => COLISIONES_PLAZA.push(o));
+})();
+
 function choca(x, z) {
   for (const c of COLISIONES_PLAZA) {
     if (x > c.minX - RADIO_AVATAR && x < c.maxX + RADIO_AVATAR && z > c.minZ - RADIO_AVATAR && z < c.maxZ + RADIO_AVATAR) return true;
