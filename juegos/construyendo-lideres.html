@@ -488,8 +488,9 @@ function gerenteEnPlaza() {
     grupo.add(g.scene);
     const naranja = new THREE.MeshStandardMaterial({ color: 0xf26b1d, roughness: 0.5, emissive: 0x331000, emissiveIntensity: 0.15 });
     const plata = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, roughness: 0.3, metalness: 0.6 });
-    const chaleco = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.56, 0.3), naranja); chaleco.position.set(0, 1.2, 0.02); chaleco.castShadow = true; grupo.add(chaleco);
-    [1.02, 1.34].forEach(y => { const t = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.05, 0.32), plata); t.position.set(0, y, 0.02); grupo.add(t); });
+    /* solo tiras reflectivas: dos bandas plateadas sobre el pecho, pegadas al frente del torso (ancho ±0.31 m) */
+    /* ancho del pecho medido en cada altura: ±0.40 m a 1.10 m y ±0.26 m a 1.40 m */
+    [[1.12, 0.78], [1.36, 0.54]].forEach(([y, w]) => { const t = new THREE.Mesh(new THREE.BoxGeometry(w, 0.025, 0.012), plata); t.position.set(0, y, 0.15); grupo.add(t); });
     grupo.add(etiquetaCargo('Gerente de Operaciones'));
     grupo.position.set(6, 0, -4.5); escena.add(grupo);
   }, undefined, () => console.warn('[SIM] gerente no cargó'));
