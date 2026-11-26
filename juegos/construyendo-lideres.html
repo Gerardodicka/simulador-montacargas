@@ -462,7 +462,7 @@ const ROLES_AMBIENTE = [
   { fem: true },
   { fem: false },
   { fem: true, cargo: 'Operaria de surtido' },
-  { fem: false, cargo: 'Jefe de Operaciones' }
+  { fem: false, cargo: 'Jefe de Operaciones', hombre: true }
 ];
 function etiquetaCargo(texto) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
@@ -535,7 +535,7 @@ function crearAmbiente() {
     /* cada trabajador toma una variante distinta del mismo grupo (hombre o mujer) de los simuladores */
     const pool = GLTF_EXTRA.filter(T => T.gltf && T.fem === !!R.fem); if (R.fem && GLTF_FEM.gltf) pool.push(GLTF_FEM);
     const T = pool.length ? pool[i % pool.length] : null;
-    const op = T ? makeStandingDe(T) : makeStandingOperator(false);
+    const op = R.hombre ? makeStandingOperator(false) : (T ? makeStandingDe(T) : makeStandingOperator(false));
     const g = new THREE.Group(); g.add(op); if (R.cargo) g.add(etiquetaCargo(R.cargo)); escena.add(g);
     ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9, av: op.userData.gltf, paso: Math.random() * 6, fase: Math.random() });
   });
@@ -543,12 +543,28 @@ function crearAmbiente() {
 }
 function moverAmbiente(dt) {
   ambientes.forEach(a => {
+    /* si se detiene por un obstáculo (oficina, muros, montacargas), espera un momento y regresa por la misma ruta */
+    if (a.pausa > 0) {
+      a.pausa -= dt;
+      if (a.av) gltfWalkPose(a.av, false, a.paso, performance.now(), false, a.fase);
+      if (a.mixer) a.mixer.update(dt);
+      return;
+    }
     const A = a.pts[a.idx], B = a.pts[(a.idx + 1) % a.pts.length];
     const largo = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
-    a.prog += dt * a.vel / largo;
-    if (a.prog >= 1) { a.prog = 0; a.idx = (a.idx + 1) % a.pts.length; }
-    const P = a.pts[a.idx], Q = a.pts[(a.idx + 1) % a.pts.length];
-    a.g.position.set(P[0] + (Q[0] - P[0]) * a.prog, 0, P[1] + (Q[1] - P[1]) * a.prog);
+    const avance = dt * a.vel / largo;
+    const prog2 = a.prog + avance;
+    let idx2 = a.idx, progN = prog2;
+    if (progN >= 1) { progN = 0; idx2 = (a.idx + 1) % a.pts.length; }
+    const P = a.pts[idx2], Q = a.pts[(idx2 + 1) % a.pts.length];
+    const nx = P[0] + (Q[0] - P[0]) * progN, nz = P[1] + (Q[1] - P[1]) * progN;
+    if (choca(nx, nz)) {
+      /* obstáculo: se detiene, da la vuelta y camina de regreso */
+      a.pts = a.pts.slice().reverse(); a.idx = 0; a.prog = 0; a.pausa = 0.8;
+      return;
+    }
+    a.idx = idx2; a.prog = progN;
+    a.g.position.set(nx, 0, nz);
     a.g.rotation.y = Math.atan2(Q[0] - P[0], Q[1] - P[1]);
     /* caminan con la misma pose de marcha del simulador: piernas, brazos y balanceo según la zancada */
     if (a.av) { a.paso += dt * 7; gltfWalkPose(a.av, true, a.paso, performance.now(), false, a.fase); }
