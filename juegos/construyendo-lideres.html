@@ -98,13 +98,13 @@ const PENDIENTES = {   /* casos sugeridos en el brief que aún no están cargado
   m4: ['El sistema muestra una ubicación sin existencia física', 'Se detecta una diferencia en recepción', 'Una tarea de surtido está bloqueada', 'El operador confirma un movimiento incorrecto', 'Hay una diferencia entre sistema y físico', 'Se requiere reubicar mercancía con trazabilidad']
 };
 const MODULOS = [
-  { id: 'm1', nombre: 'MÓDULO 1. TÚ ERES UNA PIEZA CLAVE COMO LÍDER', corto: 'Módulo 1 · Pieza clave como líder', color: 0x2138D3, activo: true,  x: -9 },
-  { id: 'm2', nombre: 'MÓDULO 2. SEGURIDAD, CALIDAD Y NORMATIVIDAD',  corto: 'Módulo 2 · Seguridad y normatividad', color: 0x2e9e5b, activo: false, x: -3 },
-  { id: 'm3', nombre: 'MÓDULO 3. PROCESOS OPERATIVOS',                corto: 'Módulo 3 · Procesos operativos', color: 0x8a5a2b, activo: false, x: 3 },
-  { id: 'm4', nombre: 'MÓDULO 4. ESPECIALIZACIÓN: WMS',               corto: 'Módulo 4 · Especialización WMS', color: 0x1769aa, activo: false, x: 9 }
+  { id: 'm1', nombre: 'MÓDULO 1. TÚ ERES UNA PIEZA CLAVE COMO LÍDER', corto: 'Módulo 1 · Pieza clave como líder', color: 0x2138D3, activo: true,  x: 18 },
+  { id: 'm2', nombre: 'MÓDULO 2. SEGURIDAD, CALIDAD Y NORMATIVIDAD',  corto: 'Módulo 2 · Seguridad y normatividad', color: 0x2e9e5b, activo: false, x: 6 },
+  { id: 'm3', nombre: 'MÓDULO 3. PROCESOS OPERATIVOS',                corto: 'Módulo 3 · Procesos operativos', color: 0x8a5a2b, activo: false, x: -6 },
+  { id: 'm4', nombre: 'MÓDULO 4. ESPECIALIZACIÓN: WMS',               corto: 'Módulo 4 · Especialización WMS', color: 0x1769aa, activo: false, x: -18 }
 ];
 const Z_EDIFICIOS = -12;
-const LIMITE = { x: 14, zMin: -17, zMax: 12 };
+const LIMITE = { x: 26, zMin: -17, zMax: 16 };
 const VEL = 4.2, GIRO = 2.4, RADIO_ENTRADA = 3.2;
 
 /* ===================== Escena ===================== */
@@ -123,6 +123,10 @@ const sol = new THREE.DirectionalLight(0xffffff, 0.9);
 sol.position.set(-8, 16, 10); sol.castShadow = true;
 sol.shadow.mapSize.set(1024, 1024); sol.shadow.camera.left = -22; sol.shadow.camera.right = 22; sol.shadow.camera.top = 22; sol.shadow.camera.bottom = -22;
 escena.add(sol);
+/* entorno procedural: sus objetos se registran para ocultarlos cuando carga la nave 3D (GLB); si el GLB no carga, se conserva */
+const ENV_PROC = [];
+const _escenaAdd = escena.add.bind(escena);
+escena.add = function (...objs) { objs.forEach(o => { if (!o.isLight) ENV_PROC.push(o); }); return _escenaAdd(...objs); };
 
 /* piso industrial con franjas de seguridad */
 const texPiso = new THREE.TextureLoader().load('assets/textures/piso.jpg', t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 12); t.anisotropy = 8; });
@@ -425,6 +429,23 @@ function animarAmbiente(t) {
   montacargas2.rotation.y = Math.cos(t * 0.3 + 1) > 0 ? 0 : Math.PI;
   CONDUCTORES.forEach(c => c.mixer.update(dt));
 }
+
+escena.add = _escenaAdd;   // fin del entorno procedural
+const MANTENER = new Set([avatar, montacargas, montacargas2]);
+/* nave 3D del Blender (GLB, Z-up): se gira a Y-up y se refleja en X para que los módulos queden frente al participante */
+const GLB_ALMACEN = { url: 'assets/models/almacen-3pl.glb', ok: false };
+(function cargarAlmacen() {
+  if (!THREE.GLTFLoader) return;
+  new THREE.GLTFLoader().load(GLB_ALMACEN.url, g => {
+    const exterior = new THREE.Group(); exterior.rotation.y = Math.PI;
+    const ejeZup = new THREE.Group(); ejeZup.rotation.x = -Math.PI / 2;
+    ejeZup.add(g.scene); exterior.add(ejeZup); escena.add(exterior);
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    ENV_PROC.forEach(o => { if (!MANTENER.has(o)) o.visible = false; });
+    GLB_ALMACEN.ok = true;
+    console.log('[SIM] almacén 3D (GLB) cargado');
+  }, undefined, () => console.warn('[SIM] almacén 3D no cargó; se usa el almacén procedural'));
+})();
 
 /* ===================== Paso 4 · Actividad ambiental: colaboradores en rutas fijas ===================== */
 const RUTAS_AMBIENTE = [
@@ -741,15 +762,7 @@ function pulsa(k) { return !!(teclas[k] || teclas[FLECHA[k]] || tactil[k]); }
 /* ===================== Colisiones de la plaza (cajas simples, independientes de la geometría visual) ===================== */
 const RADIO_AVATAR = 0.45;
 const COLISIONES_PLAZA = [
-  ...MODULOS.map(m => ({ minX: m.x - 2.7, maxX: m.x + 2.7, minZ: -13.6, maxZ: -9.7 })),   // edificios de los módulos
-  { minX: -5.6, maxX: 5.6, minZ: -19.5, maxZ: -14.8 },                                   // edificio principal
-  { minX: 12.0, maxX: 14.4, minZ: -7.6, maxZ: -0.9 },                                    // andenes
-  ...[[-11, 4], [-11, 5.3], [-9.7, 4], [11, 4], [11, 5.3], [9.7, 4]].map(([x, z]) => ({ minX: x - 0.7, maxX: x + 0.7, minZ: z - 0.6, maxZ: z + 0.6 })),   // tarimas
-  ...[[-12.5, -6], [12.5, -9], [-5.5, 6.5]].map(([x, z]) => ({ minX: x - 0.3, maxX: x + 0.3, minZ: z - 0.3, maxZ: z + 0.3 })),   // señales
-  ...[[-12.6, -3.2], [-12.6, 0.6]].map(([x, z]) => ({ minX: x - 1.3, maxX: x + 1.3, minZ: z - 0.5, maxZ: z + 0.5 })),   // racks de almacenamiento
-  { minX: 6.6, maxX: 9.4, minZ: -6.3, maxZ: -5.1 },   // mesa de surtido
-  ...[[-7, -7.6], [-5.9, -7.6]].map(([x, z]) => ({ minX: x - 0.7, maxX: x + 0.7, minZ: z - 0.6, maxZ: z + 0.6 })),   // tarimas en espera
-  { minX: 7.6, maxX: 9.2, minZ: -2.9, maxZ: -1.6 },   // emplayadora
+  ...MODULOS.map(m => ({ minX: m.x - 3.75, maxX: m.x + 3.75, minZ: -12.8, maxZ: -7.2 })),   // pabellones de la nave 3D
   { minX: 3.6, maxX: 4.4, minZ: -2.0, maxZ: -1.0 }                                        // colaborador de Ricardo (estático)
 ];
 function choca(x, z) {
