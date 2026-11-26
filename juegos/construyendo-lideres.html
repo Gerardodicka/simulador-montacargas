@@ -336,17 +336,16 @@ const MONTACARGAS = [];
 const CONDUCTORES = [];
 function conducirMontacargas() {
   if (!CONDUCTORES.length && typeof makeGLTFAvatar === 'function' && GLTF_AVATAR.ok) {
+    /* el Raymond doble alcance es de pie: el operador va parado en la plataforma, con la pose de pie del modelo */
     MONTACARGAS.forEach(m => {
-      const av = makeGLTFAvatar(false, false);
-      av.mixer.stopAllAction();
-      if (av.acts.sit) av.acts.sit.play();
-      av.obj.position.set(0, 0, -0.55);
-      m.add(av.obj); CONDUCTORES.push(av);
+      const op = makeStandingOperator(false);
+      op.position.set(0, 0.25, -0.35);
+      m.add(op); CONDUCTORES.push({ mixer: null, obj: op });
     });
   }
 }
 let montacargas = makeMontacargas(0xf5c400); montacargas.position.set(6, 0, 0); escena.add(montacargas);
-const montacargas2 = makeMontacargas(0x1769aa); montacargas2.position.set(-2, 0, 4.8); escena.add(montacargas2);
+let montacargas2 = makeMontacargas(0x1769aa); montacargas2.position.set(-2, 0, 4.8); escena.add(montacargas2);
 MONTACARGAS.push(montacargas, montacargas2);
 /* señalización: postes con letreros */
 function senal(x, z, texto, fondo, colorTexto) {
@@ -427,7 +426,7 @@ function animarAmbiente(t) {
   montacargas.rotation.y = Math.cos(t * 0.22) > 0 ? 0 : Math.PI;
   montacargas2.position.z = 4.8 + 3.2 * Math.sin(t * 0.3 + 1);
   montacargas2.rotation.y = Math.cos(t * 0.3 + 1) > 0 ? 0 : Math.PI;
-  CONDUCTORES.forEach(c => c.mixer.update(dt));
+  CONDUCTORES.forEach(c => { if (c.mixer) c.mixer.update(dt); });
 }
 
 escena.add = _escenaAdd;   // fin del entorno procedural
@@ -947,6 +946,10 @@ var zeroM = new THREE.Matrix4().makeScale(0, 0, 0);   // matriz de escala cero: 
       escena.remove(montacargas);
       montacargas = forklift; montacargas.position.set(6, 0, 0); montacargas.rotation.y = 0;
       MONTACARGAS[0] = montacargas;
+      /* segundo montacargas: el mismo Raymond doble alcance (reemplaza al azul sencillo) */
+      createForklift(); escena.remove(montacargas2);
+      montacargas2 = forklift; montacargas2.position.set(-2, 0, 4.8); montacargas2.rotation.y = 0;
+      MONTACARGAS[1] = montacargas2;
     } catch (e) { console.warn('[SIM] montacargas Raymond:', e.message); }
   }
 })();
