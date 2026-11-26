@@ -494,6 +494,24 @@ function gerenteEnPlaza() {
     grupo.position.set(6, 0, -4.5); escena.add(grupo);
   }, undefined, () => console.warn('[SIM] gerente no cargó'));
 }
+/* trabajador de construcción (modelo rigged con clip de caminar) y trabajador con transpaleta (de pie, en un punto fijo) */
+function cargarPersonajesNuevos() {
+  if (!THREE.GLTFLoader) return;
+  const L = new THREE.GLTFLoader();
+  L.load('assets/models/trabajador-transpaleta.glb', g => {
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const grupo = new THREE.Group(); grupo.add(g.scene); grupo.position.set(9, 0, 7); grupo.rotation.y = -Math.PI / 2; escena.add(grupo);
+  }, undefined, () => console.warn('[SIM] transpaleta no cargó'));
+  L.load('assets/models/trabajador-construccion.glb', g => {
+    const obj = THREE.SkeletonUtils.clone(g.scene);
+    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const grupo = new THREE.Group(); grupo.add(obj); escena.add(grupo);
+    const mixer = new THREE.AnimationMixer(obj);
+    const clip = g.animations.find(c => /walk/i.test(c.name)) || g.animations[0];
+    if (clip) mixer.clipAction(clip).play();
+    ambientes.push({ g: grupo, pts: [[-11, 10], [-11, 0]], idx: 0, prog: 0, vel: 1.0, mixer, paso: 0, fase: 0 });
+  }, undefined, () => console.warn('[SIM] trabajador de construcción no cargó'));
+}
 function makeStandingDe(T) {
   const av = makeFemAvatar(T); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av);
   const op = new THREE.Group(); op.add(av.obj); op.userData.gltf = av; op.userData.standing = true; return op;
@@ -510,6 +528,7 @@ function crearAmbiente() {
     const g = new THREE.Group(); g.add(op); if (R.cargo) g.add(etiquetaCargo(R.cargo)); escena.add(g);
     ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9, av: op.userData.gltf, paso: Math.random() * 6, fase: Math.random() });
   });
+  cargarPersonajesNuevos();
 }
 function moverAmbiente(dt) {
   ambientes.forEach(a => {
@@ -522,6 +541,7 @@ function moverAmbiente(dt) {
     a.g.rotation.y = Math.atan2(Q[0] - P[0], Q[1] - P[1]);
     /* caminan con la misma pose de marcha del simulador: piernas, brazos y balanceo según la zancada */
     if (a.av) { a.paso += dt * 7; gltfWalkPose(a.av, true, a.paso, performance.now(), false, a.fase); }
+    if (a.mixer) a.mixer.update(dt);   // trabajador con clips del modelo (caminar)
   });
 }
 
