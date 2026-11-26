@@ -477,9 +477,21 @@ function etiquetaCargo(texto) {
   sp.scale.set(2.4, 0.6, 1); sp.position.set(0, 2.35, 0); return sp;
 }
 /* operario de pie a partir de una variante del simulador (modelo, rostro y equipo de protección propios de cada una) */
+/* gerente de operaciones: modelo de traje con su chaleco reflectivo incluido; de pie en un punto fijo de la plaza */
+function gerenteEnPlaza() {
+  if (!THREE.GLTFLoader) return;
+  new THREE.GLTFLoader().load('assets/models/gerente-chaleco.glb', g => {
+    const grupo = new THREE.Group();
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    grupo.add(g.scene);
+    grupo.add(etiquetaCargo('Gerente de Operaciones'));
+    grupo.position.set(6, 0, -4.5); escena.add(grupo);
+  }, undefined, () => console.warn('[SIM] gerente no cargó'));
+}
 /* trabajador de construcción (modelo rigged con clip de caminar) y trabajador con transpaleta (de pie, en un punto fijo) */
 function cargarPersonajesNuevos() {
   if (!THREE.GLTFLoader) return;
+  gerenteEnPlaza();
   const L = new THREE.GLTFLoader();
   L.load('assets/models/trabajador-transpaleta.glb', g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
