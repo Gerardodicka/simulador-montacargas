@@ -510,6 +510,20 @@ function cargarPersonajesNuevos() {
   oficinaOperativa();
   if (!THREE.GLTFLoader) return;
   const L = new THREE.GLTFLoader();
+  /* trabajadora de pie con portapapeles: modelo con rostro más detallado (fijo, sin animación) */
+  L.load('assets/models/trabajadora-portapapeles.glb', g => {
+    /* uniforme de la plantilla: camisa y pantalón azul marino, como el resto de operarios (el rostro no cambia) */
+    g.scene.traverse(o => {
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+      if (o.isMesh && o.material) {
+        const n = o.material.name || '';
+        if (/top|bottom|citrus/i.test(n)) { o.material = o.material.clone(); o.material.color.set(0x1c2a4a); o.material.emissive && o.material.emissive.set(0x000000); o.material.roughness = 0.8; }
+      }
+      /* el casco conserva su color amarillo de seguridad */
+      if (o.isMesh && /hardhat|hard hat|helmet/i.test(o.name || '')) { o.material = o.material.clone(); o.material.color.set(0xf5c400); }
+    });
+    const grupo = new THREE.Group(); grupo.add(g.scene); grupo.position.set(-3, 0, 11.5); grupo.rotation.y = Math.PI; escena.add(grupo);
+  }, undefined, () => console.warn('[SIM] trabajadora con portapapeles no cargó'));
   L.load('assets/models/trabajador-transpaleta.glb', g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     const grupo = new THREE.Group(); grupo.add(g.scene); grupo.position.set(9, 0, 7); grupo.rotation.y = -Math.PI / 2; escena.add(grupo);
