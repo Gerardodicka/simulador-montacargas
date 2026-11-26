@@ -129,8 +129,12 @@ const _escenaAdd = escena.add.bind(escena);
 escena.add = function (...objs) { objs.forEach(o => { if (!o.isLight) ENV_PROC.push(o); }); return _escenaAdd(...objs); };
 
 /* piso industrial con franjas de seguridad */
-const texPiso = new THREE.TextureLoader().load('assets/textures/piso.jpg', t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 12); t.anisotropy = 8; });
-const piso = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ map: texPiso, color: 0xdfe3e8, roughness: 0.85 }));
+var _texCache = {};   // caché de texturas del módulo compartido (debe existir antes de usarlas)
+var WAREHOUSE = { w: 60, d: 90, h: 12 };   // medidas de la nave que usan las texturas del módulo compartido
+/* piso de concreto pulido del simulador (textura generada por el módulo compartido) */
+const texPiso = typeof concreteTex === 'function' ? concreteTex() : new THREE.TextureLoader().load('assets/textures/piso.jpg');
+texPiso.wrapS = texPiso.wrapT = THREE.RepeatWrapping; texPiso.repeat.set(10, 10); texPiso.anisotropy = 8;
+const piso = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ map: texPiso, color: 0xffffff, roughness: 0.82, metalness: 0.02 }));
 piso.rotation.x = -Math.PI / 2; piso.receiveShadow = true; escena.add(piso);
 const franja = (x, z, w, d, c) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: c, roughness: 0.7 })); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.01, z); escena.add(m); };
 franja(0, 2, 30, 0.35, 0xf5c400);
@@ -454,18 +458,16 @@ const RUTAS_AMBIENTE = [
   [[-6.2, 0], [-6.2, 8.4], [-3.4, 8.4], [-3.4, 0]],     // ruta 1: a la izquierda del pasillo central
   [[5, 9.6], [10.4, 9.6], [10.4, 11.2], [5, 11.2]],     // ruta 2: frente a la zona de andenes, fuera del montacargas
   [[-9, -3.2], [9, -3.2]],                              // ruta 3: cruza la plaza por el paso peatonal (línea de frente)
-  [[13, -6], [13, 4]],                                  // ruta 5: costado derecho de la plaza
-  [[-9.4, 4], [-9.4, -4]]                               // ruta 4: pasillo izquierdo, junto a los racks
+  [[13, -6], [13, 4]]                                   // ruta 5: costado derecho de la plaza
 ];
 const ambientes = [];
 let ambienteT = 0;
-/* personal de la plaza: algunas operarias (modelo femenino del simulador) y el jefe y gerente de operaciones con su etiqueta */
+/* personal de la plaza: algunas operarias (modelo femenino del simulador) y el jefe de operaciones con su etiqueta */
 const ROLES_AMBIENTE = [
   { fem: true },
   { fem: false },
   { fem: true, cargo: 'Operaria de surtido' },
-  { fem: false, cargo: 'Jefe de Operaciones' },
-  { fem: true, cargo: 'Gerente de Operaciones' }
+  { fem: false, cargo: 'Jefe de Operaciones' }
 ];
 function etiquetaCargo(texto) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
@@ -475,6 +477,24 @@ function etiquetaCargo(texto) {
   sp.scale.set(2.4, 0.6, 1); sp.position.set(0, 2.35, 0); return sp;
 }
 /* operario de pie a partir de una variante del simulador (modelo, rostro y equipo de protección propios de cada una) */
+/* trabajador de construcción (modelo rigged con clip de caminar) y trabajador con transpaleta (de pie, en un punto fijo) */
+function cargarPersonajesNuevos() {
+  if (!THREE.GLTFLoader) return;
+  const L = new THREE.GLTFLoader();
+  L.load('assets/models/trabajador-transpaleta.glb', g => {
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const grupo = new THREE.Group(); grupo.add(g.scene); grupo.position.set(9, 0, 7); grupo.rotation.y = -Math.PI / 2; escena.add(grupo);
+  }, undefined, () => console.warn('[SIM] transpaleta no cargó'));
+  L.load('assets/models/trabajador-construccion.glb', g => {
+    const obj = THREE.SkeletonUtils.clone(g.scene);
+    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const grupo = new THREE.Group(); grupo.add(obj); escena.add(grupo);
+    const mixer = new THREE.AnimationMixer(obj);
+    const clip = g.animations.find(c => /walk/i.test(c.name)) || g.animations[0];
+    if (clip) mixer.clipAction(clip).play();
+    ambientes.push({ g: grupo, pts: [[-11, 10], [-11, 0]], idx: 0, prog: 0, vel: 1.0, mixer, paso: 0, fase: 0 });
+  }, undefined, () => console.warn('[SIM] trabajador de construcción no cargó'));
+}
 function makeStandingDe(T) {
   const av = makeFemAvatar(T); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av);
   const op = new THREE.Group(); op.add(av.obj); op.userData.gltf = av; op.userData.standing = true; return op;
@@ -490,6 +510,7 @@ function crearAmbiente() {
     const g = new THREE.Group(); g.add(op); if (R.cargo) g.add(etiquetaCargo(R.cargo)); escena.add(g);
     ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9, av: op.userData.gltf, paso: Math.random() * 6, fase: Math.random() });
   });
+  cargarPersonajesNuevos();
 }
 function moverAmbiente(dt) {
   ambientes.forEach(a => {
@@ -502,6 +523,7 @@ function moverAmbiente(dt) {
     a.g.rotation.y = Math.atan2(Q[0] - P[0], Q[1] - P[1]);
     /* caminan con la misma pose de marcha del simulador: piernas, brazos y balanceo según la zancada */
     if (a.av) { a.paso += dt * 7; gltfWalkPose(a.av, true, a.paso, performance.now(), false, a.fase); }
+    if (a.mixer) a.mixer.update(dt);   // trabajador con clips del modelo (caminar)
   });
 }
 
@@ -954,10 +976,9 @@ var currentModel = "doublereach", forklift = null, forkPosition = { x: 0, y: 0, 
 
 /* racks del simulador (módulo compartido almacen-comun.js) a los costados de la plaza: el mismo diseño de racks cargados */
 var scene = escena;                                   // el módulo compartido espera la variable scene
-var WAREHOUSE = { w: 60, d: 90, h: 12 };
 var BRAND = { azul: 0x1D2586, brillante: 0x2138D3, marino: 0x011131, gris: 0x838383, blanco: 0xFFFFFF };
 var AISLES = [], obstacles = [];
-var RACK_MATS = {}, RAY_MATS = {}, _texCache = {}, TEXCACHE = {};
+var RACK_MATS = {}, RAY_MATS = {}, TEXCACHE = {};
 var CARTON = { img: null, pend: [], loading: false };
 var RACK_INST = [], RACK_SLOTS = [], RAYMOND = 0xc8102e;
 var zeroM = new THREE.Matrix4().makeScale(0, 0, 0);   // matriz de escala cero: oculta instancias libres   // cachés de materiales que el módulo compartido espera
