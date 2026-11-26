@@ -517,13 +517,22 @@ function cargarPersonajesNuevos() {
       if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
       if (o.isMesh && o.material) {
         const n = o.material.name || '';
-        if (/top|citrus/i.test(n)) { o.material = o.material.clone(); o.material.map = null; o.material.color.set(0x2a6fd6); o.material.emissive && o.material.emissive.set(0x000000); o.material.roughness = 0.7; o.material.needsUpdate = true; }
+        if (/top|citrus/i.test(n)) { o.material = o.material.clone(); o.material.map = null; o.material.color.set(0x1f5fc4); o.material.emissive && o.material.emissive.set(0x000000); o.material.roughness = 0.7; o.material.needsUpdate = true; }
         else if (/bottom/i.test(n)) { o.material = o.material.clone(); o.material.map = null; o.material.color.set(0x1c2a4a); o.material.roughness = 0.8; o.material.needsUpdate = true; }
       }
       /* el casco conserva su color amarillo de seguridad */
       if (o.isMesh && /hardhat|hard hat|helmet/i.test(o.name || '')) { o.material = o.material.clone(); o.material.color.set(0xf5c400); }
     });
     const grupo = new THREE.Group(); grupo.add(g.scene); grupo.position.set(-3, 0, 11.5); grupo.rotation.y = Math.PI; escena.add(grupo);
+    /* mangas largas azules sobre los brazos (la camiseta del modelo es de manga corta) */
+    const manga = new THREE.MeshStandardMaterial({ color: 0x1f5fc4, roughness: 0.75 });
+    [-0.2, 0.2].forEach(x => {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.058, 0.42, 12), manga);
+      m.position.set(x, 1.2, 0.02); m.castShadow = true; grupo.add(m);
+    });
+    /* logo de Dicka en el pecho */
+    const logo = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22 * 0.45), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('assets/textures/dojo-dicka-logo.webp'), transparent: true }));
+    logo.position.set(0, 1.42, 0.14); grupo.add(logo);
   }, undefined, () => console.warn('[SIM] trabajadora con portapapeles no cargó'));
   L.load('assets/models/trabajador-transpaleta.glb', g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
