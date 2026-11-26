@@ -442,6 +442,16 @@ const GLB_ALMACEN = { url: 'assets/models/almacen-3pl.glb', ok: false };
     ejeZup.add(g.scene); exterior.add(ejeZup); escena.add(exterior);
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     ENV_PROC.forEach(o => { if (!MANTENER.has(o)) o.visible = false; });
+    /* colisiones de la nave: equipos y estructuras del GLB dentro del área caminable (bounding box real) */
+    exterior.updateMatrixWorld(true);
+    const RX_OBSTACULO = /^(ESTACION_|MONTACARGAS_|RACK_|TARIMA|CAJA_|CHASIS_TRAILER|CAJA_TRAILER|TOPE_ANDEN|MARCO_ANDEN)/;
+    g.scene.traverse(o => {
+      if (!o.isMesh || !o.name || !RX_OBSTACULO.test(o.name)) return;
+      const b = new THREE.Box3().setFromObject(o);
+      if (b.max.y < 0.3) return;                                  // piso y tarimas planas no bloquean
+      if (b.max.x < -LIMITE.x - 1 || b.min.x > LIMITE.x + 1 || b.max.z < LIMITE.zMin - 1 || b.min.z > LIMITE.zMax + 1) return;
+      COLISIONES_PLAZA.push({ minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z });
+    });
     GLB_ALMACEN.ok = true;
     console.log('[SIM] almacén 3D (GLB) cargado');
   }, undefined, () => console.warn('[SIM] almacén 3D no cargó; se usa el almacén procedural'));
