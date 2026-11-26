@@ -376,15 +376,17 @@ function animarAmbiente(t) {
 /* ===================== Paso 4 · Actividad ambiental: colaboradores en rutas fijas ===================== */
 const RUTAS_AMBIENTE = [
   [[-6.2, 0], [-6.2, 8.4], [-3.4, 8.4], [-3.4, 0]],     // ruta 1: a la izquierda del pasillo central
-  [[5, 9.6], [10.4, 9.6], [10.4, 11.2], [5, 11.2]]      // ruta 2: frente a la zona de andenes, fuera del montacargas
+  [[5, 9.6], [10.4, 9.6], [10.4, 11.2], [5, 11.2]],     // ruta 2: frente a la zona de andenes, fuera del montacargas
+  [[-9, -3.2], [9, -3.2]],                              // ruta 3: cruza la plaza por el paso peatonal (línea de frente)
+  [[-9.4, 4], [-9.4, -4]]                               // ruta 4: pasillo izquierdo, junto a los racks
 ];
 const ambientes = [];
 let ambienteT = 0;
 function crearAmbiente() {
   if (typeof makeStandingOperator !== 'function' || ambientes.length) return;
   RUTAS_AMBIENTE.forEach(pts => {
-    const g = new THREE.Group(); g.add(makeStandingOperator(false)); escena.add(g);
-    ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9 });
+    const g = new THREE.Group(); const op = makeStandingOperator(false); g.add(op); escena.add(g);
+    ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9, av: op.userData.gltf, paso: Math.random() * 6, fase: Math.random() });
   });
 }
 function moverAmbiente(dt) {
@@ -396,6 +398,8 @@ function moverAmbiente(dt) {
     const P = a.pts[a.idx], Q = a.pts[(a.idx + 1) % a.pts.length];
     a.g.position.set(P[0] + (Q[0] - P[0]) * a.prog, 0, P[1] + (Q[1] - P[1]) * a.prog);
     a.g.rotation.y = Math.atan2(Q[0] - P[0], Q[1] - P[1]);
+    /* caminan con la misma pose de marcha del simulador: piernas, brazos y balanceo según la zancada */
+    if (a.av) { a.paso += dt * 7; gltfWalkPose(a.av, true, a.paso, performance.now(), false, a.fase); }
   });
 }
 
