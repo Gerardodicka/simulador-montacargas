@@ -855,11 +855,14 @@ function abrirModulo(m) {
   document.getElementById('panel').classList.add('on');
 }
 /* manual del Pilar 1 (Módulo 1): visor de diapositivas dentro de ENTRENAMIENTO */
-const MANUAL = { base: 'assets/materiales/manual-pilar-1/', total: 19 };
-let manualI = 1;
-function bloqueManual() {
-  manualI = 1;
-  return `<div class="puerta" style="border-left-color:#2e9e5b"><h3>Manual · Pilar 1 · Tú eres una pieza clave</h3>
+const MANUALES = {
+  m1: { base: 'assets/materiales/manual-pilar-1/', total: 19, titulo: 'Manual · Pilar 1 · Tú eres una pieza clave' },
+  m2: { base: 'assets/materiales/manual-pilar-2/', total: 12, titulo: 'Manual · Pilar 2 · Construimos excelencia' }
+};
+let MANUAL = null, manualI = 1;
+function bloqueManual(modId) {
+  MANUAL = MANUALES[modId]; manualI = 1;
+  return `<div class="puerta" style="border-left-color:#2e9e5b"><h3>${MANUAL.titulo}</h3>
     <div style="text-align:center"><img id="manualImg" src="${MANUAL.base}slide-01.jpg" alt="Diapositiva 1" style="max-width:100%;max-height:50vh;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.25)"></div>
     <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px;flex-wrap:wrap">
       <button class="btn" onclick="cambiarManual(-1)">◀ Anterior</button>
@@ -881,8 +884,8 @@ function abrirZona(id) {
   let cuerpo = '';
   if (id === 'lapzo') {
     cuerpo = `<div class="puerta"><h3>A · Lapzo (Aprende)</h3><p>Cursos asignados, videos, examen y diploma del módulo.</p>${LAPZO_URL ? `<a class="btn" href="${LAPZO_URL}" target="_blank" rel="noopener">Abrir en Lapzo</a>` : `<button class="btn" disabled>Abrir en Lapzo</button><div class="nota">Enlace pendiente de configurar con el administrador de Lapzo.</div>`}</div>`;
-  } else if (id === 'entrena' && moduloInt.id === 'm1') {
-    cuerpo = bloqueManual();
+  } else if (id === 'entrena' && MANUALES[moduloInt.id]) {
+    cuerpo = bloqueManual(moduloInt.id);
   } else if (id === 'entrena') {
     cuerpo = `<div class="puerta" style="border-left-color:#2e9e5b"><h3>B · Entrenamiento (Entrena)</h3><p>Biblioteca de la sesión. Los materiales se cargarán cuando estén validados.</p><ul><li>Manual del participante</li><li>Presentación de la sesión</li><li>Guía del instructor</li><li>Ejercicios y formatos</li></ul><span class="chip pend">Materiales por cargar</span></div>`;
   } else {
