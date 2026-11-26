@@ -259,7 +259,7 @@ if (typeof loadOperarioModel === 'function') {
     const op = makeStandingOperator(false);
     avatar.children.forEach(ch => { ch.visible = false; });
     avatar.add(op); avatarGltf = op.userData.gltf;
-    crearRicardo();
+    (typeof loadOperaria === 'function' ? loadOperaria() : Promise.resolve(false)).catch(() => false).then(() => crearRicardo());
     conducirMontacargas();
   }).catch(() => { });
 }
@@ -453,14 +453,36 @@ const RUTAS_AMBIENTE = [
   [[-6.2, 0], [-6.2, 8.4], [-3.4, 8.4], [-3.4, 0]],     // ruta 1: a la izquierda del pasillo central
   [[5, 9.6], [10.4, 9.6], [10.4, 11.2], [5, 11.2]],     // ruta 2: frente a la zona de andenes, fuera del montacargas
   [[-9, -3.2], [9, -3.2]],                              // ruta 3: cruza la plaza por el paso peatonal (línea de frente)
+  [[13, -6], [13, 4]],                                  // ruta 5: costado derecho de la plaza
   [[-9.4, 4], [-9.4, -4]]                               // ruta 4: pasillo izquierdo, junto a los racks
 ];
 const ambientes = [];
 let ambienteT = 0;
+/* personal de la plaza: algunas operarias (modelo femenino del simulador) y el jefe y gerente de operaciones con su etiqueta */
+const ROLES_AMBIENTE = [
+  { fem: true },
+  { fem: false },
+  { fem: true, cargo: 'Operaria de surtido' },
+  { fem: false, cargo: 'Jefe de Operaciones' },
+  { fem: true, cargo: 'Gerente de Operaciones' }
+];
+function etiquetaCargo(texto) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
+  g.fillStyle = 'rgba(11,22,64,.92)'; g.fillRect(0, 0, 512, 128); g.fillStyle = '#f5c400'; g.fillRect(0, 0, 512, 10);
+  g.fillStyle = '#ffffff'; g.font = 'bold 44px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(texto, 256, 70);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }));
+  sp.scale.set(2.4, 0.6, 1); sp.position.set(0, 2.35, 0); return sp;
+}
+function makeStandingOperatorFem() {
+  const av = makeFemAvatar(); av.mixer.stopAllAction(); av.procedural = true; gltfPrepareBones(av); gltfStandPose(av);
+  const op = new THREE.Group(); op.add(av.obj); op.userData.gltf = av; op.userData.standing = true; return op;
+}
 function crearAmbiente() {
   if (typeof makeStandingOperator !== 'function' || ambientes.length) return;
-  RUTAS_AMBIENTE.forEach(pts => {
-    const g = new THREE.Group(); const op = makeStandingOperator(false); g.add(op); escena.add(g);
+  RUTAS_AMBIENTE.forEach((pts, i) => {
+    const R = ROLES_AMBIENTE[i] || { fem: false };
+    const op = R.fem && GLTF_FEM.gltf && typeof makeStandingOperatorFem === 'function' ? makeStandingOperatorFem() : makeStandingOperator(false);
+    const g = new THREE.Group(); g.add(op); if (R.cargo) g.add(etiquetaCargo(R.cargo)); escena.add(g);
     ambientes.push({ g, pts, idx: 0, prog: 0, vel: 0.9, av: op.userData.gltf, paso: Math.random() * 6, fase: Math.random() });
   });
 }
