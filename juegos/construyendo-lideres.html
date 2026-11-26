@@ -517,7 +517,8 @@ function cargarPersonajesNuevos() {
       if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
       if (o.isMesh && o.material) {
         const n = o.material.name || '';
-        if (/top|bottom|citrus/i.test(n)) { o.material = o.material.clone(); o.material.color.set(0x1c2a4a); o.material.emissive && o.material.emissive.set(0x000000); o.material.roughness = 0.8; }
+        if (/top|citrus/i.test(n)) { o.material = o.material.clone(); o.material.map = null; o.material.color.set(0x2a6fd6); o.material.emissive && o.material.emissive.set(0x000000); o.material.roughness = 0.7; o.material.needsUpdate = true; }
+        else if (/bottom/i.test(n)) { o.material = o.material.clone(); o.material.map = null; o.material.color.set(0x1c2a4a); o.material.roughness = 0.8; o.material.needsUpdate = true; }
       }
       /* el casco conserva su color amarillo de seguridad */
       if (o.isMesh && /hardhat|hard hat|helmet/i.test(o.name || '')) { o.material = o.material.clone(); o.material.color.set(0xf5c400); }
