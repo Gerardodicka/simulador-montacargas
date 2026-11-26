@@ -487,21 +487,22 @@ function oficinaOperativa() {
   const mesa = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.06, 0.9), mat(0x6b4a2b)); mesa.position.set(X, 0.76, Z + 0.4); mesa.castShadow = true; escena.add(mesa);
   [[-0.95, -0.35], [0.95, -0.35], [-0.95, 0.35], [0.95, 0.35]].forEach(([dx, dz]) => { const pata = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.74, 0.06), mat(0x333333)); pata.position.set(X + dx, 0.37, Z + 0.4 + dz); escena.add(pata); });
   COLISIONES_PLAZA.push({ minX: X - 1.0, maxX: X + 1.0, minZ: Z + 0.0, maxZ: Z + 0.8 });
-  const monitor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.45, 0.05), mat(0x111111)); monitor.position.set(X, 1.12, Z + 0.3); monitor.castShadow = true; escena.add(monitor);
-  const pantalla = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.36), new THREE.MeshBasicMaterial({ color: 0x1769aa })); pantalla.position.set(X, 1.12, Z + 0.27); pantalla.rotation.y = Math.PI; escena.add(pantalla);
+  const monitor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.45, 0.05), mat(0x111111)); monitor.position.set(X + 0.9, 1.12, Z + 0.3); monitor.castShadow = true; escena.add(monitor);
+  const pantalla = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.36), new THREE.MeshBasicMaterial({ color: 0x1769aa })); pantalla.position.set(X + 0.9, 1.12, Z + 0.27); pantalla.rotation.y = Math.PI; escena.add(pantalla);
   const asiento = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.5), mat(0x2b3a55)); asiento.position.set(X, 0.5, Z - 0.6); escena.add(asiento);
   const respaldo = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.08), mat(0x2b3a55)); respaldo.position.set(X, 0.85, Z - 0.84); escena.add(respaldo);
   const c = document.createElement('canvas'); c.width = 768; c.height = 192; const g = c.getContext('2d');
   g.fillStyle = '#0b1640'; g.fillRect(0, 0, 768, 192); g.fillStyle = '#f5c400'; g.fillRect(0, 0, 768, 12);
   g.fillStyle = '#ffffff'; g.font = 'bold 62px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('OFICINAS OPERATIVAS', 384, 100);
   const letrero = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 0.75), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) })); letrero.position.set(X, 2.2, Z + D / 2 + 0.07); escena.add(letrero);
-  /* gerente sentado en la silla: pose de sentado del modelo de operario (con rig) */
-  if (typeof makeGLTFAvatar === 'function' && GLTF_AVATAR.ok && GLTF_AVATAR.clips.sit) {
-    const av = makeGLTFAvatar(false, false);
-    av.mixer.stopAllAction(); av.mixer.clipAction(GLTF_AVATAR.clips.sit).play();
-    av.obj.position.set(X, 0, Z - 0.6); av.obj.rotation.y = 0;
-    const grupo = new THREE.Group(); grupo.add(av.obj); grupo.add(etiquetaCargo('Gerente de Operaciones')); escena.add(grupo);
-    ANIMADOS.push({ mixer: av.mixer });
+  /* gerente de traje sentado en la silla: modelo con su pose de sentado (esqueleto aplicado) */
+  if (THREE.GLTFLoader) {
+    new THREE.GLTFLoader().load('assets/models/gerente-sentado.glb', gl => {
+      gl.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      const grupo = new THREE.Group(); grupo.add(gl.scene);
+      grupo.position.set(X, 0, Z - 0.6); escena.add(grupo);
+      grupo.add(etiquetaCargo('Gerente de Operaciones'));
+    }, undefined, () => console.warn('[SIM] gerente sentado no cargó'));
   }
 }
 /* trabajador de construcción (modelo rigged con clip de caminar) y trabajador con transpaleta (de pie, en un punto fijo) */
