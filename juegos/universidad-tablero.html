@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Universidad Dicka · Tablero</title>
+<style>
+  :root { --azul:#1D2586; --brillante:#2138D3; --marino:#011131; --amarillo:#f5c400; --verde:#2e9e5b; --naranja:#f26b1d; --rojo:#c62828; --gris:#8a93b3; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { background: radial-gradient(ellipse at top, #1a2a9a 0%, var(--azul) 35%, var(--marino) 100%); background-color: var(--marino); color: #fff; font-family: Arial, Helvetica, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 18px 16px 40px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .top a { color: #fff; text-decoration: none; font-weight: 800; }
+  .top b { font-size: 20px; } .top b em { color: var(--amarillo); font-style: italic; font-weight: 600; }
+  .tag { font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 999px; background: rgba(245,196,0,.15); color: var(--amarillo); border: 1px solid rgba(245,196,0,.5); }
+  .aviso { display: inline-block; font-size: 12px; font-weight: 800; color: var(--amarillo); background: rgba(245,196,0,.14); border: 1px solid rgba(245,196,0,.4); padding: 5px 10px; border-radius: 8px; margin: 14px 0 6px; }
+  h1 { font-size: clamp(24px, 4vw, 34px); margin: 14px 0 6px; }
+  .sub { color: #c7d0f2; margin: 0 0 14px; font-size: 15px; }
+
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 16px; }
+  .tab { padding: 10px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.06); color: #fff; font-weight: 800; cursor: pointer; font-size: 14px; }
+  .tab.on { background: var(--amarillo); color: var(--marino); border-color: var(--amarillo); }
+
+  .filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filtros label { font-size: 12px; font-weight: 800; color: #c7d0f2; display: flex; flex-direction: column; gap: 4px; }
+  .filtros select { background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 9px 10px; font-size: 14px; min-width: 150px; }
+  .filtros select option { color: #111; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 16px 18px; position: relative; overflow: hidden; }
+  .card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--c, var(--gris)); }
+  .card h3 { margin: 0 0 6px; font-size: 15px; letter-spacing: .04em; color: #c7d0f2; }
+  .card .big { font-size: 34px; font-weight: 800; }
+  .card .det { font-size: 13px; color: #d5dcf7; margin-top: 6px; line-height: 1.5; }
+  .semaforo { display: inline-block; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px; margin-top: 8px; }
+  .verde { background: rgba(46,158,91,.25); color: #9ff0bd; }
+  .amarillo { background: rgba(245,196,0,.22); color: var(--amarillo); }
+  .rojo { background: rgba(198,40,40,.3); color: #ffb3b3; }
+  .gris { background: rgba(138,147,179,.25); color: #dfe5f7; }
+  .barra { height: 8px; background: rgba(255,255,255,.14); border-radius: 6px; margin-top: 10px; overflow: hidden; }
+  .barra > i { display: block; height: 100%; background: var(--c, var(--verde)); border-radius: 6px; }
+
+  .seccion { margin-top: 22px; }
+  .seccion h2 { font-size: 18px; margin: 0 0 10px; }
+  table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,.04); border-radius: 12px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  th { font-size: 12px; color: #c7d0f2; letter-spacing: .04em; }
+  .oculto { display: none !important; }
+  footer { color: #aab5e0; font-size: 12px; text-align: center; padding: 22px 0 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <a href="universidad-dicka.html">← Universidad Dicka</a>
+    <span class="tag">TABLERO · DEMO</span>
+  </div>
+
+  <h1>Tablero del colaborador y ejecutivo</h1>
+  <p class="sub">La vista cambia según la población: operativo o administrativo. Datos de ejemplo para mostrar la propuesta.</p>
+  <span class="aviso">DATOS DEMOSTRATIVOS — NO SON RESULTADOS REALES</span>
+
+  <div class="tabs">
+    <button class="tab on" data-vista="colab">Mi tablero</button>
+    <button class="tab" data-vista="ejec">Tablero ejecutivo</button>
+  </div>
+
+  <!-- ===== Tablero del colaborador ===== -->
+  <section id="colab">
+    <div class="filtros">
+      <label>Población
+        <select id="poblacion">
+          <option value="operativo">Personal operativo</option>
+          <option value="administrativo">Personal administrativo</option>
+        </select>
+      </label>
+      <label>Colaborador (demo)
+        <select id="colaborador">
+          <option>Persona demo 1</option>
+          <option>Persona demo 2</option>
+        </select>
+      </label>
+    </div>
+
+    <!-- Operativo: cuatro tarjetas -->
+    <div id="vista-operativo" class="grid">
+      <div class="card" style="--c: var(--gris)">
+        <h3>LICENCIA / ACREDITACIÓN VIGENTE</h3>
+        <div class="big">—</div>
+        <div class="det">Tipo: sin registro · Emisión: — · Vence: —</div>
+        <span class="semaforo gris">Gris · sin registro o evidencia</span>
+      </div>
+      <div class="card" style="--c: var(--indigo, #3f51b5)">
+        <h3>AVANCE LAPZO</h3>
+        <div class="big">— %</div>
+        <div class="det">Cursos completados: — · Pendientes: —</div>
+        <div class="barra"><i style="width:0%;--c:#3f51b5"></i></div>
+      </div>
+      <div class="card" style="--c: var(--verde)">
+        <h3>AVANCE DOJO DICKA</h3>
+        <div class="big">— %</div>
+        <div class="det">Procedimiento: — · Simulador: — · TWI: —</div>
+        <div class="barra"><i style="width:0%"></i></div>
+      </div>
+      <div class="card" style="--c: var(--naranja)">
+        <h3>HORAS VUELO</h3>
+        <div class="big">— h</div>
+        <div class="det">Del periodo: — · Instructor responsable: —</div>
+      </div>
+    </div>
+
+    <!-- Administrativo: solo LAPZO y Dojo -->
+    <div id="vista-administrativo" class="grid oculto">
+      <div class="card" style="--c: #3f51b5">
+        <h3>AVANCE LAPZO</h3>
+        <div class="big">— %</div>
+        <div class="det">Cursos completados: — · Pendientes: —</div>
+        <div class="barra"><i style="width:0%;--c:#3f51b5"></i></div>
+      </div>
+      <div class="card" style="--c: var(--verde)">
+        <h3>AVANCE DOJO DICKA</h3>
+        <div class="big">— %</div>
+        <div class="det">Contenidos asignados · Pendientes: —</div>
+        <div class="barra"><i style="width:0%"></i></div>
+      </div>
+    </div>
+
+    <div class="seccion">
+      <h2>Guía de entrenamiento (demo)</h2>
+      <table>
+        <tr><th>Tarea</th><th>Estatus</th></tr>
+        <tr><td>Procedimiento de la tarea 1</td><td>No iniciado</td></tr>
+        <tr><td>Procedimiento de la tarea 2</td><td>En entrenamiento</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== Tablero ejecutivo ===== -->
+  <section id="ejec" class="oculto">
+    <div class="filtros">
+      <label>Periodo
+        <select><option>Mes actual</option><option>Trimestre</option><option>Año</option></select>
+      </label>
+      <label>Sitio
+        <select><option>Todos</option><option>Sitio demo A</option><option>Sitio demo B</option></select>
+      </label>
+      <label>Cuenta
+        <select><option>Todas</option><option>Cuenta demo 1</option></select>
+      </label>
+      <label>Población
+        <select><option>Todas</option><option>Operativo</option><option>Administrativo</option></select>
+      </label>
+    </div>
+
+    <div class="grid">
+      <div class="card" style="--c: var(--verde)"><h3>COLABORADORES OPERATIVOS CON ACREDITACIÓN VIGENTE</h3><div class="big">— %</div></div>
+      <div class="card" style="--c: var(--amarillo)"><h3>ACREDITACIONES PRÓXIMAS A VENCER</h3><div class="big">—</div></div>
+      <div class="card" style="--c: var(--rojo)"><h3>ACREDITACIONES VENCIDAS</h3><div class="big">—</div></div>
+      <div class="card" style="--c: var(--naranja)"><h3>HORAS VUELO (OPERATIVO)</h3><div class="big">— h</div></div>
+      <div class="card" style="--c: #3f51b5"><h3>AVANCE LAPZO</h3><div class="big">— %</div></div>
+      <div class="card" style="--c: var(--verde)"><h3>AVANCE DOJO DICKA</h3><div class="big">— %</div></div>
+    </div>
+
+    <div class="seccion">
+      <h2>Horas por modalidad (demo)</h2>
+      <table>
+        <tr><th>Modalidad</th><th>Horas</th><th>Fuente</th></tr>
+        <tr><td>LAPZO · aprendizaje digital</td><td>—</td><td>LAPZO (si la fuente lo proporciona)</td></tr>
+        <tr><td>Dojo · simulador</td><td>—</td><td>Práctica virtual</td></tr>
+        <tr><td>Sesiones presenciales o Teams</td><td>—</td><td>Registro administrativo</td></tr>
+        <tr><td>Horas Vuelo</td><td>—</td><td>Entrenamiento en piso (solo operativo)</td></tr>
+      </table>
+      <p class="sub" style="margin-top:8px">Regla: una actividad no se cuenta dos veces aunque aparezca en más de una fuente.</p>
+    </div>
+  </section>
+
+  <footer>Propuesta de trabajo · no conectada a LAPZO ni a una base de datos real</footer>
+</div>
+
+<script>
+  // Pestañas: mi tablero / tablero ejecutivo
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
+    document.getElementById('colab').classList.toggle('oculto', b.dataset.vista !== 'colab');
+    document.getElementById('ejec').classList.toggle('oculto', b.dataset.vista !== 'ejec');
+  }));
+  // Población: operativo muestra Horas Vuelo y acreditación; administrativo no
+  document.getElementById('poblacion').addEventListener('change', e => {
+    const op = e.target.value === 'operativo';
+    document.getElementById('vista-operativo').classList.toggle('oculto', !op);
+    document.getElementById('vista-administrativo').classList.toggle('oculto', op);
+  });
+</script>
+</body>
+</html>
