@@ -34,8 +34,11 @@
   @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } .foto { min-height: 240px; } .foto::before { background: linear-gradient(180deg, #1D2586 0, rgba(29,37,134,0) 30%); } }
   @media (max-width: 560px) { .btns { grid-template-columns: 1fr; } .hero .texto { padding: 24px 20px; } }
 
-  .cuadrantes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
-  @media (max-width: 720px) { .cuadrantes { grid-template-columns: 1fr; } }
+  .cuadrantes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  @media (max-width: 900px) { .cuadrantes { grid-template-columns: 1fr; } }
+  .herr { display: flex; gap: 6px; flex-wrap: wrap; }
+  .herr span { font-size: 12px; font-weight: 800; padding: 6px 10px; border-radius: 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); }
+  .herr span.act { background: var(--verde); border-color: var(--verde); }
   .cuad { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden; }
   .cuad::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--c); }
   .cuad .num { font-size: 12px; font-weight: 800; letter-spacing: .14em; color: #b9c4f0; }
@@ -81,15 +84,15 @@
     </div>
   </section>
 
-  <!-- Orden obligatorio: LAPZO, Dojo Dicka, Escuela Operativa, Construyendo Líderes Dicka -->
+  <!-- Tres espacios del brief actualizado: LAPZO, Dojo Dicka y Construyendo Líderes Dicka -->
   <main class="cuadrantes">
     <section class="cuad" style="--c: var(--indigo)">
-      <span class="num">CUADRANTE 01</span>
+      <span class="num">ESPACIO 01</span>
       <h3>LAPZO</h3>
-      <p>Aprendizaje digital: cursos, videos y evaluaciones teóricas.</p>
+      <p>Aprendizaje digital: catálogo, cursos, videos y evaluaciones teóricas.</p>
       <ul>
-        <li>Catálogo de cursos y rutas por puesto</li>
         <li>Mis cursos, avance e historial</li>
+        <li>Rutas de aprendizaje por puesto</li>
         <li>Constancias y evidencias</li>
       </ul>
       <span class="chip pend">Integración pendiente de confirmar</span>
@@ -97,41 +100,31 @@
     </section>
 
     <section class="cuad" style="--c: var(--verde)">
-      <span class="num">CUADRANTE 02</span>
+      <span class="num">ESPACIO 02</span>
       <h3>Dojo Dicka</h3>
-      <p>Práctica y evaluación virtual con escenarios interactivos.</p>
+      <p>Entrenamiento, práctica y validación. Tres herramientas:</p>
+      <div class="herr">
+        <span>Procedimiento</span>
+        <span class="act">Simulador</span>
+        <span>TWI</span>
+      </div>
       <ul>
-        <li>Seguridad, montacargas y riesgos</li>
-        <li>Teoría</li>
-        <li>Práctica en el simulador</li>
-        <li>Práctica en piso</li>
-        <li>Calificación mínima de 80 puntos</li>
+        <li>Guía de entrenamiento del colaborador</li>
+        <li>Vigencia de certificaciones</li>
+        <li>Horas Vuelo del personal operativo</li>
       </ul>
-      <span class="chip">Disponible</span>
-      <a class="btn ver" href="dojo-de-mando.html">Entrar al Dojo</a>
-    </section>
-
-    <section class="cuad" style="--c: var(--teal)">
-      <span class="num">CUADRANTE 03</span>
-      <h3>Escuela Operativa</h3>
-      <p>Formación técnica por puesto: manual, piso y evaluación.</p>
-      <ul>
-        <li>Rutas: auxiliar, surtidor, verificador, montacarguista</li>
-        <li>Entrenamiento en piso con registro de horas</li>
-        <li>Estatus de acreditación</li>
-      </ul>
-      <span class="chip pend">Contenido en preparación</span>
-      <span class="btn off" style="background:var(--teal)">Próximamente</span>
+      <span class="chip">Simulador disponible</span>
+      <a class="btn ver" href="dojo-de-mando.html">Entrar al simulador</a>
     </section>
 
     <section class="cuad" style="--c: var(--naranja)">
-      <span class="num">CUADRANTE 04</span>
+      <span class="num">ESPACIO 03</span>
       <h3>Construyendo Líderes Dicka</h3>
-      <p>Desarrollo de liderazgo para supervisores, jefaturas y gerencias.</p>
+      <p>Desarrollo de liderazgo para supervisores, jefaturas, gerencias y HRBP.</p>
       <ul>
         <li>Cuatro etapas con almacén 3D</li>
         <li>Toma de decisiones y liderazgo</li>
-        <li>Niveles: supervisor, jefatura, gerencia y HRBP</li>
+        <li>Ruta asignada según tu nivel</li>
       </ul>
       <span class="chip">Disponible</span>
       <a class="btn sol" href="construyendo-lideres.html" style="background:var(--naranja);color:#fff">Entrar al almacén 3D</a>
