@@ -3,159 +3,146 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Universidad Dicka · Propuesta</title>
+<title>Universidad Dicka</title>
 <style>
-  :root {
-    --marino: #0b1640;
-    --azul: #1d2586;
-    --indigo: #3f51b5;
-    --verde: #2e9e5b;
-    --teal: #0f8a7e;
-    --naranja: #f26b1d;
-    --amarillo: #f5c400;
-    --papel: #f4f7fb;
-    --texto: #1b2240;
-    --suave: #6b7390;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --papel: #0f1530; --texto: #e9eefc; --suave: #a9b3d6; }
-  }
-  :root[data-theme="dark"] { --papel: #0f1530; --texto: #e9eefc; --suave: #a9b3d6; }
+  :root { --azul:#1D2586; --brillante:#2138D3; --marino:#011131; --amarillo:#f5c400; --verde:#2e9e5b; --naranja:#f26b1d; --teal:#0f8a7e; --indigo:#3f51b5; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--papel); color: var(--texto); font-family: Arial, Helvetica, sans-serif; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 16px; }
-  header.hero { background: linear-gradient(135deg, var(--marino), var(--azul)); color: #fff; border-radius: 18px; padding: 26px 22px; margin-top: 8px; position: relative; }
-  .demo { position: absolute; top: 12px; right: 12px; background: var(--amarillo); color: var(--marino); font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 999px; }
-  .hero small { letter-spacing: .08em; color: var(--amarillo); font-weight: 700; }
-  .hero h1 { margin: 6px 0 4px; font-size: clamp(26px, 5vw, 40px); }
-  .hero p { margin: 0; opacity: .92; font-size: 17px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
-  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
-  .card { background: #fff; color: var(--texto); border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(11,22,64,.10); display: flex; flex-direction: column; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .card { background: #18214a; } }
-  :root[data-theme="dark"] .card { background: #18214a; }
-  .card .bar { height: 8px; }
-  .card .cuerpo { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-  .num { font-weight: 800; font-size: 13px; color: var(--suave); }
-  .card h2 { margin: 0; font-size: 22px; }
-  .proposito { font-size: 14px; color: var(--suave); margin: 0; }
-  .card ul { margin: 4px 0 6px; padding-left: 18px; font-size: 14px; line-height: 1.5; }
-  .acciones { margin-top: auto; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 8px; }
-  .btn { display: inline-block; padding: 10px 14px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; color: #fff; border: 0; cursor: pointer; }
-  .btn.sec { background: transparent; color: inherit; border: 2px solid currentColor; }
-  .chip { display: inline-block; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: #eef1fa; color: var(--azul); align-self: flex-start; }
-  .chip.pend { background: #fff4d6; color: #7a5a00; }
-  .tablero { margin-top: 18px; background: #fff; color: var(--texto); border-radius: 16px; padding: 18px; box-shadow: 0 6px 18px rgba(11,22,64,.08); }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tablero { background: #18214a; } }
-  :root[data-theme="dark"] .tablero { background: #18214a; }
-  .tablero h3 { margin: 0 0 4px; }
-  .aviso { font-size: 12px; font-weight: 800; color: #7a5a00; background: #fff4d6; display: inline-block; padding: 3px 8px; border-radius: 6px; }
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
-  .kpi { border: 1px solid #dfe5f3; border-radius: 12px; padding: 10px 12px; }
-  .kpi b { display: block; font-size: 22px; }
-  .kpi span { font-size: 12px; color: var(--suave); }
-  footer { color: var(--suave); font-size: 12px; text-align: center; padding: 18px 0 26px; }
+  html, body { margin: 0; min-height: 100%; }
+  body { background: radial-gradient(ellipse at top, #1a2a9a 0%, var(--azul) 35%, var(--marino) 100%); background-color: var(--marino); color: #fff; font-family: 'Poppins', Arial, Helvetica, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 18px 16px 40px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 6px 4px 12px; }
+  .top b { font-size: 20px; letter-spacing: .02em; }
+  .top b em { color: var(--amarillo); font-style: italic; font-weight: 600; }
+  .tag { font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 999px; background: rgba(245,196,0,.15); color: var(--amarillo); border: 1px solid rgba(245,196,0,.5); }
+  .hero { position: relative; display: grid; grid-template-columns: 1.05fr .95fr; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); background: linear-gradient(135deg, #1a2a9a 0%, #1D2586 55%, #0f1a4d 100%); }
+  .hero .texto { padding: 34px 30px 30px; position: relative; z-index: 1; }
+  .pildora { display: inline-block; font-size: 12px; letter-spacing: .18em; font-weight: 700; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); color: #dfe6ff; }
+  .hero h1 { margin: 18px 0 2px; font-size: clamp(34px, 5.4vw, 56px); line-height: 1.02; font-weight: 800; }
+  .hero h2 { margin: 0; font-size: clamp(22px, 3.4vw, 34px); color: var(--amarillo); font-style: italic; font-weight: 600; }
+  .hero p { margin: 16px 0 0; font-size: 16px; line-height: 1.55; color: #e7ecff; max-width: 520px; }
+  .foto { position: relative; min-height: 300px; }
+  .foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .foto::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #1D2586 0, rgba(29,37,134,0) 22%); z-index: 1; }
+  .letras { position: absolute; top: 22px; right: 22px; z-index: 2; text-align: right; font-weight: 800; letter-spacing: .16em; font-size: 15px; color: #fff; line-height: 1.5; }
+  .letras::after { content: ""; display: block; width: 58px; height: 4px; background: var(--brillante); margin: 8px 0 0 auto; border-radius: 2px; }
+  .btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 24px; }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 15px 12px; border-radius: 14px; font-weight: 800; font-size: 16px; text-decoration: none; color: #fff; border: 0; min-height: 52px; text-align: center; }
+  .btn.sol { background: var(--amarillo); color: var(--marino); }
+  .btn.ver { background: var(--verde); }
+  .btn.azu { background: #3b82f6; }
+  .btn.off { opacity: .55; cursor: not-allowed; }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } .foto { min-height: 240px; } .foto::before { background: linear-gradient(180deg, #1D2586 0, rgba(29,37,134,0) 30%); } }
+  @media (max-width: 560px) { .btns { grid-template-columns: 1fr; } .hero .texto { padding: 24px 20px; } }
+
+  .cuadrantes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+  @media (max-width: 720px) { .cuadrantes { grid-template-columns: 1fr; } }
+  .cuad { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden; }
+  .cuad::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--c); }
+  .cuad .num { font-size: 12px; font-weight: 800; letter-spacing: .14em; color: #b9c4f0; }
+  .cuad h3 { margin: 0; font-size: 22px; font-weight: 800; }
+  .cuad p { margin: 0; font-size: 14px; line-height: 1.5; color: #d5dcf7; }
+  .cuad ul { margin: 2px 0 4px; padding-left: 18px; font-size: 14px; line-height: 1.55; color: #e7ecff; }
+  .chip { align-self: flex-start; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; }
+  .chip.pend { background: rgba(245,196,0,.18); color: var(--amarillo); }
+  .cuad .btn { margin-top: auto; min-height: 46px; font-size: 15px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 22px; }
+  @media (max-width: 720px) { .stats { grid-template-columns: 1fr 1fr; } }
+  .stat { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 14px 16px; border-left: 4px solid var(--c); }
+  .stat b { display: block; font-size: 28px; font-weight: 800; }
+  .stat span { font-size: 12px; letter-spacing: .08em; color: #c7d0f2; font-weight: 700; }
+  .aviso { display: inline-block; margin-top: 16px; font-size: 12px; font-weight: 800; color: var(--amarillo); background: rgba(245,196,0,.14); border: 1px solid rgba(245,196,0,.4); padding: 5px 10px; border-radius: 8px; }
+  footer { color: #aab5e0; font-size: 12px; text-align: center; padding: 22px 0 0; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header class="hero">
-    <span class="demo">PROPUESTA · DEMO</span>
-    <small>DICKA LOGISTICS</small>
-    <h1>UNIVERSIDAD DICKA</h1>
-    <p>Aprende. Practica. Desarrolla. Certifícate.</p>
-  </header>
+  <div class="top">
+    <b>UNIVERSIDAD <em>Dicka</em></b>
+    <span class="tag">PROPUESTA · DEMO</span>
+  </div>
 
-  <!-- Orden obligatorio: LAPZO, Dojo Dicka, Escuela Operativa, Construyendo Líderes Dicka -->
-  <main class="grid">
-
-    <section class="card">
-      <div class="bar" style="background:var(--indigo)"></div>
-      <div class="cuerpo">
-        <span class="num">CUADRANTE 01</span>
-        <h2>LAPZO</h2>
-        <p class="proposito">Aprendizaje digital: cursos, videos y evaluaciones teóricas.</p>
-        <ul>
-          <li>Catálogo de cursos y rutas por puesto</li>
-          <li>Mis cursos, avance e historial</li>
-          <li>Constancias y evidencias</li>
-        </ul>
-        <span class="chip pend">Integración pendiente de confirmar</span>
-        <div class="acciones">
-          <button class="btn" style="background:var(--indigo)" disabled>Abrir en LAPZO</button>
-          <span style="font-size:12px;color:var(--suave);align-self:center">Enlace por definir</span>
-        </div>
+  <section class="hero">
+    <div class="texto">
+      <span class="pildora">DICKA LOGISTICS · UNIVERSIDAD</span>
+      <h1>UNIVERSIDAD<br>DICKA</h1>
+      <h2>Aprende. Practica. Desarrolla. Certifícate.</h2>
+      <p>Aprende, practica, desarrolla competencias y certifícate. Elige un cuadrante, practica y lleva tu avance a tu supervisor.</p>
+      <div class="btns">
+        <a class="btn sol" href="construyendo-lideres.html">▶ Entrar al almacén 3D</a>
+        <a class="btn ver" href="dojo-de-mando.html">🎯 Dojo Dicka</a>
+        <span class="btn azu off">📊 Tablero (próximamente)</span>
       </div>
-    </section>
-
-    <section class="card">
-      <div class="bar" style="background:var(--verde)"></div>
-      <div class="cuerpo">
-        <span class="num">CUADRANTE 02</span>
-        <h2>Dojo Dicka</h2>
-        <p class="proposito">Práctica y evaluación virtual con escenarios interactivos.</p>
-        <ul>
-          <li>Seguridad, montacargas y riesgos</li>
-          <li>Toma de decisiones y liderazgo</li>
-          <li>Calificación mínima de 80 puntos</li>
-        </ul>
-        <span class="chip">Disponible</span>
-        <div class="acciones">
-          <a class="btn" style="background:var(--verde)" href="dojo-de-mando.html">Entrar al Dojo</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="bar" style="background:var(--teal)"></div>
-      <div class="cuerpo">
-        <span class="num">CUADRANTE 03</span>
-        <h2>Escuela Operativa</h2>
-        <p class="proposito">Formación técnica por puesto: manual, piso y evaluación.</p>
-        <ul>
-          <li>Rutas: auxiliar, surtidor, verificador, montacarguista</li>
-          <li>Entrenamiento en piso con registro de horas</li>
-          <li>Estatus de acreditación</li>
-        </ul>
-        <span class="chip pend">Contenido en preparación</span>
-        <div class="acciones">
-          <button class="btn" style="background:var(--teal)" disabled>Próximamente</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="bar" style="background:var(--naranja)"></div>
-      <div class="cuerpo">
-        <span class="num">CUADRANTE 04</span>
-        <h2>Construyendo Líderes Dicka</h2>
-        <p class="proposito">Desarrollo de liderazgo para supervisores, jefaturas y gerencias.</p>
-        <ul>
-          <li>Cuatro etapas con almacén 3D</li>
-          <li>Conversaciones y decisiones con personajes</li>
-          <li>Niveles: supervisor, jefatura, gerencia y HRBP</li>
-        </ul>
-        <span class="chip">Disponible</span>
-        <div class="acciones">
-          <a class="btn" style="background:var(--naranja)" href="construyendo-lideres.html">Entrar al almacén 3D</a>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <section class="tablero">
-    <span class="aviso">DATOS DEMOSTRATIVOS — NO SON RESULTADOS REALES</span>
-    <h3>Tablero ejecutivo</h3>
-    <p class="proposito" style="margin:0">Vista de ejemplo para Dirección, Talento y Operaciones. Los números no son reales.</p>
-    <div class="kpis">
-      <div class="kpi"><b>— %</b><span>Cobertura de capacitación (DEMO)</span></div>
-      <div class="kpi"><b>— h</b><span>Horas totales (DEMO)</span></div>
-      <div class="kpi"><b>— %</b><span>Prácticas aprobadas (DEMO)</span></div>
-      <div class="kpi"><b>—</b><span>Certificaciones por vencer (DEMO)</span></div>
+    </div>
+    <div class="foto">
+      <div class="letras">APRENDE<br>PRACTICA<br>CERTIFICATE</div>
+      <img src="assets/textures/universidad-hero.jpg" alt="Montacargas en almacén">
     </div>
   </section>
+
+  <!-- Orden obligatorio: LAPZO, Dojo Dicka, Escuela Operativa, Construyendo Líderes Dicka -->
+  <main class="cuadrantes">
+    <section class="cuad" style="--c: var(--indigo)">
+      <span class="num">CUADRANTE 01</span>
+      <h3>LAPZO</h3>
+      <p>Aprendizaje digital: cursos, videos y evaluaciones teóricas.</p>
+      <ul>
+        <li>Catálogo de cursos y rutas por puesto</li>
+        <li>Mis cursos, avance e historial</li>
+        <li>Constancias y evidencias</li>
+      </ul>
+      <span class="chip pend">Integración pendiente de confirmar</span>
+      <span class="btn off" style="background:var(--indigo)">Abrir en LAPZO</span>
+    </section>
+
+    <section class="cuad" style="--c: var(--verde)">
+      <span class="num">CUADRANTE 02</span>
+      <h3>Dojo Dicka</h3>
+      <p>Práctica y evaluación virtual con escenarios interactivos.</p>
+      <ul>
+        <li>Seguridad, montacargas y riesgos</li>
+        <li>Toma de decisiones y liderazgo</li>
+        <li>Calificación mínima de 80 puntos</li>
+      </ul>
+      <span class="chip">Disponible</span>
+      <a class="btn ver" href="dojo-de-mando.html">Entrar al Dojo</a>
+    </section>
+
+    <section class="cuad" style="--c: var(--teal)">
+      <span class="num">CUADRANTE 03</span>
+      <h3>Escuela Operativa</h3>
+      <p>Formación técnica por puesto: manual, piso y evaluación.</p>
+      <ul>
+        <li>Rutas: auxiliar, surtidor, verificador, montacarguista</li>
+        <li>Entrenamiento en piso con registro de horas</li>
+        <li>Estatus de acreditación</li>
+      </ul>
+      <span class="chip pend">Contenido en preparación</span>
+      <span class="btn off" style="background:var(--teal)">Próximamente</span>
+    </section>
+
+    <section class="cuad" style="--c: var(--naranja)">
+      <span class="num">CUADRANTE 04</span>
+      <h3>Construyendo Líderes Dicka</h3>
+      <p>Desarrollo de liderazgo para supervisores, jefaturas y gerencias.</p>
+      <ul>
+        <li>Cuatro etapas con almacén 3D</li>
+        <li>Conversaciones y decisiones con personajes</li>
+        <li>Niveles: supervisor, jefatura, gerencia y HRBP</li>
+      </ul>
+      <span class="chip">Disponible</span>
+      <a class="btn sol" href="construyendo-lideres.html" style="background:var(--naranja);color:#fff">Entrar al almacén 3D</a>
+    </section>
+  </main>
+
+  <section class="stats">
+    <div class="stat" style="--c: var(--amarillo)"><b>— %</b><span>COBERTURA (DEMO)</span></div>
+    <div class="stat" style="--c: var(--verde)"><b>— h</b><span>HORAS TOTALES (DEMO)</span></div>
+    <div class="stat" style="--c: #3b82f6"><b>— %</b><span>PRÁCTICAS APROBADAS (DEMO)</span></div>
+    <div class="stat" style="--c: var(--naranja)"><b>—</b><span>CERTIFICACIONES POR VENCER (DEMO)</span></div>
+  </section>
+  <span class="aviso">DATOS DEMOSTRATIVOS — NO SON RESULTADOS REALES</span>
 
   <footer>Propuesta de trabajo · no conectada a LAPZO ni a una base de datos real</footer>
 </div>
