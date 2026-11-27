@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Universidad Dicka · Propuesta</title>
+<style>
+  :root {
+    --marino: #0b1640;
+    --azul: #1d2586;
+    --indigo: #3f51b5;
+    --verde: #2e9e5b;
+    --teal: #0f8a7e;
+    --naranja: #f26b1d;
+    --amarillo: #f5c400;
+    --papel: #f4f7fb;
+    --texto: #1b2240;
+    --suave: #6b7390;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --papel: #0f1530; --texto: #e9eefc; --suave: #a9b3d6; }
+  }
+  :root[data-theme="dark"] { --papel: #0f1530; --texto: #e9eefc; --suave: #a9b3d6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--papel); color: var(--texto); font-family: Arial, Helvetica, sans-serif; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 16px; }
+  header.hero { background: linear-gradient(135deg, var(--marino), var(--azul)); color: #fff; border-radius: 18px; padding: 26px 22px; margin-top: 8px; position: relative; }
+  .demo { position: absolute; top: 12px; right: 12px; background: var(--amarillo); color: var(--marino); font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 999px; }
+  .hero small { letter-spacing: .08em; color: var(--amarillo); font-weight: 700; }
+  .hero h1 { margin: 6px 0 4px; font-size: clamp(26px, 5vw, 40px); }
+  .hero p { margin: 0; opacity: .92; font-size: 17px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: #fff; color: var(--texto); border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(11,22,64,.10); display: flex; flex-direction: column; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .card { background: #18214a; } }
+  :root[data-theme="dark"] .card { background: #18214a; }
+  .card .bar { height: 8px; }
+  .card .cuerpo { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .num { font-weight: 800; font-size: 13px; color: var(--suave); }
+  .card h2 { margin: 0; font-size: 22px; }
+  .proposito { font-size: 14px; color: var(--suave); margin: 0; }
+  .card ul { margin: 4px 0 6px; padding-left: 18px; font-size: 14px; line-height: 1.5; }
+  .acciones { margin-top: auto; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 8px; }
+  .btn { display: inline-block; padding: 10px 14px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; color: #fff; border: 0; cursor: pointer; }
+  .btn.sec { background: transparent; color: inherit; border: 2px solid currentColor; }
+  .chip { display: inline-block; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: #eef1fa; color: var(--azul); align-self: flex-start; }
+  .chip.pend { background: #fff4d6; color: #7a5a00; }
+  .tablero { margin-top: 18px; background: #fff; color: var(--texto); border-radius: 16px; padding: 18px; box-shadow: 0 6px 18px rgba(11,22,64,.08); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tablero { background: #18214a; } }
+  :root[data-theme="dark"] .tablero { background: #18214a; }
+  .tablero h3 { margin: 0 0 4px; }
+  .aviso { font-size: 12px; font-weight: 800; color: #7a5a00; background: #fff4d6; display: inline-block; padding: 3px 8px; border-radius: 6px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .kpi { border: 1px solid #dfe5f3; border-radius: 12px; padding: 10px 12px; }
+  .kpi b { display: block; font-size: 22px; }
+  .kpi span { font-size: 12px; color: var(--suave); }
+  footer { color: var(--suave); font-size: 12px; text-align: center; padding: 18px 0 26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="demo">PROPUESTA · DEMO</span>
+    <small>DICKA LOGISTICS</small>
+    <h1>UNIVERSIDAD DICKA</h1>
+    <p>Aprende. Practica. Desarrolla. Certifícate.</p>
+  </header>
+
+  <!-- Orden obligatorio: LAPZO, Dojo Dicka, Escuela Operativa, Construyendo Líderes Dicka -->
+  <main class="grid">
+
+    <section class="card">
+      <div class="bar" style="background:var(--indigo)"></div>
+      <div class="cuerpo">
+        <span class="num">CUADRANTE 01</span>
+        <h2>LAPZO</h2>
+        <p class="proposito">Aprendizaje digital: cursos, videos y evaluaciones teóricas.</p>
+        <ul>
+          <li>Catálogo de cursos y rutas por puesto</li>
+          <li>Mis cursos, avance e historial</li>
+          <li>Constancias y evidencias</li>
+        </ul>
+        <span class="chip pend">Integración pendiente de confirmar</span>
+        <div class="acciones">
+          <button class="btn" style="background:var(--indigo)" disabled>Abrir en LAPZO</button>
+          <span style="font-size:12px;color:var(--suave);align-self:center">Enlace por definir</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="bar" style="background:var(--verde)"></div>
+      <div class="cuerpo">
+        <span class="num">CUADRANTE 02</span>
+        <h2>Dojo Dicka</h2>
+        <p class="proposito">Práctica y evaluación virtual con escenarios interactivos.</p>
+        <ul>
+          <li>Seguridad, montacargas y riesgos</li>
+          <li>Toma de decisiones y liderazgo</li>
+          <li>Calificación mínima de 80 puntos</li>
+        </ul>
+        <span class="chip">Disponible</span>
+        <div class="acciones">
+          <a class="btn" style="background:var(--verde)" href="dojo-de-mando.html">Entrar al Dojo</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="bar" style="background:var(--teal)"></div>
+      <div class="cuerpo">
+        <span class="num">CUADRANTE 03</span>
+        <h2>Escuela Operativa</h2>
+        <p class="proposito">Formación técnica por puesto: manual, piso y evaluación.</p>
+        <ul>
+          <li>Rutas: auxiliar, surtidor, verificador, montacarguista</li>
+          <li>Entrenamiento en piso con registro de horas</li>
+          <li>Estatus de acreditación</li>
+        </ul>
+        <span class="chip pend">Contenido en preparación</span>
+        <div class="acciones">
+          <button class="btn" style="background:var(--teal)" disabled>Próximamente</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="bar" style="background:var(--naranja)"></div>
+      <div class="cuerpo">
+        <span class="num">CUADRANTE 04</span>
+        <h2>Construyendo Líderes Dicka</h2>
+        <p class="proposito">Desarrollo de liderazgo para supervisores, jefaturas y gerencias.</p>
+        <ul>
+          <li>Cuatro etapas con almacén 3D</li>
+          <li>Conversaciones y decisiones con personajes</li>
+          <li>Niveles: supervisor, jefatura, gerencia y HRBP</li>
+        </ul>
+        <span class="chip">Disponible</span>
+        <div class="acciones">
+          <a class="btn" style="background:var(--naranja)" href="construyendo-lideres.html">Entrar al almacén 3D</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <section class="tablero">
+    <span class="aviso">DATOS DEMOSTRATIVOS — NO SON RESULTADOS REALES</span>
+    <h3>Tablero ejecutivo</h3>
+    <p class="proposito" style="margin:0">Vista de ejemplo para Dirección, Talento y Operaciones. Los números no son reales.</p>
+    <div class="kpis">
+      <div class="kpi"><b>— %</b><span>Cobertura de capacitación (DEMO)</span></div>
+      <div class="kpi"><b>— h</b><span>Horas totales (DEMO)</span></div>
+      <div class="kpi"><b>— %</b><span>Prácticas aprobadas (DEMO)</span></div>
+      <div class="kpi"><b>—</b><span>Certificaciones por vencer (DEMO)</span></div>
+    </div>
+  </section>
+
+  <footer>Propuesta de trabajo · no conectada a LAPZO ni a una base de datos real</footer>
+</div>
+</body>
+</html>
