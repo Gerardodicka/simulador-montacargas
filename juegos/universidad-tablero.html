@@ -76,13 +76,15 @@
           <option value="administrativo">Personal administrativo</option>
         </select>
       </label>
-      <label>Colaborador (demo)
-        <select id="colaborador">
-          <option>Persona demo 1</option>
-          <option>Persona demo 2</option>
-        </select>
+      <label>Número de empleado
+        <span style="display:flex;gap:8px">
+          <input id="buscar-num" type="text" inputmode="numeric" placeholder="Ej. DEMO-1001" style="background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:9px 10px;font-size:14px;min-width:170px">
+          <button id="buscar-btn" type="button" class="tab on" style="padding:9px 14px">Buscar</button>
+        </span>
       </label>
     </div>
+
+    <p id="resultado" class="sub" style="margin:0 0 12px;min-height:20px"></p>
 
     <!-- Operativo: cuatro tarjetas -->
     <div id="vista-operativo" class="grid">
@@ -186,12 +188,35 @@
     document.getElementById('colab').classList.toggle('oculto', b.dataset.vista !== 'colab');
     document.getElementById('ejec').classList.toggle('oculto', b.dataset.vista !== 'ejec');
   }));
-  // Población: operativo muestra Horas Vuelo y acreditación; administrativo no
-  document.getElementById('poblacion').addEventListener('change', e => {
-    const op = e.target.value === 'operativo';
+  // Registro de demostración (no son personas reales)
+  const DEMO_EMPLEADOS = {
+    'DEMO-1001': { nombre: 'Colaborador demo A', poblacion: 'operativo' },
+    'DEMO-1002': { nombre: 'Colaborador demo B', poblacion: 'operativo' },
+    'DEMO-2001': { nombre: 'Colaborador demo C', poblacion: 'administrativo' }
+  };
+  function mostrarPoblacion(pob) {
+    document.getElementById('poblacion').value = pob;
+    const op = pob === 'operativo';
     document.getElementById('vista-operativo').classList.toggle('oculto', !op);
     document.getElementById('vista-administrativo').classList.toggle('oculto', op);
+  }
+  // Población: operativo muestra Horas Vuelo y acreditación; administrativo no
+  document.getElementById('poblacion').addEventListener('change', e => {
+    mostrarPoblacion(e.target.value);
+    document.getElementById('resultado').textContent = '';
   });
+  // Buscador por número de empleado (demo)
+  function buscarEmpleado() {
+    const num = document.getElementById('buscar-num').value.trim().toUpperCase();
+    const out = document.getElementById('resultado');
+    if (!num) { out.textContent = 'Escribe un número de empleado.'; return; }
+    const emp = DEMO_EMPLEADOS[num];
+    if (!emp) { out.textContent = 'No se encontró el número ' + num + ' (DEMO).'; return; }
+    mostrarPoblacion(emp.poblacion);
+    out.textContent = 'Mostrando: ' + emp.nombre + ' · ' + num + ' · ' + (emp.poblacion === 'operativo' ? 'personal operativo' : 'personal administrativo') + ' (DEMO)';
+  }
+  document.getElementById('buscar-btn').addEventListener('click', buscarEmpleado);
+  document.getElementById('buscar-num').addEventListener('keydown', e => { if (e.key === 'Enter') buscarEmpleado(); });
 </script>
 </body>
 </html>
